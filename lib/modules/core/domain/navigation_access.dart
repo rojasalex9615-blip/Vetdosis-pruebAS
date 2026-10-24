@@ -13,7 +13,10 @@ bool navigationAllowed(
   }
   final role = member.role;
   return switch (page) {
+    'Planeación financiera' => role == ClinicRole.admin,
+    'Cálculos' ||
     'Cálculo rápido' ||
+    'Operaciones de dosis' ||
     'Cálculos clínicos' => [ClinicRole.admin, ClinicRole.mvz].contains(role),
     'Hospitalización' || 'Receta' when access == null => [
       ClinicRole.admin,
