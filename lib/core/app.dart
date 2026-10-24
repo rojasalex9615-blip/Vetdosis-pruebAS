@@ -1,3 +1,10 @@
+import 'dart:math' as math;
+import 'widgets/app_version_label.dart';
+import '../modules/finance/presentation/financial_planning_panel.dart';
+import '../modules/core/presentation/section_menu.dart';
+import '../modules/production/presentation/production_menu.dart';
+import '../modules/dashboard/presentation/home_pilot.dart';
+import '../vet_ui/vet_theme.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
 import '../modules/identity/domain/identity_repository.dart';
@@ -40,6 +47,7 @@ import '../modules/patients/domain/patient_repository.dart';
 import '../modules/patients/presentation/patients_screen.dart';
 import 'package:flutter/material.dart';
 import '../modules/doses/presentation/dose_screen.dart';
+import '../modules/doses/presentation/dose_math_tools.dart';
 import '../modules/doses/data/personal_dose_repository.dart';
 import '../modules/auth/domain/clinic_membership.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -103,33 +111,26 @@ class VetDosisApp extends StatelessWidget {
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
-    final background = dark
-        ? const Color(0xFF0B121C)
-        : const Color(0xFFF2F7FA);
-    final surface = dark
-        ? const Color(0xFF131E2A)
-        : const Color(0xFFF9FBFD);
-    final primary = dark
-        ? const Color(0xFF55E2D3)
-        : const Color(0xFF31CDBD);
-    final secondary = dark
-        ? const Color(0xFFB69BFF)
-        : const Color(0xFFA88DF2);
-    final tertiary = dark
-        ? const Color(0xFFFF92C9)
-        : const Color(0xFFF29AC4);
-    final scheme = ColorScheme.fromSeed(
-      seedColor: neumorphic
-          ? primary
-          : paletteColors[model.settings.palette],
-      brightness: brightness,
-    ).copyWith(
-      primary: neumorphic ? primary : null,
-      onPrimary: neumorphic ? const Color(0xFF062321) : null,
-      secondary: neumorphic ? secondary : null,
-      tertiary: neumorphic ? tertiary : null,
-      surface: neumorphic ? surface : null,
-    );
+    final background = dark ? const Color(0xFF0B121C) : VetColors.canvas;
+    final surface = dark ? const Color(0xFF131E2A) : VetColors.surface;
+    final primary = dark ? const Color(0xFF55E2D3) : VetColors.purple;
+    final secondary = dark ? const Color(0xFFB69BFF) : VetColors.turquoise;
+    final tertiary = dark ? const Color(0xFFFF92C9) : VetColors.lavender;
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: neumorphic
+              ? primary
+              : paletteColors[model.settings.palette],
+          brightness: brightness,
+        ).copyWith(
+          primary: neumorphic ? primary : null,
+          onPrimary: neumorphic
+              ? (dark ? const Color(0xFF062321) : Colors.white)
+              : null,
+          secondary: neumorphic ? secondary : null,
+          tertiary: neumorphic ? tertiary : null,
+          surface: neumorphic ? surface : null,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -171,9 +172,7 @@ class VetDosisApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               side: BorderSide(
-                color: dark
-                    ? const Color(0xFF2A3A4B)
-                    : const Color(0xFFDDE7EF),
+                color: dark ? const Color(0xFF2A3A4B) : const Color(0xFFDDE7EF),
               ),
             )
           : null,
@@ -184,9 +183,7 @@ class VetDosisApp extends StatelessWidget {
               elevation: 0,
             )
           : null,
-      extensions: [
-        WorkspaceStyle(neumorphic: neumorphic),
-      ],
+      extensions: [WorkspaceStyle(neumorphic: neumorphic)],
     );
   }
 
@@ -300,22 +297,123 @@ class CoreShell extends StatelessWidget {
 
   bool allowed(String page) =>
       navigationAllowed(page, auth?.active, moduleAccess);
+  Future<void> openAccount(BuildContext context) async {
+    if (auth == null) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => ClinicAccountScreen(
+          model: auth!,
+          identityBuilder: (_) => Column(
+            children: [
+              if (auth!.repository.userId != null)
+                ProfileAppearance(
+                  key: ValueKey(auth!.repository.userId),
+                  userId: auth!.repository.userId!,
+                  repository: identity,
+                ),
+              if (auth!.active != null)
+                ClinicIdentity(
+                  key: ValueKey(
+                    '${auth!.active!.clinicId}:${auth!.active!.role}',
+                  ),
+                  member: auth!.active!,
+                  repository: forms,
+                  identity: identity,
+                  editable: true,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget bottomNavigation() {
+    final destinations = <(String, IconData)>[
+      ('Inicio', Icons.home_outlined),
+      if (allowed('Agenda')) ('Agenda', Icons.calendar_month_outlined),
+      if (allowed('Pacientes')) ('Pacientes', Icons.pets_outlined),
+      if (allowed('Cálculos')) ('Cálculos', Icons.calculate_outlined),
+      ('Más', Icons.grid_view_outlined),
+    ];
+    final page = switch (model.screen) {
+      'Cálculo rápido' ||
+      'Operaciones de dosis' ||
+      'Cálculos clínicos' => 'Cálculos',
+      'Producción y grandes especies' => 'Inicio',
+      _ => model.screen,
+    };
+    final selected = destinations.indexWhere((entry) => entry.$1 == page);
+    return NavigationBar(
+      selectedIndex: selected < 0 ? destinations.length - 1 : selected,
+      onDestinationSelected: (index) => model.navigate(destinations[index].$1),
+      destinations: [
+        for (final entry in destinations)
+          NavigationDestination(icon: Icon(entry.$2), label: entry.$1),
+      ],
+    );
+  }
+
   @override
-  Widget build(BuildContext context) => PopScope(
+  Widget build(BuildContext context) => Theme(
+    data: homePilotTheme(Theme.of(context)),
+    child: Builder(builder: _buildShell),
+  );
+
+  Widget _buildShell(BuildContext context) => PopScope(
     canPop: model.screen == 'Inicio',
     onPopInvokedWithResult: (didPop, result) {
       if (!didPop) model.navigate('Inicio');
     },
     child: Scaffold(
       appBar: AppBar(
+        toolbarHeight: auth?.active == null
+            ? 56
+            : math.max(
+                68,
+                (model.screen == 'Inicio'
+                        ? 44.0
+                        : MediaQuery.textScalerOf(context).scale(
+                                Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge?.fontSize ??
+                                    22,
+                              ) *
+                              1.4) +
+                    MediaQuery.textScalerOf(context).scale(
+                          Theme.of(context).textTheme.labelSmall?.fontSize ??
+                              11,
+                        ) *
+                        1.4 +
+                    16,
+              ),
         title: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              model.screen == 'Inicio' ? 'VetDosis Pro' : model.screen,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            if (model.screen == 'Inicio')
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Image.asset(
+                    'assets/brand/vetdosis-logo.png',
+                    width: 140,
+                    height: 44,
+                    fit: BoxFit.cover,
+                    alignment: const Alignment(0, .3),
+                    semanticLabel: 'VetDosis Pro',
+                  ),
+                ),
+              )
+            else
+              Text(model.screen, maxLines: 1, overflow: TextOverflow.ellipsis),
             if (auth?.active != null)
               Text(
                 auth!.active!.clinicName,
@@ -333,34 +431,7 @@ class CoreShell extends StatelessWidget {
                 userId: auth!.repository.userId ?? 'signed-out',
                 repository: identity,
               ),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => ClinicAccountScreen(
-                    model: auth!,
-                    identityBuilder: (_) => Column(
-                      children: [
-                        if (auth!.repository.userId != null)
-                          ProfileAppearance(
-                            key: ValueKey(auth!.repository.userId),
-                            userId: auth!.repository.userId!,
-                            repository: identity,
-                          ),
-                        if (auth!.active != null)
-                          ClinicIdentity(
-                            key: ValueKey(
-                              '${auth!.active!.clinicId}:${auth!.active!.role}',
-                            ),
-                            member: auth!.active!,
-                            repository: forms,
-                            identity: identity,
-                            editable: true,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              onPressed: () => openAccount(context),
             ),
           IconButton(
             tooltip: 'Ajustes',
@@ -377,69 +448,54 @@ class CoreShell extends StatelessWidget {
                 title: Text('VetDosis Pro'),
                 subtitle: Text('Tu espacio veterinario'),
               ),
-              for (final branch in ClinicalBranch.values)
+              const Divider(),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Área de trabajo'),
+              ),
+              for (final branch in ClinicalBranch.values.where(
+                (b) => b != ClinicalBranch.management,
+              ))
                 ListTile(
                   leading: Icon(branch.icon),
                   title: Text(branch.label),
                   selected: model.branch == branch,
                   onTap: () {
-                    model.selectBranch(branch);
                     Navigator.pop(context);
+                    model.selectBranch(branch);
                   },
                 ),
               const Divider(),
-              if (allowed('Cálculo rápido') || allowed('Cálculos clínicos'))
-                ExpansionTile(
-                  leading: const Icon(Icons.calculate_outlined),
-                  title: const Text('Cálculos'),
-                  initiallyExpanded: [
-                    'Cálculo rápido',
-                    'Cálculos clínicos',
-                  ].contains(model.screen),
-                  children: [
-                    for (final page in ['Cálculo rápido', 'Cálculos clínicos'])
-                      if (allowed(page))
-                        ListTile(
-                          leading: Icon(sectionIcon(page)),
-                          title: Text(page),
-                          selected: model.screen == page,
-                          onTap: () {
-                            model.navigate(page);
-                            Navigator.pop(context);
-                          },
-                        ),
-                  ],
+              ListTile(
+                leading: const Icon(Icons.business_outlined),
+                title: const Text('Gestión clínica'),
+                onTap: () {
+                  Navigator.pop(context);
+                  model.selectBranch(ClinicalBranch.management);
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: SectionMenu(
+                  member: auth?.active,
+                  access: moduleAccess,
+                  onNavigate: (page) {
+                    Navigator.pop(context);
+                    model.navigate(page);
+                  },
+                  onAccount: auth == null
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          openAccount(context);
+                        },
                 ),
-              for (final page in [
-                'Inicio',
-                'Escanear producto',
-                'Hospitalización',
-                'Pacientes',
-                'Formatos',
-                'Receta',
-                'Agenda',
-                if (auth?.active?.isPersonal != true) 'Checado',
-
-                'Producto y costos',
-                'Inicio guiado',
-                'Estadísticas',
-                'Inventario',
-                'Ajustes',
-              ])
-                if (allowed(page))
-                  ListTile(
-                    leading: Icon(sectionIcon(page)),
-                    title: Text(page),
-                    selected: model.screen == page,
-                    onTap: () {
-                      model.navigate(page);
-                      Navigator.pop(context);
-                    },
-                  ),
+              ),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: bottomNavigation(),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -472,8 +528,12 @@ class CoreShell extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1100),
             child: ListView(
-              key: ValueKey((auth?.active?.userId, auth?.active?.clinicId,
-                model.branch, model.screen)),
+              key: ValueKey((
+                auth?.active?.userId,
+                auth?.active?.clinicId,
+                model.branch,
+                model.screen,
+              )),
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 220),
               children: [
                 if (auth?.offline == true) ...[
@@ -491,30 +551,39 @@ class CoreShell extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                 ],
-                DropdownButtonFormField<ClinicalBranch>(
-                  initialValue: model.branch,
-                  key: ValueKey(model.branch),
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Rama de trabajo',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: ClinicalBranch.values
-                      .map(
-                        (branch) => DropdownMenuItem(
-                          value: branch,
-                          child: Text(
-                            branch.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                if (model.screen == 'Inicio')
+                  HomePracticeSelector(
+                    selected: model.branch,
+                    onChanged: model.selectBranch,
+                  )
+                else if (![
+                  'Más',
+                  'Producción y grandes especies',
+                ].contains(model.screen))
+                  DropdownButtonFormField<ClinicalBranch>(
+                    initialValue: model.branch,
+                    key: ValueKey(model.branch),
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Rama de trabajo',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: ClinicalBranch.values
+                        .map(
+                          (branch) => DropdownMenuItem(
+                            value: branch,
+                            child: Text(
+                              branch.label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (branch) {
-                    if (branch != null) model.selectBranch(branch);
-                  },
-                ),
+                        )
+                        .toList(),
+                    onChanged: (branch) {
+                      if (branch != null) model.selectBranch(branch);
+                    },
+                  ),
                 const SizedBox(height: 28),
                 if (auth?.active != null &&
                     moduleAccess != null &&
@@ -524,6 +593,38 @@ class CoreShell extends StatelessWidget {
                   )
                 else if (model.screen == 'Inicio')
                   ...home(context)
+                else if (model.screen == 'Más')
+                  SectionMenu(
+                    member: auth?.active,
+                    access: moduleAccess,
+                    initialGroup: model.branch == ClinicalBranch.management
+                        ? 'Administración y finanzas'
+                        : null,
+                    onNavigate: model.navigate,
+                    onAccount: auth == null ? null : () => openAccount(context),
+                  )
+                else if (model.screen == 'Planeación financiera')
+                  allowed('Planeación financiera')
+                      ? FinancialPlanningPanel(
+                          key: ValueKey(
+                            '${auth?.active?.userId}:${auth?.active?.clinicId}',
+                          ),
+                        )
+                      : const Text(
+                          'Este apartado no está disponible con tus permisos actuales.',
+                        )
+                else if (model.screen == 'Cálculos')
+                  CalculationMenu(
+                    member: auth?.active,
+                    access: moduleAccess,
+                    onNavigate: model.navigate,
+                  )
+                else if (model.screen == 'Producción y grandes especies')
+                  ProductionMenu(
+                    member: auth?.active,
+                    access: moduleAccess,
+                    onNavigate: model.navigate,
+                  )
                 else if (model.screen == 'Cálculo rápido')
                   auth == null ||
                           [
@@ -540,6 +641,16 @@ class CoreShell extends StatelessWidget {
                           admin: auth?.active?.role == ClinicRole.admin,
                           offline: auth?.offline ?? false,
                         )
+                      : const Text(
+                          'El cálculo clínico requiere acceso de MVZ o administrador.',
+                        )
+                else if (model.screen == 'Operaciones de dosis')
+                  auth == null ||
+                          [
+                            ClinicRole.admin,
+                            ClinicRole.mvz,
+                          ].contains(auth!.active?.role)
+                      ? const DoseMathTools()
                       : const Text(
                           'El cálculo clínico requiere acceso de MVZ o administrador.',
                         )
@@ -574,6 +685,15 @@ class CoreShell extends StatelessWidget {
                                 ),
                                 repository: patients!,
                                 member: auth!.active!,
+                                canOpenActivity: allowed,
+                                onOpenActivity: (destination, patientId) async {
+                                  if (allowed(destination)) {
+                                    model.navigate(
+                                      destination,
+                                      patientId: patientId,
+                                    );
+                                  }
+                                },
                                 onOpenClinical:
                                     clinical != null && forms != null
                                     ? (patient) async {
@@ -616,6 +736,7 @@ class CoreShell extends StatelessWidget {
                                 key: ValueKey(
                                   '${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role.name}',
                                 ),
+                                initialPatientId: model.activityPatientId,
                                 repository: hospital!,
                                 patients: patients!,
                                 member: auth!.active!,
@@ -731,38 +852,56 @@ class CoreShell extends StatelessWidget {
                         )
                 else if (model.screen == 'Agenda' ||
                     model.screen == 'Equipo y avisos' ||
-                    model.screen == 'Pendientes del equipo')
+                    model.screen == 'Pendientes del equipo' ||
+                    model.screen == 'Servicios' ||
+                    model.screen == 'Proveedores')
                   operations != null &&
                           auth?.active != null &&
                           auth?.offline != true
                       ? OperationsScreen(
-                          key: ValueKey('operations:${model.screen}'),
-                          initialSection: model.screen == 'Equipo y avisos'
+                          key: ValueKey(
+                            'operations:${model.screen}:${auth?.active?.clinicId}:${auth?.active?.userId}:${model.activityPatientId}',
+                          ),
+                          initialSection: model.screen == 'Servicios'
+                              ? 'services'
+                              : model.screen == 'Proveedores'
+                              ? 'suppliers'
+                              : model.screen == 'Equipo y avisos'
                               ? 'messages'
                               : model.screen == 'Pendientes del equipo'
                               ? 'tasks'
                               : 'appointments',
+                          initialPatientId: model.activityPatientId,
+                          onNavigate: model.navigate,
+                          canOpenInventory: allowed('Inventario'),
+                          canOpenSales: allowed('Caja'),
                           repository: operations!,
                           member: auth!.active!,
                           onOpenPatient:
                               patients != null && allowed('Pacientes')
                               ? (id) async {
                                   final member = auth!.active!;
+                                  final patientTheme = homePilotTheme(
+                                    Theme.of(context),
+                                  );
                                   await Navigator.push(
                                     context,
                                     MaterialPageRoute<void>(
-                                      builder: (_) => Scaffold(
-                                        appBar: AppBar(
-                                          title: const Text(
-                                            'Paciente de la cita',
+                                      builder: (_) => Theme(
+                                        data: patientTheme,
+                                        child: Scaffold(
+                                          appBar: AppBar(
+                                            title: const Text(
+                                              'Paciente de la cita',
+                                            ),
                                           ),
-                                        ),
-                                        body: SingleChildScrollView(
-                                          padding: const EdgeInsets.all(20),
-                                          child: PatientsScreen(
-                                            repository: patients!,
-                                            member: member,
-                                            initialPatientId: id,
+                                          body: SingleChildScrollView(
+                                            padding: const EdgeInsets.all(20),
+                                            child: PatientsScreen(
+                                              repository: patients!,
+                                              member: member,
+                                              initialPatientId: id,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -787,9 +926,12 @@ class CoreShell extends StatelessWidget {
                         )
                 else if (model.screen == 'Estadísticas')
                   DashboardScreen(
-                    key: ValueKey(
-                      (auth?.active?.userId, auth?.active?.clinicId, auth?.offline, moduleAccess),
-                    ),
+                    key: ValueKey((
+                      auth?.active?.userId,
+                      auth?.active?.clinicId,
+                      auth?.offline,
+                      moduleAccess,
+                    )),
                     model: DashboardViewModel(
                       member: auth?.active,
                       backup: allowed('Estadísticas') ? backup : null,
@@ -905,9 +1047,13 @@ class CoreShell extends StatelessWidget {
       onNavigate: model.navigate,
     ),
     DashboardScreen(
-      key: ValueKey(
-        (auth?.active?.userId, auth?.active?.clinicId, auth?.active?.role, auth?.offline, moduleAccess),
-      ),
+      key: ValueKey((
+        auth?.active?.userId,
+        auth?.active?.clinicId,
+        auth?.active?.role,
+        auth?.offline,
+        moduleAccess,
+      )),
       model: DashboardViewModel(
         member: auth?.active,
         operations: operations,
@@ -918,6 +1064,7 @@ class CoreShell extends StatelessWidget {
         moduleAccess: moduleAccess,
       ),
       offline: auth?.offline ?? false,
+      homePilot: true,
       alerts: hospitalAlerts,
       onNavigate: model.navigate,
     ),
@@ -1063,7 +1210,11 @@ class CoreShell extends StatelessWidget {
             if (option.$1 == 'Proveedor de IA y privacidad') {
               if (ai == null || auth?.active == null || auth?.offline == true) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('La configuración de IA requiere cuenta y conexión.')),
+                  const SnackBar(
+                    content: Text(
+                      'La configuración de IA requiere cuenta y conexión.',
+                    ),
+                  ),
                 );
                 return;
               }
@@ -1098,7 +1249,7 @@ class CoreShell extends StatelessWidget {
       ),
       AlertPreferencesPanel(alerts: hospitalAlerts),
     ],
-    const Text('VetDosis Pro · Versión de pruebas · 0.1.0'),
+    const AppVersionLabel(),
   ];
 
   List<Widget> pending(BuildContext context) => [
@@ -1130,9 +1281,7 @@ class SoftPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final surface = dark
-        ? const Color(0xFF131E2A)
-        : const Color(0xFFF9FBFD);
+    final surface = dark ? const Color(0xFF131E2A) : VetColors.surface;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1144,22 +1293,16 @@ class SoftPanel extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: dark
-              ? const Color(0xFF243547)
-              : const Color(0xFFE4EDF3),
+          color: dark ? const Color(0xFF243547) : const Color(0xFFE4EDF3),
         ),
         boxShadow: [
           BoxShadow(
-            color: dark
-                ? const Color(0x99000000)
-                : const Color(0xFFD5E0E7),
+            color: dark ? const Color(0x99000000) : const Color(0xFFD5E0E7),
             offset: const Offset(7, 8),
             blurRadius: 18,
           ),
           BoxShadow(
-            color: dark
-                ? const Color(0x182DE6D1)
-                : const Color(0xFFFFFFFF),
+            color: dark ? const Color(0x182DE6D1) : const Color(0xFFFFFFFF),
             offset: const Offset(-6, -6),
             blurRadius: 16,
           ),
@@ -1198,14 +1341,21 @@ class _ModuleSearch extends StatefulWidget {
 class _ModuleSearchState extends State<_ModuleSearch> {
   String query = '';
   static const pages = [
+    'Más',
+    'Cálculos',
+    'Producción y grandes especies',
+    'Servicios',
+    'Proveedores',
     'Agenda',
     'Pacientes',
     'Hospitalización',
     'Inventario',
     'Caja',
+    'Planeación financiera',
     'Receta',
     'Formatos',
     'Cálculo rápido',
+    'Operaciones de dosis',
     'Cálculos clínicos',
     'Estadísticas',
     'Escanear producto',

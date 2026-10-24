@@ -132,6 +132,13 @@ class _FormsScreenState extends State<FormsScreen> {
     }
   }
 
+  bool canCreate(FormTemplateVersion version) => model.documentsKnown
+      ? model.canCreateDraft(version)
+      : (model.documentsAvailable &&
+            (model.access.finalize || professionalAdmin) &&
+            version.clinicId != null &&
+            version.approved);
+
   Future<void> open(FormDocument doc) async {
     try {
       if (doc.signed) {
@@ -301,14 +308,20 @@ class _FormsScreenState extends State<FormsScreen> {
                   },
             child: const Text('Casos clínicos, mediciones y actuaciones'),
           ),
-        Text('Plantillas', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          '1. Configurar formatos de la clínica',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const Text(
+          'Aquí el equipo autorizado edita el texto fijo: cláusulas legales, explicaciones e indicaciones. También configura los campos que se llenarán al atender. Cada cambio crea una versión nueva; los documentos firmados conservan la versión que utilizaron.',
+        ),
         if (!model.busy && model.error == null && model.templates.isEmpty)
           Text(
             model.templateKnown && !model.capability('can_read')
                 ? 'Tu cuenta no tiene permiso para consultar plantillas. '
-                    'Revisa Permisos y habilitación.'
+                      'Revisa Permisos y habilitación.'
                 : 'No hay plantillas disponibles. Las plantillas deben '
-                    'configurarse y revisarse antes de usarlas.',
+                      'configurarse y revisarse antes de usarlas.',
           ),
         for (final version in model.templates)
           Card(
@@ -354,25 +367,6 @@ class _FormsScreenState extends State<FormsScreen> {
                               : () => editor(version, restore: true),
                           child: const Text('Restaurar base en versión nueva'),
                         ),
-                      if (model.documentsKnown
-                          ? model.canCreateDraft(version)
-                          : (model.documentsAvailable &&
-                                (model.access.finalize || professionalAdmin) &&
-                                version.clinicId != null &&
-                                version.approved))
-                        FilledButton(
-                          onPressed: model.busy ? null : () => create(version),
-                          child: Text(
-                            version.schema['type'].toString().startsWith(
-                                      'clinical_',
-                                    ) ||
-                                    version.schema['type']
-                                        .toString()
-                                        .startsWith('surgical_')
-                                ? 'Nuevo formato clínico'
-                                : 'Nuevo consentimiento',
-                          ),
-                        ),
                       TextButton(
                         onPressed: model.busy ? null : () => history(version),
                         child: const Text('Historial de versiones'),
@@ -384,14 +378,47 @@ class _FormsScreenState extends State<FormsScreen> {
             ),
           ),
         const SizedBox(height: 20),
-        Text('Documentos', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          '2. Llenar un consentimiento o formato',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            'Elige una plantilla aprobada. Los datos ya registrados del paciente aparecen vinculados. El tutor/propietario completa o confirma sus datos de identificación; el equipo captura los datos clínicos y del procedimiento. Las cláusulas e indicaciones se leen en el documento y no se editan durante el llenado.',
+          ),
+        ),
+        if (!model.busy &&
+            model.error == null &&
+            !model.templates.any(canCreate))
+          const Text('No hay formatos aprobados disponibles para llenar.'),
+        for (final version in model.templates.where(canCreate))
+          Card(
+            child: ListTile(
+              title: Text(version.schema['title']),
+              subtitle: Text(
+                'Versión ${version.version} · aprobada para uso por la clínica',
+              ),
+              trailing: const Icon(Icons.edit_note),
+              onTap: model.busy ? null : () => create(version),
+            ),
+          ),
+        const SizedBox(height: 20),
+        Text(
+          '3. Documentos del expediente',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const Text(
+          'Llena un formato con los datos autorizados del paciente, revisa la vista previa, firma y guarda el PDF como evidencia inmutable.',
+        ),
         if (model.documents.isEmpty && !model.busy)
           const Text('Sin documentos disponibles para tu acceso.'),
         for (final doc in model.documents) ...[
           ListTile(
             title: Text(doc.snapshot['schema']['title']),
             subtitle: Text(
-              '${formStateLabel(doc.state)} · ${doc.snapshot['patient']['name']}',
+              '${formStateLabel(doc.state)} · ${doc.snapshot['patient']['name']}\n'
+              '${doc.signed ? 'Firmado y agregado al expediente' : 'Borrador editable'}',
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: model.busy ? null : () => open(doc),
