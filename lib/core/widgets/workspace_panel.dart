@@ -1,3 +1,4 @@
+import '../../vet_ui/vet_components.dart';
 import 'package:flutter/material.dart';
 
 class WorkspaceStyle extends ThemeExtension<WorkspaceStyle> {
@@ -20,31 +21,16 @@ class WorkspacePanel extends StatelessWidget {
     if (theme.extension<WorkspaceStyle>()?.neumorphic != true) {
       return Card(child: child);
     }
-    final dark = theme.brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: dark ? const Color(0xFF131A20) : const Color(0xFFCDD6DE),
-            offset: const Offset(6, 6),
-            blurRadius: 14,
-          ),
-          BoxShadow(
-            color: dark ? const Color(0xFF34424B) : Colors.white,
-            offset: const Offset(-6, -6),
-            blurRadius: 14,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        clipBehavior: Clip.antiAlias,
-        child: child,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: VetCard(
+        padding: EdgeInsets.zero,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        ),
       ),
     );
   }
@@ -52,7 +38,9 @@ class WorkspacePanel extends StatelessWidget {
 
 IconData sectionIcon(String page) => switch (page) {
   'Inicio' => Icons.dashboard_outlined,
-  'Cálculos' || 'Cálculo rápido' => Icons.calculate_outlined,
+  'Cálculos' ||
+  'Cálculo rápido' ||
+  'Operaciones de dosis' => Icons.calculate_outlined,
   'Cálculos clínicos' => Icons.science_outlined,
   'Escanear producto' => Icons.qr_code_scanner,
   'Hospitalización' => Icons.local_hospital_outlined,
@@ -68,6 +56,7 @@ IconData sectionIcon(String page) => switch (page) {
   'Ayuda y soporte' => Icons.help_outline,
   'Estadísticas' => Icons.bar_chart_outlined,
   'Respaldo' || 'Estadísticas y respaldo' => Icons.backup_outlined,
+  'Planeación financiera' => Icons.trending_up,
   'Caja' => Icons.point_of_sale_outlined,
   'Equipo y avisos' || 'Pendientes del equipo' => Icons.forum_outlined,
   'Inventario' => Icons.inventory_2_outlined,
