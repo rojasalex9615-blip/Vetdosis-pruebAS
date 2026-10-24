@@ -167,8 +167,10 @@ void main() {
   testWidgets(
     'Mobile dashboard, grouped calculations, settings and floating navigation',
     (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
+      tester.view.physicalSize = const Size(390, 1000);
       tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       SharedPreferences.setMockInitialValues({});
@@ -181,12 +183,22 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
-      expect(find.text('Cálculos').last, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Drawer),
+          matching: find.text('Cálculos'),
+        ),
+        findsNothing,
+      );
       expect(find.text('Planes'), findsNothing);
       expect(find.text('Estadísticas y respaldo'), findsNothing);
-      await tester.tap(find.text('Cálculos').last);
+      tester.state<ScaffoldState>(find.byType(Scaffold).first).closeDrawer();
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(NavigationDestination, 'Cálculos'));
       await tester.pumpAndSettle();
       expect(find.text('Cálculos clínicos').last, findsOneWidget);
+      await tester.ensureVisible(find.text('Cálculos clínicos').last);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Cálculos clínicos').last);
       await tester.pumpAndSettle();
       expect(model.screen, 'Cálculos clínicos');
