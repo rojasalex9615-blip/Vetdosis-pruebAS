@@ -63,7 +63,9 @@ class _OperationsScreenState extends State<OperationsScreen>
     DateTime.now().month,
   );
   bool careDay = true;
-  bool get careEnabled => widget.repository is AppointmentCareRepository;
+  bool get careEnabled =>
+      widget.repository is AppointmentCareRepository &&
+      model.careWindow != null;
   String? appointmentState;
   List<Map<String, dynamic>> get visibleAppointments => model
       .rows('appointments')
@@ -632,8 +634,9 @@ class _OperationsScreenState extends State<OperationsScreen>
               Text(
                 '${model.careWindow!['day']} · ${model.careWindow!['timezone']} · ${visibleAppointments.length} citas',
               ),
-            if (model.careError != null) Text(model.careError!),
           ],
+          // Do not hide the failure message when care mode falls back.
+          if (model.careError != null) Text(model.careError!),
           VetActionButton(
             label: 'Agendar cita',
             icon: Icons.add,
