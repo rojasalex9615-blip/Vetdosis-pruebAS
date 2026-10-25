@@ -1,3 +1,7 @@
+import '../modules/clinic_experience/domain/clinic_experience.dart';
+import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
+import '../modules/clinic_experience/presentation/clinic_experience_boundary.dart';
+import '../modules/clinic_experience/presentation/clinic_experience_screen.dart';
 import '../modules/auth/presentation/team_duty_screen.dart';
 import '../modules/review/domain/review_catalog_repository.dart';
 import '../modules/review/presentation/review_catalog_screen.dart';
@@ -102,6 +106,7 @@ class VetDosisApp extends StatelessWidget {
     this.subscriptions,
     this.support,
     this.moduleAccess,
+    this.experienceRepository,
     this.reviewCatalog,
   });
   final CoreViewModel model;
@@ -125,6 +130,7 @@ class VetDosisApp extends StatelessWidget {
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
   final ModuleAccessRepository? moduleAccess;
+  final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
@@ -271,7 +277,11 @@ class VetDosisApp extends StatelessWidget {
           member: auth?.active,
           repository: moduleAccess,
           revision: auth?.accessRevision ?? 0,
-          builder: (access) => CoreShell(
+          builder: (access) => ClinicExperienceBoundary(
+            member: auth?.active,
+            repository: experienceRepository,
+            revision: auth?.accessRevision ?? 0,
+            builder: (experience, ready, reload) => CoreShell(
             model: model,
             auth: auth,
             moduleAccess: access,
@@ -292,6 +302,11 @@ class VetDosisApp extends StatelessWidget {
             ai: ai,
             subscriptions: subscriptions,
             support: support,
+            experience: experience,
+            experienceRepository: experienceRepository,
+            experienceReady: ready,
+            onExperienceSaved: reload,
+          ),
           ),
         );
 }
@@ -318,6 +333,10 @@ class CoreShell extends StatelessWidget {
     this.subscriptions,
     this.support,
     this.moduleAccess,
+    this.experience,
+    this.experienceRepository,
+    this.experienceReady = false,
+    this.onExperienceSaved,
     this.reviewCatalog,
   });
   final CoreViewModel model;
@@ -339,6 +358,10 @@ class CoreShell extends StatelessWidget {
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
   final ModuleAccess? moduleAccess;
+  final ClinicExperience? experience;
+  final ClinicExperienceRepository? experienceRepository;
+  final bool experienceReady;
+  final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
 
   /// Whether [member] still matches an online session allowed hospital access.
@@ -404,7 +427,8 @@ class CoreShell extends StatelessWidget {
   }
 
   bool allowed(String page) =>
-      navigationAllowed(page, auth?.active, moduleAccess);
+      navigationAllowed(page, auth?.active, moduleAccess) &&
+      (experience?.visible(page) ?? true);
   Future<void> openAccount(BuildContext context) async {
     if (auth == null) return;
     await Navigator.push(
@@ -720,6 +744,7 @@ class CoreShell extends StatelessWidget {
                   SectionMenu(
                     member: auth?.active,
                     access: moduleAccess,
+                    experience: experience,
                     initialGroup: model.branch == ClinicalBranch.management
                         ? 'Administración y finanzas'
                         : null,
@@ -740,6 +765,7 @@ class CoreShell extends StatelessWidget {
                   CalculationMenu(
                     member: auth?.active,
                     access: moduleAccess,
+                    experience: experience,
                     onNavigate: model.navigate,
                   )
                 else if (model.screen == 'Producción y grandes especies')
@@ -1187,7 +1213,7 @@ class CoreShell extends StatelessWidget {
                         )
                 else if (model.screen == 'Asistente IA')
                   ai != null && auth?.active != null && auth?.offline != true
-                      ? AiScreen(repository: ai!, member: auth!.active!)
+                      ? AiScreen(repository: ai!, member: auth!.active!, preferredProvider: experience?.defaultAiProvider)
                       : const Text('El asistente requiere cuenta y conexión.')
                 else if (model.screen == 'Planes')
                   subscriptions != null &&
@@ -1282,6 +1308,7 @@ class CoreShell extends StatelessWidget {
     _ModuleSearch(
       member: auth?.active,
       moduleAccess: moduleAccess,
+      experience: experience,
       onNavigate: model.navigate,
     ),
     DashboardScreen(
@@ -1416,6 +1443,27 @@ class CoreShell extends StatelessWidget {
           ),
         ),
       ),
+    if (auth?.active != null)
+      ListTile(
+        leading: const Icon(Icons.tune_outlined),
+        title: const Text('Perfil, módulos y flujos de la clínica'),
+        subtitle: Text(!experienceReady
+            ? 'Configuración compartida aún no disponible en el servidor.'
+            : auth?.active?.role == ClinicRole.admin
+              ? 'Elige secciones, submódulos, procesos y proveedor IA predeterminado.'
+              : 'Solo la administración puede modificar estas preferencias.'),
+        onTap: experienceRepository == null || !experienceReady ? null : () async {
+          await Navigator.push<void>(context, MaterialPageRoute(
+            builder: (_) => ClinicExperienceScreen(
+              member: auth!.active!,
+              initial: experience ?? ClinicExperience.defaults(),
+              repository: experienceRepository!,
+              ready: experienceReady,
+              onSaved: onExperienceSaved,
+            ),
+          ));
+        },
+      ),
     Text(
       'Configura tus herramientas',
       style: Theme.of(context).textTheme.titleLarge,
@@ -1493,6 +1541,7 @@ class CoreShell extends StatelessWidget {
                           repository: ai!,
                           member: auth!.active!,
                           configurationOnly: true,
+                          preferredProvider: experience?.defaultAiProvider,
                         ),
                       ),
                     ),
@@ -1592,10 +1641,12 @@ class _ModuleSearch extends StatefulWidget {
   const _ModuleSearch({
     required this.member,
     required this.moduleAccess,
+    required this.experience,
     required this.onNavigate,
   });
   final ClinicMembership? member;
   final ModuleAccess? moduleAccess;
+  final ClinicExperience? experience;
   final ValueChanged<String> onNavigate;
   @override
   State<_ModuleSearch> createState() => _ModuleSearchState();
@@ -1648,6 +1699,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
         .where(
           (p) =>
               navigationAllowed(p, widget.member, widget.moduleAccess) &&
+               (widget.experience?.visible(p) ?? true) &&
               normalize(p).contains(normalize(query.trim())),
         )
         .toList();

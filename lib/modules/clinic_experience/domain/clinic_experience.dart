@@ -1,0 +1,194 @@
+import '../../core/domain/section_catalog.dart';
+
+/// Only presentation preferences. Never grants permission, skips validation or
+/// changes the server-side clinical/audit contracts.
+enum ClinicPreset { general, smallAnimals, hospital, production, custom }
+
+enum ClinicalFlowMode { free, guided, mandatory }
+
+const protectedExperiencePages = <String>{
+  'Inicio', 'Ajustes', 'Mi cuenta y clínicas', 'Ayuda y soporte',
+  'Modo revisión', 'Más', 'Cálculos', 'Planes',
+};
+
+const configurableFlows = <String, String>{
+  'dose': 'Cálculo de dosis',
+  'prescription': 'Recetas',
+  'hospital': 'Hospitalización',
+  'inventory': 'Inventario y movimientos',
+  'clinical': 'Procedimientos clínicos',
+};
+
+const aiExperienceProviders = <String, String>{
+  'google': 'Google Gemini',
+  'openai': 'OpenAI',
+  'anthropic': 'Anthropic Claude',
+  'zai': 'Z.ai',
+};
+
+Set<String> get configurableExperiencePages => {
+  for (final group in sectionGroups)
+    for (final page in group.pages)
+      if (!protectedExperiencePages.contains(page)) page,
+};
+
+class ClinicExperience {
+  ClinicExperience({
+    required this.preset,
+    required Set<String> hiddenPages,
+    required Map<String, ClinicalFlowMode> flowModes,
+    required this.defaultAiProvider,
+    required this.revision,
+  }) : hiddenPages = Set.unmodifiable(hiddenPages),
+       flowModes = Map.unmodifiable(flowModes);
+
+  final ClinicPreset preset;
+  final Set<String> hiddenPages;
+  final Map<String, ClinicalFlowMode> flowModes;
+  /// Provider identifier, not a credential or key.
+  final String? defaultAiProvider;
+  final int revision;
+
+  static ClinicExperience defaults() => ClinicExperience(
+    preset: ClinicPreset.general,
+    hiddenPages: {},
+    flowModes: {},
+    defaultAiProvider: null,
+    revision: 0,
+  );
+
+  static ClinicExperience forPreset(
+    ClinicPreset preset, {
+    ClinicExperience? previous,
+  }) {
+    final enabledGroups = switch (preset) {
+      ClinicPreset.smallAnimals => <String>{
+        'Atención y expedientes', 'Medicamentos y herramientas',
+        'Administración y finanzas', 'Equipo y comunicación',
+        'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
+      },
+      ClinicPreset.hospital => <String>{
+        'Atención y expedientes', 'Medicamentos y herramientas',
+        'Administración y finanzas', 'Equipo y comunicación',
+        'Estadísticas y reportes', 'Cuenta y ajustes', 'Asistente IA',
+        'Revisión de catálogos',
+      },
+      ClinicPreset.production => <String>{
+        'Atención y expedientes', 'Medicamentos y herramientas',
+        'Producción animal', 'Administración y finanzas',
+        'Equipo y comunicación', 'Estadísticas y reportes',
+        'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
+      },
+      ClinicPreset.general || ClinicPreset.custom => <String>{
+        for (final group in sectionGroups) group.title,
+      },
+    };
+    final hide = <String>{
+      for (final group in sectionGroups)
+        if (!enabledGroups.contains(group.title))
+          for (final page in group.pages)
+            if (!protectedExperiencePages.contains(page)) page,
+    };
+    if (preset == ClinicPreset.smallAnimals) {
+      hide.addAll({'Planeación financiera', 'Productividad y semana'});
+    }
+    if (preset == ClinicPreset.production) {
+      hide.add('Hospitalización');
+    }
+    return ClinicExperience(
+      preset: preset,
+      hiddenPages: hide,
+      flowModes: previous?.flowModes ?? {},
+      defaultAiProvider: previous?.defaultAiProvider,
+      revision: previous?.revision ?? 0,
+    );
+  }
+
+  bool visible(String page) =>
+      protectedExperiencePages.contains(page) || !hiddenPages.contains(page);
+
+  ClinicalFlowMode flow(String key) =>
+      flowModes[key] ?? ClinicalFlowMode.guided;
+
+  ClinicExperience withPage(String page, bool visible) {
+    if (!configurableExperiencePages.contains(page)) return this;
+    final hidden = Set<String>.from(hiddenPages);
+    if (visible) {
+      hidden.remove(page);
+    } else {
+      hidden.add(page);
+    }
+    return copy(preset: ClinicPreset.custom, hiddenPages: hidden);
+  }
+
+  ClinicExperience withFlow(String key, ClinicalFlowMode mode) {
+    if (!configurableFlows.containsKey(key)) return this;
+    return copy(flowModes: {...flowModes, key: mode});
+  }
+
+  ClinicExperience copy({
+    ClinicPreset? preset,
+    Set<String>? hiddenPages,
+    Map<String, ClinicalFlowMode>? flowModes,
+    String? defaultAiProvider,
+    bool clearProvider = false,
+    int? revision,
+  }) => ClinicExperience(
+    preset: preset ?? this.preset,
+    hiddenPages: hiddenPages ?? this.hiddenPages,
+    flowModes: flowModes ?? this.flowModes,
+    defaultAiProvider: clearProvider ? null : defaultAiProvider ?? this.defaultAiProvider,
+    revision: revision ?? this.revision,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'schema_version': 1,
+    'preset': preset.name,
+    'hidden_pages': hiddenPages.toList()..sort(),
+    'workflow_modes': flowModes.map((key, mode) => MapEntry(key, mode.name)),
+    'default_ai_provider': defaultAiProvider,
+  };
+
+  factory ClinicExperience.fromServer(Map<String, dynamic> data) {
+    if (data['schema_version'] != 1 || data['revision'] is! int ||
+        (data['revision'] as int) < 0 || data['settings'] is! Map) {
+      throw const FormatException('Contrato de personalización desconocido.');
+    }
+    final settings = Map<String, dynamic>.from(data['settings'] as Map);
+    if (settings['schema_version'] != 1 ||
+        settings['preset'] is! String ||
+        settings['hidden_pages'] is! List ||
+        settings['workflow_modes'] is! Map) {
+      throw const FormatException('Preferencias de clínica inválidas.');
+    }
+    final preset = ClinicPreset.values.where((p) => p.name == settings['preset']).firstOrNull;
+    if (preset == null) throw const FormatException('Perfil desconocido.');
+    final rawPages = settings['hidden_pages'] as List;
+    if (rawPages.any((value) => value is! String ||
+        !configurableExperiencePages.contains(value)) ||
+        rawPages.toSet().length != rawPages.length) {
+      throw const FormatException('Submódulos desconocidos.');
+    }
+    final modes = Map<String, dynamic>.from(settings['workflow_modes'] as Map);
+    final parsedModes = <String, ClinicalFlowMode>{};
+    for (final entry in modes.entries) {
+      if (!configurableFlows.containsKey(entry.key) || entry.value is! String) {
+        throw const FormatException('Flujo desconocido.');
+      }
+      final parsed = ClinicalFlowMode.values.where((m) => m.name == entry.value).firstOrNull;
+      if (parsed == null) throw const FormatException('Modo de trabajo inválido.');
+      parsedModes[entry.key] = parsed;
+    }
+    final ai = settings['default_ai_provider'];
+    if (ai != null && (ai is! String || !aiExperienceProviders.containsKey(ai))) {
+      throw const FormatException('Proveedor predeterminado desconocido.');
+    }
+    return ClinicExperience(
+      preset: preset,
+      hiddenPages: rawPages.cast<String>().toSet(),
+      flowModes: parsedModes,
+      defaultAiProvider: ai as String?,
+      revision: data['revision'] as int,
+    );
+  }
+}
