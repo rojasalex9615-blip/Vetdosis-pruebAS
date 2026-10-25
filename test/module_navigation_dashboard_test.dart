@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/core/domain/module_access.dart';
+import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience.dart';
 import 'package:vetdosis_pro/modules/core/domain/navigation_access.dart';
 import 'package:vetdosis_pro/modules/core/presentation/module_access_boundary.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/dashboard_view_model.dart';
@@ -149,6 +150,38 @@ void main() {
     await model.load();
     expect(probe.reads, 0);
     model.dispose();
+  });
+
+  testWidgets('clinic preference hides inventory dashboard without revoking server permission', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final authRepository = auth_fixture.FakeAuth();
+    final auth = AuthViewModel(authRepository);
+    await auth.start();
+    final model = CoreViewModel(SettingsRepository(), const AppSettings());
+    final inventory = InventoryProbe();
+    final access = ModuleAccess.read(contract(enabled: 'inventory'));
+    final hidden = ClinicExperience.defaults()
+        .withPage('Inventario', false)
+        .withPage('Escanear producto', false);
+    expect(navigationAllowed('Inventario', member, access), isTrue);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model,
+      auth: auth,
+      inventory: inventory,
+      moduleAccess: access,
+      experience: hidden,
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Inventario'), findsNothing);
+    expect(find.textContaining('Existencias disponibles por unidad'), findsNothing);
+    expect(find.byTooltip('Escáner'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    model.dispose();
+    auth.dispose();
+    await authRepository.controller.close();
   });
 
   testWidgets('dashboard reloads when a same-session grant arrives and clears on revocation', (
