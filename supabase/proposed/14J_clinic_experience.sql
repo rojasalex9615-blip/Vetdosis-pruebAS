@@ -47,7 +47,7 @@ begin
     not exists(select 1 from public.clinic_members m
       where m.clinic_id=p_clinic and m.user_id=auth.uid())
  then raise exception 'clinic_experience_admin_required'; end if;
- if p_expected_revision < 0 or p_settings is null or
+ if p_expected_revision is null or p_expected_revision < 0 or p_settings is null or
     jsonb_typeof(p_settings) <> 'object' or
     (select count(*) from jsonb_object_keys(p_settings)) <> 6 or
     not (p_settings ?& array['schema_version','preset','hidden_pages','workflow_modes','default_ai_provider','hospital_notice_delivery']) or
