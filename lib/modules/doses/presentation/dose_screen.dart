@@ -548,7 +548,7 @@ class _DoseScreenState extends State<DoseScreen> {
                         builder: (context) => AlertDialog(
                           title: const Text('Segunda confirmación'),
                           content: Text(
-                            '${widget.recordedWeight == null ? '' : '$weightContext\n'}${selected!.name} · ${selected.species}\n${model.presentation!.brand}\nPeso: ${weight.text} kg · Dosis: ${selected!.prescribedDose?.display() ?? 'no disponible'} mg/kg\nVolumen: ≈ ${r.roundedVolume.display(places: 9)} ml\nVía: ${selected.route} · Intervalo: ${selected.interval}',
+                            '${widget.recordedWeight == null ? '' : '$weightContext\n'}${selected!.name} · ${selected.species}\n${model.presentation!.brand}\nPeso: ${weight.text} kg · Dosis: ${selected.prescribedDose?.display() ?? 'no disponible'} mg/kg\nVolumen: ≈ ${r.roundedVolume.display(places: 9)} ml\nVía: ${selected.route} · Intervalo: ${selected.interval}',
                           ),
                           actions: [
                             TextButton(
