@@ -40,17 +40,23 @@ class _ClinicExperienceBoundaryState extends State<ClinicExperienceBoundary> {
   @override
   void didUpdateWidget(covariant ClinicExperienceBoundary oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.member?.userId != widget.member?.userId ||
+    final identityChanged =
+        oldWidget.member?.userId != widget.member?.userId ||
         oldWidget.member?.clinicId != widget.member?.clinicId ||
-        oldWidget.repository != widget.repository ||
-        oldWidget.revision != widget.revision) {
+        oldWidget.repository != widget.repository;
+    if (identityChanged) {
+      // Never share preferences across sessions or clinic switches.
       settings = ClinicExperience.defaults();
       ready = false;
       reload();
+    } else if (oldWidget.revision != widget.revision) {
+      // A periodic permissions refresh does not invalidate an already loaded
+      // display preference. Authorization is checked separately.
+      reload(preserveOnFailure: true);
     }
   }
 
-  Future<void> reload() async {
+  Future<void> reload({bool preserveOnFailure = false}) async {
     final ticket = ++generation;
     final member = widget.member;
     final repo = widget.repository;
@@ -71,7 +77,7 @@ class _ClinicExperienceBoundaryState extends State<ClinicExperienceBoundary> {
         setState(() { settings = next; ready = true; });
       }
     } catch (_) {
-      if (mounted && ticket == generation) {
+      if (mounted && ticket == generation && !preserveOnFailure) {
         setState(() {
           settings = ClinicExperience.defaults();
           ready = false;
