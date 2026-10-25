@@ -4,13 +4,18 @@ import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience_repository.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/presentation/clinic_experience_screen.dart';
+import 'package:vetdosis_pro/modules/clinic_experience/presentation/clinic_experience_boundary.dart';
 
 class FakeExperienceRepository implements ClinicExperienceRepository {
   ClinicExperience stored = ClinicExperience.defaults();
   int saves = 0;
+  bool failReads = false;
 
   @override
-  Future<ClinicExperience> read(String clinicId) async => stored;
+  Future<ClinicExperience> read(String clinicId) async {
+    if (failReads) throw StateError('Synthetic network error');
+    return stored;
+  }
 
   @override
   Future<ClinicExperience> save(String clinicId, ClinicExperience value) async {
@@ -206,6 +211,45 @@ void main() {
     expect(repo.stored.visible('Hospitalización'), isTrue);
     expect(repo.stored.visible('Inventario'), isFalse);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('background permission refresh keeps preferences; clinic switch resets', (
+    tester,
+  ) async {
+    final repo = FakeExperienceRepository();
+    repo.stored = repo.stored.withPage('Hospitalización', false);
+    Widget show(ClinicMembership membership, int revision) => MaterialApp(
+      home: ClinicExperienceBoundary(
+        member: membership,
+        repository: repo,
+        revision: revision,
+        builder: (experience, ready, reload) => Text(
+          '${ready ? 'ready' : 'waiting'}:'
+          '${experience.visible('Hospitalización')}',
+          textDirection: TextDirection.ltr,
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(show(administrator, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('ready:false'), findsOneWidget);
+
+    // A background refresh failure must not reveal previously hidden pages.
+    repo.failReads = true;
+    await tester.pumpWidget(show(administrator, 1));
+    await tester.pumpAndSettle();
+    expect(find.text('ready:false'), findsOneWidget);
+
+    // Different clinic identity is never allowed to reuse stale preferences.
+    await tester.pumpWidget(show(const ClinicMembership(
+      clinicId: 'other-clinic',
+      clinicName: 'Otra clínica',
+      userId: 'admin',
+      role: ClinicRole.admin,
+    ), 2));
+    await tester.pumpAndSettle();
+    expect(find.text('waiting:true'), findsOneWidget);
   });
 
   testWidgets('admin can save preferences and non-admin cannot', (tester) async {
