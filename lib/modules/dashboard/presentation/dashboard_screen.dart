@@ -40,9 +40,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool openingCash = false;
 
   /// Combines server-provided navigation access with clinic preferences.
+  bool routeAuthorized(String page) =>
+      navigationAllowed(page, model.member, model.moduleAccess);
+
   bool routeVisible(String page) =>
-      navigationAllowed(page, model.member, model.moduleAccess) &&
-      (widget.isVisible?.call(page) ?? true);
+      routeAuthorized(page) && (widget.isVisible?.call(page) ?? true);
 
   void openPage(String page) {
     if (routeVisible(page)) widget.onNavigate(page);
@@ -464,26 +466,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       subtitle: Text(time(m.effectiveTime(t))),
                       onTap: () => openPage('Hospitalización'),
                     ),
-                if (routeVisible('Hospitalización'))
-                  ExpansionTile(
-                    title: const Text('Configurar avisos en este dispositivo'),
-                    children: [
-                      AlertPreferencesPanel(
-                        alerts: widget.alerts,
-                        onUpdated: () async {
-                          final a = widget.alerts;
-                          if (a?.scope != null && m.ward != null) {
-                            await a!.reconcile(
-                              '${m.member!.userId}:${m.member!.clinicId}:${m.member!.role.name}',
-                              m.ward!.tasks,
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
               ],
             ),
+            // Settings for alarms already on this device remain reachable even
+            // when a clinic hides the hospital navigation shortcut.
+            if (widget.alerts != null && routeAuthorized('Hospitalización'))
+              ExpansionTile(
+                title: const Text('Configurar avisos en este dispositivo'),
+                children: [
+                  AlertPreferencesPanel(
+                    alerts: widget.alerts,
+                    onUpdated: () async {
+                      final a = widget.alerts;
+                      if (a?.scope != null && m.ward != null) {
+                        await a!.reconcile(
+                          '${m.member!.userId}:${m.member!.clinicId}:${m.member!.role.name}',
+                          m.ward!.tasks,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
             if (m.canSummarize('agenda') && routeVisible('Agenda')) ...[
               panel('Próximas citas de hoy', 'Agenda', [
                 Text(
