@@ -140,6 +140,51 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               ),
             ),
           const SizedBox(height: 20),
+          Text('Notificaciones de hospitalización',
+              style: Theme.of(context).textTheme.titleLarge),
+          const Text(
+            'Elige por qué canales quieres que se envíen los avisos. '
+            'Teléfono significa notificación o alarma del dispositivo, '
+            'no una llamada ni un SMS. WhatsApp requiere una conexión '
+            'habilitada por la clínica y autorización del destinatario.',
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<HospitalNoticeDelivery>(
+            key: ValueKey('hospital-notice-${draft.hospitalNoticeDelivery.name}'),
+            initialValue: draft.hospitalNoticeDelivery,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'Canales preferidos',
+              border: OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: HospitalNoticeDelivery.phone,
+                child: Text('Teléfono (alarma del dispositivo)'),
+              ),
+              DropdownMenuItem(
+                value: HospitalNoticeDelivery.whatsapp,
+                child: Text('WhatsApp (en preparación)'),
+              ),
+              DropdownMenuItem(
+                value: HospitalNoticeDelivery.both,
+                child: Text('Ambos (en preparación)'),
+              ),
+            ],
+            onChanged: canEdit ? (channel) {
+              if (channel != null) {
+                setState(() =>
+                  draft = draft.copy(hospitalNoticeDelivery: channel));
+              }
+            } : null,
+          ),
+          const Text(
+            'Esta preferencia no activa WhatsApp ni desactiva las alarmas '
+            'existentes. El envío externo quedará sujeto a disponibilidad, '
+            'consentimiento, permisos de turno y pruebas con el proveedor. '
+            'Los avisos deben omitir datos clínicos sensibles.',
+          ),
+          const SizedBox(height: 20),
           Text('Proveedor IA predeterminado', style: Theme.of(context).textTheme.titleLarge),
           DropdownButtonFormField<String>(
             key: ValueKey('provider-${draft.defaultAiProvider ?? 'none'}'),

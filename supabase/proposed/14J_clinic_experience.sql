@@ -1,5 +1,6 @@
 -- Candidate for coordinated integration only. Do not apply directly to production.
 -- Presentation preferences NEVER grant server permissions or waive clinical checks.
+-- Hospital delivery mode is a requested channel, not an enabled outbound transport.
 begin;
 
 create table if not exists public.clinic_experience_settings (
@@ -29,7 +30,8 @@ begin
    return jsonb_build_object('schema_version',1,'revision',0,
      'settings', jsonb_build_object(
        'schema_version',1,'preset','general','hidden_pages','[]'::jsonb,
-       'workflow_modes','{}'::jsonb,'default_ai_provider',null));
+       'workflow_modes','{}'::jsonb,'default_ai_provider',null,
+       'hospital_notice_delivery','phone'));
  end if;
  return jsonb_build_object(
    'schema_version',1,'revision',row_data.revision,'settings',row_data.settings);
@@ -47,8 +49,8 @@ begin
  then raise exception 'clinic_experience_admin_required'; end if;
  if p_expected_revision < 0 or p_settings is null or
     jsonb_typeof(p_settings) <> 'object' or
-    (select count(*) from jsonb_object_keys(p_settings)) <> 5 or
-    not (p_settings ?& array['schema_version','preset','hidden_pages','workflow_modes','default_ai_provider']) or
+    (select count(*) from jsonb_object_keys(p_settings)) <> 6 or
+    not (p_settings ?& array['schema_version','preset','hidden_pages','workflow_modes','default_ai_provider','hospital_notice_delivery']) or
     p_settings->'schema_version' <> '1'::jsonb or
     p_settings->>'preset' not in ('general','smallAnimals','hospital','production','custom') or
     jsonb_typeof(p_settings->'hidden_pages') <> 'array' or
@@ -56,7 +58,9 @@ begin
     jsonb_typeof(p_settings->'workflow_modes') <> 'object' or
     (select count(*) from jsonb_object_keys(p_settings->'workflow_modes')) > 5 or
     (jsonb_typeof(p_settings->'default_ai_provider') <> 'null' and
-       p_settings->>'default_ai_provider' not in ('google','openai','anthropic','zai'))
+       p_settings->>'default_ai_provider' not in ('google','openai','anthropic','zai')) or
+    jsonb_typeof(p_settings->'hospital_notice_delivery') <> 'string' or
+    p_settings->>'hospital_notice_delivery' not in ('phone','whatsapp','both')
  then raise exception 'clinic_experience_invalid_settings'; end if;
 
  for page in select jsonb_array_elements_text(p_settings->'hidden_pages') loop

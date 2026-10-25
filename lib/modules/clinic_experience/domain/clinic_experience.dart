@@ -6,6 +6,16 @@ enum ClinicPreset { general, smallAnimals, hospital, production, custom }
 
 enum ClinicalFlowMode { free, guided, mandatory }
 
+/// Where the clinic wants hospital notices delivered. This is a routing
+/// preference, never evidence that WhatsApp delivery or opt-in is configured.
+/// Existing local alarms must not be disabled solely by changing this field.
+enum HospitalNoticeDelivery { phone, whatsapp, both }
+
+extension HospitalNoticeDeliveryChannels on HospitalNoticeDelivery {
+  bool get phoneSelected => this != HospitalNoticeDelivery.whatsapp;
+  bool get whatsappSelected => this != HospitalNoticeDelivery.phone;
+}
+
 const protectedExperiencePages = <String>{
   'Inicio', 'Ajustes', 'Mi cuenta y clínicas', 'Ayuda y soporte',
   'Modo revisión', 'Más', 'Cálculos', 'Planes',
@@ -38,6 +48,7 @@ class ClinicExperience {
     required Set<String> hiddenPages,
     required Map<String, ClinicalFlowMode> flowModes,
     required this.defaultAiProvider,
+    required this.hospitalNoticeDelivery,
     required this.revision,
   }) : hiddenPages = Set.unmodifiable(hiddenPages),
        flowModes = Map.unmodifiable(flowModes);
@@ -47,6 +58,7 @@ class ClinicExperience {
   final Map<String, ClinicalFlowMode> flowModes;
   /// Provider identifier, not a credential or key.
   final String? defaultAiProvider;
+  final HospitalNoticeDelivery hospitalNoticeDelivery;
   final int revision;
 
   static ClinicExperience defaults() => ClinicExperience(
@@ -54,6 +66,7 @@ class ClinicExperience {
     hiddenPages: {},
     flowModes: {},
     defaultAiProvider: null,
+    hospitalNoticeDelivery: HospitalNoticeDelivery.phone,
     revision: 0,
   );
 
@@ -100,6 +113,7 @@ class ClinicExperience {
       hiddenPages: hide,
       flowModes: previous?.flowModes ?? {},
       defaultAiProvider: previous?.defaultAiProvider,
+      hospitalNoticeDelivery: previous?.hospitalNoticeDelivery ?? HospitalNoticeDelivery.phone,
       revision: previous?.revision ?? 0,
     );
   }
@@ -132,12 +146,14 @@ class ClinicExperience {
     Map<String, ClinicalFlowMode>? flowModes,
     String? defaultAiProvider,
     bool clearProvider = false,
+    HospitalNoticeDelivery? hospitalNoticeDelivery,
     int? revision,
   }) => ClinicExperience(
     preset: preset ?? this.preset,
     hiddenPages: hiddenPages ?? this.hiddenPages,
     flowModes: flowModes ?? this.flowModes,
     defaultAiProvider: clearProvider ? null : defaultAiProvider ?? this.defaultAiProvider,
+    hospitalNoticeDelivery: hospitalNoticeDelivery ?? this.hospitalNoticeDelivery,
     revision: revision ?? this.revision,
   );
 
@@ -147,6 +163,7 @@ class ClinicExperience {
     'hidden_pages': hiddenPages.toList()..sort(),
     'workflow_modes': flowModes.map((key, mode) => MapEntry(key, mode.name)),
     'default_ai_provider': defaultAiProvider,
+    'hospital_notice_delivery': hospitalNoticeDelivery.name,
   };
 
   factory ClinicExperience.fromServer(Map<String, dynamic> data) {
@@ -183,11 +200,22 @@ class ClinicExperience {
     if (ai != null && (ai is! String || !aiExperienceProviders.containsKey(ai))) {
       throw const FormatException('Proveedor predeterminado desconocido.');
     }
+    final rawDelivery = settings['hospital_notice_delivery'] ?? 'phone';
+    if (rawDelivery is! String) {
+      throw const FormatException('Canal de hospitalización inválido.');
+    }
+    final delivery = HospitalNoticeDelivery.values.where(
+      (channel) => channel.name == rawDelivery,
+    ).firstOrNull;
+    if (delivery == null) {
+      throw const FormatException('Canal de hospitalización desconocido.');
+    }
     return ClinicExperience(
       preset: preset,
       hiddenPages: rawPages.cast<String>().toSet(),
       flowModes: parsedModes,
       defaultAiProvider: ai as String?,
+      hospitalNoticeDelivery: delivery,
       revision: data['revision'] as int,
     );
   }

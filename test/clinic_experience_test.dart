@@ -43,7 +43,10 @@ void main() {
   test('presets differ without changing permissions or saved workflow choices', () {
     final custom = ClinicExperience.defaults()
         .withFlow('dose', ClinicalFlowMode.free)
-        .copy(defaultAiProvider: 'openai');
+        .copy(
+          defaultAiProvider: 'openai',
+          hospitalNoticeDelivery: HospitalNoticeDelivery.both,
+        );
     final hospital = ClinicExperience.forPreset(ClinicPreset.hospital, previous: custom);
     final production = ClinicExperience.forPreset(ClinicPreset.production, previous: custom);
     expect(hospital.visible('Hospitalización'), true);
@@ -52,6 +55,8 @@ void main() {
     expect(hospital.visible('Producción y grandes especies'), false);
     expect(hospital.flow('dose'), ClinicalFlowMode.free);
     expect(production.defaultAiProvider, 'openai');
+    expect(production.hospitalNoticeDelivery, HospitalNoticeDelivery.both);
+    expect(hospital.hospitalNoticeDelivery, HospitalNoticeDelivery.both);
   });
 
   test('versions and unknown values fail closed instead of hiding routes', () {
@@ -68,6 +73,12 @@ void main() {
     final unsafe = {...settings, 'default_ai_provider': 'service_role'};
     expect(() => ClinicExperience.fromServer({...data, 'settings': unsafe}),
         throwsFormatException);
+    final wrongChannel = {...settings, 'hospital_notice_delivery': 'automatic_bypass'};
+    expect(() => ClinicExperience.fromServer({...data, 'settings': wrongChannel}),
+        throwsFormatException);
+    final wrongShape = {...settings, 'hospital_notice_delivery': <String, bool>{'phone': true}};
+    expect(() => ClinicExperience.fromServer({...data, 'settings': wrongShape}),
+        throwsFormatException);
     final duplicates = {...settings, 'hidden_pages': ['Agenda', 'Agenda']};
     expect(() => ClinicExperience.fromServer({...data, 'settings': duplicates}),
         throwsFormatException);
@@ -77,10 +88,14 @@ void main() {
     final a = ClinicExperience.defaults()
       .withPage('Inventario', false)
       .withFlow('dose', ClinicalFlowMode.mandatory)
-      .copy(defaultAiProvider: 'google');
+      .copy(
+        defaultAiProvider: 'google',
+        hospitalNoticeDelivery: HospitalNoticeDelivery.whatsapp,
+      );
     final wire = a.toJson();
     expect(wire.keys, containsAll([
       'preset', 'hidden_pages', 'workflow_modes', 'default_ai_provider',
+      'hospital_notice_delivery',
     ]));
     expect(wire.toString().contains('API_KEY'), false);
     final b = ClinicExperience.fromServer({
@@ -89,7 +104,26 @@ void main() {
     expect(b.visible('Inventario'), false);
     expect(b.flow('dose'), ClinicalFlowMode.mandatory);
     expect(b.defaultAiProvider, 'google');
+    expect(b.hospitalNoticeDelivery, HospitalNoticeDelivery.whatsapp);
+    expect(b.hospitalNoticeDelivery.phoneSelected, isFalse);
+    expect(b.hospitalNoticeDelivery.whatsappSelected, isTrue);
     expect(b.revision, 8);
+  });
+
+  test('default channel stays on device and old saved profile loads safely', () {
+    final defaults = ClinicExperience.defaults();
+    expect(defaults.hospitalNoticeDelivery, HospitalNoticeDelivery.phone);
+    expect(defaults.hospitalNoticeDelivery.phoneSelected, isTrue);
+    expect(defaults.hospitalNoticeDelivery.whatsappSelected, isFalse);
+    final legacy = defaults.toJson()..remove('hospital_notice_delivery');
+    final restored = ClinicExperience.fromServer({
+      'schema_version': 1, 'revision': 2, 'settings': legacy,
+    });
+    expect(restored.hospitalNoticeDelivery, HospitalNoticeDelivery.phone);
+    final both = restored.copy(hospitalNoticeDelivery: HospitalNoticeDelivery.both);
+    expect(both.hospitalNoticeDelivery.phoneSelected, isTrue);
+    expect(both.hospitalNoticeDelivery.whatsappSelected, isTrue);
+    expect(both.toJson().containsKey('phone_number'), false);
   });
 
   testWidgets('admin can save preferences and non-admin cannot', (tester) async {
