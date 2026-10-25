@@ -39,6 +39,7 @@ const sectionGroups = [
   ]),
   SectionGroup('Estadísticas y reportes', ['Estadísticas']),
   SectionGroup('Asistente IA', ['Asistente IA']),
+  SectionGroup('Revisión de catálogos', ['Modo revisión']),
   SectionGroup('Cuenta y ajustes', [
     'Mi cuenta y clínicas',
     'Ajustes',
