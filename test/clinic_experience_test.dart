@@ -102,7 +102,9 @@ void main() {
     )));
     expect(find.text('Personalización de clínica'), findsOneWidget);
     final button = find.text('Guardar configuración de la clínica');
-    await tester.ensureVisible(button);
+    await tester.scrollUntilVisible(
+      button, 220, scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(button);
     await tester.pumpAndSettle();
     expect(repo.saves, 1);
@@ -116,6 +118,10 @@ void main() {
       ready: true,
     )));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Guardar configuración de la clínica'), 220,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(tester.widget<FilledButton>(find.widgetWithText(
       FilledButton, 'Guardar configuración de la clínica',
     )).onPressed, isNull);
