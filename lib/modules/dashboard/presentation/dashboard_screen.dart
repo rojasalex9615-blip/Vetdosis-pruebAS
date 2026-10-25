@@ -750,8 +750,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ]),
-            if (m.member?.isPersonal == false &&
-                (m.agenda?['sections'] as Map?)?['tasks'] == true)
+            if (m.canShowTeamPanel('tasks'))
               panel('Tareas de hoy', 'Pendientes del equipo', [
                 unavailable(
                   'Agenda',
@@ -784,8 +783,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ]),
-            if (m.member?.isPersonal == false &&
-                (m.agenda?['sections'] as Map?)?['messages'] == true)
+            if (m.canShowTeamPanel('messages'))
               panel('Anuncios y avisos', 'Anuncios y avisos', [
                 unavailable(
                   'Agenda',

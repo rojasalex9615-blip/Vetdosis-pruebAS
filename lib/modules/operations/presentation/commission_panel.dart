@@ -108,7 +108,13 @@ class _CommissionPanelState extends State<CommissionPanel> {
           ),
           TextButton.icon(
             onPressed: busy ? null : () async {
-              final date = await showDatePicker(context: context, initialDate: payOn ?? DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)));
+              final tomorrow = DateUtils.dateOnly(DateTime.now()).add(const Duration(days: 1));
+              final date = await showDatePicker(
+                context: context,
+                initialDate: payOn != null && !payOn!.isBefore(tomorrow) ? payOn! : tomorrow,
+                firstDate: tomorrow,
+                lastDate: tomorrow.add(const Duration(days: 365)),
+              );
               if (date != null && mounted) setState(() => payOn = date);
             },
             icon: const Icon(Icons.event),

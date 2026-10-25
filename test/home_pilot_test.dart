@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vetdosis_pro/core/widgets/workspace_panel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetdosis_pro/core/app.dart';
@@ -64,6 +65,18 @@ Future<void> showDashboard(
 }
 
 void main() {
+
+  test('Clásico preserves the exact palette and avoids neumorphic overrides', () {
+    final base = ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
+      extensions: [const WorkspaceStyle(neumorphic: false)],
+    );
+    final themed = homePilotTheme(base);
+    expect(themed.colorScheme.primary, base.colorScheme.primary);
+    expect(themed.extension<WorkspaceStyle>()?.neumorphic, isFalse);
+    expect(identical(themed, base), isTrue);
+  });
+
   testWidgets('Denied summaries never read or display private pilot activity', (
     tester,
   ) async {

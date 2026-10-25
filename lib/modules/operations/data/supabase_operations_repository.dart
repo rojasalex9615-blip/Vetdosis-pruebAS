@@ -214,7 +214,7 @@ class SupabaseOperationsRepository
   ) async {
     await client.rpc(
       'ops_contact_save',
-      params: {'p_clinic': clinic, 'p_kind': kind, 'p_id': id, 'p_data': data},
+      params: {'p_clinic': clinic, 'p_kind': kind == 'suppliers' ? 'supplier' : kind, 'p_id': id, 'p_data': data},
     );
   }
 

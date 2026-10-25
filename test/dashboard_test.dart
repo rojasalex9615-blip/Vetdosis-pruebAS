@@ -65,6 +65,33 @@ HospitalTask task(
   snoozedUntil: snooze == null ? null : DateTime.parse(snooze),
 );
 void main() {
+  test('team panels respect server sections and old dashboard contracts', () {
+    final adminModel = DashboardViewModel(member: member(ClinicRole.admin));
+    adminModel.agenda = {
+      'appointments': [],
+      'tasks': [],
+      'messages': [],
+    };
+    expect(adminModel.canShowTeamPanel('tasks'), isTrue);
+    expect(adminModel.canShowTeamPanel('messages'), isTrue);
+    adminModel.agenda = {
+      'tasks': [],
+      'messages': [],
+      'sections': {'tasks': false, 'messages': true},
+    };
+    expect(adminModel.canShowTeamPanel('tasks'), isFalse);
+    expect(adminModel.canShowTeamPanel('messages'), isTrue);
+    adminModel.agenda = null;
+    adminModel.errors['Agenda'] = 'No se pudo cargar';
+    expect(adminModel.canShowTeamPanel('tasks'), isTrue);
+    adminModel.dispose();
+
+    final personal = DashboardViewModel(member: member(ClinicRole.estilista));
+    personal.agenda = {'tasks': [], 'messages': []};
+    expect(personal.canShowTeamPanel('tasks'), isFalse);
+    personal.dispose();
+  });
+
   test(
     'Partial failure preserves agenda and never invents zero stock',
     () async {

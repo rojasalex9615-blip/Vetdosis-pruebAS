@@ -218,7 +218,9 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     final saved = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => RxEntryScreen(
       title: 'Horario para puntualidad',
       initial: {
-        'start': current?['start_local'] ?? '09:00',
+        'start': current?['start_local'] == null
+            ? '09:00'
+            : '${current!['start_local']}'.split(':').take(2).join(':'),
         'weekdays': (current?['weekdays'] as List? ?? [1,2,3,4,5]).join(','),
         'grace': '${current?['grace_minutes'] ?? 10}',
       },
