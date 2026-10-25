@@ -1187,6 +1187,7 @@ class CoreShell extends StatelessWidget {
                       auth?.active?.clinicId,
                       auth?.offline,
                       moduleAccess,
+                      experience?.revision,
                     )),
                     model: DashboardViewModel(
                       member: auth?.active,
@@ -1195,6 +1196,7 @@ class CoreShell extends StatelessWidget {
                     ),
                     offline: auth?.offline ?? false,
                     statisticsOnly: true,
+                    isVisible: allowed,
                     onNavigate: model.navigate,
                   )
                 else if (model.screen == 'Respaldo' ||
@@ -1318,6 +1320,7 @@ class CoreShell extends StatelessWidget {
         auth?.active?.role,
         auth?.offline,
         moduleAccess,
+        experience?.revision,
       )),
       model: DashboardViewModel(
         member: auth?.active,
@@ -1332,6 +1335,7 @@ class CoreShell extends StatelessWidget {
       offline: auth?.offline ?? false,
       homePilot: true,
       alerts: hospitalAlerts,
+      isVisible: allowed,
       onNavigate: model.navigate,
     ),
     FirstStepsBanner(

@@ -22,11 +22,13 @@ class DashboardScreen extends StatefulWidget {
     this.statisticsOnly = false,
     this.homePilot = false,
     this.alerts,
+    this.isVisible,
   });
   final DashboardViewModel model;
   final ValueChanged<String> onNavigate;
   final bool offline, statisticsOnly, homePilot;
   final HospitalAlerts? alerts;
+  final bool Function(String)? isVisible;
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -36,6 +38,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final search = TextEditingController();
   Timer? timer;
   bool openingCash = false;
+
+  /// Combines server-provided navigation access with clinic preferences.
+  bool routeVisible(String page) =>
+      navigationAllowed(page, model.member, model.moduleAccess) &&
+      (widget.isVisible?.call(page) ?? true);
+
+  void openPage(String page) {
+    if (routeVisible(page)) widget.onNavigate(page);
+  }
   @override
   void initState() {
     super.initState();
@@ -72,7 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: sectionColor(page),
         trailing: IconButton(
           tooltip: 'Abrir $title',
-          onPressed: () => widget.onNavigate(page),
+          onPressed: () => openPage(page),
           icon: const Icon(Icons.chevron_right),
         ),
         child: Padding(
@@ -127,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   List<(String, int)>? get activity {
     if (model.member == null ||
-        !model.canSummarize('agenda') ||
+        !model.canSummarize('agenda') || !routeVisible('Agenda') ||
         model.agenda == null) {
       return null;
     }
@@ -146,15 +157,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<(String, String, IconData)> get summaryMetrics => [
-    if (model.member != null && model.canSeePatients)
+    if (model.member != null && model.canSeePatients && routeVisible('Pacientes'))
       ('Pacientes', model.patientCount?.toString() ?? '—', Icons.pets_outlined),
-    if (model.member != null && model.canSummarize('agenda'))
+    if (model.member != null && model.canSummarize('agenda') && routeVisible('Agenda'))
       (
         'Citas por venir',
         model.agenda == null ? '—' : '${model.upcoming.length}',
         Icons.calendar_month_outlined,
       ),
-    if (model.member != null && model.canSummarize('hospital'))
+    if (model.member != null && model.canSummarize('hospital') && routeVisible('Hospitalización'))
       (
         'En hospital',
         model.ward == null ? '—' : '${model.ward!.stays.length}',
@@ -162,7 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     if (model.member != null &&
         !model.member!.isPersonal &&
-        model.canSummarize('agenda'))
+        model.canSummarize('agenda') && routeVisible('Pendientes del equipo'))
       (
         'Tareas visibles',
         model.agenda == null ? '—' : '${model.pendingTasks.length}',
@@ -296,7 +307,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (m.updated != null) Text('Última consulta: ${time(m.updated!)}'),
           if (m.busy) const LinearProgressIndicator(),
           if (widget.statisticsOnly &&
-              navigationAllowed('Estadísticas', m.member, m.moduleAccess))
+              routeVisible('Estadísticas'))
             statisticsPanel,
           if (widget.homePilot && !widget.statisticsOnly) ...[
             const SizedBox(height: 16),
@@ -304,7 +315,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
           if (!widget.homePilot &&
               !widget.statisticsOnly &&
-              navigationAllowed('Estadísticas', m.member, m.moduleAccess))
+              routeVisible('Estadísticas'))
             statisticsPanel,
           if (!widget.statisticsOnly) ...[
             const SizedBox(height: 16),
@@ -324,10 +335,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ('Cálculo rápido', 'Cálculo rápido'),
                     ('Hospital', 'Hospitalización'),
                   ])
-                    if (navigationAllowed(action.$2, m.member, m.moduleAccess))
+                    if (routeVisible(action.$2))
                       action,
                 ],
-                onNavigate: widget.onNavigate,
+                onNavigate: openPage,
               ),
               const SizedBox(height: 16),
               Wrap(
@@ -340,9 +351,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ('Cálculos clínicos', 'Cálculos clínicos'),
                     ('Escáner', 'Escanear producto'),
                   ])
-                    if (navigationAllowed(action.$2, m.member, m.moduleAccess))
+                    if (routeVisible(action.$2))
                       OutlinedButton.icon(
-                        onPressed: () => widget.onNavigate(action.$2),
+                        onPressed: () => openPage(action.$2),
                         icon: Icon(sectionIcon(action.$2)),
                         label: Text(action.$1),
                       ),
@@ -366,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ('Cálculos clínicos', 'Cálculos clínicos'),
                     ('Escáner', 'Escanear producto'),
                   ])
-                    if (navigationAllowed(action.$2, m.member, m.moduleAccess))
+                    if (routeVisible(action.$2))
                       ConstrainedBox(
                         constraints: BoxConstraints(
                           maxWidth: MediaQuery.sizeOf(context).width - 48,
@@ -375,24 +386,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           label: action.$1,
                           icon: sectionIcon(action.$2),
                           style: VetActionStyle.neutral,
-                          onPressed: () => widget.onNavigate(action.$2),
+                          onPressed: () => openPage(action.$2),
                         ),
                       ),
                 ],
               ),
             if (widget.homePilot &&
-                navigationAllowed('Estadísticas', m.member, m.moduleAccess))
+                routeVisible('Estadísticas'))
               ExpansionTile(
                 title: const Text('Ver estadísticas'),
                 children: [statisticsPanel],
               ),
+            if (routeVisible('Hospitalización') || routeVisible('Agenda') || routeVisible('Inventario'))
             panel(
               'Alertas y recordatorios',
-              navigationAllowed('Hospitalización', m.member, m.moduleAccess)
+              routeVisible('Hospitalización')
                   ? 'Hospitalización'
                   : 'Agenda',
               [
-                if (m.canSummarize('hospital'))
+                if (m.canSummarize('hospital') && routeVisible('Hospitalización'))
                   unavailable(
                     'Hospitalización',
                     m.ward != null,
@@ -408,12 +420,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             subtitle: Text(
                               'Horario: ${time(m.effectiveTime(t))}',
                             ),
-                            onTap: () => widget.onNavigate('Hospitalización'),
+                            onTap: () => openPage('Hospitalización'),
                           ),
                       ],
                     ),
                   ),
-                if (m.canSummarize('inventory') &&
+                if (m.canSummarize('inventory') && routeVisible('Inventario') &&
                     widget.alerts?.stockWarnings != false)
                   unavailable(
                     'Inventario',
@@ -430,12 +442,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             subtitle: Text(
                               'Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}',
                             ),
-                            onTap: () => widget.onNavigate('Inventario'),
+                            onTap: () => openPage('Inventario'),
                           ),
                       ],
                     ),
                   ),
-                if (m.canSummarize('hospital') &&
+                if (m.canSummarize('hospital') && routeVisible('Hospitalización') &&
                     (widget.alerts?.leadMinutes ?? 0) > 0)
                   for (final t
                       in m.nextDoses
@@ -450,13 +462,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'Próxima dosis · ${m.patient(t)} · ${t.label}',
                       ),
                       subtitle: Text(time(m.effectiveTime(t))),
-                      onTap: () => widget.onNavigate('Hospitalización'),
+                      onTap: () => openPage('Hospitalización'),
                     ),
-                if (navigationAllowed(
-                  'Hospitalización',
-                  m.member,
-                  m.moduleAccess,
-                ))
+                if (routeVisible('Hospitalización'))
                   ExpansionTile(
                     title: const Text('Configurar avisos en este dispositivo'),
                     children: [
@@ -476,7 +484,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
               ],
             ),
-            if (m.canSummarize('agenda')) ...[
+            if (m.canSummarize('agenda') && routeVisible('Agenda')) ...[
               panel('Próximas citas de hoy', 'Agenda', [
                 Text(
                   m.clinicTimezone == null
@@ -496,7 +504,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           subtitle: Text(
                             '${time(m.starts(a)!)} · ${a['kind']}',
                           ),
-                          onTap: () => widget.onNavigate('Agenda'),
+                          onTap: () => openPage('Agenda'),
                         ),
                     ],
                   ),
@@ -518,15 +526,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           subtitle: Text(
                             '${time(m.starts(a)!)} · ${a['state']}',
                           ),
-                          onTap: () => widget.onNavigate('Agenda'),
+                          onTap: () => openPage('Agenda'),
                         ),
                     ],
                   ),
                 ),
               ]),
             ],
-            if (m.canSummarize('inventory')) ...[
-              panel('Inventario', 'Inventario', [
+            if (m.canSummarize('inventory') && (routeVisible('Inventario') || routeVisible('Caja'))) ...[
+              if (routeVisible('Inventario')) panel('Inventario', 'Inventario', [
                 unavailable(
                   'Inventario',
                   m.stock != null,
@@ -536,7 +544,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Text(
                         '${m.products.length} artículos activos · ${m.lowStock.length} por revisar',
                       ),
-                      if (m.canSeeClinicSales)
+                      if (m.canSeeClinicSales && routeVisible('Caja'))
                         metrics([
                           (
                             'Valor a costo',
@@ -587,13 +595,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             subtitle: Text(
                               'Disponible: ${p['available_stock']} ${p['stock_unit']}',
                             ),
-                            onTap: () => widget.onNavigate('Inventario'),
+                            onTap: () => openPage('Inventario'),
                           ),
                     ],
                   ),
                 ),
               ]),
-              panel('Caja del turno', 'Caja', [
+              if (routeVisible('Caja')) panel('Caja del turno', 'Caja', [
                 unavailable(
                   'Inventario',
                   m.stock != null,
@@ -616,7 +624,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'Tu caja está abierta · fondo inicial: ${money(m.ownShift!['opening_cash'])}',
                         ),
                         FilledButton(
-                          onPressed: () => widget.onNavigate('Caja'),
+                          onPressed: () => openPage('Caja'),
                           child: const Text('Venta o revisión del turno'),
                         ),
                       ],
@@ -633,13 +641,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           subtitle: Text(
                             'Contado: ${money(sh['counted_cash'])}',
                           ),
-                          onTap: () => widget.onNavigate('Caja'),
+                          onTap: () => openPage('Caja'),
                         ),
                     ],
                   ),
                 ),
               ]),
-              if (m.canSeeClinicSales)
+              if (m.canSeeClinicSales && routeVisible('Caja'))
                 panel('Ventas de hoy', 'Caja', [
                   unavailable(
                     'Inventario',
@@ -692,7 +700,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ]),
             ],
-            if (m.canSummarize('hospital'))
+            if (m.canSummarize('hospital') && routeVisible('Hospitalización'))
               panel('Próximas dosis', 'Hospitalización', [
                 unavailable(
                   'Hospitalización',
@@ -707,13 +715,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ListTile(
                           title: Text('${m.patient(t)} · ${t.label}'),
                           subtitle: Text(time(m.effectiveTime(t))),
-                          onTap: () => widget.onNavigate('Hospitalización'),
+                          onTap: () => openPage('Hospitalización'),
                         ),
                     ],
                   ),
                 ),
               ]),
-            if (m.member != null && m.commissions != null)
+            if (m.member != null && m.commissions != null && routeVisible('Servicios'))
               panel('Mis comisiones', 'Servicios', [
                 Text(
                   'Saldo de servicios cobrados pendiente de liquidar: ${money(m.ownCommission?['amount'] ?? '0')}',
@@ -726,7 +734,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'El porcentaje se configura por servicio. Solo cuentan ventas vigentes.',
                 ),
               ]),
-            if (m.member?.isPersonal == false && m.attendanceWeek != null)
+            if (m.member?.isPersonal == false && m.attendanceWeek != null && routeVisible('Checado'))
               panel('Puntualidad y asistencia', 'Checado', [
                 if (m.attendanceWeek!['week_summary'] is Map) ...[
                   Text(
@@ -751,7 +759,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ]),
             if (m.member?.isPersonal == false &&
-                (m.agenda?['sections'] as Map?)?['tasks'] == true)
+                (m.agenda?['sections'] as Map?)?['tasks'] == true &&
+                routeVisible('Pendientes del equipo'))
               panel('Tareas de hoy', 'Pendientes del equipo', [
                 unavailable(
                   'Agenda',
@@ -773,11 +782,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                           ),
                           onTap: () =>
-                              widget.onNavigate('Pendientes del equipo'),
+                              openPage('Pendientes del equipo'),
                         ),
                       TextButton(
                         onPressed: () =>
-                            widget.onNavigate('Pendientes del equipo'),
+                            openPage('Pendientes del equipo'),
                         child: const Text('Crear o revisar pendientes'),
                       ),
                     ],
@@ -785,7 +794,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ]),
             if (m.member?.isPersonal == false &&
-                (m.agenda?['sections'] as Map?)?['messages'] == true)
+                (m.agenda?['sections'] as Map?)?['messages'] == true &&
+                routeVisible('Anuncios y avisos'))
               panel('Anuncios y avisos', 'Anuncios y avisos', [
                 unavailable(
                   'Agenda',
@@ -803,7 +813,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       TextButton(
-                        onPressed: () => widget.onNavigate('Anuncios y avisos'),
+                        onPressed: () => openPage('Anuncios y avisos'),
                         child: const Text('Ver avisos'),
                       ),
                     ],
