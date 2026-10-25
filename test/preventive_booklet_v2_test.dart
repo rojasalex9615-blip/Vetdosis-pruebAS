@@ -9,6 +9,7 @@ import 'package:vetdosis_pro/modules/patients/domain/preventive_repository.dart'
 import 'package:vetdosis_pro/modules/patients/domain/preventive_coverage.dart';
 import 'package:vetdosis_pro/modules/patients/domain/patient_models.dart';
 import 'package:vetdosis_pro/modules/patients/presentation/preventive_screen.dart';
+import 'package:vetdosis_pro/modules/patients/data/supabase_patient_repository.dart';
 
 Map<String, dynamic> bookletData() => {
   'schema_version': 2,
@@ -176,6 +177,32 @@ void main() {
       );
     },
   );
+  test('PostgreSQL multiline base64 evidence decodes and remains MIME-checked', () {
+    final bytes = Uint8List.fromList([
+      ...utf8.encode('%PDF-1.4\n'),
+      ...List<int>.generate(140, (index) => (index * 37) % 256),
+    ]);
+    final encoded = base64Encode(bytes);
+    final wrapped = encoded.replaceAllMapped(
+      RegExp('.{1,76}'),
+      (m) => '${m.group(0)}\n',
+    );
+    expect(wrapped, contains('\n'));
+    expect(decodePreventiveEvidence(wrapped, 'application/pdf'), bytes);
+    expect(
+      decodePreventiveEvidence(' $wrapped \n', 'application/pdf'),
+      bytes,
+    );
+    expect(
+      () => decodePreventiveEvidence(wrapped, 'image/jpeg'),
+      throwsFormatException,
+    );
+    expect(
+      () => decodePreventiveEvidence('%%%invalid%%%', 'application/pdf'),
+      throwsFormatException,
+    );
+  });
+
   test(
     'Sharing omits private notes, sources, files and unconfirmed historical next dates',
     () async {
