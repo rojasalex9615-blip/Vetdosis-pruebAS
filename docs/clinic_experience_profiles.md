@@ -1,6 +1,6 @@
 # Perfiles de clínica y flujos configurables (candidato beta)
 
-Rama independiente sobre la integración visual/clínica PR #26. La instalación SQL remota queda pendiente; ni las pruebas locales ni un APK acreditan disponibilidad del RPC en producción.
+Rama independiente sobre la integración visual/clínica PR #26. La migración `clinic_experience_preferences_beta` (versión `20261025184345`) fue aplicada únicamente a Supabase **Pruebas** el 25-oct-2026. No está instalada en producción ni se ha validado todavía en una APK firmada.
 
 ## Contratos
 - Perfil general, pequeñas especies, hospital, producción o personalizado.
@@ -19,13 +19,17 @@ Rama independiente sobre la integración visual/clínica PR #26. La instalación
 
 ## Despliegue y pruebas pendientes
 1. Revisar prerequisitos \`public.clinics\`, \`public.clinic_members\`, \`private.has_clinic_role\`, y compatibilidad con SQL de integración, incluyendo rol personal.
-2. Aplicar una migración versionada a **Pruebas**; el archivo \`supabase/proposed/14J_clinic_experience.sql\` es candidato, no desplegado ni una entrada de migración definitiva.
-3. Validar HTTP/RPC con dos clínicas, dos administradores concurrentes, auxiliares, sesiones anónimas y cambios de membresía; verificar control de revisiones y listas desconocidas.
+2. **Completado en Pruebas:** migración `clinic_experience_preferences_beta`, origen `supabase/proposed/14J_clinic_experience.sql`. Pendiente: integración al historial de migraciones del repositorio antes de producción.
+3. **Parcial:** se probó el rol `authenticated` con lectura, escritura, revisión obsoleta/nula y bloqueo entre clínicas en transacciones revertidas. Faltan sesiones de app reales con auxiliares, dos administradores concurrentes, usuario anónimo y revocaciones de membresía.
 4. Pruebas de widget y navegación: cambiar de clínica limpia inmediatamente preferencias; Ajustes continúa visible; cambios de perfil ocultan rutas sin conceder derechos; al no existir RPC mostrar secciones habituales sin simular guardados.
 5. Implementar guías y transiciones obligatorias **por proceso** en cliente y servidor con pruebas de acceso directo, cambios de permisos durante la operación y excepciones clínicas antes de marcar el modo obligatorio como operativo.
 6. Validación en APK Android y revisión por integración (no fusionar ramas clínicas sin resolver CI).
 7. Canales hospitalización: simular teléfono, WhatsApp y ambos; ausencia de proveedor, número sin consentimiento, turno revocado, cambio de clínica, desactivación de notificaciones del sistema y fallos de red. No enviar por WhatsApp desde esta configuración; exigir backend auditado.
-8. Actualizar el candidato SQL en la rama: admite `hospital_notice_delivery` y conserva el default `phone`. La base Pruebas todavía no lo tiene aplicado hasta validación y despliegue explícito.
+8. **Completado en Pruebas:** la base ahora reconoce `hospital_notice_delivery` y conserva el predeterminado `phone`. No hay envíos reales de WhatsApp ni transporte activado por esta migración.
+
+## Supabase Security Advisor
+- `rls_enabled_no_policy` en `public.clinic_experience_settings` es intencional: se revocó el acceso directo de usuarios y se usan exclusivamente las funciones verificadas.
+- `authenticated_security_definer_function_executable` indica que los RPC privilegiados `clinic_experience_read/save` están expuestos a usuarios autenticados. Es intencional, pues comprueban membresía/rol en servidor, pero debe volverse a revisar con sesiones reales antes de producción. https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
 
 ## Criterios de seguridad
 Administración del workspace es independiente del criterio MVZ; admins eligen la apariencia pero no pueden forzar el bypass de comprobaciones clínicas. El proveedor de IA es un identificador público, jamás una API key. Las claves reales se gestionan en el gateway seguro existente.
