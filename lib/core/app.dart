@@ -370,7 +370,7 @@ class CoreShell extends StatelessWidget {
       auth?.offline == false &&
       auth?.active?.userId == member.userId &&
       auth?.active?.clinicId == member.clinicId &&
-      allowed('Hospitalización') &&
+      serverAllowed('Hospitalización') &&
       [
         ClinicRole.admin,
         ClinicRole.mvz,
@@ -391,17 +391,17 @@ class CoreShell extends StatelessWidget {
     if (member == null ||
         !hospitalWeightContext(member) ||
         member.clinicId != weight.clinicId ||
-        !allowed('Cálculo rápido')) {
+        !serverAllowed('Cálculo rápido')) {
       return;
     }
     Future<bool> current(RecordedPatientWeight value) async {
-      if (!hospitalWeightContext(member) || !allowed('Cálculo rápido')) {
+      if (!hospitalWeightContext(member) || !serverAllowed('Cálculo rápido')) {
         return false;
       }
       final valid = await validate(value);
       return valid &&
           hospitalWeightContext(member) &&
-          allowed('Cálculo rápido');
+          serverAllowed('Cálculo rápido');
     }
 
     if (!await current(weight) || !context.mounted) return;
@@ -426,9 +426,12 @@ class CoreShell extends StatelessWidget {
     );
   }
 
+  // Authorization is independent of the clinic's navigation preferences.
+  bool serverAllowed(String page) =>
+      navigationAllowed(page, auth?.active, moduleAccess);
+
   bool allowed(String page) =>
-      navigationAllowed(page, auth?.active, moduleAccess) &&
-      (experience?.visible(page) ?? true);
+      serverAllowed(page) && (experience?.visible(page) ?? true);
   Future<void> openAccount(BuildContext context) async {
     if (auth == null) return;
     await Navigator.push(
@@ -720,7 +723,9 @@ class CoreShell extends StatelessWidget {
                 const SizedBox(height: 28),
                 if (auth?.active != null &&
                     moduleAccess != null &&
-                    !allowed(model.screen))
+                    !allowed(model.screen) &&
+                    !(model.screen == 'Hospitalización' &&
+                        serverAllowed('Hospitalización')))
                   const Text(
                     'Este apartado no está disponible con tus permisos actuales.',
                   )
@@ -933,7 +938,7 @@ class CoreShell extends StatelessWidget {
                                 clinical: clinical,
                                 contextIsCurrent: hospitalWeightContext,
                                 sessionChanges: auth,
-                                onCalculateWeight: allowed('Cálculo rápido')
+                                onCalculateWeight: serverAllowed('Cálculo rápido')
                                     ? (weight, validate) =>
                                           hospitalWeightCalculation(
                                             context,
@@ -1557,7 +1562,7 @@ class CoreShell extends StatelessWidget {
             }
           },
         ),
-    if (allowed('Hospitalización')) ...[
+    if (serverAllowed('Hospitalización')) ...[
       const Divider(),
       Text(
         'Alertas y recordatorios',
