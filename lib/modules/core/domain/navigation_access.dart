@@ -18,7 +18,10 @@ bool navigationAllowed(
   }
   return switch (page) {
     'Modo revisión' => role == ClinicRole.admin,
+    'Planeación financiera' => role == ClinicRole.admin,
+    'Cálculos' ||
     'Cálculo rápido' ||
+    'Operaciones de dosis' ||
     'Cálculos clínicos' => [ClinicRole.admin, ClinicRole.mvz].contains(role),
     'Hospitalización' || 'Receta' when access == null => [
       ClinicRole.admin,
@@ -31,7 +34,7 @@ bool navigationAllowed(
     'Respaldo' ||
     'Estadísticas y respaldo' when access == null => role == ClinicRole.admin,
     'Estadísticas' || 'Respaldo' || 'Estadísticas y respaldo' => true,
-    'Equipo y avisos' || 'Pendientes del equipo' => !member.isPersonal,
+    'Equipo y avisos' || 'Anuncios y avisos' || 'Pendientes del equipo' || 'Productividad y semana' => !member.isPersonal,
     'Checado' => !member.isPersonal,
     _ => true,
   };

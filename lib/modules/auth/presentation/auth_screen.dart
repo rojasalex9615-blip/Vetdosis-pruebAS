@@ -1,4 +1,6 @@
 import 'team_duty_screen.dart';
+import '../../../core/widgets/neu_identity.dart';
+import '../../../core/widgets/workspace_panel.dart';
 import '../../permissions/domain/permission_repository.dart';
 import '../../permissions/presentation/permission_screen.dart';
 import '../domain/auth_repository.dart';
@@ -9,9 +11,10 @@ import '../domain/clinic_membership.dart';
 import 'auth_view_model.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key, required this.model, this.configured = true});
+  const AuthScreen({super.key, required this.model, this.configured = true, this.initialRegister = false});
   final AuthViewModel? model;
   final bool configured;
+  final bool initialRegister;
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
@@ -22,8 +25,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final _clinic = TextEditingController();
   final _code = TextEditingController();
   final _form = GlobalKey<FormState>();
-  bool _register = false;
+  late bool _register = widget.initialRegister;
   bool _reset = false;
+  bool _showPassword = false;
   @override
   void dispose() {
     for (final field in [_email, _password, _clinic, _code]) {
@@ -44,6 +48,11 @@ class _AuthScreenState extends State<AuthScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
+                if (Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true) ...[
+                  const SizedBox(height: 12),
+                  const VetDosisBrand(large: true),
+                  const SizedBox(height: 20),
+                ],
                 Text(
                   model?.signedIn == true ? 'Tu clínica' : 'Bienvenido',
                   style: Theme.of(context).textTheme.headlineMedium,
@@ -105,7 +114,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                     ),
                   ),
-                  FilledButton(
+                  NeuPrimaryButton(
                     onPressed: model.busy
                         ? null
                         : () {
@@ -149,10 +158,23 @@ class _AuthScreenState extends State<AuthScreen> {
                         if (!_reset)
                           TextFormField(
                             controller: _password,
-                            obscureText: true,
+                            obscureText: !_showPassword,
                             autofillHints: const [AutofillHints.password],
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Contraseña',
+                              suffixIcon: IconButton(
+                                tooltip: _showPassword
+                                    ? 'Ocultar contraseña'
+                                    : 'Mostrar contraseña',
+                                onPressed: () => setState(
+                                  () => _showPassword = !_showPassword,
+                                ),
+                                icon: Icon(
+                                  _showPassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                ),
+                              ),
                             ),
                             validator: (value) =>
                                 (value?.length ?? 0) >= (_register ? 8 : 1)

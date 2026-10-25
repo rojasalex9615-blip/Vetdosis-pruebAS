@@ -1,3 +1,4 @@
+import 'neu_identity.dart';
 import 'package:flutter/material.dart';
 
 class WorkspaceStyle extends ThemeExtension<WorkspaceStyle> {
@@ -20,25 +21,12 @@ class WorkspacePanel extends StatelessWidget {
     if (theme.extension<WorkspaceStyle>()?.neumorphic != true) {
       return Card(child: child);
     }
-    final dark = theme.brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: dark ? const Color(0xFF131A20) : const Color(0xFFCDD6DE),
-            offset: const Offset(6, 6),
-            blurRadius: 14,
-          ),
-          BoxShadow(
-            color: dark ? const Color(0xFF34424B) : Colors.white,
-            offset: const Offset(-6, -6),
-            blurRadius: 14,
-          ),
-        ],
+        boxShadow: neuShadows(theme.brightness == Brightness.dark),
       ),
       child: Material(
         color: Colors.transparent,
@@ -52,7 +40,10 @@ class WorkspacePanel extends StatelessWidget {
 
 IconData sectionIcon(String page) => switch (page) {
   'Inicio' => Icons.dashboard_outlined,
-  'Cálculos' || 'Cálculo rápido' => Icons.calculate_outlined,
+  'Cálculos' ||
+  'Cálculo rápido' ||
+  'Vademécum' ||
+  'Operaciones de dosis' => Icons.calculate_outlined,
   'Cálculos clínicos' => Icons.science_outlined,
   'Escanear producto' => Icons.qr_code_scanner,
   'Hospitalización' => Icons.local_hospital_outlined,
@@ -68,6 +59,7 @@ IconData sectionIcon(String page) => switch (page) {
   'Ayuda y soporte' => Icons.help_outline,
   'Estadísticas' => Icons.bar_chart_outlined,
   'Respaldo' || 'Estadísticas y respaldo' => Icons.backup_outlined,
+  'Planeación financiera' => Icons.trending_up,
   'Caja' => Icons.point_of_sale_outlined,
   'Equipo y avisos' || 'Pendientes del equipo' => Icons.forum_outlined,
   'Inventario' => Icons.inventory_2_outlined,
