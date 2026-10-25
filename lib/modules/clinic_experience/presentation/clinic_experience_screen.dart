@@ -114,6 +114,21 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                         onChanged: canEdit ? (value) =>
                             setState(() => draft = draft.withPage(page, value)) : null,
                       ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: canEdit ? () {
+                        setState(() {
+                          draft = draft.restoreModuleVisibility(group.title);
+                          message = 'Visibilidad predeterminada de '
+                              '${group.title} recuperada. Guarda para '
+                              'aplicar el cambio a la clínica.';
+                        });
+                      } : null,
+                      icon: const Icon(Icons.restart_alt_outlined),
+                      label: const Text('Restablecer este módulo'),
+                    ),
+                  ),
                 ],
               ),
           const SizedBox(height: 20),

@@ -135,6 +135,35 @@ class ClinicExperience {
     return copy(preset: ClinicPreset.custom, hiddenPages: hidden);
   }
 
+  /// Restores *only* module visibility to the factory default (all entries
+  /// displayed). It does not touch clinical data, permissions, alarms, workflow
+  /// preferences, provider connections, or other module groups.
+  ClinicExperience restoreModuleVisibility(String groupTitle) {
+    final groups = sectionGroups.where(
+      (group) => group.title == groupTitle,
+    );
+    if (groups.isEmpty) return this;
+
+    final targetPages = groups.first.pages.where(
+      configurableExperiencePages.contains,
+    ).toSet();
+    if (targetPages.isEmpty) return this;
+
+    final updated = Set<String>.from(hiddenPages)..removeAll(targetPages);
+    if (updated.length == hiddenPages.length) return this;
+    return copy(preset: ClinicPreset.custom, hiddenPages: updated);
+  }
+
+  /// Only clears the selected workflow preference; current safe default is
+  /// guided. Clinical validations remain enforced regardless of mode.
+  ClinicExperience restoreFlowDefault(String key) {
+    if (!configurableFlows.containsKey(key) || !flowModes.containsKey(key)) {
+      return this;
+    }
+    final updated = Map<String, ClinicalFlowMode>.from(flowModes)..remove(key);
+    return copy(flowModes: updated);
+  }
+
   ClinicExperience withFlow(String key, ClinicalFlowMode mode) {
     if (!configurableFlows.containsKey(key)) return this;
     return copy(flowModes: {...flowModes, key: mode});

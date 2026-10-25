@@ -126,6 +126,88 @@ void main() {
     expect(both.toJson().containsKey('phone_number'), false);
   });
 
+  test('restoring a module only restores visibility, never operational records', () {
+    final original = ClinicExperience.defaults()
+      .withPage('Hospitalización', false)
+      .withPage('Agenda', false)
+      .withPage('Inventario', false)
+      .withFlow('dose', ClinicalFlowMode.mandatory)
+      .copy(
+        defaultAiProvider: 'anthropic',
+        hospitalNoticeDelivery: HospitalNoticeDelivery.both,
+        revision: 4,
+      );
+    final restored = original.restoreModuleVisibility('Atención y expedientes');
+    expect(restored.visible('Hospitalización'), isTrue);
+    expect(restored.visible('Agenda'), isTrue);
+    expect(restored.visible('Inventario'), isFalse);
+    expect(restored.flow('dose'), ClinicalFlowMode.mandatory);
+    expect(restored.defaultAiProvider, 'anthropic');
+    expect(restored.hospitalNoticeDelivery, HospitalNoticeDelivery.both);
+    expect(restored.revision, 4); // Optimistic-lock revision stays intact.
+    expect(restored.preset, ClinicPreset.custom);
+    expect(original.visible('Hospitalización'), isFalse); // Immutable original.
+    expect(
+      restored.restoreModuleVisibility('Grupo desconocido').toJson(),
+      restored.toJson(),
+    );
+  });
+
+  test('reset workflow restores guided default without touching other settings', () {
+    final custom = ClinicExperience.defaults()
+        .withFlow('dose', ClinicalFlowMode.mandatory)
+        .withFlow('hospital', ClinicalFlowMode.free)
+        .withPage('Inventario', false);
+    final doseRestored = custom.restoreFlowDefault('dose');
+    expect(doseRestored.flow('dose'), ClinicalFlowMode.guided);
+    expect(doseRestored.flow('hospital'), ClinicalFlowMode.free);
+    expect(doseRestored.visible('Inventario'), isFalse);
+    expect(doseRestored.toJson()['workflow_modes'], {'hospital': 'free'});
+    expect(custom.flow('dose'), ClinicalFlowMode.mandatory);
+    expect(
+      custom.restoreFlowDefault('unrecognized').toJson(),
+      custom.toJson(),
+    );
+  });
+
+  testWidgets('module reset button saves only requested visibility', (tester) async {
+    final repo = FakeExperienceRepository();
+    repo.stored = repo.stored
+        .withPage('Agenda', false)
+        .withPage('Hospitalización', false)
+        .withPage('Inventario', false);
+    await tester.pumpWidget(MaterialApp(home: ClinicExperienceScreen(
+      member: administrator,
+      initial: repo.stored,
+      repository: repo,
+      ready: true,
+    )));
+    final group = find.text('Atención y expedientes');
+    await tester.scrollUntilVisible(
+      group, 220, scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(group);
+    await tester.pumpAndSettle();
+    final reset = find.text('Restablecer este módulo');
+    await tester.scrollUntilVisible(
+      reset, 170, scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    expect(repo.saves, 0); // Do not persist without explicit save.
+    final save = find.text('Guardar configuración de la clínica');
+    await tester.scrollUntilVisible(
+      save, 250, scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(repo.saves, 1);
+    expect(repo.stored.visible('Agenda'), isTrue);
+    expect(repo.stored.visible('Hospitalización'), isTrue);
+    expect(repo.stored.visible('Inventario'), isFalse);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('admin can save preferences and non-admin cannot', (tester) async {
     final repo = FakeExperienceRepository();
     await tester.pumpWidget(MaterialApp(home: ClinicExperienceScreen(

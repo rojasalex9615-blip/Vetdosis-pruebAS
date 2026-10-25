@@ -5,6 +5,8 @@ Rama independiente sobre la integración visual/clínica PR #26. La instalación
 ## Contratos
 - Perfil general, pequeñas especies, hospital, producción o personalizado.
 - Secciones y submódulos configurables por clínica. Ajustes, recuperación y herramientas de revisión autorizadas **no** se pueden ocultar por personalización.
+- Se añadió **Restablecer este módulo** bajo cada grupo de submódulos: recupera la visibilidad predeterminada (todas las opciones visibles) solo para ese grupo, deja otros módulos tal como estaban y **no borra ni modifica** expedientes, pagos, archivos, alarmas o roles. La restauración modifica un borrador local y requiere pulsar Guardar, con control de revisión entre administradores. No elimina configuraciones de flujos ni IA ni canales hospitalarios.
+- La función de dominio `restoreFlowDefault(key)` permite limpiar solamente la preferencia de un flujo al modo Asistido, sin afectar otros módulos, para integrarse posteriormente al control de flujo específico.
 - Configuración sincronizada en servidor mediante RPC versionado, lectura por miembros, escritura por **administrador** y control optimista de revisión. No se guardan claves de IA en estas preferencias.
 - La visibilidad es una intersección: **permiso de servidor ∧ preferencia de visualización**. La configuración nunca concede permisos ni altera las políticas RLS/roles. Apagar secciones tampoco borra registros, cancela alarmas ni deshabilita transacciones pendientes.
 - Preferencia de proveedor de IA preselecciona únicamente una conexión ya listada/autorizada. Se puede cambiar antes de enviar; el usuario sigue aceptando cada envío.
