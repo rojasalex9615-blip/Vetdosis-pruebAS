@@ -162,13 +162,17 @@ void main() {
       final repo = CareFake()..failCare = true;
       await tester.pumpWidget(
         MaterialApp(
-          home: OperationsScreen(
-            repository: repo,
-            member: const ClinicMembership(
-              clinicId: 'c',
-              clinicName: 'Synthetic',
-              userId: 'u',
-              role: ClinicRole.mvz,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: OperationsScreen(
+                repository: repo,
+                member: const ClinicMembership(
+                  clinicId: 'c',
+                  clinicName: 'Synthetic',
+                  userId: 'u',
+                  role: ClinicRole.mvz,
+                ),
+              ),
             ),
           ),
         ),
