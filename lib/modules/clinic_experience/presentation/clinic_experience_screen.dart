@@ -40,8 +40,9 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
       });
       await widget.onSaved?.call();
     } catch (_) {
-      if (mounted) setState(() =>
-        message = 'No se pudo guardar. Es posible que otro administrador haya actualizado las opciones: cierra y vuelve a abrir esta pantalla para revisar la última versión.');
+      if (mounted) {
+        setState(() => message = 'No se pudo guardar. Es posible que otro administrador haya actualizado las opciones: cierra y vuelve a abrir esta pantalla para revisar la última versión.');
+      }
     } finally {
       if (mounted) setState(() => saving = false);
     }
@@ -78,8 +79,9 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               DropdownMenuItem(value: ClinicPreset.custom, child: Text('Personalizado')),
             ],
             onChanged: canEdit ? (value) {
-              if (value != null) setState(() =>
-                draft = ClinicExperience.forPreset(value, previous: draft));
+              if (value != null) {
+                setState(() => draft = ClinicExperience.forPreset(value, previous: draft));
+              }
             } : null,
           ),
           const SizedBox(height: 20),
@@ -90,8 +92,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               ExpansionTile(
                 title: Text(group.title),
                 subtitle: Text(
-                  group.pages.where(configurableExperiencePages.contains)
-                    .where(draft.visible).length.toString() + ' activos',
+                  '${group.pages.where(configurableExperiencePages.contains).where(draft.visible).length} activos',
                 ),
                 trailing: Switch(
                   value: group.pages.where(configurableExperiencePages.contains)
@@ -122,7 +123,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: DropdownButtonFormField<ClinicalFlowMode>(
-                key: ValueKey('flow-' + task.key + '-' + draft.flow(task.key).name),
+                key: ValueKey('flow-${task.key}-${draft.flow(task.key).name}'),
                 initialValue: draft.flow(task.key),
                 decoration: InputDecoration(
                   labelText: task.value,
@@ -141,7 +142,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
           const SizedBox(height: 20),
           Text('Proveedor IA predeterminado', style: Theme.of(context).textTheme.titleLarge),
           DropdownButtonFormField<String>(
-            key: ValueKey('provider-' + (draft.defaultAiProvider ?? 'none')),
+            key: ValueKey('provider-${draft.defaultAiProvider ?? 'none'}'),
             initialValue: draft.defaultAiProvider ?? '',
             isExpanded: true,
             decoration: const InputDecoration(border: OutlineInputBorder()),

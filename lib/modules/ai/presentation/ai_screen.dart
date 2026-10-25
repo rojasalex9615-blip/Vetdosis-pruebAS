@@ -56,7 +56,9 @@ class _AiScreenState extends State<AiScreen> {
 
   Future<void> selectPreferredConnection() async {
     if (!mounted || widget.configurationOnly || connection != null ||
-        widget.preferredProvider == null) return;
+        widget.preferredProvider == null) {
+      return;
+    }
     final candidates = vm.rows('connections').where(
       (row) => row['provider'] == widget.preferredProvider,
     );

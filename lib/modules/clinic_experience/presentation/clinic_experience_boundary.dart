@@ -55,10 +55,12 @@ class _ClinicExperienceBoundaryState extends State<ClinicExperienceBoundary> {
     final member = widget.member;
     final repo = widget.repository;
     if (member == null || repo == null) {
-      if (mounted) setState(() {
-        settings = ClinicExperience.defaults();
-        ready = false;
-      });
+      if (mounted) {
+        setState(() {
+          settings = ClinicExperience.defaults();
+          ready = false;
+        });
+      }
       return;
     }
     try {
