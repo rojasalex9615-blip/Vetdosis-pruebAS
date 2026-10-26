@@ -59,7 +59,9 @@ jobs:
           python3 - <<'PY'
           import json,os
           from pathlib import Path
-          key=os.environ.get("TEST_PUBLISHABLE_KEY","").strip()
+          # Public Supabase client key from Pruebas; not a service_role secret.
+          # CI var/secret overrides the fallback if configured.
+          key=os.environ.get("TEST_PUBLISHABLE_KEY","").strip() or 'sb_publishable_8IHRZcv_Dvs65VMv4N-I7A_xD5ckZLF'
           if key and not key.startswith("sb_publishable_"):
               raise SystemExit("Invalid public test key")
           Path("supabase/config.preview.local.json").write_text(json.dumps({
