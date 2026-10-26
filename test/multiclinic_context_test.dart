@@ -79,4 +79,16 @@ void main() {
     await refresh;
     expect(model.active?.clinicId, 'b');
   });
+  test('Cambio durante lectura no conserva clínica revocada', () async {
+    await model.start();
+    final pending = Completer<List<ClinicMembership>>();
+    repository.pending = pending;
+    final refresh = model.refresh(background: true);
+    model.selectClinic(clinicB);
+    pending.complete([member]);
+    await refresh;
+    expect(model.active?.clinicId, 'a');
+    expect(model.memberships.map((m) => m.clinicId), ['a']);
+  });
+
 }
