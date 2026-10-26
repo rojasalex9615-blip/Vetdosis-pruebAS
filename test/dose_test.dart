@@ -176,6 +176,16 @@ void main() {
       expect(() => DoseCatalog.parse(jsonEncode(m)), throwsFormatException);
     }
   });
+  test('Manual catalog search ignores accents in names and brands', () {
+    final data = fixture();
+    data['farmacos'][0]['farmaco'] = 'Ácido ficticio';
+    data['farmacos'][0]['presentaciones'][0]['nombre_comercial'] = 'Solución Única';
+    final catalog = DoseCatalog.parse(jsonEncode(data));
+    expect(catalog.search('acido').single.name, 'Ácido ficticio');
+    expect(catalog.search('unica').length, 1);
+    expect(catalog.search('SOLUCION').length, 1);
+    expect(catalog.search('acido', species: 'Otra'), isEmpty);
+  });
   test('Search by brand with species filter', () {
     final c = DoseCatalog.parse(jsonEncode(fixture()));
     expect(c.search('marca').length, 1);
