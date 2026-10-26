@@ -1,3 +1,4 @@
+import { authorizedDispatch } from "../_shared/hospital_dispatch_auth.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { deliveryConfig, sendHospitalDelivery } from "../_shared/hospital_delivery.mjs";
 
@@ -9,7 +10,7 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 Deno.serve(async (request) => {
   if (request.method !== "POST") return reply({ error: "method_not_allowed" }, 405);
   const secret = Deno.env.get("HOSPITAL_DISPATCH_SECRET");
-  if (!secret || request.headers.get("Authorization") !== `Bearer ${secret}`) {
+  if (!authorizedDispatch(request.headers.get("Authorization"), secret)) {
     return reply({ error: "authentication_required" }, 401);
   }
   const config = deliveryConfig();
