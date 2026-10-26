@@ -157,6 +157,42 @@ void main() {
     },
   );
   testWidgets(
+    'failed care snapshot leaves appointments visible and reports failure',
+    (tester) async {
+      final repo = CareFake()..failCare = true;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: OperationsScreen(
+                repository: repo,
+                member: const ClinicMembership(
+                  clinicId: 'c',
+                  clinicName: 'Synthetic',
+                  userId: 'u',
+                  role: ClinicRole.mvz,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Paciente sintético'), findsOneWidget);
+      expect(
+        find.textContaining('No se pudo comprobar el ingreso y la entrega'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Atención del día y pendientes anteriores'),
+        findsNothing,
+      );
+      // Fallback must not silently erase the list or pretend care loaded.
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets(
     'Read-only staff cannot close a consultation or skip delivery steps',
     (tester) async {
       await tester.pumpWidget(

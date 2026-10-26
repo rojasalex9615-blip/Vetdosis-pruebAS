@@ -52,7 +52,7 @@ declare tz text;d date;can_patient boolean;can_manage boolean;can_clinical boole
   'day_start',d::timestamp at time zone tz,'day_end',(d+1)::timestamp at time zone tz,
   'appointments',(select coalesce(jsonb_agg(jsonb_build_object('appointment_id',a.id,
    'can_manage',can_manage and (a.patient_id is null or can_patient),
-   'can_close',can_manage and (a.patient_id is null or can_patient) and (a.kind='estetica' or (can_clinical and a.patient_id is not null)),
+   'can_close',can_manage and (a.patient_id is null or can_patient) and (a.kind<>'consulta' or (can_clinical and a.patient_id is not null)),
    'records',(select coalesce(jsonb_agg(jsonb_build_object('id',r.id,'action',r.action,'details',r.details,
     'recorded_by',r.recorded_by,'created_at',r.created_at,'clinical_recorded',r.clinical_event_id is not null)
     order by r.created_at,r.id),'[]') from public.appointment_care_records r where r.clinic_id=p_clinic and r.appointment_id=a.id))),'[]')

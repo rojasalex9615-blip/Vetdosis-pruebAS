@@ -30,7 +30,16 @@ begin
       'patient_id',a.patient_id,'record_id',a.id,
       'kind',case when a.state='listo' then 'ready'
         when a.kind='consulta' then 'consultation' else 'service' end,
-      'detail',case a.kind when 'consulta' then 'Consulta' else 'Estética' end||
+      'detail',case a.kind
+        when 'consulta' then 'Consulta'
+        when 'estetica' then 'Estética'
+        when 'seguimiento' then 'Seguimiento'
+        when 'cirugia' then 'Cirugía'
+        when 'analisis' then 'Análisis'
+        when 'vacunacion' then 'Vacunación'
+        when 'entrega' then 'Entrega'
+        when 'otro' then 'Otro servicio'
+        else 'Servicio' end||
         case when a.starts_at<start_at then ' · Pendiente de día anterior' else '' end||
         case when nullif(btrim(a.notes),'') is null then '' else ' · '||a.notes end,
       'local_time',to_char(a.starts_at at time zone tz,'YYYY-MM-DD HH24:MI'),

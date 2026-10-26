@@ -44,6 +44,25 @@ class DashboardViewModel extends ChangeNotifier {
   bool canSummarize(String name) =>
       moduleAccess == null || moduleAccess!.summary(name);
   final Map<String, String> errors = {};
+
+  /// Legacy ops_dashboard omits sections but returns server-filtered rows.
+  /// Explicit section flags, when supplied, take precedence; a failed read
+  /// may show its error without revealing any team records.
+  bool canShowTeamPanel(String key) {
+    if (member == null ||
+        member!.isPersonal ||
+        (key != 'tasks' && key != 'messages')) {
+      return false;
+    }
+    if (errors.containsKey('Agenda')) {
+      return true;
+    }
+    final sections = agenda?['sections'];
+    if (sections is Map) {
+      return sections[key] == true;
+    }
+    return agenda?[key] is List;
+  }
   Map<String, dynamic>? agenda, stock, statistics, commissions, attendanceWeek;
   HospitalSnapshot? ward;
   int? patientCount;

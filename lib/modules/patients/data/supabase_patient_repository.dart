@@ -7,6 +7,16 @@ import '../domain/patient_activity.dart';
 import '../domain/patient_repository.dart';
 import '../domain/patient_contacts.dart';
 
+/// PostgreSQL encode(bytea, 'base64') wraps lines at 76 characters.
+/// Normalize transport whitespace, never bypass MIME/size verification.
+Uint8List decodePreventiveEvidence(String encoded, String mime) {
+  final bytes = base64Decode(encoded.replaceAll(RegExp(r'\s'), ''));
+  if (evidenceMime(bytes) != mime) {
+    throw const FormatException('Comprobante no válido.');
+  }
+  return bytes;
+}
+
 class SupabasePatientRepository
     implements
         PatientRepository,
@@ -84,11 +94,10 @@ class SupabasePatientRepository
           )
           as Map,
     );
-    final bytes = base64Decode(raw['content'] as String);
-    if (evidenceMime(bytes) != raw['mime']) {
-      throw const FormatException('Comprobante no válido.');
-    }
-    return bytes;
+    return decodePreventiveEvidence(
+      raw['content'] as String,
+      raw['mime'] as String,
+    );
   }
 
   @override

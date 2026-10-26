@@ -69,16 +69,13 @@ class DoseViewModel extends ChangeNotifier {
           'Este producto no tiene una dosis única y verificada. No se puede calcular automáticamente.',
         );
       }
-      if (Quantity.parse(dose).compareTo(prescribed) != 0) {
-        throw const FormatException(
-          'La dosis no coincide con la dosis única registrada en el Vademécum.',
-        );
-      }
+      // The displayed dose is rounded for readability and is not a source
+      // for arithmetic. Always calculate using the exact catalog Quantity.
       result = const DoseEngine().calculate(
         drug: drug!,
         presentation: presentation!,
         weightKg: Quantity.parse(weight),
-        doseMgKg: Quantity.parse(dose),
+        doseMgKg: prescribed,
         syringeStepMl: step.trim().isEmpty ? null : Quantity.parse(step),
         breed: breed,
         conditions: conditions

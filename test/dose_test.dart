@@ -72,6 +72,22 @@ class ExactRepo implements CatalogRepository {
 }
 
 void main() {
+  test('catalog precision survives rounded display dose', () {
+    final tinyFixture = fixture();
+    tinyFixture['farmacos'][0]['min'] = '0.0000005';
+    tinyFixture['farmacos'][0]['max'] = '0.0000005';
+    final tiny = DoseCatalog.parse(jsonEncode(tinyFixture)).drugs.single;
+    final vm = DoseViewModel(Repo())
+      ..select(tiny)
+      ..selectPresentation(tiny.presentations.single);
+    // UI's display may round this value, but computation must not.
+    expect(tiny.prescribedDose, isNotNull);
+    vm.calculate('10', tiny.prescribedDose!.display(), '', '', '');
+    expect(vm.error, isNull);
+    expect(vm.result!.mass.compareTo(Quantity.parse('0.000005')), 0);
+    vm.dispose();
+  });
+
   test('Known fictitious vector: 10 kg × 2 mg/kg / 10 mg/ml', () {
     final r = calc(drug());
     expect(r.mass.display(), '20');

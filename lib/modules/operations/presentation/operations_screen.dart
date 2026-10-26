@@ -63,7 +63,9 @@ class _OperationsScreenState extends State<OperationsScreen>
     DateTime.now().month,
   );
   bool careDay = true;
-  bool get careEnabled => widget.repository is AppointmentCareRepository;
+  bool get careEnabled =>
+      widget.repository is AppointmentCareRepository &&
+      model.careWindow != null;
   String? appointmentState;
   List<Map<String, dynamic>> get visibleAppointments => model
       .rows('appointments')
@@ -632,8 +634,9 @@ class _OperationsScreenState extends State<OperationsScreen>
               Text(
                 '${model.careWindow!['day']} · ${model.careWindow!['timezone']} · ${visibleAppointments.length} citas',
               ),
-            if (model.careError != null) Text(model.careError!),
           ],
+          // Do not hide the failure message when care mode falls back.
+          if (model.careError != null) Text(model.careError!),
           VetActionButton(
             label: 'Agendar cita',
             icon: Icons.add,
@@ -1243,7 +1246,7 @@ class _OperationsScreenState extends State<OperationsScreen>
             ),
           for (final e in performance.entries)
             ListTile(
-              title: Text(person(e.key)),
+              title: Text(e.key.isEmpty ? 'Sin asignar' : person(e.key)),
               subtitle: Text(
                 'Comisión registrada: ${e.value[0].display} · cobrada: ${e.value[1].display}',
               ),
@@ -1283,7 +1286,9 @@ class _OperationsScreenState extends State<OperationsScreen>
   Map<String, List<Money>> get performance {
     final sums = <String, List<Money>>{};
     for (final a in periodActs) {
-      final key = a['professional_id'] as String;
+      final key = a['professional_id'] is String
+          ? a['professional_id'] as String
+          : '';
       final v = sums.putIfAbsent(
         key,
         () => [Money(BigInt.zero), Money(BigInt.zero)],
@@ -1308,7 +1313,9 @@ class _OperationsScreenState extends State<OperationsScreen>
         for (final act in model.rows('acts'))
           {
             ...act,
-            'professional_name': person(act['professional_id'] as String),
+            'professional_name': act['professional_id'] is String
+                ? person(act['professional_id'] as String)
+                : 'Sin asignar',
           },
       ]);
       await FilePicker.saveFile(
