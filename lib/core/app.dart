@@ -1218,6 +1218,7 @@ class CoreShell extends StatelessWidget {
                           allowed(model.screen) &&
                           auth?.offline != true
                       ? BackupScreen(
+                          key: ValueKey('backup-${auth!.active!.userId}-${auth!.active!.clinicId}'),
                           identity: identity,
                           repository: backup!,
                           member: auth!.active!,

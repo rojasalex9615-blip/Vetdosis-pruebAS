@@ -1,3 +1,6 @@
+import 'package:http/http.dart' as http;
+import '../data/drive_backup_client.dart';
+import '../data/drive_backup_authorization.dart';
 import '../../identity/domain/identity_repository.dart';
 import '../../exports/domain/branded_export.dart';
 import '../../exports/presentation/branded_export_action.dart';
@@ -154,6 +157,7 @@ class BackupScreen extends StatefulWidget {
 class _BackupScreenState extends State<BackupScreen> {
   late final model = BackupViewModel(widget.repository, widget.member.clinicId);
   bool working = false, ack = false, protect = true;
+  http.Client? driveClient;
   BackupAccess? access;
   BackupScope scope = BackupScope.clinic;
   BackupRecoveryReport? inspection;
@@ -230,6 +234,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
   @override
   void dispose() {
+    driveClient?.close();
     model.dispose();
     super.dispose();
   }
@@ -259,11 +264,12 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  Future<void> backup() async {
+  Future<void> backup({bool toDrive = false}) async {
+    if (toDrive && !protect) return;
     final password = protect
         ? await requestBackupPassword(context, creating: true)
         : null;
-    if (protect && password == null) return;
+    if (!mounted || (protect && password == null)) return;
     final bytes = await BackupArchive.create(
       widget.repository,
       widget.member.clinicId,
@@ -287,6 +293,10 @@ class _BackupScreenState extends State<BackupScreen> {
         ? await compute(_encryptBackup, (bytes, password!))
         : bytes;
     if (!mounted) return;
+    if (toDrive) {
+      await sendToDrive(output);
+      return;
+    }
     final savedFile = await FilePicker.saveFile(
       dialogTitle: 'Guardar respaldo operacional',
       fileName:
@@ -298,6 +308,74 @@ class _BackupScreenState extends State<BackupScreen> {
     setState(() {
       result = manualBackupSaveStatus(savedFile: savedFile, encrypted: protect);
     });
+  }
+
+  Future<void> sendToDrive(Uint8List encrypted) async {
+    final clinic = widget.member.clinicId;
+    final selectedScope = scope;
+    bool current() =>
+        mounted && widget.member.clinicId == clinic && scope == selectedScope;
+    final account = await DriveBackupAuthorization.chooseAccount();
+    final client = http.Client();
+    driveClient = client;
+    try {
+      if (!mounted || !current()) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Autorizar copia cifrada en Drive'),
+          content: Text(
+            'Cuenta: ${account.email}\nClínica: ${widget.member.clinicName}\nAlcance: ${selectedScope == BackupScope.clinic ? "Clínica" : "Personal"}\n\nSe guardará un archivo cifrado y se descargará para verificarlo. Conserva tu contraseña: VetDosis no la guarda. Esta copia no restaura todo el servidor.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Autorizar copia'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !current()) return;
+      final token = await DriveBackupAuthorization.token(account);
+      if (!current()) return;
+      final freshAccess = BackupAccess.read(
+        await widget.repository.workspace(clinic),
+      );
+      if (!current()) return;
+      if (!(selectedScope == BackupScope.clinic
+          ? freshAccess.clinic
+          : freshAccess.personal)) {
+        throw const FormatException(
+          'El permiso de respaldo cambió. No se envió la copia.',
+        );
+      }
+      final receipt = await DriveBackupClient(client).uploadVerified(
+        token: token,
+        // Avoid patient, clinic and user identifiers in remote file names.
+        fileName:
+            'vetdosis-${selectedScope.name}-${DateTime.now().toUtc().microsecondsSinceEpoch}.vetbackup',
+        encrypted: encrypted,
+      );
+      if (!current()) return;
+      setState(
+        () => result =
+            'Copia cifrada verificada en Drive de ${account.email}. '
+            'Descarga y SHA-256 coinciden. Archivo: ${receipt.fileId}. '
+            'No equivale a una restauración completa del servidor.',
+      );
+    } finally {
+      client.close();
+      driveClient = null;
+      try {
+        await DriveBackupAuthorization.signOut();
+      } catch (_) {
+        /* No credentials retained by this screen. */
+      }
+    }
   }
 
   Future<void> csv({String format = 'csv'}) async {
@@ -861,6 +939,20 @@ class _BackupScreenState extends State<BackupScreen> {
                             : 'Exportar respaldo JSON',
                       ),
                     ),
+                    if (!kIsWeb &&
+                        defaultTargetPlatform == TargetPlatform.android)
+                      FilledButton.tonal(
+                        onPressed:
+                            ack &&
+                                protect &&
+                                !working &&
+                                (scope == BackupScope.clinic
+                                    ? access!.clinic
+                                    : access!.personal)
+                            ? () => run(() => backup(toDrive: true))
+                            : null,
+                        child: const Text('Guardar copia cifrada en Drive'),
+                      ),
                     TextButton(
                       onPressed:
                           ack &&

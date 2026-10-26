@@ -4,6 +4,7 @@ on:
     branches:
       - integration/sol6-sol61-visual-preview-20261026
       - integration/consolidation-20261026
+      - feature/drive-encrypted-backup-20261026
   workflow_dispatch:
 permissions:
   contents: read
