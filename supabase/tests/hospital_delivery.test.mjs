@@ -39,15 +39,18 @@ test("FCM sends only a generic notice and checks provider acknowledgement", asyn
   const reference = await sendHospitalDelivery(
     { channel: "fcm", destination: "synthetic.device~token_123456" }, config,
     async () => "synthetic-access-token",
-    async (_url, options) => {
+    async (url, options) => {
       body = JSON.parse(options.body);
+      assert.equal(url, "https://fcm.googleapis.com/v1/projects/test-project/messages:send");
       assert.equal(options.headers.Authorization, "Bearer synthetic-access-token");
       return { ok: true, json: async () => ({ name: "projects/test/messages/1" }) };
     },
   );
   assert.equal(reference, "projects/test/messages/1");
   assert.deepEqual(Object.keys(body.message), ["token", "notification", "data"]);
-  assert.ok(!JSON.stringify(body).includes("patient"));
+  assert.equal(body.message.token, "synthetic.device~token_123456");
+  assert.deepEqual(body.message.data, { kind: "hospital_notice" });
+  assert.ok(!/patient|paciente/i.test(JSON.stringify(body)));
 });
 
 test("WhatsApp uses a template without patient details or free text", async () => {

@@ -1,3 +1,4 @@
+import 'ai_plans_test.dart' show AiFake;
 import 'package:vetdosis_pro/modules/patients/presentation/patient_form.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -198,11 +199,19 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: CoreShell(
       model: model,
       auth: auth,
+      ai: AiFake(),
       moduleAccess: access,
       experience: hidden,
     )));
     await tester.pumpAndSettle();
     expect(find.byTooltip('Asistente IA'), findsNothing);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model, auth: auth, ai: AiFake(), moduleAccess: access,
+      experience: ClinicExperience.defaults(),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Asistente IA'), findsOneWidget);
+
     // Help is now in the menu, not a floating shortcut.
     expect(find.byTooltip('Ayuda y soporte'), findsNothing);
     expect(tester.takeException(), isNull);

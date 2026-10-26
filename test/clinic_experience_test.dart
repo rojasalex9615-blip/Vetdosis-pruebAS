@@ -270,6 +270,30 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('failed post-save reload keeps hidden pages and reports failure', (tester) async {
+    final repo = FakeExperienceRepository();
+    repo.stored = repo.stored.withPage('Hospitalización', false);
+    late Future<void> Function() refresh;
+    await tester.pumpWidget(MaterialApp(home: ClinicExperienceBoundary(
+      member: administrator, repository: repo, revision: 0,
+      builder: (experience, ready, reload) {
+        refresh = reload;
+        return Text('${ready ? "ready" : "waiting"}:${experience.visible("Hospitalización")}');
+      },
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('ready:false'), findsOneWidget);
+    repo.failReads = true;
+    await expectLater(refresh(), throwsStateError);
+    await tester.pump();
+    expect(find.text('ready:false'), findsOneWidget);
+    repo.failReads = false;
+    repo.stored = repo.stored.withPage('Hospitalización', true);
+    await refresh();
+    await tester.pump();
+    expect(find.text('ready:true'), findsOneWidget);
+  });
+
   testWidgets('background permission refresh keeps preferences; clinic switch resets', (
     tester,
   ) async {

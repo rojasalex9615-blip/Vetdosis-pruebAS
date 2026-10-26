@@ -56,7 +56,7 @@ class _ClinicExperienceBoundaryState extends State<ClinicExperienceBoundary> {
     }
   }
 
-  Future<void> reload({bool preserveOnFailure = false}) async {
+  Future<void> reload({bool preserveOnFailure = false, bool reportFailure = false}) async {
     final ticket = ++generation;
     final member = widget.member;
     final repo = widget.repository;
@@ -83,10 +83,11 @@ class _ClinicExperienceBoundaryState extends State<ClinicExperienceBoundary> {
           ready = false;
         });
       }
+      if (reportFailure) rethrow;
     }
   }
 
   @override
   Widget build(BuildContext context) =>
-      widget.builder(settings, ready, reload);
+      widget.builder(settings, ready, () => reload(preserveOnFailure: true, reportFailure: true));
 }
