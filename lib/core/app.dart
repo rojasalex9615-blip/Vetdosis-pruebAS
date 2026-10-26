@@ -63,6 +63,7 @@ import '../modules/patients/domain/recorded_weight.dart';
 import '../modules/patients/presentation/patients_screen.dart';
 import 'package:flutter/material.dart';
 import '../modules/doses/presentation/dose_screen.dart';
+import '../modules/doses/presentation/dose_label_scanner_screen.dart';
 import '../modules/doses/presentation/vademecum_screen.dart';
 import '../modules/doses/data/catalog_repository.dart';
 import '../modules/doses/presentation/dose_math_tools.dart';
@@ -569,11 +570,12 @@ class CoreShell extends StatelessWidget {
               ),
               onPressed: () => openAccount(context),
             ),
-          IconButton(
-            tooltip: 'Ajustes',
-            onPressed: () => model.navigate('Ajustes'),
-            icon: const Icon(Icons.tune),
-          ),
+          if (ai != null && auth?.active != null && allowed('Asistente IA'))
+            IconButton(
+              tooltip: 'Asistente IA',
+              onPressed: () => model.navigate('Asistente IA'),
+              icon: const Icon(Icons.auto_awesome_outlined),
+            ),
         ],
       ),
       drawer: Drawer(
@@ -633,35 +635,16 @@ class CoreShell extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: bottomNavigation(),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (allowed('Escanear producto')) ...[
-            FloatingActionButton.small(
-              heroTag: 'scanner',
-              tooltip: 'Escáner',
-              onPressed: () => model.navigate('Escanear producto'),
-              child: const Icon(Icons.qr_code_scanner),
-            ),
-            const SizedBox(height: 12),
-          ],
-          if (allowed('Asistente IA')) ...[
-            FloatingActionButton.small(
-              heroTag: 'assistant',
-              tooltip: 'Asistente IA',
-              onPressed: () => model.navigate('Asistente IA'),
-              child: const Icon(Icons.auto_awesome),
-            ),
-            const SizedBox(height: 12),
-          ],
-          FloatingActionButton.small(
-            heroTag: 'support',
-            tooltip: 'Ayuda y soporte',
-            onPressed: () => model.navigate('Ayuda y soporte'),
-            child: const Icon(Icons.help_outline),
-          ),
-        ],
-      ),
+      floatingActionButton: auth?.active != null &&
+              allowed('Cálculo rápido') &&
+              model.screen != 'Escanear etiqueta para dosis'
+          ? FloatingActionButton(
+              heroTag: 'dose-label-scanner',
+              tooltip: 'Escanear etiqueta para dosis',
+              onPressed: () => model.navigate('Escanear etiqueta para dosis'),
+              child: const Icon(Icons.document_scanner_outlined),
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -805,6 +788,16 @@ class CoreShell extends StatelessWidget {
                         )
                       : const Text(
                           'El cálculo clínico requiere acceso de MVZ o administrador.',
+                        )
+                else if (model.screen == 'Escanear etiqueta para dosis')
+                  auth?.active != null && allowed('Cálculo rápido')
+                      ? DoseLabelScannerScreen(
+                          member: auth!.active!,
+                          personalRepository: personalDoses,
+                          offline: auth!.offline,
+                        )
+                      : const Text(
+                          'La lectura de etiquetas para dosis requiere acceso de MVZ o administrador.',
                         )
                 else if (model.screen == 'Vademécum')
                   VademecumScreen(
