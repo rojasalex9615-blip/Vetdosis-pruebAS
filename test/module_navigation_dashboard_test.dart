@@ -184,6 +184,32 @@ void main() {
     await authRepository.controller.close();
   });
 
+  testWidgets('hidden AI module removes the floating assistant shortcut', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final authRepository = auth_fixture.FakeAuth();
+    final auth = AuthViewModel(authRepository);
+    await auth.start();
+    final model = CoreViewModel(SettingsRepository(), const AppSettings());
+    final access = ModuleAccess.read(contract(enabled: 'inventory'));
+    final hidden = ClinicExperience.defaults().withPage('Asistente IA', false);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model,
+      auth: auth,
+      moduleAccess: access,
+      experience: hidden,
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Asistente IA'), findsNothing);
+    expect(find.byTooltip('Ayuda y soporte'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    model.dispose();
+    auth.dispose();
+    await authRepository.controller.close();
+  });
+
   testWidgets('dashboard reloads when a same-session grant arrives and clears on revocation', (
     tester,
   ) async {

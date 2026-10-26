@@ -644,13 +644,15 @@ class CoreShell extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          FloatingActionButton.small(
-            heroTag: 'assistant',
-            tooltip: 'Asistente IA',
-            onPressed: () => model.navigate('Asistente IA'),
-            child: const Icon(Icons.auto_awesome),
-          ),
-          const SizedBox(height: 12),
+          if (allowed('Asistente IA')) ...[
+            FloatingActionButton.small(
+              heroTag: 'assistant',
+              tooltip: 'Asistente IA',
+              onPressed: () => model.navigate('Asistente IA'),
+              child: const Icon(Icons.auto_awesome),
+            ),
+            const SizedBox(height: 12),
+          ],
           FloatingActionButton.small(
             heroTag: 'support',
             tooltip: 'Ayuda y soporte',
@@ -723,11 +725,16 @@ class CoreShell extends StatelessWidget {
                 const SizedBox(height: 28),
                 if (auth?.active != null &&
                     moduleAccess != null &&
-                    !allowed(model.screen) &&
+                    !serverAllowed(model.screen))
+                  const Text(
+                    'Este apartado no está disponible con tus permisos actuales.',
+                  )
+                else if (auth?.active != null &&
+                    !(experience?.visible(model.screen) ?? true) &&
                     !(model.screen == 'Hospitalización' &&
                         serverAllowed('Hospitalización')))
                   const Text(
-                    'Este apartado no está disponible con tus permisos actuales.',
+                    'Este apartado está oculto en los ajustes de esta clínica.',
                   )
                 else if (model.screen == 'Inicio')
                   ...home(context)

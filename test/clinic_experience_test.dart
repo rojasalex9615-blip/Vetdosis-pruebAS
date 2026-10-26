@@ -9,16 +9,20 @@ import 'package:vetdosis_pro/modules/clinic_experience/presentation/clinic_exper
 class FakeExperienceRepository implements ClinicExperienceRepository {
   ClinicExperience stored = ClinicExperience.defaults();
   int saves = 0;
+  int reads = 0;
   bool failReads = false;
+  bool failSaves = false;
 
   @override
   Future<ClinicExperience> read(String clinicId) async {
+    reads++;
     if (failReads) throw StateError('Synthetic network error');
     return stored;
   }
 
   @override
   Future<ClinicExperience> save(String clinicId, ClinicExperience value) async {
+    if (failSaves) throw const FormatException('Synthetic write conflict');
     if (value.revision != stored.revision) {
       throw const FormatException('Conflicto de revisión');
     }
@@ -129,6 +133,53 @@ void main() {
     expect(both.hospitalNoticeDelivery.phoneSelected, isTrue);
     expect(both.hospitalNoticeDelivery.whatsappSelected, isTrue);
     expect(both.toJson().containsKey('phone_number'), false);
+  });
+
+  test('selecting Personalizado preserves previous module choices', () {
+    final original = ClinicExperience.defaults()
+      .withPage('Hospitalización', false)
+      .withPage('Inventario', false)
+      .withFlow('dose', ClinicalFlowMode.mandatory)
+      .copy(
+        revision: 6,
+        defaultAiProvider: 'google',
+        hospitalNoticeDelivery: HospitalNoticeDelivery.both,
+      );
+    final custom = ClinicExperience.forPreset(
+      ClinicPreset.custom, previous: original,
+    );
+    expect(custom.hiddenPages, original.hiddenPages);
+    expect(custom.visible('Hospitalización'), isFalse);
+    expect(custom.visible('Inventario'), isFalse);
+    expect(custom.flow('dose'), ClinicalFlowMode.mandatory);
+    expect(custom.revision, 6);
+    expect(custom.defaultAiProvider, 'google');
+    expect(custom.hospitalNoticeDelivery, HospitalNoticeDelivery.both);
+  });
+
+  testWidgets('saving conflict waits for readback before showing error', (tester) async {
+    final repo = FakeExperienceRepository()..failSaves = true;
+    var callbackCompleted = false;
+    await tester.pumpWidget(MaterialApp(home: ClinicExperienceScreen(
+      member: administrator,
+      initial: repo.stored,
+      repository: repo,
+      ready: true,
+      onSaved: () async {
+        await repo.read(administrator.clinicId);
+        callbackCompleted = true;
+      },
+    )));
+    final saveButton = find.text('Guardar configuración de la clínica');
+    await tester.scrollUntilVisible(
+      saveButton, 240, scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+    expect(callbackCompleted, isTrue);
+    expect(repo.reads, 1);
+    expect(repo.saves, 0);
+    expect(find.textContaining('No se pudo guardar.'), findsOneWidget);
   });
 
   test('restoring a module only restores visibility, never operational records', () {

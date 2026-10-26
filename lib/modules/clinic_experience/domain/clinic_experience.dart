@@ -74,6 +74,12 @@ class ClinicExperience {
     ClinicPreset preset, {
     ClinicExperience? previous,
   }) {
+    // Switching to Personalizado must preserve each manual module choice.
+    if (preset == ClinicPreset.custom) {
+      return (previous ?? ClinicExperience.defaults()).copy(
+        preset: ClinicPreset.custom,
+      );
+    }
     final enabledGroups = switch (preset) {
       ClinicPreset.smallAnimals => <String>{
         'Atención y expedientes', 'Medicamentos y herramientas',

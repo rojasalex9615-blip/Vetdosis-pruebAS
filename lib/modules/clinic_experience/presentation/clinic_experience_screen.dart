@@ -28,18 +28,32 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
   bool saving = false;
   String? message;
 
+  Future<bool> refreshBoundary() async {
+    try {
+      await widget.onSaved?.call();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> save() async {
     if (saving || widget.member.role != ClinicRole.admin || !widget.ready) return;
     setState(() { saving = true; message = null; });
     try {
       final next = await widget.repository.save(widget.member.clinicId, draft);
       if (!mounted) return;
-      setState(() {
-        draft = next;
-        message = 'Preferencias guardadas para esta clínica.';
-      });
-      await widget.onSaved?.call();
+      setState(() { draft = next; });
+      final refreshed = await refreshBoundary();
+      if (mounted) {
+        setState(() => message = refreshed
+            ? 'Preferencias guardadas para esta clínica.'
+            : 'Se guardaron los cambios, pero no fue posible actualizar la vista. Comprueba la conexión antes de continuar.');
+      }
     } catch (_) {
+      // A rejected write may be a conflict with another admin: read the
+      // current server revision before letting this modal reopen.
+      await refreshBoundary();
       if (mounted) {
         setState(() => message = 'No se pudo guardar. Es posible que otro administrador haya actualizado las opciones: cierra y vuelve a abrir esta pantalla para revisar la última versión.');
       }
