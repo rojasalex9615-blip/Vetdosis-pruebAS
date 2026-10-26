@@ -10,6 +10,7 @@ class SupabaseOperationsRepository
         AppointmentLinksRepository,
         AppointmentCareRepository,
         CommissionRepository,
+        ServiceCommissionRepository,
         ContactDirectoryRepository,
         ProductivityRepository,
         WeeklyTaskPlanRepository,
@@ -216,6 +217,23 @@ class SupabaseOperationsRepository
       'ops_contact_save',
       params: {'p_clinic': clinic, 'p_kind': kind == 'suppliers' ? 'supplier' : kind, 'p_id': id, 'p_data': data},
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> commissionServiceAccount(String clinic, {int offset = 0}) async =>
+      Map<String, dynamic>.from(await client.rpc('ops_commission_account',
+          params: {'p_clinic': clinic, 'p_offset': offset}) as Map);
+
+  @override
+  Future<void> settleServiceCommission(String clinic, String serviceAct,
+      String method, String reference, String operation) async {
+    await client.rpc('ops_commission_settle', params: {
+      'p_clinic': clinic,
+      'p_act': serviceAct,
+      'p_method': method,
+      'p_reference': reference,
+      'p_operation': operation,
+    });
   }
 
   @override

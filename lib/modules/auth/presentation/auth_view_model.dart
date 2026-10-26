@@ -12,12 +12,14 @@ class AuthViewModel extends ChangeNotifier {
     this.syncStore,
     this.refreshInterval,
     this.onVerifiedAccess,
+    this.onBeforeSignOut,
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
   final AccessCache? cache;
   final SyncStore? syncStore;
   final Duration? refreshInterval;
   final Future<void> Function(List<ClinicMembership>)? onVerifiedAccess;
+  final Future<void> Function(String userId)? onBeforeSignOut;
   final DateTime Function() now;
   Timer? _refreshTimer;
   String? _lastUserId;
@@ -268,6 +270,9 @@ class AuthViewModel extends ChangeNotifier {
     final userId = repository.userId;
     if (userId != null && (await syncStore?.pendingForUser(userId) ?? 0) > 0) {
       throw const PendingChanges();
+    }
+    if (userId != null) {
+      await onBeforeSignOut?.call(userId);
     }
     try {
       await repository.signOut();
