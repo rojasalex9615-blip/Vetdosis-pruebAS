@@ -86,7 +86,15 @@ void main() {
     expect(adminModel.canShowTeamPanel('tasks'), isTrue);
     adminModel.dispose();
 
-    final personal = DashboardViewModel(member: member(ClinicRole.estilista));
+    final personal = DashboardViewModel(
+      member: const ClinicMembership(
+        clinicId: 'personal-space',
+        clinicName: 'Espacio personal',
+        userId: 'person',
+        role: ClinicRole.estilista,
+        workspaceKind: 'personal',
+      ),
+    );
     personal.agenda = {'tasks': [], 'messages': []};
     expect(personal.canShowTeamPanel('tasks'), isFalse);
     personal.dispose();
