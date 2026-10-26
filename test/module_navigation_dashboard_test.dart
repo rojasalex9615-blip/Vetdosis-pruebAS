@@ -185,7 +185,7 @@ void main() {
     await authRepository.controller.close();
   });
 
-  testWidgets('hidden AI module removes the floating assistant shortcut', (
+  testWidgets('hidden AI module removes the header assistant shortcut', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -203,7 +203,8 @@ void main() {
     )));
     await tester.pumpAndSettle();
     expect(find.byTooltip('Asistente IA'), findsNothing);
-    expect(find.byTooltip('Ayuda y soporte'), findsOneWidget);
+    // Help is now in the menu, not a floating shortcut.
+    expect(find.byTooltip('Ayuda y soporte'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     model.dispose();
@@ -272,7 +273,8 @@ void main() {
     await tester.pumpWidget(app(ModuleAccess.read(contract(enabled: 'inventory'))));
     await tester.pumpAndSettle();
     expect(inventory.reads, 1);
-    expect(find.byTooltip('Escáner'), findsOneWidget);
+    // Label OCR belongs to clinical dose permission, not inventory access.
+    expect(find.byTooltip('Escanear etiqueta para dosis'), findsNothing);
     expect(find.textContaining('Existencias disponibles por unidad'), findsOneWidget);
     await tester.pumpWidget(app(ModuleAccess.denied));
     await tester.pumpAndSettle();

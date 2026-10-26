@@ -200,7 +200,7 @@ void main() {
     },
   );
   testWidgets(
-    'Mobile dashboard, grouped calculations, settings and floating navigation',
+    'Mobile dashboard, grouped calculations, settings and screen navigation',
     (tester) async {
       tester.view.physicalSize = const Size(390, 1000);
       tester.view.devicePixelRatio = 1;
@@ -237,13 +237,18 @@ void main() {
       await tester.tap(find.text('Cálculos clínicos').last);
       await tester.pumpAndSettle();
       expect(model.screen, 'Cálculos clínicos');
-      await tester.tap(find.byTooltip('Asistente IA'));
+      // With no signed-in account, IA is not exposed in the AppBar.
+      expect(find.byTooltip('Asistente IA'), findsNothing);
+      model.navigate('Asistente IA');
       await tester.pumpAndSettle();
       expect(model.screen, 'Asistente IA');
-      await tester.tap(find.byTooltip('Ayuda y soporte'));
+      // Support and Settings are sections, not floating/AppBar actions.
+      expect(find.byTooltip('Ayuda y soporte'), findsNothing);
+      model.navigate('Ayuda y soporte');
       await tester.pumpAndSettle();
       expect(model.screen, 'Ayuda y soporte');
-      await tester.tap(find.byTooltip('Ajustes'));
+      expect(find.byTooltip('Ajustes'), findsNothing);
+      model.navigate('Ajustes');
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Plan y pagos de VetDosis'),
