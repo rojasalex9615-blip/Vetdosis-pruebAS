@@ -36,6 +36,7 @@ class AuthViewModel extends ChangeNotifier {
   String? invitation;
   bool _disposed = false;
   int _revision = 0;
+  int _clinicSelectionRevision = 0;
   final Map<String, bool> _workspaceManagers = {};
   int get accessRevision => _revision;
   bool get signedIn => repository.userId != null;
@@ -62,6 +63,7 @@ class AuthViewModel extends ChangeNotifier {
     final previousUser = _lastUserId;
     _lastUserId = userId;
     final previousClinic = active?.clinicId;
+    final selectionRevision = _clinicSelectionRevision;
     if (!background || userId != previousUser) {
       active = null;
       memberships = [];
@@ -112,8 +114,11 @@ class AuthViewModel extends ChangeNotifier {
           }
         }
       }
+      final selectedClinic = selectionRevision == _clinicSelectionRevision
+          ? previousClinic
+          : active?.clinicId;
       active =
-          result.where((m) => m.clinicId == previousClinic).firstOrNull ??
+          result.where((m) => m.clinicId == selectedClinic).firstOrNull ??
           result.firstOrNull;
       try {
         await onVerifiedAccess?.call(result);
@@ -172,6 +177,7 @@ class AuthViewModel extends ChangeNotifier {
   void selectClinic(ClinicMembership membership) {
     if (!memberships.contains(membership)) return;
     active = membership;
+    _clinicSelectionRevision++;
     invitation = null;
     _notify();
   }
