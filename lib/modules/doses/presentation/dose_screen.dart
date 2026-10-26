@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../data/catalog_repository.dart';
 import '../domain/catalog.dart';
 import 'dose_view_model.dart';
+import 'commercial_package_dose_screen.dart';
 
 class DoseScreen extends StatefulWidget {
   const DoseScreen({
@@ -19,6 +20,7 @@ class DoseScreen extends StatefulWidget {
     this.offline = false,
     this.recordedWeight,
     this.validateRecordedWeight,
+    this.initialDrug,
   });
   final CatalogRepository? repository;
   final PersonalDoseRepository? personalRepository;
@@ -26,6 +28,7 @@ class DoseScreen extends StatefulWidget {
   final bool admin, offline;
   final RecordedPatientWeight? recordedWeight;
   final Future<bool> Function(RecordedPatientWeight)? validateRecordedWeight;
+  final DrugDose? initialDrug;
   @override
   State<DoseScreen> createState() => _DoseScreenState();
 }
@@ -33,7 +36,6 @@ class DoseScreen extends StatefulWidget {
 class _DoseScreenState extends State<DoseScreen> {
   late final DoseViewModel model;
   final weight = TextEditingController(),
-      dose = TextEditingController(),
       step = TextEditingController(),
       breed = TextEditingController(),
       conditions = TextEditingController();
@@ -100,7 +102,7 @@ class _DoseScreenState extends State<DoseScreen> {
     // Snapshot every input before the asynchronous permission/source check.
     final inputs = [
       weight.text,
-      dose.text,
+      model.drug?.prescribedDose?.display() ?? '',
       step.text,
       breed.text,
       conditions.text,
@@ -118,7 +120,7 @@ class _DoseScreenState extends State<DoseScreen> {
       if (!await checkWeight() || !mounted) return;
       final current = [
         weight.text,
-        dose.text,
+        model.drug?.prescribedDose?.display() ?? '',
         step.text,
         breed.text,
         conditions.text,
@@ -230,7 +232,9 @@ class _DoseScreenState extends State<DoseScreen> {
   void initState() {
     super.initState();
     model = DoseViewModel(widget.repository ?? AssetCatalogRepository());
-    model.load();
+    model.load().then((_) {
+      if (mounted && widget.initialDrug != null) model.select(widget.initialDrug!);
+    });
     refreshPersonal();
   }
 
@@ -249,7 +253,7 @@ class _DoseScreenState extends State<DoseScreen> {
 
   @override
   void dispose() {
-    for (final c in [weight, dose, step, breed, conditions]) {
+    for (final c in [weight, step, breed, conditions]) {
       c.dispose();
     }
     model.dispose();
@@ -293,7 +297,7 @@ class _DoseScreenState extends State<DoseScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Cálculo rápido',
+            'Calcular dosis de un producto',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 16),
@@ -320,6 +324,25 @@ class _DoseScreenState extends State<DoseScreen> {
                 ),
               ),
             ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const CommercialPackageDoseScreen(),
+              ),
+            ),
+            icon: const Icon(Icons.medication_liquid_outlined),
+            label: const Text('Vademécum comercial · dosis del empaque'),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Vademécum farmacológico: dosis por principio activo, '
+            'presentación y validación clínica independiente.',
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Selecciona un fármaco con dosis documentada, elige su presentación e ingresa el peso. La app no propone dosis faltantes ni interpreta rangos.',
+          ),
+          const SizedBox(height: 12),
           if (widget.admin)
             OutlinedButton.icon(
               onPressed: importCatalog,
@@ -358,7 +381,7 @@ class _DoseScreenState extends State<DoseScreen> {
               child: Padding(
                 padding: EdgeInsets.all(20),
                 child: Text(
-                  'Tu catálogo está pendiente de importar. Necesitamos dosis con fuente y concentración por presentación comercial. No hay dosis precargadas ni recomendaciones inventadas.',
+                  'El Vademécum no tiene fármacos disponibles para calcular. Importa un catálogo con fuente, dosis por peso y concentración por presentación. No se calculará una dosis ingresada libremente en este modo.',
                 ),
               ),
             )
@@ -407,7 +430,9 @@ class _DoseScreenState extends State<DoseScreen> {
                 'Vía: ${selected.route ?? 'Pendiente'} · Intervalo: ${selected.interval ?? 'Pendiente'}',
               ),
               Text(
-                'Rango: ${selected.min?.display() ?? 'Pendiente'}–${selected.max?.display() ?? 'Pendiente'} mg/kg',
+                selected.prescribedDose == null
+                    ? 'Dosis: sin valor único; este modo no calcula rangos automáticamente.'
+                    : 'Dosis registrada: ${selected.prescribedDose!.display()} mg/kg',
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<Presentation>(
@@ -443,8 +468,13 @@ class _DoseScreenState extends State<DoseScreen> {
                 numeric: true,
                 readOnly: widget.recordedWeight != null,
               ),
-              field('Dosis seleccionada (mg/kg)', dose, numeric: true),
-              field('Graduación de jeringa (ml)', step, numeric: true),
+              if (selected.prescribedDose != null)
+                _bookletDoseValue(selected.prescribedDose!.display()),
+              field(
+                'Graduación de jeringa (mL, opcional)',
+                step,
+                numeric: true,
+              ),
               field('Raza', breed),
               field(
                 'Condiciones del paciente (separadas por coma)',
@@ -475,7 +505,9 @@ class _DoseScreenState extends State<DoseScreen> {
           if (model.result case final r?) ...[
             const SizedBox(height: 20),
             Text(
-              'Masa: ≈ ${r.mass.display()} mg\nVolumen teórico: ≈ ${r.volume.display()} ml\nVolumen a la graduación elegida: ≈ ${r.roundedVolume.display(places: 9)} ml',
+              step.text.trim().isEmpty
+                  ? 'Masa calculada: ${r.mass.display()} mg\nVolumen calculado: ${r.volume.display()} mL'
+                  : 'Masa calculada: ${r.mass.display()} mg\nVolumen teórico: ${r.volume.display()} mL\nVolumen redondeado a la graduación: ${r.roundedVolume.display(places: 9)} mL',
             ),
             const Text(
               'La visualización se aproxima; los límites se evalúan con valores exactos.',
@@ -516,7 +548,7 @@ class _DoseScreenState extends State<DoseScreen> {
                         builder: (context) => AlertDialog(
                           title: const Text('Segunda confirmación'),
                           content: Text(
-                            '${widget.recordedWeight == null ? '' : '$weightContext\n'}${selected!.name} · ${selected.species}\n${model.presentation!.brand}\nPeso: ${weight.text} kg · Dosis: ${dose.text} mg/kg\nVolumen: ≈ ${r.roundedVolume.display(places: 9)} ml\nVía: ${selected.route} · Intervalo: ${selected.interval}',
+                            '${widget.recordedWeight == null ? '' : '$weightContext\n'}${selected!.name} · ${selected.species}\n${model.presentation!.brand}\nPeso: ${weight.text} kg · Dosis: ${selected.prescribedDose?.display() ?? 'no disponible'} mg/kg\nVolumen: ≈ ${r.roundedVolume.display(places: 9)} ml\nVía: ${selected.route} · Intervalo: ${selected.interval}',
                           ),
                           actions: [
                             TextButton(
@@ -553,3 +585,14 @@ class _DoseScreenState extends State<DoseScreen> {
     },
   );
 }
+
+Widget _bookletDoseValue(String dose) => Padding(
+  padding: const EdgeInsets.only(bottom: 16),
+  child: InputDecorator(
+    decoration: const InputDecoration(
+      labelText: 'Dosis del Vademécum',
+      border: OutlineInputBorder(),
+    ),
+    child: Text('$dose mg/kg · no editable'),
+  ),
+);

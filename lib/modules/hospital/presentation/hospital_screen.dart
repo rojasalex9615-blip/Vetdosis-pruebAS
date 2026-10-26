@@ -1,5 +1,7 @@
 import '../domain/hospital_history.dart';
 import 'hospital_history_screen.dart';
+import '../../patients/domain/patient_contacts.dart';
+import '../../patients/presentation/patient_contact_panel.dart';
 import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/domain/patient_repository.dart';
@@ -28,7 +30,11 @@ class HospitalScreen extends StatefulWidget {
     this.onCalculateWeight,
     this.contextIsCurrent,
     this.sessionChanges,
+    this.initialPatientId,
+    this.initialInstructions,
   });
+  final String? initialPatientId;
+  final String? initialInstructions;
   final HospitalRepository repository;
   final PatientRepository patients;
   final ClinicMembership member;
@@ -50,6 +56,12 @@ class _HospitalScreenState extends State<HospitalScreen> {
   );
   DateTime day = DateTime.now();
   bool table = false;
+  Iterable<HospitalStay> get visibleStays => model.snapshot.stays.where(
+    (s) =>
+        widget.initialPatientId == null ||
+        s.patientId == widget.initialPatientId,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -208,6 +220,12 @@ class _HospitalScreenState extends State<HospitalScreen> {
       MaterialPageRoute<void>(
         builder: (_) => HospitalOrderForm(
           stay: stay,
+          initialLabel: widget.initialInstructions == null
+              ? null
+              : 'Revisión de fluidoterapia',
+          initialInstructions: widget.initialPatientId == stay.patientId
+              ? widget.initialInstructions
+              : null,
           reviewTypes: model.snapshot.typedReviews
               ? model.snapshot.reviewTypes
               : null,
@@ -659,6 +677,13 @@ class _HospitalScreenState extends State<HospitalScreen> {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 16),
+          if (widget.initialInstructions != null)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Selecciona programar una revisión en la ficha de este paciente. Revisa el borrador, elige el procedimiento y los horarios antes de guardar. Si no está hospitalizado, registra primero su ingreso.',
+              ),
+            ),
           if (waiting > 0)
             Semantics(
               liveRegion: true,
@@ -818,12 +843,12 @@ class _HospitalScreenState extends State<HospitalScreen> {
               ),
             ],
           ),
-          if (model.snapshot.stays.isEmpty &&
-              !model.busy &&
-              model.error == null)
+          if (visibleStays.isEmpty && !model.busy && model.error == null)
             const Padding(
               padding: EdgeInsets.all(24),
-              child: Text('No hay pacientes hospitalizados en esta clínica.'),
+              child: Text(
+                'No hay estancias activas disponibles para esta selección.',
+              ),
             ),
           if (table && hours.isNotEmpty)
             SingleChildScrollView(
@@ -847,7 +872,7 @@ class _HospitalScreenState extends State<HospitalScreen> {
                         ),
                     ],
                   ),
-                  for (final stay in model.snapshot.stays)
+                  for (final stay in visibleStays)
                     TableRow(
                       children: [
                         Padding(
@@ -875,7 +900,7 @@ class _HospitalScreenState extends State<HospitalScreen> {
               ),
             )
           else
-            for (final stay in model.snapshot.stays)
+            for (final stay in visibleStays)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -987,6 +1012,28 @@ class _HospitalScreenState extends State<HospitalScreen> {
                               ? null
                               : () => automation(stay.id),
                           child: const Text('Órdenes diarias de este paciente'),
+                        ),
+                      if (widget.patients is PatientContactRepository &&
+                          [
+                            ClinicRole.admin,
+                            ClinicRole.mvz,
+                            ClinicRole.recepcion,
+                          ].contains(widget.member.role))
+                        ExpansionTile(
+                          title: const Text('Contacto del tutor'),
+                          children: [
+                            PatientContactPanel(
+                              key: ValueKey(
+                                'hospital-contact:${widget.member.userId}:${widget.member.clinicId}:${stay.patientId}',
+                              ),
+                              repository:
+                                  widget.patients as PatientContactRepository,
+                              clinic: widget.member.clinicId,
+                              patient: stay.patientId,
+                              patientName: stay.patientName,
+                              onSaved: () => model.refresh(),
+                            ),
+                          ],
                         ),
                       if (model.snapshot.cageChanges &&
                           widget.repository is HospitalLocationRepository)
