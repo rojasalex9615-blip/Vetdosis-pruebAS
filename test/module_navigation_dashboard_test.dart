@@ -17,6 +17,7 @@ import 'package:vetdosis_pro/modules/core/domain/module_access.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience.dart';
 import 'package:vetdosis_pro/modules/core/domain/navigation_access.dart';
 import 'package:vetdosis_pro/modules/core/presentation/module_access_boundary.dart';
+import 'package:vetdosis_pro/modules/core/presentation/section_menu.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/dashboard_view_model.dart';
 import 'package:vetdosis_pro/modules/inventory/domain/inventory_repository.dart';
 
@@ -204,6 +205,44 @@ void main() {
     expect(find.byTooltip('Asistente IA'), findsNothing);
     expect(find.byTooltip('Ayuda y soporte'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    model.dispose();
+    auth.dispose();
+    await authRepository.controller.close();
+  });
+
+  testWidgets('drawer receives the clinic module-visibility preferences', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final authRepository = auth_fixture.FakeAuth();
+    final auth = AuthViewModel(authRepository);
+    await auth.start();
+    final model = CoreViewModel(SettingsRepository(), const AppSettings());
+    final config = ClinicExperience.defaults().withPage('Inventario', false);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model,
+      auth: auth,
+      moduleAccess: ModuleAccess.read(contract(enabled: 'inventory')),
+      experience: config,
+    )));
+    await tester.pumpAndSettle();
+    tester.state<ScaffoldState>(find.byType(Scaffold).first).openDrawer();
+    await tester.pumpAndSettle();
+    final drawer = find.byType(Drawer);
+    final menu = tester.widget<SectionMenu>(
+      find.descendant(of: drawer, matching: find.byType(SectionMenu)),
+    );
+    expect(menu.experience?.visible('Inventario'), isFalse);
+    await tester.enterText(
+      find.descendant(of: drawer, matching: find.byType(TextField)).first,
+      'inventario',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: drawer, matching: find.text('Inventario')),
+      findsNothing,
+    );
     await tester.pumpWidget(const SizedBox());
     model.dispose();
     auth.dispose();

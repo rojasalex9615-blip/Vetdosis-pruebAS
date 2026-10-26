@@ -615,6 +615,7 @@ class CoreShell extends StatelessWidget {
                 child: SectionMenu(
                   member: auth?.active,
                   access: moduleAccess,
+                  experience: experience,
                   onNavigate: (page) {
                     Navigator.pop(context);
                     model.navigate(page);
