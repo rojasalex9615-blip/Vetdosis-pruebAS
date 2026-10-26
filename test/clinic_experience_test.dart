@@ -174,6 +174,12 @@ void main() {
     await tester.scrollUntilVisible(
       saveButton, 240, scrollable: find.byType(Scrollable).first,
     );
+    // Keep the button away from the bottom viewport boundary in test layouts.
+    await Scrollable.ensureVisible(
+      tester.element(saveButton),
+      alignment: 0.5,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(saveButton);
     await tester.pumpAndSettle();
     expect(callbackCompleted, isTrue);
