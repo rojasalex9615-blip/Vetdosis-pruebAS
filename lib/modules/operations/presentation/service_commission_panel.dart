@@ -103,7 +103,8 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
         '${item['id']}', method, paymentReference, retryOperation!);
       retryKey = null;
       retryOperation = null;
-      if (mounted) setState(() => busy = false);
+      if (!mounted) return;
+      setState(() => busy = false);
       await load();
     } catch (_) {
       if (mounted) {

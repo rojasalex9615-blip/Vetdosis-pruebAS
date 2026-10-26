@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - integration/sol6-sol61-visual-preview-20261026
+      - integration/consolidation-20261026
   workflow_dispatch:
 permissions:
   contents: read
@@ -27,7 +28,17 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test --timeout 5m --concurrency 2
+  backend-local-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts/supabase -p 'test_encrypted_storage_backup.py'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test supabase/tests/hospital_delivery.test.mjs
   android-preview:
+    needs: [flutter-qa, backend-local-qa]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -82,9 +93,8 @@ jobs:
       - name: Escribir manifest de fuentes
         shell: bash
         run: |
-          mkdir -p build/preview
-          printf '{"repository":"%s","commit":"%s","source_sol":"%s","type":"debug-preview-not-for-distribution"}\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "rojasalex9615-blip/Vet-dosis-pruebas@b64ff80ca84bff29977f747c6052848da5103ad6" > build/preview/BUILD-SOURCES.json
-          sha256sum build/app/outputs/flutter-apk/app-beta-debug.apk > build/preview/SHA256SUMS.txt
+          python3 scripts/build/preview_manifest.py
+          (cd build && sha256sum app/outputs/flutter-apk/app-beta-debug.apk > preview/SHA256SUMS.txt)
       - uses: actions/upload-artifact@v4
         with:
           name: vetdosis-sol6-sol61-preview-NO-DISTRIBUIR
