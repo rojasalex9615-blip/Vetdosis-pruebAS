@@ -33,6 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 -m unittest discover -s scripts/supabase -p 'test_encrypted_storage_backup.py'
+      - run: python3 -m unittest discover -s scripts/supabase -p 'test_restore_database_backup_isolated.py'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
