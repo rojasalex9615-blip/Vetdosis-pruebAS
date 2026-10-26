@@ -52,6 +52,7 @@ begin
     (select count(*) from jsonb_object_keys(p_settings)) <> 6 or
     not (p_settings ?& array['schema_version','preset','hidden_pages','workflow_modes','default_ai_provider','hospital_notice_delivery']) or
     p_settings->'schema_version' <> '1'::jsonb or
+    jsonb_typeof(p_settings->'preset') <> 'string' or
     p_settings->>'preset' not in ('general','smallAnimals','hospital','production','custom') or
     jsonb_typeof(p_settings->'hidden_pages') <> 'array' or
     jsonb_array_length(p_settings->'hidden_pages') > 60 or
@@ -81,7 +82,8 @@ begin
 
  for flow_entry in select key, value from jsonb_each_text(p_settings->'workflow_modes') loop
    if flow_entry.key not in ('dose','prescription','hospital','inventory','clinical')
-      or flow_entry.value not in ('free','guided','mandatory')
+      or flow_entry.value is null
+       or flow_entry.value not in ('free','guided','mandatory')
    then raise exception 'clinic_experience_unknown_flow'; end if;
  end loop;
 

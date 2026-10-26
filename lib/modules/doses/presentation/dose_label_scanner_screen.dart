@@ -11,17 +11,7 @@ import 'dose_screen.dart';
 
 /// OCR is only a search aid. Neither a dose nor a product concentration is
 /// inferred from an untrusted photo; the clinician must choose a known record.
-String normalizeDoseLabel(String value) {
-  const accented = <String, String>{
-    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u',
-    'ñ': 'n',
-  };
-  var text = value.toLowerCase();
-  for (final item in accented.entries) {
-    text = text.replaceAll(item.key, item.value);
-  }
-  return text.replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
-}
+String normalizeDoseLabel(String value) => normalizeDoseSearch(value);
 
 List<DrugDose> doseLabelSuggestions(DoseCatalog catalog, String label) {
   final text = normalizeDoseLabel(label);

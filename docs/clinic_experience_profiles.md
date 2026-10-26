@@ -18,7 +18,7 @@ Rama independiente sobre la integración visual/clínica PR #26. La migración `
 - El perfil y los flujos no implican disponibilidad de funciones de producción o interfaces futuras; módulos pendientes mantienen su estado pendiente.
 
 ## Despliegue y pruebas pendientes
-1. Revisar prerequisitos \`public.clinics\`, \`public.clinic_members\`, \`private.has_clinic_role\`, y compatibilidad con SQL de integración, incluyendo rol personal.
+1. Revisar prerequisitos `public.clinics`, `public.clinic_members`, `private.has_clinic_role`, y compatibilidad con SQL de integración, incluyendo rol personal.
 2. **Completado en Pruebas:** migración `clinic_experience_preferences_beta`, origen `supabase/proposed/14J_clinic_experience.sql`. Pendiente: integración al historial de migraciones del repositorio antes de producción.
 3. **Parcial:** se probó el rol `authenticated` con lectura, escritura, revisión obsoleta/nula y bloqueo entre clínicas en transacciones revertidas. Faltan sesiones de app reales con auxiliares, dos administradores concurrentes, usuario anónimo y revocaciones de membresía.
 4. Pruebas de widget y navegación: cambiar de clínica limpia inmediatamente preferencias; Ajustes continúa visible; cambios de perfil ocultan rutas sin conceder derechos; al no existir RPC mostrar secciones habituales sin simular guardados.

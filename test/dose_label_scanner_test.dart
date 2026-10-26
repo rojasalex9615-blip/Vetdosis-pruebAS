@@ -70,6 +70,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Revisar dosis'), findsOneWidget);
     expect(find.text('Calcular dosis de un producto'), findsOneWidget);
+    // This appears only after DoseScreen receives the selected initialDrug.
+    expect(find.text('Ficticio · Especie ficticia'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
