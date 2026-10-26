@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
+import 'package:vetdosis_pro/modules/backup/presentation/backup_screen.dart';
+import 'backup_protection_test.dart' show CountingBackup;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
@@ -7,6 +11,44 @@ import 'package:http/testing.dart';
 import 'package:vetdosis_pro/modules/backup/data/drive_backup_client.dart';
 
 void main() {
+  testWidgets(
+    'Drive requires acknowledgement and encryption before account access',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BackupScreen(
+              repository: CountingBackup(),
+              member: const ClinicMembership(
+                clinicId: 'clinic',
+                clinicName: 'Prueba',
+                userId: 'user',
+                role: ClinicRole.admin,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final button = find.widgetWithText(
+        FilledButton,
+        'Guardar copia cifrada en Drive',
+      );
+      expect(button, findsOneWidget);
+      expect(tester.widget<FilledButton>(button).onPressed, isNull);
+      tester
+          .widget<CheckboxListTile>(find.byType(CheckboxListTile).first)
+          .onChanged!(true);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
+      tester
+          .widget<SwitchListTile>(find.byType(SwitchListTile).first)
+          .onChanged!(false);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(button).onPressed, isNull);
+    },
+  );
+
   // Synthetic envelope for transport tests: no patient or real encrypted data.
   final bytes = Uint8List.fromList(
     utf8.encode(
