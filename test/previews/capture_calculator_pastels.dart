@@ -46,79 +46,87 @@ void main() {
     testWidgets('Capture calculator pastels ${dark ? 'dark' : 'light'}', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(1170, 1100);
+      tester.view.physicalSize = const Size(1170, 1400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      SharedPreferences.setMockInitialValues({});
-      await (FontLoader(
-        'Roboto',
-      )..addFont(rootBundle.load('assets/fonts/DejaVuSans.ttf'))).load();
-      await (FontLoader(
-        'MaterialIcons',
-      )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
-      final core = CoreViewModel(
-        SettingsRepository(),
-        AppSettings(visualStyle: 'neu'),
-      );
-      final key = GlobalKey();
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: VetDosisApp(
-            model: core,
-          ).theme(dark ? Brightness.dark : Brightness.light),
-          home: RepaintBoundary(
-            key: key,
-            child: Scaffold(
-              body: SafeArea(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final tool in <Widget>[
-                      DoseMathTools(),
-                      CalculationScreen(
-                        initialTool: 'cri',
-                        repository: PreviewCalculations(calculations),
-                        doses: PreviewDoses(doses),
-                      ),
-                      CalculationScreen(
-                        initialTool: 'water',
-                        repository: PreviewCalculations(calculations),
-                        doses: PreviewDoses(doses),
-                      ),
-                    ])
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(12),
-                          child: tool,
+      final previousShadows = debugDisableShadows;
+      debugDisableShadows = false;
+      try {
+        SharedPreferences.setMockInitialValues({});
+        await (FontLoader(
+          'Roboto',
+        )..addFont(rootBundle.load('assets/fonts/DejaVuSans.ttf'))).load();
+        await (FontLoader(
+          'MaterialIcons',
+        )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+        final core = CoreViewModel(
+          SettingsRepository(),
+          AppSettings(visualStyle: 'neu'),
+        );
+        final key = GlobalKey();
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: VetDosisApp(
+              model: core,
+            ).theme(dark ? Brightness.dark : Brightness.light),
+            home: RepaintBoundary(
+              key: key,
+              child: Scaffold(
+                body: SafeArea(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final tool in <Widget>[
+                        DoseMathTools(visualReference: true),
+                        CalculationScreen(
+                          initialTool: 'cri',
+                          repository: PreviewCalculations(calculations),
+                          doses: PreviewDoses(doses),
                         ),
-                      ),
-                  ],
+                        CalculationScreen(
+                          initialTool: 'water',
+                          repository: PreviewCalculations(calculations),
+                          doses: PreviewDoses(doses),
+                        ),
+                      ])
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(12),
+                            child: tool,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await tester.runAsync(() async {
-        final capture =
-            await (key.currentContext!.findRenderObject()
-                    as RenderRepaintBoundary)
-                .toImage();
-        final bytes = await capture.toByteData(format: ui.ImageByteFormat.png);
-        const directory = String.fromEnvironment(
-          'CALCULATOR_PREVIEW_DIR',
-          defaultValue: 'review/calculator-pastels-20261027',
         );
-        final file = File('$directory/${dark ? 'dark' : 'light'}.png');
-        await file.parent.create(recursive: true);
-        await file.writeAsBytes(bytes!.buffer.asUint8List());
-        capture.dispose();
-      });
-      await tester.pumpWidget(const SizedBox());
-      core.dispose();
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.runAsync(() async {
+          final capture =
+              await (key.currentContext!.findRenderObject()
+                      as RenderRepaintBoundary)
+                  .toImage();
+          final bytes = await capture.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          const directory = String.fromEnvironment(
+            'CALCULATOR_PREVIEW_DIR',
+            defaultValue: 'review/calculator-pastels-20261027',
+          );
+          final file = File('$directory/${dark ? 'dark' : 'light'}.png');
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes!.buffer.asUint8List());
+          capture.dispose();
+        });
+        await tester.pumpWidget(const SizedBox());
+        core.dispose();
+      } finally {
+        debugDisableShadows = previousShadows;
+      }
     });
   }
   for (final tool in ['arithmetic', 'cri']) {

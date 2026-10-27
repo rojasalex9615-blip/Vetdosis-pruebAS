@@ -35,17 +35,10 @@ class NeuHeaderCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: soft ? null : color.withValues(alpha: dark ? .25 : .20),
-                gradient: soft
-                    ? LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color.lerp(base, color, dark ? .28 : .2)!,
-                          Color.lerp(base, Colors.white, dark ? .02 : .20)!,
-                        ],
-                      )
-                    : null,
+                // Uniform pastel strip, matching the existing app cards.
+                color: soft
+                    ? Color.lerp(base, color, dark ? .25 : .22)
+                    : color.withValues(alpha: dark ? .25 : .20),
               ),
               child: Row(
                 children: [

@@ -23,7 +23,7 @@ class DoseMathTools extends StatefulWidget {
     this.visualReference = false,
   });
 
-  /// Opt-in reference only; disabled in production navigation until approved.
+  /// Shared cushioned family; enabled by the app when neumorphic style is selected.
   final bool visualReference;
   final Future<void> Function()? onChoosePatient;
 
@@ -47,8 +47,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       key: TextEditingController(),
   };
   DoseMathMode mode = DoseMathMode.concentration;
-  bool get referenceStyle =>
-      widget.visualReference && mode == DoseMathMode.concentration;
+  bool get referenceStyle => widget.visualReference;
   String fromUnit = 'kg';
   String toUnit = 'g';
   String? result;
@@ -267,7 +266,11 @@ class _DoseMathToolsState extends State<DoseMathTools> {
   Widget _unitPicker(String value, ValueChanged<String> changed) =>
       DropdownButtonFormField<String>(
         initialValue: value,
-        decoration: const InputDecoration(border: OutlineInputBorder()),
+        isExpanded: true,
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+          border: OutlineInputBorder(),
+        ),
         items: const ['kg', 'g', 'mg', 'L', 'mL', 'cc']
             .map((unit) => DropdownMenuItem(value: unit, child: Text(unit)))
             .toList(),
@@ -403,13 +406,18 @@ class _DoseMathToolsState extends State<DoseMathTools> {
           soft: true,
           color: calculatorPastel(mode.name),
           onPressed: calculate,
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.calculate_outlined, size: 21),
-              SizedBox(width: 10),
+              const Icon(Icons.calculate_outlined, size: 21),
+              const SizedBox(width: 10),
               Flexible(
-                child: Text('Calcular volumen', textAlign: TextAlign.center),
+                child: Text(
+                  mode == DoseMathMode.conversion
+                      ? 'Convertir unidades'
+                      : 'Calcular volumen',
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),

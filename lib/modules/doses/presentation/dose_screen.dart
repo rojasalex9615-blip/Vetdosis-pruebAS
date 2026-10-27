@@ -201,7 +201,8 @@ class _DoseScreenState extends State<DoseScreen> {
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancelar'),
             ),
-            FilledButton(
+            CalculatorActionButton(
+              id: 'dose',
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Importar'),
             ),
@@ -319,7 +320,8 @@ class _DoseScreenState extends State<DoseScreen> {
                     'Usa un peso registrado y después elige el principio activo, nombre comercial o dosis personal.',
                   ),
                   const SizedBox(height: 8),
-                  FilledButton.icon(
+                  CalculatorActionButton.icon(
+                    id: 'dose',
                     onPressed: widget.offline ? null : widget.onChoosePatient,
                     icon: const Icon(Icons.person_search_outlined),
                     label: const Text('Elegir paciente y peso registrado'),
@@ -520,7 +522,8 @@ class _DoseScreenState extends State<DoseScreen> {
                   ),
               ],
               const SizedBox(height: 16),
-              FilledButton(
+              CalculatorActionButton(
+                id: 'dose',
                 onPressed: checkingWeight ? null : calculate,
                 child: const Text('Calcular'),
               ),
@@ -564,7 +567,8 @@ class _DoseScreenState extends State<DoseScreen> {
                   ? (_) => model.review()
                   : null,
             ),
-            FilledButton(
+            CalculatorActionButton(
+              id: 'dose',
               onPressed:
                   model.stage == ConfirmationStage.reviewed &&
                       r.canConfirm &&
@@ -587,7 +591,8 @@ class _DoseScreenState extends State<DoseScreen> {
                               onPressed: () => Navigator.pop(context, false),
                               child: const Text('Volver a revisar'),
                             ),
-                            FilledButton(
+                            CalculatorActionButton(
+                              id: 'dose',
                               onPressed: () => Navigator.pop(context, true),
                               child: const Text('Confirmar cálculo'),
                             ),

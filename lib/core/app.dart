@@ -879,6 +879,7 @@ class CoreShell extends StatelessWidget {
                             ClinicRole.mvz,
                           ].contains(auth!.active?.role)
                       ? DoseMathTools(
+                          visualReference: model.settings.visualStyle == 'neu',
                           onChoosePatient: canChooseDosePatient
                               ? () => chooseDosePatient(context)
                               : null,

@@ -1,3 +1,5 @@
+import '../../../core/widgets/neu_header_card.dart';
+import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import '../../patients/domain/patient_repository.dart';
 import 'fluid_therapy_panel.dart';
@@ -232,16 +234,17 @@ class _CalculationScreenState extends State<CalculationScreen> {
                 context,
               ).textTheme.bodyMedium?.copyWith(fontSize: 14),
               isDense: false,
+              itemHeight: null,
               isExpanded: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
                 border: OutlineInputBorder(),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(14)),
-                  borderSide: BorderSide(color: Color(0xFFBCCBD3)),
+                enabledBorder: NeuInputBorder(
+                  dark: Theme.of(context).brightness == Brightness.dark,
+                  depth: 1.8,
                 ),
                 filled: true,
               ),
@@ -390,7 +393,8 @@ class _CalculationScreenState extends State<CalculationScreen> {
                     'No se verifica automáticamente compatibilidad entre fármacos. Revisa todas las etapas antes de confirmar.',
                   ),
                 ],
-                FilledButton(
+                CalculatorActionButton(
+                  id: selected,
                   onPressed: reference.evidence.verified
                       ? () => referenceCalculate(reference)
                       : null,
@@ -409,38 +413,58 @@ class _CalculationScreenState extends State<CalculationScreen> {
           if (def != null &&
               selected != 'fluids' &&
               (selected != 'adjustment' || reference != null)) ...[
-            for (final f in def.inputs)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: TextFormField(
-                  key: ValueKey('$selected:$generation:${f.id}:$referenceId'),
-                  initialValue: f.id == 'factor'
-                      ? reference?.data['factor'] as String?
-                      : null,
-                  readOnly: f.id == 'factor',
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: f.label,
-                    helperMaxLines: 4,
-                    helperText: [
-                      ?calculatorUnitHint(f.label),
-                      if (f.zero) 'Permite 0 si el MVZ así lo indica.',
-                    ].join('\n'),
-                  ),
-                  onChanged: (v) {
-                    values[f.id] = v;
-                    model.clear();
-                    setState(() {
-                      reviewed = false;
-                      confirmed = false;
-                    });
-                  },
+            NeuHeaderCard(
+              title: 'Datos del cálculo',
+              icon: calculatorIdentity(selected).icon,
+              color: calculatorIdentity(selected).color,
+              soft: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final f in def.inputs)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: CalculatorFieldLabel(
+                          label: f.label,
+                          child: TextFormField(
+                            key: ValueKey(
+                              '$selected:$generation:${f.id}:$referenceId',
+                            ),
+                            initialValue: f.id == 'factor'
+                                ? reference?.data['factor'] as String?
+                                : null,
+                            readOnly: f.id == 'factor',
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              helperMaxLines: 4,
+                              helperText: [
+                                ?calculatorUnitHint(f.label),
+                                if (f.zero)
+                                  'Permite 0 si el MVZ así lo indica.',
+                              ].join('\n'),
+                            ),
+                            onChanged: (v) {
+                              values[f.id] = v;
+                              model.clear();
+                              setState(() {
+                                reviewed = false;
+                                confirmed = false;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
+            ),
             const SizedBox(height: 16),
-            FilledButton(
+            CalculatorActionButton(
+              id: selected,
               onPressed: () {
                 if (reference?.data['factor'] != null) {
                   values['factor'] = reference!.data['factor'] as String;
