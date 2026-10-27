@@ -13,7 +13,9 @@ reset role;
 begin;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000150',false);
 set role authenticated;
-select public.permission_grant(:'clinic',auth.uid(),'backup.export',null,clock_timestamp()+interval '1 day','Synthetic own profile export');
+reset role;
+select public.permission_grant(:'clinic',auth.uid(),'backup.export',null,clock_timestamp()+interval '1 day','Synthetic own profile export') where private.permission_effective(:'clinic',auth.uid(),'backup.export') is null;
+set role authenticated;
 select public.ops_staff_medical_workspace(:'clinic',auth.uid())->>'member_since' as admin_since \gset
 select public.ops_staff_medical_write(:'clinic','save','{"allergies":"OWN-PRIVATE-HEALTH"}',true,1,:'notice_hash',0,:'admin_since',auth.uid(),repeat('ee01',12));
 select public.clinic_export(:'clinic')::jsonb->'tables'->'my_staff_medical_profile' as own_export \gset
@@ -39,7 +41,9 @@ select pg_temp.medical_assert(jsonb_array_length(:'directory'::jsonb->'items')=1
 select pg_temp.medical_error(format('select public.ops_staff_medical_view(%L,%L,null,%L)',:'clinic','00000000-0000-0000-0000-000000000181',auth.uid()),'staff_medical_purpose_required');
 select public.ops_staff_medical_view(:'clinic','00000000-0000-0000-0000-000000000181','emergency',auth.uid()) as viewed \gset
 select pg_temp.medical_assert(:'viewed'::jsonb->'details'->>'allergies'='HEALTH-NOT-IN-LOGS','authorized detail missing');
-select public.permission_grant(:'clinic',auth.uid(),'backup.export',null,clock_timestamp()+interval '1 day','Synthetic privacy backup');
+reset role;
+select public.permission_grant(:'clinic',auth.uid(),'backup.export',null,clock_timestamp()+interval '1 day','Synthetic privacy backup') where private.permission_effective(:'clinic',auth.uid(),'backup.export') is null;
+set role authenticated;
 select pg_temp.medical_assert(jsonb_array_length(public.clinic_export(:'clinic')::jsonb->'tables'->'my_staff_medical_events')=0,'backup copied coworker consent');
 select pg_temp.medical_assert(jsonb_array_length(public.clinic_export(:'clinic')::jsonb->'tables'->'my_staff_medical_profile')=0,'backup copied coworker health');
 reset role;
