@@ -78,3 +78,30 @@ Ejecutar `bash supabase/tests/run_staff_medical_privacy.sh`.
 Migración generada con Supabase CLI:
 `supabase/migrations/20261027142748_staff_medical_consent_access.sql`.
 Pendientes revisión de CodeRabbit, integración y validación con dos clínicas/APK.
+
+## Retención y mantenimiento antes de eliminar cuentas
+
+Las referencias a clínica/persona son restrictivas a propósito. Retirar destruye
+el contenido activo; no borra automáticamente los comprobantes mínimos. No hay
+borrado de cuentas/clínicas habilitado por esta entrega ni un plazo legal inferido.
+Antes de uso real, el responsable de privacidad debe aprobar el plazo y cualquier
+bloqueo de conservación. Sin decisión registrada se rechaza la purga.
+
+El propietario de la base puede registrar, por clínica/persona, una decisión en
+`private.staff_medical_retention_decisions` con fecha de elegibilidad,
+`legal_hold=false` y referencia a la política o ticket aprobado (sin datos de
+salud). `private.staff_medical_purge(clinic,user)` verifica la decisión vencida,
+exige ficha ya retirada y elimina únicamente el historial mínimo, estado y recibos
+médicos de ese ámbito, además de accesos que identifiquen a esa persona como
+sujeto o actor. Registra la referencia de mantenimiento sin contenido médico.
+Este paso es irreversible y debe ejecutarse por un operador autorizado, después
+de comprobar las obligaciones y el alcance de respaldos; no se ejecutó aquí.
+
+Ni el usuario de aplicación, ni un administrador de clínica, ni `service_role`
+pueden registrar la decisión o invocar la purga. Los eventos siguen rechazando
+UPDATE y DELETE ordinarios, incluso por el propietario; solo la función de
+mantenimiento abre una autorización interna limitada a transacción/ámbito. No
+hay cascadas silenciosas ni un interruptor GUC manipulable por el cliente.
+La eliminación completa de cuentas conserva las restricciones de otros módulos y
+requiere su propio flujo; esta función solo resuelve las referencias nuevas del
+historial médico. Las copias ya exportadas requieren su política de retención.

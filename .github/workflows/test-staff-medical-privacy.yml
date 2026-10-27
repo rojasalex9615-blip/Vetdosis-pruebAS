@@ -3,11 +3,13 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/*staff_medical_consent_access.sql'
-      - 'supabase/tests/*staff_medical*'
-      - 'supabase/tests/run_permission_clinic_operations.sh'
-      - 'lib/modules/operations/**'
-      - 'test/staff_medical_privacy_test.dart'
+      - 'supabase/tests/**'
+      - 'supabase/proposed/**'
+      - 'supabase/adaptations/**'
       - '.github/workflows/test-staff-medical-privacy.yml'
+concurrency:
+  group: staff-medical-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

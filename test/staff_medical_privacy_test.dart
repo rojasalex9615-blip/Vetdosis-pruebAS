@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
@@ -142,6 +143,31 @@ Future<void> auditedConsult(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'hidden withdrawal confirmation reports that no request was sent',
+    (tester) async {
+      await roomy(tester);
+      final repo = MedicalRepository();
+      await tester.pumpWidget(app(repo));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.text('Retirar mi ficha y consentimiento'),
+      );
+      await tester.tap(find.text('Retirar mi ficha y consentimiento'));
+      await tester.pumpAndSettle();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      await tester.tap(find.text('Confirmar retirada'));
+      await tester.pumpAndSettle();
+      expect(repo.writes, isEmpty);
+      expect(
+        find.textContaining('Revisa tu ficha y repite la retirada'),
+        findsOneWidget,
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+    },
+  );
   testWidgets(
     'withdrawal is independent of acceptance and never opens coworker data',
     (tester) async {

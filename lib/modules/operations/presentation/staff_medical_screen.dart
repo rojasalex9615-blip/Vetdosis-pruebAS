@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
+
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
@@ -149,8 +151,7 @@ class _StaffMedicalScreenState extends State<StaffMedicalScreen>
       if (current(revision)) {
         setState(() {
           clear();
-          error =
-              'No se pudo consultar tu ficha. Comprueba conexión, sesión y la actualización de la clínica.';
+          error = 'No se pudo consultar tu ficha. Comprueba conexión, sesión y la actualización de la clínica.';
         });
       }
     } finally {
@@ -180,7 +181,14 @@ class _StaffMedicalScreenState extends State<StaffMedicalScreen>
         ],
       ),
     );
-    if (current(revision) && accepted == true) await mutate('withdraw');
+    if (accepted != true || !mounted) return;
+    if (!current(revision)) {
+      setState(
+        () => error = 'La pantalla se ocultó antes de confirmar. Revisa tu ficha y repite la retirada.',
+      );
+      return;
+    }
+    await mutate('withdraw');
   }
 
   Future<void> mutate(String action) async {
@@ -382,8 +390,7 @@ class _StaffMedicalTeamScreenState extends State<StaffMedicalTeamScreen>
         people = [];
         busy = false;
         more = false;
-        error =
-            'La consulta se ocultó al salir de la aplicación. Actualiza y confirma de nuevo la finalidad para consultar otra ficha.';
+        error = 'La consulta se ocultó al salir de la aplicación. Actualiza y confirma de nuevo la finalidad para consultar otra ficha.';
       });
     }
   }
@@ -486,7 +493,13 @@ class _StaffMedicalTeamScreenState extends State<StaffMedicalTeamScreen>
         ),
       ),
     );
-    if (!current(revision) || accepted != true) return;
+    if (accepted != true || !mounted) return;
+    if (!current(revision)) {
+      setState(
+        () => error = 'La pantalla se ocultó antes de confirmar. Confirma de nuevo la finalidad de consulta.',
+      );
+      return;
+    }
     setState(() {
       busy = true;
       error = null;

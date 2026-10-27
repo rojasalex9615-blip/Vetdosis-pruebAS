@@ -95,6 +95,7 @@ begin
  notice=private.staff_medical_notice();
  if p_action='save' and (p_consent is distinct from true or p_notice_version is distinct from (notice->>'version')::integer or p_notice_hash is distinct from notice->>'hash') then raise exception 'staff_medical_consent_required';end if;
  select * into previous from public.staff_medical_profiles where clinic_id=p_clinic and user_id=auth.uid();
+ if p_action='withdraw' and not found then raise exception 'staff_medical_profile_unavailable';end if;
  insert into private.staff_medical_events(clinic_id,user_id,member_since,revision,action,notice_version,notice_hash)
  values(p_clinic,auth.uid(),since,revision+1,case when p_action='save' then 'accepted' else 'withdrawn' end,
  case when p_action='save' then p_notice_version else (select notice_version from private.staff_medical_events where id=previous.consent_event_id) end,
@@ -174,12 +175,61 @@ revoke all on function private.clinic_export_before_staff_medical_privacy(uuid) 
 create function public.clinic_export(p_clinic uuid) returns text language plpgsql security definer set search_path='' as $$
 declare snapshot jsonb;begin
  snapshot=private.clinic_export_before_staff_medical_privacy(p_clinic)::jsonb;
+ snapshot=jsonb_set(snapshot,'{tables,my_staff_medical_profile}',(select coalesce(jsonb_agg(to_jsonb(p)-'details'),'[]') from public.staff_medical_profiles p where p.clinic_id=p_clinic and p.user_id=auth.uid()));
  snapshot=jsonb_set(snapshot,'{tables,my_staff_medical_events}',(select coalesce(jsonb_agg(to_jsonb(e)),'[]') from private.staff_medical_events e where e.clinic_id=p_clinic and e.user_id=auth.uid()));
  snapshot=jsonb_set(snapshot,'{tables,my_staff_medical_accesses}',(select coalesce(jsonb_agg(to_jsonb(a)),'[]') from private.staff_medical_accesses a where a.clinic_id=p_clinic and a.subject_id=auth.uid()));
  return jsonb_set(snapshot,'{tables,my_staff_medical_state}',(select coalesce(jsonb_agg(to_jsonb(s)),'[]') from private.staff_medical_state s where s.clinic_id=p_clinic and s.user_id=auth.uid()))::text;
 end$$;
 revoke all on function public.clinic_export(uuid) from public,anon,authenticated,service_role;
 grant execute on function public.clinic_export(uuid) to authenticated;
+-- No automatic retention period: a reviewed decision is required for each purge.
+-- Owner-only maintenance, unavailable to app roles and service_role.
+create table private.staff_medical_retention_decisions(
+ clinic_id uuid not null,user_id uuid not null,purge_after timestamptz not null,
+ legal_hold boolean not null default true,policy_ref text not null check(length(btrim(policy_ref)) between 8 and 1000),
+ approved_at timestamptz not null default clock_timestamp(),primary key(clinic_id,user_id)
+);
+create table private.staff_medical_purge_permits(
+ backend integer not null,transaction_id bigint not null,clinic_id uuid not null,user_id uuid not null,
+ primary key(backend,transaction_id)
+);
+alter table private.staff_medical_retention_decisions enable row level security;
+alter table private.staff_medical_purge_permits enable row level security;
+revoke all on private.staff_medical_retention_decisions,private.staff_medical_purge_permits from public,anon,authenticated,service_role;
+create function private.staff_medical_history_guard() returns trigger language plpgsql set search_path='' as $$
+begin
+ if tg_op='DELETE' and current_user=(select pg_get_userbyid(relowner) from pg_class where oid='private.staff_medical_events'::regclass)
+ and exists(select 1 from private.staff_medical_purge_permits p where p.backend=pg_backend_pid() and p.transaction_id=txid_current()
+  and p.clinic_id=old.clinic_id and (case when tg_table_name='staff_medical_events' then to_jsonb(old)->>'user_id'=p.user_id::text
+   else to_jsonb(old)->>'subject_id'=p.user_id::text or to_jsonb(old)->>'actor_id'=p.user_id::text end)) then return old;end if;
+ raise exception 'staff_medical_history_is_immutable';
+end$$;
+revoke all on function private.staff_medical_history_guard() from public,anon,authenticated,service_role;
+drop trigger staff_medical_event_immutable on private.staff_medical_events;
+drop trigger staff_medical_access_immutable on private.staff_medical_accesses;
+create trigger staff_medical_event_immutable before update or delete on private.staff_medical_events for each row execute function private.staff_medical_history_guard();
+create trigger staff_medical_access_immutable before update or delete on private.staff_medical_accesses for each row execute function private.staff_medical_history_guard();
+create function private.staff_medical_purge(p_clinic uuid,p_user uuid) returns void
+language plpgsql security invoker set search_path='' as $$
+declare decision private.staff_medical_retention_decisions;
+begin
+ if current_user<>(select pg_get_userbyid(relowner) from pg_class where oid='private.staff_medical_events'::regclass) then raise exception 'maintenance_owner_required';end if;
+ perform 1 from public.clinics where id=p_clinic for update;
+ select * into decision from private.staff_medical_retention_decisions where clinic_id=p_clinic and user_id=p_user for update;
+ if not found or decision.legal_hold or decision.purge_after>clock_timestamp() then raise exception 'staff_medical_retention_not_released';end if;
+ if exists(select 1 from public.staff_medical_profiles where clinic_id=p_clinic and user_id=p_user) then raise exception 'staff_medical_withdrawal_required';end if;
+ insert into private.staff_medical_purge_permits values(pg_backend_pid(),txid_current(),p_clinic,p_user);
+ delete from private.staff_medical_accesses where clinic_id=p_clinic and (subject_id=p_user or actor_id=p_user);
+ delete from private.staff_medical_events where clinic_id=p_clinic and user_id=p_user;
+ delete from private.staff_medical_state where clinic_id=p_clinic and user_id=p_user;
+ delete from private.vet_operation_receipts where clinic_id=p_clinic and user_id=p_user and fingerprint->>'kind'='staff_medical';
+ delete from private.staff_medical_purge_permits where backend=pg_backend_pid() and transaction_id=txid_current();
+ delete from private.staff_medical_retention_decisions where clinic_id=p_clinic and user_id=p_user;
+ -- Operator policy/ticket is retained without subject or medical content.
+ raise log 'staff_medical_purge policy_ref=%',decision.policy_ref;
+end$$;
+revoke all on function private.staff_medical_purge(uuid,uuid) from public,anon,authenticated,service_role;
+
 select private.beta_install_guards();
 notify pgrst,'reload schema';
 commit;
