@@ -218,6 +218,7 @@ begin
  select * into decision from private.staff_medical_retention_decisions where clinic_id=p_clinic and user_id=p_user for update;
  if not found or decision.legal_hold or decision.purge_after>clock_timestamp() then raise exception 'staff_medical_retention_not_released';end if;
  if exists(select 1 from public.staff_medical_profiles where clinic_id=p_clinic and user_id=p_user) then raise exception 'staff_medical_withdrawal_required';end if;
+ if exists(select 1 from public.clinic_members where clinic_id=p_clinic and user_id=p_user) then raise exception 'staff_medical_membership_removal_required';end if;
  insert into private.staff_medical_purge_permits values(pg_backend_pid(),txid_current(),p_clinic,p_user);
  delete from private.staff_medical_accesses where clinic_id=p_clinic and (subject_id=p_user or actor_id=p_user);
  delete from private.staff_medical_events where clinic_id=p_clinic and user_id=p_user;
