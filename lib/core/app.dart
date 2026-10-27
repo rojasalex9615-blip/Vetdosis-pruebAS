@@ -1,3 +1,4 @@
+import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
 import '../modules/clinic_experience/presentation/clinic_experience_boundary.dart';
@@ -286,32 +287,32 @@ class VetDosisApp extends StatelessWidget {
             repository: experienceRepository,
             revision: auth?.accessRevision ?? 0,
             builder: (experience, ready, reload) => CoreShell(
-            model: model,
-            auth: auth,
-            moduleAccess: access,
-            reviewCatalog: reviewCatalog,
-            personalDoses: personalDoses,
-            patients: patients,
-            hospital: hospital,
-            hospitalAlerts: hospitalAlerts,
-            hospitalPushService: hospitalPushService,
-            forms: forms,
-            identity: identity,
-            clinical: clinical,
-            prescribing: prescribing,
-            referenceLibrary: referenceLibrary,
-            inventory: inventory,
-            operations: operations,
-            attendance: attendance,
-            backup: backup,
-            ai: ai,
-            subscriptions: subscriptions,
-            support: support,
-            experience: experience,
-            experienceRepository: experienceRepository,
-            experienceReady: ready,
-            onExperienceSaved: reload,
-          ),
+              model: model,
+              auth: auth,
+              moduleAccess: access,
+              reviewCatalog: reviewCatalog,
+              personalDoses: personalDoses,
+              patients: patients,
+              hospital: hospital,
+              hospitalAlerts: hospitalAlerts,
+              hospitalPushService: hospitalPushService,
+              forms: forms,
+              identity: identity,
+              clinical: clinical,
+              prescribing: prescribing,
+              referenceLibrary: referenceLibrary,
+              inventory: inventory,
+              operations: operations,
+              attendance: attendance,
+              backup: backup,
+              ai: ai,
+              subscriptions: subscriptions,
+              support: support,
+              experience: experience,
+              experienceRepository: experienceRepository,
+              experienceReady: ready,
+              onExperienceSaved: reload,
+            ),
           ),
         );
 }
@@ -384,6 +385,36 @@ class CoreShell extends StatelessWidget {
         ClinicRole.auxiliar,
       ].contains(auth?.active?.role);
 
+  bool get canChooseDosePatient =>
+      hospital != null &&
+      clinical != null &&
+      auth?.active != null &&
+      hospitalWeightContext(auth!.active!) &&
+      serverAllowed('Cálculo rápido');
+
+  Future<void> chooseDosePatient(BuildContext context) async {
+    final member = auth?.active;
+    if (!canChooseDosePatient || member == null) return;
+    final accessRevision = auth?.accessRevision;
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HospitalDosePatientScreen(
+          hospital: hospital!,
+          clinical: clinical!,
+          member: member,
+          sessionChanges: auth,
+          contextIsCurrent: () =>
+              hospitalWeightContext(member) &&
+              auth?.accessRevision == accessRevision &&
+              serverAllowed('Cálculo rápido'),
+          onCalculate: (weight, validate) =>
+              hospitalWeightCalculation(context, weight, validate),
+        ),
+      ),
+    );
+  }
+
   /// Opens the calculator after rechecking session, module access, and weight.
   ///
   /// [validate] must verify the persisted measurement; its errors propagate.
@@ -426,6 +457,18 @@ class CoreShell extends StatelessWidget {
               admin: member.role == ClinicRole.admin,
               recordedWeight: weight,
               validateRecordedWeight: current,
+              onReviewPatientInstructions:
+                  hospitalAlerts != null && patients != null
+                  ? (patientId) async {
+                      if (!hospitalWeightContext(member) ||
+                          !serverAllowed('Cálculo rápido')) {
+                        return;
+                      }
+                      // Reuse the complete hospital module, including prescription actions.
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      model.navigate('Hospitalización', patientId: patientId);
+                    }
+                  : null,
             ),
           ),
         ),
@@ -641,7 +684,8 @@ class CoreShell extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: bottomNavigation(),
-      floatingActionButton: auth?.active != null &&
+      floatingActionButton:
+          auth?.active != null &&
               allowed('Cálculo rápido') &&
               model.screen != 'Escanear etiqueta para dosis'
           ? FloatingActionButton(
@@ -741,7 +785,9 @@ class CoreShell extends StatelessWidget {
                           user: auth!.active!.userId,
                           offline: auth!.offline,
                         )
-                      : const Text('El modo revisión requiere una cuenta autorizada y conexión.')
+                      : const Text(
+                          'El modo revisión requiere una cuenta autorizada y conexión.',
+                        )
                 else if (model.screen == 'Más')
                   SectionMenu(
                     member: auth?.active,
@@ -791,6 +837,9 @@ class CoreShell extends StatelessWidget {
                           userId: auth?.active?.userId,
                           admin: auth?.active?.role == ClinicRole.admin,
                           offline: auth?.offline ?? false,
+                          onChoosePatient: canChooseDosePatient
+                              ? () => chooseDosePatient(context)
+                              : null,
                         )
                       : const Text(
                           'El cálculo clínico requiere acceso de MVZ o administrador.',
@@ -829,7 +878,11 @@ class CoreShell extends StatelessWidget {
                             ClinicRole.admin,
                             ClinicRole.mvz,
                           ].contains(auth!.active?.role)
-                      ? const DoseMathTools()
+                      ? DoseMathTools(
+                          onChoosePatient: canChooseDosePatient
+                              ? () => chooseDosePatient(context)
+                              : null,
+                        )
                       : const Text(
                           'El cálculo clínico requiere acceso de MVZ o administrador.',
                         )
@@ -946,7 +999,8 @@ class CoreShell extends StatelessWidget {
                                 clinical: clinical,
                                 contextIsCurrent: hospitalWeightContext,
                                 sessionChanges: auth,
-                                onCalculateWeight: serverAllowed('Cálculo rápido')
+                                onCalculateWeight:
+                                    serverAllowed('Cálculo rápido')
                                     ? (weight, validate) =>
                                           hospitalWeightCalculation(
                                             context,
@@ -1218,7 +1272,9 @@ class CoreShell extends StatelessWidget {
                           allowed(model.screen) &&
                           auth?.offline != true
                       ? BackupScreen(
-                          key: ValueKey('backup-${auth!.active!.userId}-${auth!.active!.clinicId}'),
+                          key: ValueKey(
+                            'backup-${auth!.active!.userId}-${auth!.active!.clinicId}',
+                          ),
                           identity: identity,
                           repository: backup!,
                           member: auth!.active!,
@@ -1229,7 +1285,11 @@ class CoreShell extends StatelessWidget {
                         )
                 else if (model.screen == 'Asistente IA')
                   ai != null && auth?.active != null && auth?.offline != true
-                      ? AiScreen(repository: ai!, member: auth!.active!, preferredProvider: experience?.defaultAiProvider)
+                      ? AiScreen(
+                          repository: ai!,
+                          member: auth!.active!,
+                          preferredProvider: experience?.defaultAiProvider,
+                        )
                       : const Text('El asistente requiere cuenta y conexión.')
                 else if (model.screen == 'Planes')
                   subscriptions != null &&
@@ -1308,55 +1368,59 @@ class CoreShell extends StatelessWidget {
       ListTile(
         leading: const Icon(Icons.rate_review_outlined),
         title: const Text('Modo revisión de catálogos'),
-        subtitle: const Text('Datos sin verificar; comenta los errores por fila.'),
+        subtitle: const Text(
+          'Datos sin verificar; comenta los errores por fila.',
+        ),
         onTap: () => model.navigate('Modo revisión'),
       ),
     if (auth?.active?.role != ClinicRole.revisor) ...[
-    if (auth?.active != null)
-      ClinicIdentity(
-        key: ValueKey(
-          "identity:${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role}",
+      if (auth?.active != null)
+        ClinicIdentity(
+          key: ValueKey(
+            "identity:${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role}",
+          ),
+          member: auth!.active!,
+          repository: forms,
+          identity: identity,
         ),
-        member: auth!.active!,
-        repository: forms,
-        identity: identity,
-      ),
-    _ModuleSearch(
-      member: auth?.active,
-      moduleAccess: moduleAccess,
-      experience: experience,
-      onNavigate: model.navigate,
-    ),
-    DashboardScreen(
-      key: ValueKey((
-        auth?.active?.userId,
-        auth?.active?.clinicId,
-        auth?.active?.role,
-        auth?.offline,
-        moduleAccess,
-        experience?.revision,
-      )),
-      model: DashboardViewModel(
+      _ModuleSearch(
         member: auth?.active,
-        operations: operations,
-        inventory: inventory,
-        hospital: hospital,
-        patients: patients,
-        backup: backup,
-        attendance: attendance,
         moduleAccess: moduleAccess,
+        experience: experience,
+        onNavigate: model.navigate,
       ),
-      offline: auth?.offline ?? false,
-      homePilot: true,
-      alerts: hospitalAlerts,
-      isVisible: allowed,
-      onNavigate: model.navigate,
-    ),
-    FirstStepsBanner(
-      key: ValueKey('guide:${auth?.active?.userId}:${auth?.active?.clinicId}'),
-      scope: '${auth?.active?.userId}:${auth?.active?.clinicId}',
-      onOpen: () => model.navigate('Inicio guiado'),
-    ),
+      DashboardScreen(
+        key: ValueKey((
+          auth?.active?.userId,
+          auth?.active?.clinicId,
+          auth?.active?.role,
+          auth?.offline,
+          moduleAccess,
+          experience?.revision,
+        )),
+        model: DashboardViewModel(
+          member: auth?.active,
+          operations: operations,
+          inventory: inventory,
+          hospital: hospital,
+          patients: patients,
+          backup: backup,
+          attendance: attendance,
+          moduleAccess: moduleAccess,
+        ),
+        offline: auth?.offline ?? false,
+        homePilot: true,
+        alerts: hospitalAlerts,
+        isVisible: allowed,
+        onNavigate: model.navigate,
+      ),
+      FirstStepsBanner(
+        key: ValueKey(
+          'guide:${auth?.active?.userId}:${auth?.active?.clinicId}',
+        ),
+        scope: '${auth?.active?.userId}:${auth?.active?.clinicId}',
+        onOpen: () => model.navigate('Inicio guiado'),
+      ),
     ],
   ];
 
@@ -1465,22 +1529,29 @@ class CoreShell extends StatelessWidget {
       ListTile(
         leading: const Icon(Icons.tune_outlined),
         title: const Text('Perfil, módulos y flujos de la clínica'),
-        subtitle: Text(!experienceReady
-            ? 'Configuración compartida aún no disponible en el servidor.'
-            : auth?.active?.role == ClinicRole.admin
+        subtitle: Text(
+          !experienceReady
+              ? 'Configuración compartida aún no disponible en el servidor.'
+              : auth?.active?.role == ClinicRole.admin
               ? 'Elige secciones, submódulos, procesos y proveedor IA predeterminado.'
-              : 'Solo la administración puede modificar estas preferencias.'),
-        onTap: experienceRepository == null || !experienceReady ? null : () async {
-          await Navigator.push<void>(context, MaterialPageRoute(
-            builder: (_) => ClinicExperienceScreen(
-              member: auth!.active!,
-              initial: experience ?? ClinicExperience.defaults(),
-              repository: experienceRepository!,
-              ready: experienceReady,
-              onSaved: onExperienceSaved,
-            ),
-          ));
-        },
+              : 'Solo la administración puede modificar estas preferencias.',
+        ),
+        onTap: experienceRepository == null || !experienceReady
+            ? null
+            : () async {
+                await Navigator.push<void>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ClinicExperienceScreen(
+                      member: auth!.active!,
+                      initial: experience ?? ClinicExperience.defaults(),
+                      repository: experienceRepository!,
+                      ready: experienceReady,
+                      onSaved: onExperienceSaved,
+                    ),
+                  ),
+                );
+              },
       ),
     Text(
       'Configura tus herramientas',
@@ -1717,7 +1788,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
         .where(
           (p) =>
               navigationAllowed(p, widget.member, widget.moduleAccess) &&
-               (widget.experience?.visible(p) ?? true) &&
+              (widget.experience?.visible(p) ?? true) &&
               normalize(p).contains(normalize(query.trim())),
         )
         .toList();

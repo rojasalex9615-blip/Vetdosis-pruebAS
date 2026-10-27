@@ -108,9 +108,11 @@ void main() {
                     as RenderRepaintBoundary)
                 .toImage();
         final bytes = await capture.toByteData(format: ui.ImageByteFormat.png);
-        final file = File(
-          'review/calculator-pastels-20261027/${dark ? 'dark' : 'light'}.png',
+        const directory = String.fromEnvironment(
+          'CALCULATOR_PREVIEW_DIR',
+          defaultValue: 'review/calculator-pastels-20261027',
         );
+        final file = File('$directory/${dark ? 'dark' : 'light'}.png');
         await file.parent.create(recursive: true);
         await file.writeAsBytes(bytes!.buffer.asUint8List());
         capture.dispose();

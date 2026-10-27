@@ -14,7 +14,8 @@ enum DoseMathMode {
 
 /// Arithmetic helpers only. All clinical inputs are supplied by the clinician.
 class DoseMathTools extends StatefulWidget {
-  const DoseMathTools({super.key});
+  const DoseMathTools({super.key, this.onChoosePatient});
+  final Future<void> Function()? onChoosePatient;
 
   @override
   State<DoseMathTools> createState() => _DoseMathToolsState();
@@ -234,34 +235,55 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         'Operaciones matemáticas. Ingresa únicamente parámetros ya indicados y confirma las unidades y la presentación con el MVZ.',
       ),
       const SizedBox(height: 16),
-      DropdownButtonFormField<DoseMathMode>(
-        isExpanded: true,
-        initialValue: mode,
-        decoration: const InputDecoration(
-          labelText: 'Tipo de cálculo',
-          border: OutlineInputBorder(),
-        ),
-        items: DoseMathMode.values
-            .map(
-              (item) => DropdownMenuItem(
-                value: item,
-                child: Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+      CalculatorSelectorCard(
+        id: mode.name,
+        title: 'Tipo de cálculo',
+        child: DropdownButtonFormField<DoseMathMode>(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
+          isDense: false,
+          isExpanded: true,
+          initialValue: mode,
+          decoration: InputDecoration(
+            helperText: mode.label,
+            helperMaxLines: 3,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            enabledBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+              borderSide: BorderSide(color: Color(0xFFBCCBD3)),
+            ),
+            border: const OutlineInputBorder(),
+          ),
+          items: DoseMathMode.values
+              .map(
+                (item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            )
-            .toList(),
-        onChanged: (value) => setState(() {
-          mode = value ?? mode;
-          result = null;
-          formula = null;
-          concentrationDetail = null;
-          error = null;
-        }),
+              )
+              .toList(),
+          onChanged: (value) => setState(() {
+            mode = value ?? mode;
+            result = null;
+            formula = null;
+            concentrationDetail = null;
+            error = null;
+          }),
+        ),
       ),
       const SizedBox(height: 16),
+      if (widget.onChoosePatient != null && mode == DoseMathMode.concentration)
+        OutlinedButton.icon(
+          onPressed: widget.onChoosePatient,
+          icon: const Icon(Icons.person_search_outlined),
+          label: const Text('Elegir paciente, peso y fármaco'),
+        ),
       ..._inputs(),
       FilledButton.icon(
         onPressed: calculate,

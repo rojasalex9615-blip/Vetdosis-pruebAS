@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import '../../patients/domain/recorded_weight.dart';
 import '../domain/manufacturer_catalog.dart';
 import 'manufacturer_catalog_screen.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,14 @@ import '../domain/quantity.dart';
 /// Until product labels have been verified and published as reviewed data,
 /// the professional transcribes the actual package instruction manually.
 class CommercialPackageDoseScreen extends StatefulWidget {
-  const CommercialPackageDoseScreen({super.key, this.initialProduct});
+  const CommercialPackageDoseScreen({
+    super.key,
+    this.initialProduct,
+    this.recordedWeight,
+    this.validateRecordedWeight,
+  });
+  final RecordedPatientWeight? recordedWeight;
+  final Future<bool> Function(RecordedPatientWeight)? validateRecordedWeight;
   final ManufacturerProduct? initialProduct;
 
   @override
@@ -37,6 +46,9 @@ class _CommercialPackageDoseScreenState
   }
 
   void selectProduct(ManufacturerProduct? value) {
+    generation++;
+    checkingWeight = false;
+    weightApplied = false;
     selectedProduct = value;
     for (final c in [
       product,
@@ -77,9 +89,71 @@ class _CommercialPackageDoseScreenState
   int tabletParts = 2;
   CommercialPackageResult? result;
   String? error;
+  bool checkingWeight = false, weightApplied = false;
+  int generation = 0;
+  List<Object> get inputSnapshot => [
+    product.text,
+    presentation.text,
+    labelWording.text,
+    species.text,
+    route.text,
+    frequency.text,
+    animalWeight.text,
+    labelAmount.text,
+    perKg.text,
+    unit.name,
+    proportionalConfirmed,
+    tabletSplitAllowedByLabel,
+    tabletParts,
+  ];
+  @override
+  void didUpdateWidget(covariant CommercialPackageDoseScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previous = oldWidget.recordedWeight, next = widget.recordedWeight;
+    if ((previous == null) != (next == null) ||
+        (previous != null && next != null && !previous.sameMeasurement(next)) ||
+        oldWidget.validateRecordedWeight != widget.validateRecordedWeight) {
+      generation++;
+      checkingWeight = false;
+      weightApplied = false;
+      animalWeight.clear();
+      result = null;
+      error = null;
+    }
+  }
+
+  Future<bool> useRecordedWeight() async {
+    final source = widget.recordedWeight;
+    if (source == null || checkingWeight) return false;
+    final revision = generation;
+    setState(() {
+      checkingWeight = true;
+      result = null;
+      error = null;
+    });
+    var valid = false;
+    try {
+      valid = await widget.validateRecordedWeight?.call(source) ?? false;
+    } catch (_) {
+      valid = false;
+    }
+    if (!mounted || generation != revision) return false;
+    valid = valid && widget.recordedWeight?.sameMeasurement(source) == true;
+    setState(() {
+      checkingWeight = false;
+      weightApplied = valid;
+      animalWeight.text = valid ? source.kg : '';
+      if (!valid) {
+        error =
+            'El peso registrado ya no se pudo comprobar. Revisa el paciente y la medición antes de continuar.';
+      }
+    });
+    return valid;
+  }
 
   @override
   void dispose() {
+    generation++;
     for (final c in [
       product,
       presentation,
@@ -104,7 +178,27 @@ class _CommercialPackageDoseScreenState
     });
   }
 
-  void calculate() {
+  Future<void> calculate() async {
+    if (checkingWeight) return;
+    if (widget.recordedWeight != null) {
+      if (!weightApplied) {
+        setState(() {
+          result = null;
+          error = 'Revisa y selecciona el peso registrado antes de calcular.';
+        });
+        return;
+      }
+      final snapshot = inputSnapshot;
+      if (!await useRecordedWeight() || !mounted) return;
+      if (!listEquals(snapshot, inputSnapshot)) {
+        setState(() {
+          result = null;
+          error =
+              'Los datos cambiaron durante la comprobación. Revísalos antes de calcular.';
+        });
+        return;
+      }
+    }
     try {
       if (!proportionalConfirmed) {
         throw const FormatException(
@@ -156,7 +250,9 @@ class _CommercialPackageDoseScreenState
     padding: const EdgeInsets.only(bottom: 12),
     child: TextField(
       controller: controller,
-      readOnly: controller == product && selectedProduct != null,
+      readOnly:
+          (controller == product && selectedProduct != null) ||
+          (controller == animalWeight && widget.recordedWeight != null),
       maxLines: maxLines,
       keyboardType: numeric
           ? const TextInputType.numberWithOptions(decimal: true)
@@ -217,6 +313,17 @@ class _CommercialPackageDoseScreenState
           field(route, 'Vía de administración indicada'),
           field(frequency, 'Intervalo o frecuencia indicada'),
           const SizedBox(height: 6),
+          if (widget.recordedWeight case final source?) ...[
+            Text(
+              '${source.patientName} · ${source.kg} kg · ${source.observedAt.toLocal()}\nPaciente: ${source.patientId} · Caso: ${source.caseId} · Medición: ${source.id}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            OutlinedButton(
+              onPressed: checkingWeight ? null : useRecordedWeight,
+              child: const Text('Usar peso registrado'),
+            ),
+            if (checkingWeight) const LinearProgressIndicator(),
+          ],
           field(animalWeight, 'Peso del animal (kg)', numeric: true),
           field(labelAmount, 'Cantidad indicada en el empaque', numeric: true),
           field(
@@ -303,7 +410,7 @@ class _CommercialPackageDoseScreenState
           ],
           const SizedBox(height: 14),
           FilledButton.icon(
-            onPressed: calculate,
+            onPressed: checkingWeight ? null : calculate,
             icon: const Icon(Icons.calculate_outlined),
             label: const Text('Calcular cantidad según empaque'),
           ),
