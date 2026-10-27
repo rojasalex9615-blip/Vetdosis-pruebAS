@@ -25,4 +25,7 @@ done
 if [ "${SERVICE_COMMISSION_RECOVERIES:-0}" = 1 ];then
  bash supabase/tests/service_commission_recovery_concurrency.sh "$container_name"
 fi
+if [ "${PARTIAL_PRODUCT_RETURNS:-0}" = 1 ];then
+ bash supabase/tests/partial_product_return_concurrency.sh "$container_name"
+fi
 echo 'Workspace management and clinic operations permissions passed.'
