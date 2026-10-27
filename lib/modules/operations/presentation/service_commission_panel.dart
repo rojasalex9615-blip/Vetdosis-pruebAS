@@ -226,9 +226,9 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
         paymentReference,
         retryOperation!,
       );
+      if (!current(generation)) return;
       retryKey = null;
       retryOperation = null;
-      if (!current(generation)) return;
       setState(() => busy = false);
       await load();
     } catch (_) {
@@ -382,9 +382,9 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
         reasonText,
         retryOperation!,
       );
+      if (!current(generation)) return;
       retryKey = null;
       retryOperation = null;
-      if (!current(generation)) return;
       setState(() => busy = false);
       await load();
     } catch (_) {

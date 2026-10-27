@@ -26,7 +26,7 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
   final quantity = TextEditingController(), reason = TextEditingController();
   List<Map<String, dynamic>>? lines;
   Map<String, dynamic>? selected, account;
-  bool version2 = false;
+  bool advancedContract = false;
   String method = 'efectivo';
   bool busy = false, restock = false, confirmed = false;
   String? error, retryKey, operation;
@@ -50,7 +50,7 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
       lines = null;
       selected = null;
       account = null;
-      version2 = false;
+      advancedContract = false;
       busy = false;
       restock = false;
       confirmed = false;
@@ -71,7 +71,20 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
   }
 
   Future<void> load() async {
-    final revision = generation;
+    final revision = ++generation;
+    setState(() {
+      lines = null;
+      selected = null;
+      account = null;
+      advancedContract = false;
+      restock = false;
+      busy = true;
+      confirmed = false;
+      error = null;
+      retryKey = null;
+      operation = null;
+      quantity.clear();
+    });
     try {
       final raw = Map<String, dynamic>.from(
         await widget.repository.read('inv_sale_return_workspace', {
@@ -86,8 +99,11 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
         throw StateError('session_changed');
       }
       if (current(revision)) {
-        version2 = raw['schema_version'] == 2;
-        account = version2
+        if (raw['schema_version'] != 3) {
+          throw StateError('return_client_upgrade_required');
+        }
+        advancedContract = true;
+        account = advancedContract
             ? Map<String, dynamic>.from(raw['account'] as Map)
             : null;
         setState(
@@ -103,6 +119,8 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
               'Esta venta no está disponible para devolución parcial. Requiere turno propio abierto y permisos; se admiten productos no farmacológicos y servicios, con permisos adicionales para servicios.',
         );
       }
+    } finally {
+      if (current(revision)) setState(() => busy = false);
     }
   }
 
@@ -115,7 +133,7 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
     final revision = generation;
     try {
       final amount = partialReturnQuote(selected!, quantity.text);
-      final advanced = version2
+      final advanced = advancedContract
           ? saleReturnQuote(selected!, quantity.text, account!)
           : null;
       if (reason.text.trim().isEmpty) {
@@ -125,7 +143,7 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
         quantity.text,
       ).display(places: 9).replaceAll(',', '.');
       final key =
-          '${selected!['id']}|$canonical|$method|$restock|${reason.text.trim()}|${amount.decimal}|${advanced?.refund.decimal}|${advanced?.commission.decimal}';
+          '${selected!['id']}|$canonical|$method|$restock|${reason.text.trim()}|${amount.decimal}|${advanced?.refund.decimal}|${advanced?.commission.decimal}|${selected!['returned_quantity']}';
       if (retryKey != key) {
         retryKey = key;
         operation = newOperationId();
@@ -134,30 +152,39 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
         busy = true;
         error = null;
       });
-      await widget.repository.write(
-        version2 ? 'inv_sale_return_v2' : 'inv_sale_return',
-        {
-          'p_sale': widget.sale,
-          'p_shift': widget.shift,
-          'p_line': selected!['id'],
-          'p_quantity': canonical,
-          'p_method': method,
-          'p_restock': restock,
-          'p_reason': reason.text.trim(),
-          'p_expected_amount': amount.decimal,
-          if (advanced != null) ...{
-            'p_expected_refund': advanced.refund.decimal,
-            'p_expected_commission': advanced.commission.decimal,
-          },
-          'p_actor': widget.member.userId,
-          'p_operation': operation,
+      await widget.repository.write('inv_sale_return_v3', {
+        'p_sale': widget.sale,
+        'p_shift': widget.shift,
+        'p_line': selected!['id'],
+        'p_quantity': canonical,
+        'p_method': method,
+        'p_restock': restock,
+        'p_reason': reason.text.trim(),
+        'p_expected_amount': amount.decimal,
+        'p_expected_returned_quantity': Quantity.parse(
+          '${selected!['returned_quantity']}',
+        ).display(places: 9).replaceAll(',', '.'),
+        if (advanced != null) ...{
+          'p_expected_refund': advanced.refund.decimal,
+          'p_expected_commission': advanced.commission.decimal,
         },
-      );
+        'p_actor': widget.member.userId,
+        'p_operation': operation,
+      });
       if (mounted && revision == generation) Navigator.pop(context, true);
     } on FormatException catch (e) {
       if (current(revision)) setState(() => error = e.message);
-    } catch (_) {
+    } catch (e) {
       if (current(revision)) {
+        if (e.toString().contains('return_workspace_changed') ||
+            e.toString().contains('return_amount_changed')) {
+          setState(() {
+            confirmed = false;
+            error =
+                'La venta o el saldo cambiaron. Actualiza venta y saldo antes de registrar otra devolución.';
+          });
+          return;
+        }
         setState(
           () => error =
               'No se confirmó el registro. Revisa el historial antes de cambiar datos o iniciar otra devolución; reintentar los mismos datos conserva la operación.',
@@ -175,7 +202,7 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
     if (selected != null && quantity.text.isNotEmpty) {
       try {
         quote = partialReturnQuote(selected!, quantity.text);
-        if (version2) {
+        if (advancedContract) {
           advanced = saleReturnQuote(selected!, quantity.text, account!);
         }
       } on FormatException {
@@ -190,10 +217,16 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
           const Text(
             'Productos no farmacológicos y servicios; admite ventas mixtas. No cambia el registro clínico. Primero reduce el saldo pendiente y solo reembolsa lo cobrado de más. Los servicios requieren administración y ajustan su comisión proporcionalmente.',
           ),
+          TextButton(
+            onPressed: busy ? null : load,
+            child: const Text('Actualizar venta y saldo'),
+          ),
           if (busy || lines == null && error == null)
             const LinearProgressIndicator(),
           if (lines != null) ...[
             DropdownButtonFormField<Map<String, dynamic>>(
+              key: ValueKey(generation),
+              initialValue: selected,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Línea de la venta'),
               items: [
@@ -287,7 +320,7 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
             CheckboxListTile(
               value: confirmed,
               title: Text(
-                version2
+                advancedContract
                     ? 'Confirmo cantidad, motivo, saldo, comisión y dinero devuelto al cliente'
                     : 'Confirmo cantidad, motivo e importe que devolví al cliente',
               ),

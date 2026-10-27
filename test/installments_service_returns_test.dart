@@ -33,13 +33,15 @@ class InstallmentRepository implements InventoryRepository {
   final writes = <Map<String, dynamic>>[];
   final commands = <String>[];
   String actor = 'person';
+  bool succeeds = false;
+  int paid = 10;
   Completer<dynamic>? delayed;
   @override
   Future<dynamic> read(String command, Map<String, dynamic> args) async {
     if (delayed != null && args['p_clinic'] == 'clinic') return delayed!.future;
     if (command == 'inv_sale_return_workspace') {
       return {
-        'schema_version': 2,
+        'schema_version': 3,
         'clinic_id': 'clinic',
         'actor_id': actor,
         'account': {
@@ -60,9 +62,9 @@ class InstallmentRepository implements InventoryRepository {
           'debtor': 'Titular ficticio',
           'account': {
             'net_total': '30',
-            'paid': '10',
+            'paid': '$paid',
             'refunded': '0',
-            'balance': '20',
+            'balance': '${30 - paid}',
           },
           'collections': [],
         },
@@ -74,6 +76,10 @@ class InstallmentRepository implements InventoryRepository {
   Future<dynamic> write(String command, Map<String, dynamic> args) async {
     commands.add(command);
     writes.add(args);
+    if (succeeds) {
+      paid += 5;
+      return 'collection';
+    }
     throw StateError('Synthetic lost response');
   }
 
@@ -195,6 +201,36 @@ void main() {
     },
   );
   testWidgets(
+    'two successful identical installments create distinct operations',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repo = InstallmentRepository()..succeeds = true;
+      await tester.pumpWidget(accounts(repo));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.text('Registrar abono'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField).at(0), '5');
+        await tester.enterText(find.byType(TextField).at(1), 'Same reference');
+        await tester.tap(
+          find.text('Confirmo el importe y medio del dinero recibido'),
+        );
+        await tester.pump();
+        await tester.tap(find.text('Confirmar abono'));
+        await tester.pumpAndSettle();
+      }
+      expect(repo.writes, hasLength(2));
+      expect(
+        repo.writes[0]['p_operation'],
+        isNot(repo.writes[1]['p_operation']),
+      );
+      expect(repo.paid, 20);
+    },
+  );
+  testWidgets(
     'wrong actor cannot expose an account and stale clinic response is discarded',
     (tester) async {
       tester.view.physicalSize = const Size(1000, 2000);
@@ -287,7 +323,7 @@ void main() {
       await tester.ensureVisible(find.text('Registrar devolución'));
       await tester.tap(find.text('Registrar devolución'));
       await tester.pumpAndSettle();
-      expect(repo.commands.single, 'inv_sale_return_v2');
+      expect(repo.commands.single, 'inv_sale_return_v3');
       expect(repo.writes.single['p_expected_amount'], '150.00');
       expect(repo.writes.single['p_expected_refund'], '0.00');
       expect(repo.writes.single['p_expected_commission'], '12.50');

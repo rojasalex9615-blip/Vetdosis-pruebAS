@@ -19,11 +19,15 @@ reset role;
 drop table if exists public.synthetic_installment_race;
 create table public.synthetic_installment_race as select :'sale'::uuid as sale, :'shift'::uuid as shift, id as line from public.inventory_sale_lines where sale_id=:'sale';
 SQL
+ has_v3=$(docker exec "$container_name" psql -U postgres -d "$test_database" -Atc "select to_regprocedure('public.inv_sale_return_v3(uuid,uuid,uuid,text,text,boolean,text,text,text,text,uuid,text,text)') is not null")
  pids=()
  for operation in aa bb;do
   action="select public.inv_sale_collect(:'sale',:'shift','7','efectivo','Synthetic race installment','00000000-0000-0000-0000-000000000150',repeat('$seed$operation',12));"
   if [ "$race" = return ] && [ "$operation" = bb ];then
    action="select public.inv_sale_return_v2(:'sale',:'shift',:'line','1','efectivo',false,'Synthetic race return','10','0','0','00000000-0000-0000-0000-000000000150',repeat('$seed$operation',12));"
+   if [ "$has_v3" = t ];then
+    action="select public.inv_sale_return_v3(:'sale',:'shift',:'line','1','efectivo',false,'Synthetic race return','10','0','0','00000000-0000-0000-0000-000000000150',repeat('$seed$operation',12),'0');"
+   fi
   fi
   docker exec -i "$container_name" psql -U postgres -d "$test_database" -v ON_ERROR_STOP=1 > "$work_dir/$operation.log" 2>&1 <<SQL &
 begin;
