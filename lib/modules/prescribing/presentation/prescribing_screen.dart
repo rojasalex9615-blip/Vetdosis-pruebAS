@@ -1271,6 +1271,19 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
       });
     },
   );
+  Future<void> openVialIncident(String caseId) async {
+    final selectedModel = model;
+    await selectedModel.load(selectedCase: caseId);
+    if (!mounted || selectedModel != model) return;
+    if (selectedModel.error != null || selectedModel.caseId != caseId) {
+      message(
+        'El caso ya no está disponible. Actualiza y comprueba tus permisos.',
+      );
+      return;
+    }
+    setState(() => section = 'Medicación');
+  }
+
   Future<void> closeVial(Map<String, dynamic> v) async => entry(
     'Conciliar y cerrar frasco',
     [
@@ -1391,6 +1404,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
           label: const Text('Actualizar'),
         ),
         DropdownButtonFormField<String>(
+          key: ValueKey('prescribing-section-$section'),
           initialValue: section,
           decoration: const InputDecoration(labelText: 'Apartado'),
           items: [
@@ -1659,6 +1673,29 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     for (final m in v['movements'] as List? ?? [])
                       Text(
                         '${m['kind']} · ${m['delta']} ml · ${m['created_at']}\n${m['reason']}',
+                      ),
+                    if (v['has_post_close_movements'] == true)
+                      Text(
+                        'Hay movimientos registrados después del cierre. La conciliación original se conserva; requiere revisión del MVZ responsable.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    for (final incident
+                        in (v['incidents'] as List? ?? []).cast<Map>()) ...[
+                      Text(
+                        'Incidencia pendiente de revisión · ${incident['quantity']} ${incident['unit']}\nObservada: ${incident['observed_at']} · Registrada: ${incident['reported_at']}\n${incident['incidence']}',
+                      ),
+                      TextButton(
+                        onPressed: model.busy
+                            ? null
+                            : () => openVialIncident('${incident['case_id']}'),
+                        child: const Text('Ver caso de la incidencia'),
+                      ),
+                    ],
+                    if (v['more_incidents'] == true)
+                      const Text(
+                        'Se muestran las 100 incidencias accesibles más recientes. Consulta Medicación por caso para el historial completo.',
                       ),
                     if (v['closure'] != null)
                       Text(

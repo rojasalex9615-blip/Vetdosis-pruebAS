@@ -18,6 +18,9 @@ y atribución en `preparacion_provenance.json`. Mantiene las 471 filas originale
 identificadores únicos y todos los cruces pendientes. Sus fechas son atribuidas,
 no verificadas de forma independiente. No cambia clasificaciones de la app.
 
+CodeRabbit es el responsable de revisar e informar hallazgos según la indicación
+de Ale. La asignación no acredita revisión ejecutada ni integración aprobada.
+
 ## Formato de novedades
 
 - Autor/sesión y tarea aceptada.

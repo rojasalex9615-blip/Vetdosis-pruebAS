@@ -20,4 +20,7 @@ bash supabase/tests/permission_medication_concurrency.sh "$container_name"
 for sql_file in "$@";do
  docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 < "$sql_file" > "$work_dir/test.log" 2>&1 || { echo "FAILED: $sql_file";cat "$work_dir/test.log";exit 1; }
 done
+if [ "${VIAL_INDEX_WRITE_TEST:-0}" = 1 ];then
+ bash supabase/tests/vial_index_write_compatibility.sh "$container_name"
+fi
 echo 'Medication permissions passed: distinct report/administer/draw/validate, immutable corrections, vial safeguards and typed scheduling.'

@@ -1,0 +1,24 @@
+name: Validar incidencias visibles de frascos
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/*vial_incident_overview.sql'
+      - 'supabase/migrations/*vial_*_index_concurrent.sql'
+      - 'supabase/tests/vial_index_write_compatibility.sh'
+      - 'supabase/tests/run_permission_medication.sh'
+      - 'supabase/tests/*vial_incident_overview*'
+      - 'supabase/tests/run_vial_reconciliation_retries.sh'
+      - 'lib/modules/prescribing/**'
+      - 'test/vial_incident_overview_test.dart'
+      - '.github/workflows/test-vial-incident-overview.yml'
+permissions:
+  contents: read
+jobs:
+  vial-overview-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_vial_incident_overview.sh
