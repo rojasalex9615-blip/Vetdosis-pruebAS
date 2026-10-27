@@ -1,3 +1,4 @@
+begin;
 -- Per-device consent and token rotation on the synthetic 14J fixture.
 create function pg_temp.push_assert(v boolean,msg text) returns void language plpgsql as $$
 begin if v is distinct from true then raise exception 'ASSERT: %',msg;end if;end$$;
@@ -29,3 +30,5 @@ set role authenticated;
 select public.hospital_delivery_target_revoke(:'clinic',:'new_target');
 select pg_temp.push_assert(public.hospital_delivery_targets_own(:'clinic')='[]'::jsonb,'revoked target still shown');
 reset role;
+
+rollback;

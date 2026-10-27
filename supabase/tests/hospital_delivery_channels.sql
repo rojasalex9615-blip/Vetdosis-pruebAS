@@ -34,3 +34,25 @@ select pg_temp.delivery_error(
   $$select public.hospital_delivery_claim(20,array['fcm']::text[])$$,
   'permission denied');
 reset role;
+
+-- Expired seventh attempt may be retried once, but an exhausted lease is terminal.
+update private.hospital_notice_deliveries x
+set status='leased',attempts=7,lease_until=clock_timestamp()-interval '1 second',
+    next_attempt_at=clock_timestamp()-interval '1 second'
+from private.hospital_delivery_targets t where x.target_id=t.id and t.channel='fcm';
+set role service_role;
+select public.hospital_delivery_claim(20,array['fcm']::text[]) as last_claim \gset
+select pg_temp.delivery_assert(jsonb_array_length(:'last_claim'::jsonb)=1,'seventh attempt was not retried');
+select pg_temp.delivery_assert(public.hospital_delivery_claim(20,array['fcm']::text[])='[]'::jsonb,'unexpired last lease was reclaimed');
+reset role;
+select pg_temp.delivery_assert((select count(*)=1 from private.hospital_notice_deliveries where status='leased' and attempts=8),'unexpired final lease was terminated');
+update private.hospital_notice_deliveries set lease_until=clock_timestamp()-interval '1 second'
+where status='leased' and attempts=8;
+set role service_role;
+select pg_temp.delivery_assert(public.hospital_delivery_claim(20,array['fcm']::text[])='[]'::jsonb,'exhausted delivery was reclaimed');
+reset role;
+select pg_temp.delivery_assert((select count(*)=1 from private.hospital_notice_deliveries
+ where status='dead' and attempts=8 and lease_until is null and error_code='lease_expired'),'exhausted expired lease was not finalized');
+select pg_temp.delivery_assert((select count(*)=1 from private.hospital_notice_deliveries x
+ join private.hospital_delivery_targets t on t.id=x.target_id
+ where t.channel='whatsapp' and x.status='pending'),'another channel was altered');

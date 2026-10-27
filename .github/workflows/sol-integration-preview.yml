@@ -8,6 +8,7 @@ on:
       - fix/integration-review-blockers-20261026
       - feature/grok-manufacturer-vademecum-20261027
       - fix/hospital-token-refresh-20261027
+      - fix/hospital-target-revocation-20261027
   workflow_dispatch:
 permissions:
   contents: read
@@ -46,6 +47,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --test supabase/tests/hospital_delivery.test.mjs supabase/tests/hospital_dispatch_auth.test.mjs
+      - name: Probar revocacion, reintentos y permisos en PostgreSQL aislado
+        run: HOSPITAL_TEST_CHANNELS=1 HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
   android-preview:
     needs: [flutter-qa, backend-local-qa]
     runs-on: ubuntu-latest

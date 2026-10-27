@@ -14,6 +14,9 @@ declare d record;result jsonb:='[]'::jsonb;begin
   select 1 from unnest(p_channels) as channel
   where channel is null or channel not in ('fcm','whatsapp')
  ) then raise exception 'invalid_delivery_channels';end if;
+ update private.hospital_notice_deliveries
+ set status='dead',lease_until=null,error_code='lease_expired'
+ where status='leased' and attempts>=8 and lease_until<clock_timestamp();
  for d in
   select x.id,x.attempts,t.channel,t.destination,n.clinic_id,n.recipient_id
   from private.hospital_notice_deliveries x

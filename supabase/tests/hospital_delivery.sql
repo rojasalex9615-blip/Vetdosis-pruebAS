@@ -39,8 +39,8 @@ set role service_role;
 select public.hospital_delivery_claim(20) as claimed \gset
 select pg_temp.delivery_assert(jsonb_array_length(:'claimed'::jsonb)=2,'eligible delivery not claimed');
 select pg_temp.delivery_assert(:'claimed' not like '%Synthetic delivery care%','clinical details leaked');
-select public.hospital_delivery_finish((:'claimed'::jsonb->0->>'id')::uuid,true,'synthetic-provider-id',null);
-select public.hospital_delivery_finish((:'claimed'::jsonb->1->>'id')::uuid,false,null,'provider_http_error');
+select public.hospital_delivery_finish((select (x->>'id')::uuid from jsonb_array_elements(:'claimed'::jsonb) x where x->>'channel'='fcm'),true,'synthetic-provider-id',null);
+select public.hospital_delivery_finish((select (x->>'id')::uuid from jsonb_array_elements(:'claimed'::jsonb) x where x->>'channel'='whatsapp'),false,null,'provider_http_error');
 reset role;
 select pg_temp.delivery_assert((select count(*)=1 from private.hospital_notice_deliveries where status='sent'),'sent receipt missing');
 select pg_temp.delivery_assert((select count(*)=1 from private.hospital_notice_deliveries where status='pending' and attempts=1),'retry missing');

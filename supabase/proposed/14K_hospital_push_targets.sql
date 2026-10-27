@@ -16,6 +16,12 @@ declare since timestamptz;target uuid;begin
     or (p_channel='fcm' and length(p_destination) between 20 and 4096
         and p_destination ~ '^[A-Za-z0-9:._~-]+$') then null;
  else raise exception 'invalid_delivery_destination';end if;
+ if p_channel='fcm' then
+  perform pg_advisory_xact_lock(hashtextextended(p_destination,9072));
+  update private.hospital_delivery_targets set revoked_at=clock_timestamp()
+  where channel='fcm' and destination=p_destination
+    and user_id<>auth.uid() and revoked_at is null;
+ end if;
  insert into private.hospital_delivery_targets
  (clinic_id,user_id,member_since,channel,destination)
  values(p_clinic,auth.uid(),since,p_channel,p_destination)
@@ -57,6 +63,10 @@ declare old_target private.hospital_delivery_targets;new_target uuid;begin
  if p_new_token is null or length(p_new_token) not between 20 and 4096
    or p_new_token !~ '^[A-Za-z0-9:._~-]+$'
    then raise exception 'invalid_delivery_destination';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_new_token,9072));
+ update private.hospital_delivery_targets set revoked_at=clock_timestamp()
+ where channel='fcm' and destination=p_new_token
+   and user_id<>auth.uid() and revoked_at is null;
  if old_target.destination=p_new_token then return old_target.id;end if;
  update private.hospital_delivery_targets set revoked_at=clock_timestamp()
  where id=old_target.id;
