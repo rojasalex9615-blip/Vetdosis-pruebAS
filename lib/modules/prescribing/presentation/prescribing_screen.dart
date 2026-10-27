@@ -1662,7 +1662,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                       ),
                     if (v['closure'] != null)
                       Text(
-                        'Diferencia conservada al cierre: ${v['closure']['difference']} ml\nNota: ${v['closure']['reason']}',
+                        'Conciliación al cierre: saldo registrado ${v['closure']['expected']} ml · medido ${v['closure']['measured']} ml\nDiferencia conservada: ${v['closure']['difference']} ml\nNota: ${v['closure']['reason']}',
                       ),
                     if (v['closed'] != true &&
                         v['responsible_id'] == widget.member.userId &&

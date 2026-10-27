@@ -15,4 +15,9 @@ for sql_file in supabase/tests/bootstrap.sql supabase/tests/existing_fixture.sql
  docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 < "$sql_file" > "$work_dir/test.log" 2>&1 || { echo "FAILED: $sql_file";cat "$work_dir/test.log";exit 1; }
 done
 bash supabase/tests/permission_medication_concurrency.sh "$container_name"
+# Additional candidate tests run after the existing revocation/expiry fixture,
+# so their explicit grants cannot change that fixture's authority assumptions.
+for sql_file in "$@";do
+ docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 < "$sql_file" > "$work_dir/test.log" 2>&1 || { echo "FAILED: $sql_file";cat "$work_dir/test.log";exit 1; }
+done
 echo 'Medication permissions passed: distinct report/administer/draw/validate, immutable corrections, vial safeguards and typed scheduling.'
