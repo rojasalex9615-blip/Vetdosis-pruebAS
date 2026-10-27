@@ -12,6 +12,7 @@ on:
       - fix/hospital-runtime-fcm-cache-20261027
       - feature/commission-recovery-20261027
       - feature/partial-product-returns-20261027
+      - feature/installments-service-returns-20261027
   workflow_dispatch:
 permissions:
   contents: read
@@ -50,8 +51,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --test supabase/tests/hospital_delivery.test.mjs supabase/tests/hospital_dispatch_auth.test.mjs supabase/tests/hospital_fcm_token.test.mjs
-      - name: Probar devoluciones parciales, comisiones y respaldo financiero
-        run: bash supabase/tests/run_partial_product_returns.sh
+      - name: Probar abonos, devoluciones, comisiones y respaldo financiero
+        run: bash supabase/tests/run_installments_service_returns.sh
       - name: Probar revocacion, reintentos y permisos en PostgreSQL aislado
         run: HOSPITAL_TEST_CHANNELS=1 HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
   android-preview:

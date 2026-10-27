@@ -7,6 +7,8 @@ import 'package:vetdosis_pro/modules/operations/presentation/service_commission_
 
 class RecoveryRepository implements ServiceCommissionRepository {
   String recovered = '0.00';
+  String? recoveryLimit;
+  bool reversed = true;
   int writes = 0;
   bool failAfterWrite = false;
   final operations = <String>[];
@@ -26,7 +28,8 @@ class RecoveryRepository implements ServiceCommissionRepository {
         'settlement_id': 'settlement',
         'settled_amount': '25.00',
         'sale_collected': false,
-        'settlement_sale_reversed': true,
+        'settlement_sale_reversed': reversed,
+        if (recoveryLimit != null) 'recovery_limit': recoveryLimit,
         'recovered_amount': recovered,
         'recoveries': [],
       },
@@ -182,6 +185,39 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Servicio b'), findsWidgets);
       expect(find.textContaining('Servicio a'), findsNothing);
+    },
+  );
+  testWidgets(
+    'partial return caps recovery at the adjustment, not the original payment',
+    (tester) async {
+      final repo = RecoveryRepository()
+        ..recoveryLimit = '5.00'
+        ..reversed = false;
+      await tester.pumpWidget(app(repo, member('a')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Registrar reintegro recibido'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Máximo sin registrar: \$5,00'),
+        findsOneWidget,
+      );
+      final amount = find.byWidgetPredicate(
+        (w) =>
+            w is TextField && w.decoration?.labelText == 'Importe recibido MXN',
+      );
+      final reason = find.byWidgetPredicate(
+        (w) =>
+            w is TextField && w.decoration?.labelText == 'Motivo del reintegro',
+      );
+      await tester.enterText(amount, '6');
+      await tester.enterText(reason, 'Synthetic partial adjustment');
+      await tester.tap(find.text('Confirmar reintegro recibido'));
+      await tester.pumpAndSettle();
+      expect(repo.writes, 0);
+      await tester.enterText(amount, '5');
+      await tester.tap(find.text('Confirmar reintegro recibido'));
+      await tester.pumpAndSettle();
+      expect(repo.received, '5.00');
     },
   );
 }

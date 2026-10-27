@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../core/domain/plan_errors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -91,9 +92,12 @@ String inventoryError(Object error) {
         'El punto de reorden debe ser igual o mayor al stock mínimo.',
     'operation_content_changed':
         'La operación anterior tenía otros datos. Actualiza y vuelve a revisar.',
-    'invoice_reversed_sale': 'No se puede solicitar factura de una venta revertida.',
-    'invoice_fiscal_data_invalid': 'Revisa RFC, régimen, código postal, uso de CFDI y correo.',
-    'invoice_request_already_processed': 'Esta solicitud de factura ya fue procesada.',
+    'invoice_reversed_sale':
+        'No se puede solicitar factura de una venta revertida.',
+    'invoice_fiscal_data_invalid':
+        'Revisa RFC, régimen, código postal, uso de CFDI y correo.',
+    'invoice_request_already_processed':
+        'Esta solicitud de factura ya fue procesada.',
   };
   for (final e in messages.entries) {
     if (text.contains(e.key)) return e.value;
@@ -111,6 +115,8 @@ class SaleScreen extends StatefulWidget {
     required this.staff,
     required this.admin,
     this.canUpdateCatalog = false,
+    this.creditSupported = false,
+    this.actor,
     this.services = const [],
     this.catalogUnavailable = false,
     this.clinicName = 'Clínica veterinaria',
@@ -123,6 +129,8 @@ class SaleScreen extends StatefulWidget {
   final List<Map<String, dynamic>> products, prescriptions, staff;
   final bool admin;
   final bool canUpdateCatalog;
+  final bool creditSupported;
+  final String? actor;
   final List<Map<String, dynamic>> services;
   final bool catalogUnavailable;
   final String clinicName;
@@ -135,7 +143,28 @@ class _SaleScreenState extends State<SaleScreen> {
   final lines = <Map<String, dynamic>>[];
   String method = 'efectivo', operation = newOperationId();
   String? error;
-  bool busy = false, reviewed = false;
+  bool busy = false, reviewed = false, credit = false;
+  final initialAmount = TextEditingController(text: '0');
+  final debtor = TextEditingController();
+  String? creditRetryKey, creditOperation;
+  @override
+  void dispose() {
+    initialAmount.dispose();
+    debtor.dispose();
+    super.dispose();
+  }
+
+  bool get creditEligible => lines.every(
+    (line) =>
+        line['charge_id'] == null &&
+        line['delivery_id'] == null &&
+        (line['kind'] == 'servicio' ||
+            widget.products.any(
+              (product) =>
+                  product['id'] == line['item_id'] &&
+                  product['m8_kind'] == 'producto',
+            )),
+  );
   Money get total => lines.fold(
     Money(BigInt.zero),
     (a, l) =>
@@ -172,8 +201,14 @@ class _SaleScreenState extends State<SaleScreen> {
           onSubmitted: (value) => Navigator.pop(dialogContext, value),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, controller.text), child: const Text('Buscar')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Buscar'),
+          ),
         ],
       ),
     );
@@ -183,18 +218,23 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> addByCode(String code) async {
-    final matches = widget.products.where(
-      (p) => p['m8_enabled'] == true &&
-          p['active'] == true &&
-          (p['codigo_barras']?.toString().trim() == code.trim() ||
-              p['barcode']?.toString().trim() == code.trim()),
-    ).toList();
+    final matches = widget.products
+        .where(
+          (p) =>
+              p['m8_enabled'] == true &&
+              p['active'] == true &&
+              (p['codigo_barras']?.toString().trim() == code.trim() ||
+                  p['barcode']?.toString().trim() == code.trim()),
+        )
+        .toList();
     if (matches.length == 1) {
       await addProduct(matches.single);
     } else {
-      setState(() => error = matches.isEmpty
-          ? 'No se encontró un producto activo con ese código de barras.'
-          : 'El código coincide con varios productos. Selecciona uno de la lista.');
+      setState(
+        () => error = matches.isEmpty
+            ? 'No se encontró un producto activo con ese código de barras.'
+            : 'El código coincide con varios productos. Selecciona uno de la lista.',
+      );
     }
   }
 
@@ -330,7 +370,10 @@ class _SaleScreenState extends State<SaleScreen> {
 
   Future<void> addCatalogService(Map<String, dynamic> service) async {
     if (lines.any((line) => line['catalog_service_id'] == service['id'])) {
-      setState(() => error = 'Ese servicio ya está en la nota. Elimínalo para cambiar su precio.');
+      setState(
+        () => error =
+            'Ese servicio ya está en la nota. Elimínalo para cambiar su precio.',
+      );
       return;
     }
     await Navigator.push(
@@ -338,10 +381,23 @@ class _SaleScreenState extends State<SaleScreen> {
       MaterialPageRoute<void>(
         builder: (_) => RxEntryScreen(
           title: '${service['name']} · precio para esta venta',
-          initial: {'price': '${service['price']}', 'quantity': '1', 'cost': '0'},
+          initial: {
+            'price': '${service['price']}',
+            'quantity': '1',
+            'cost': '0',
+          },
           fields: [
-            const RxField('quantity', 'Cantidad', type: 'quantity', required: true),
-            const RxField('price', 'Precio unitario de esta venta MXN', required: true),
+            const RxField(
+              'quantity',
+              'Cantidad',
+              type: 'quantity',
+              required: true,
+            ),
+            const RxField(
+              'price',
+              'Precio unitario de esta venta MXN',
+              required: true,
+            ),
             const RxField('cost', 'Costo TOTAL interno MXN', required: true),
             RxField(
               'price_mode',
@@ -350,7 +406,9 @@ class _SaleScreenState extends State<SaleScreen> {
               required: true,
               options: {
                 'solo_venta': 'Usar solo en esta venta',
-                if (widget.canUpdateCatalog) 'actualizar_catalogo': 'Actualizar precio para ventas futuras',
+                if (widget.canUpdateCatalog)
+                  'actualizar_catalogo':
+                      'Actualizar precio para ventas futuras',
               },
             ),
           ],
@@ -361,7 +419,11 @@ class _SaleScreenState extends State<SaleScreen> {
             }
             final cost = Money.parse(data['cost'] as String);
             final quantity = Quantity.parse(data['quantity'] as String);
-            if (!quantity.positive) throw const FormatException('La cantidad debe ser mayor que cero.');
+            if (!quantity.positive) {
+              throw const FormatException(
+                'La cantidad debe ser mayor que cero.',
+              );
+            }
             setState(() {
               lines.add({
                 'kind': 'servicio',
@@ -389,10 +451,7 @@ class _SaleScreenState extends State<SaleScreen> {
       error = null;
     });
     try {
-      final saleId = await widget.repository.write(
-          lines.any((line) => line['catalog_service_id'] != null)
-              ? 'inv_catalog_service_sale_post'
-              : 'inv_sale_post', {
+      final args = <String, dynamic>{
         'p_shift': widget.shift,
         'p_method': method,
         'p_lines': [
@@ -403,14 +462,53 @@ class _SaleScreenState extends State<SaleScreen> {
               ..remove('unit'),
         ],
         'p_expected_total': total.decimal,
-        'p_operation': operation,
-      });
+      };
+      if (credit) {
+        if (!creditEligible) {
+          throw const FormatException(
+            'Los abonos de esta versión admiten productos no farmacológicos y servicios; excluyen medicamentos, aplicaciones y entregas clínicas.',
+          );
+        }
+        final initial = Money.parse(initialAmount.text);
+        if (initial.cents >= total.cents || debtor.text.trim().isEmpty) {
+          throw const FormatException(
+            'El abono debe ser menor al total. Indica a quién corresponde el saldo.',
+          );
+        }
+        args.addAll({
+          'p_initial_amount': initial.decimal,
+          'p_debtor': debtor.text.trim(),
+          'p_actor': widget.actor,
+        });
+        final key = jsonEncode(args);
+        if (key != creditRetryKey) {
+          creditRetryKey = key;
+          creditOperation = newOperationId();
+        }
+      }
+      args['p_operation'] = credit ? creditOperation : operation;
+      final saleId = await widget.repository.write(
+        credit
+            ? 'inv_sale_credit_post'
+            : lines.any((line) => line['catalog_service_id'] != null)
+            ? 'inv_catalog_service_sale_post'
+            : 'inv_sale_post',
+        args,
+      );
       if (mounted) {
         await receiptActions('$saleId');
         if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
-      if (mounted) setState(() => error = inventoryError(e));
+      if (mounted) {
+        setState(
+          () => error = e is FormatException
+              ? e.message
+              : credit
+              ? 'No se confirmó el registro. Revisa las cuentas antes de iniciar otra venta; reintentar los mismos datos conserva la operación.'
+              : inventoryError(e),
+        );
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -425,19 +523,36 @@ class _SaleScreenState extends State<SaleScreen> {
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
           title: const Text('Venta registrada'),
-          content: Text('Folio: $saleId\nPuedes imprimir o compartir la nota en PDF por WhatsApp.'),
+          content: Text(
+            'Folio: $saleId\nPuedes imprimir o compartir la nota en PDF por WhatsApp.',
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, 'close'), child: const Text('Terminar')),
-            TextButton(onPressed: () => Navigator.pop(dialogContext, 'print'), child: const Text('Imprimir nota')),
-            FilledButton(onPressed: () => Navigator.pop(dialogContext, 'share'), child: const Text('Compartir · WhatsApp')),
-            TextButton(onPressed: () => Navigator.pop(dialogContext, 'invoice'), child: const Text('Solicitar factura')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'close'),
+              child: const Text('Terminar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'print'),
+              child: const Text('Imprimir nota'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, 'share'),
+              child: const Text('Compartir · WhatsApp'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'invoice'),
+              child: const Text('Solicitar factura'),
+            ),
           ],
         ),
       );
       if (action == 'print') {
         await Printing.layoutPdf(onLayout: (_) async => bytes);
       } else if (action == 'share') {
-        await Printing.sharePdf(bytes: bytes, filename: 'nota-venta-$saleId.pdf');
+        await Printing.sharePdf(
+          bytes: bytes,
+          filename: 'nota-venta-$saleId.pdf',
+        );
       } else if (action == 'invoice' && mounted) {
         await Navigator.push<bool>(
           context,
@@ -445,11 +560,23 @@ class _SaleScreenState extends State<SaleScreen> {
             builder: (_) => RxEntryScreen(
               title: 'Solicitud de factura · $saleId',
               fields: const [
-                RxField('fiscal_name', 'Nombre o razón social fiscal', required: true),
+                RxField(
+                  'fiscal_name',
+                  'Nombre o razón social fiscal',
+                  required: true,
+                ),
                 RxField('rfc', 'RFC', required: true),
-                RxField('fiscal_regime', 'Régimen fiscal (3 dígitos)', required: true),
+                RxField(
+                  'fiscal_regime',
+                  'Régimen fiscal (3 dígitos)',
+                  required: true,
+                ),
                 RxField('postal_code', 'Código postal fiscal', required: true),
-                RxField('cfdi_use', 'Uso de CFDI (clave de 3 caracteres)', required: true),
+                RxField(
+                  'cfdi_use',
+                  'Uso de CFDI (clave de 3 caracteres)',
+                  required: true,
+                ),
                 RxField('email', 'Correo para enviar CFDI', required: true),
               ],
               submit: (data, _) async {
@@ -472,25 +599,53 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<Uint8List> buildReceipt(String saleId) async {
-      final font = pw.Font.ttf(await rootBundle.load('assets/fonts/DejaVuSans.ttf'));
-      final pdf = pw.Document(theme: pw.ThemeData.withFont(base: font, bold: font));
-      pdf.addPage(pw.Page(build: (_) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(widget.clinicName, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-          pw.Text('Nota de venta', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-          pw.Text('Folio: $saleId'),
-          pw.Text('Fecha: ${DateTime.now().toLocal()}'),
-          pw.SizedBox(height: 16),
-          for (final line in lines)
-            pw.Text('${line['display']} · ${line['quantity']} × ${Money.parse(line['price'] as String).display} = ${Money.parse(line['price'] as String).times(Quantity.parse(line['quantity'] as String)).display}'),
-          pw.Divider(),
-          pw.Text('Total a pagar: ${total.display}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-          pw.Text('Método de pago: $method'),
-          pw.Text('Nota interna de venta. No es factura fiscal.'),
-        ],
-      )));
-      return pdf.save();
+    final font = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/DejaVuSans.ttf'),
+    );
+    final pdf = pw.Document(
+      theme: pw.ThemeData.withFont(base: font, bold: font),
+    );
+    pdf.addPage(
+      pw.Page(
+        build: (_) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              widget.clinicName,
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              'Nota de venta',
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text('Folio: $saleId'),
+            pw.Text('Fecha: ${DateTime.now().toLocal()}'),
+            pw.SizedBox(height: 16),
+            for (final line in lines)
+              pw.Text(
+                '${line['display']} · ${line['quantity']} × ${Money.parse(line['price'] as String).display} = ${Money.parse(line['price'] as String).times(Quantity.parse(line['quantity'] as String)).display}',
+              ),
+            pw.Divider(),
+            pw.Text(
+              'Total a pagar: ${total.display}',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            if (credit) ...[
+              pw.Text(
+                'Cobrado ahora: ${Money.parse(initialAmount.text).display}',
+              ),
+              pw.Text(
+                'Saldo pendiente: ${(total - Money.parse(initialAmount.text)).display}',
+              ),
+              pw.Text('Cuenta: ${debtor.text.trim()}'),
+            ],
+            pw.Text('Método de pago: $method'),
+            pw.Text('Nota interna de venta. No es factura fiscal.'),
+          ],
+        ),
+      ),
+    );
+    return pdf.save();
   }
 
   @override
@@ -535,10 +690,16 @@ class _SaleScreenState extends State<SaleScreen> {
               ),
             ),
           if (widget.admin)
-            for (final service in widget.services.where((s) => s['active'] == true))
+            for (final service in widget.services.where(
+              (s) => s['active'] == true,
+            ))
               ListTile(
-                title: Text('${service['name']} · ${Money.parse('${service['price']}').display}'),
-                subtitle: const Text('Puedes usar otro precio solo en esta venta.'),
+                title: Text(
+                  '${service['name']} · ${Money.parse('${service['price']}').display}',
+                ),
+                subtitle: const Text(
+                  'Puedes usar otro precio solo en esta venta.',
+                ),
                 trailing: IconButton(
                   tooltip: 'Agregar servicio del catálogo',
                   onPressed: busy ? null : () => addCatalogService(service),
@@ -615,7 +776,49 @@ class _SaleScreenState extends State<SaleScreen> {
             'Total a pagar: ${total.display}',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const Text('Las comisiones son internas; no se suman al total del cliente.'),
+          const Text(
+            'Las comisiones son internas; no se suman al total del cliente.',
+          ),
+          if (widget.creditSupported && widget.actor != null) ...[
+            SwitchListTile(
+              value: credit,
+              title: const Text('Registrar abono y dejar saldo pendiente'),
+              subtitle: const Text(
+                'Productos no farmacológicos y servicios. No repite movimientos de inventario.',
+              ),
+              onChanged: busy || (!credit && !creditEligible)
+                  ? null
+                  : (value) => setState(() {
+                      credit = value;
+                      changed();
+                    }),
+            ),
+            if (credit) ...[
+              TextField(
+                controller: debtor,
+                enabled: !busy,
+                maxLength: 200,
+                decoration: const InputDecoration(
+                  labelText: 'Titular o referencia de la cuenta',
+                ),
+                onChanged: (_) => setState(changed),
+              ),
+              TextField(
+                controller: initialAmount,
+                enabled: !busy,
+                decoration: const InputDecoration(
+                  labelText: 'Abono recibido ahora MXN (0 si no hay pago)',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (_) => setState(changed),
+              ),
+              const Text(
+                'La comisión de servicios queda pendiente hasta cobrar el total neto de la venta.',
+              ),
+            ],
+          ],
           DropdownButtonFormField<String>(
             initialValue: method,
             decoration: const InputDecoration(labelText: 'Método de pago'),
@@ -650,7 +853,13 @@ class _SaleScreenState extends State<SaleScreen> {
             ),
           FilledButton(
             onPressed: busy || !reviewed || lines.isEmpty ? null : post,
-            child: Text(busy ? 'Registrando…' : 'Registrar venta y pago'),
+            child: Text(
+              busy
+                  ? 'Registrando…'
+                  : credit
+                  ? 'Registrar venta con saldo'
+                  : 'Registrar venta y pago',
+            ),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'credit_accounts_screen.dart';
 import 'partial_return_screen.dart';
 import '../../../core/widgets/neu_record_card.dart';
 import '../../identity/domain/identity_repository.dart';
@@ -448,6 +449,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
           builder: (_) => SaleScreen(
             repository: widget.repository,
             clinicName: widget.member.clinicName,
+            creditSupported: model.dashboard?['credit_supported'] == true,
+            actor: widget.member.userId,
             shift: model.ownShift!['id'],
             products: model.dispensingKnown && !model.canDispense
                 ? model.products
@@ -612,6 +615,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
       });
     },
   );
+  Future<void> creditAccounts() async {
+    final selectedModel = model;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreditAccountsScreen(
+          repository: widget.repository,
+          member: widget.member,
+          shift: selectedModel.ownShift!['id'] as String,
+          canReturn: selectedModel.canReverse,
+        ),
+      ),
+    );
+    if (mounted && selectedModel == model) await model.load();
+  }
+
   Future<void> partialReturn(String sale) async {
     final selectedModel = model;
     await Navigator.push<bool>(
@@ -864,8 +883,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       for (final e in {
-        'gross': 'Ventas menos reversos',
-        'cash': 'Efectivo por ventas/reversos',
+        'gross': 'Ventas netas (incluye saldos por cobrar)',
+        'cash': 'Efectivo recibido menos reembolsos',
         'card': 'Tarjeta',
         'transfer': 'Transferencia',
         'cost': 'Costo de mercancía/servicios',
@@ -881,7 +900,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             '${e.value}: ${Money.parse(t[e.key] as String, signed: true).display}',
           ),
       const Text(
-        'El resultado no acredita que todos los gastos ni costos pendientes estén incluidos. Ingresos y retiros no se cuentan como ventas/utilidad.',
+        'Las ventas incluyen saldos por cobrar. Los medios muestran pagos recibidos menos reembolsos. El resultado no acredita que todos los gastos ni costos pendientes estén incluidos. Ingresos y retiros no se cuentan como ventas/utilidad.',
       ),
     ],
   );
@@ -1179,6 +1198,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
             ],
             if (section == 'cash') ...[
+              if (model.dashboard?['credit_supported'] == true &&
+                  model.canCollect &&
+                  model.canReadFinance &&
+                  model.ownShift != null)
+                TextButton(
+                  onPressed: creditAccounts,
+                  child: const Text('Cuentas y abonos'),
+                ),
               if (model.ownShift == null && model.canCollect)
                 FilledButton(
                   onPressed: openShift,
@@ -1253,7 +1280,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         .cast<Map>())
                   ListTile(
                     title: Text(
-                      'Devolución parcial · ${displayMoney(r['amount'])}',
+                      'Cancelado ${displayMoney(r['amount'])} · Reembolsado ${displayMoney(r['refund_amount'] ?? r['amount'])}',
                     ),
                     subtitle: Text(
                       '${r['quantity']} · ${r['method']} · ${r['restocked'] == true ? 'Reingresó al lote' : 'Sin reingreso al lote'}\n${r['reason']}',
@@ -1279,11 +1306,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   itemBuilder: (_) => [
                                     const PopupMenuItem(
                                       value: 'partial',
-                                      child: Text('Devolución parcial'),
+                                      child: Text('Devolver líneas'),
                                     ),
                                     PopupMenuItem(
                                       value: 'reverse',
-                                      enabled: s['has_partial_returns'] != true,
+                                      enabled:
+                                          s['has_partial_returns'] != true &&
+                                          s['is_credit'] != true &&
+                                          s['use_line_returns'] != true,
                                       child: const Text('Reverso completo'),
                                     ),
                                   ],

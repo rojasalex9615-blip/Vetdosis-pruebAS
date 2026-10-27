@@ -32,6 +32,16 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
     return '${item['professional_name']} · $suffix';
   }
 
+  Money recoverable(Map<String, dynamic> item) =>
+      Money.parse(
+        '${item['recovery_limit'] ?? item['settled_amount'] ?? '0'}',
+      ) -
+      Money.parse('${item['recovered_amount'] ?? '0'}');
+  bool hasAdjustment(Map<String, dynamic> item) =>
+      item['settlement_sale_reversed'] == true ||
+      (item['recovery_limit'] != null &&
+          Money.parse('${item['recovery_limit']}').cents > BigInt.zero);
+
   int scopeGeneration = 0;
   bool current(int generation) => mounted && generation == scopeGeneration;
 
@@ -134,6 +144,7 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
     if (busy ||
         !admin ||
         item['sale_collected'] != true ||
+        Money.parse('${item['commission']}').cents <= BigInt.zero ||
         item['settlement_id'] != null) {
       return;
     }
@@ -237,13 +248,11 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
     final repository = widget.repository;
     if (busy ||
         !admin ||
-        item['settlement_sale_reversed'] != true ||
+        !hasAdjustment(item) ||
         data?['recovery_supported'] != true) {
       return;
     }
-    final maximum =
-        Money.parse('${item['settled_amount']}') -
-        Money.parse('${item['recovered_amount'] ?? '0'}');
+    final maximum = recoverable(item);
     if (maximum.cents <= BigInt.zero) return;
     final amount = TextEditingController(),
         reference = TextEditingController(),
@@ -418,7 +427,11 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
                 'Servicios aún sin cobrar: ${Money.parse('${data!['awaiting_collection']}').display}',
               ),
               if (items.isEmpty) const Text('No hay comisiones registradas.'),
-              for (final item in items)
+              for (final item in items) ...[
+                if (item['original_commission'] != null)
+                  Text(
+                    'Comisión original: ${Money.parse('${item['original_commission']}').display} · vigente: ${Money.parse('${item['commission']}').display}',
+                  ),
                 ListTile(
                   title: Text(
                     '${admin ? '${worker(item)} · ' : ''}${item['service_name']} · ${Money.parse('${item['commission']}').display}',
@@ -427,7 +440,7 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
                     item['settlement_id'] != null
                         ? (item['sale_collected'] == true
                               ? 'Liquidada'
-                              : 'Liquidada; venta revertida, revisar ajuste')
+                              : 'Liquidada; revisar cobros y devoluciones')
                         : item['sale_collected'] == true
                         ? 'Cobrada; pendiente de liquidar'
                         : 'Pendiente de cobro',
@@ -435,16 +448,17 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
                   trailing:
                       admin &&
                           item['sale_collected'] == true &&
-                          item['settlement_id'] == null
+                          item['settlement_id'] == null &&
+                          Money.parse('${item['commission']}').cents >
+                              BigInt.zero
                       ? TextButton(
                           onPressed: busy ? null : () => settle(item),
                           child: const Text('Registrar pago'),
                         )
                       : null,
                 ),
-              for (final item in items.where(
-                (item) => item['settlement_sale_reversed'] == true,
-              ))
+              ],
+              for (final item in items.where(hasAdjustment))
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -452,19 +466,14 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${item['service_name']} · comisión pagada con venta revertida',
+                          '${item['service_name']} · comisión pagada; ajuste por devolución',
                         ),
                         Text(
                           'Reintegros recibidos: ${Money.parse('${item['recovered_amount'] ?? '0'}').display}',
                         ),
                         if (admin &&
                             data?['recovery_supported'] == true &&
-                            (Money.parse('${item['settled_amount']}') -
-                                        Money.parse(
-                                          '${item['recovered_amount'] ?? '0'}',
-                                        ))
-                                    .cents >
-                                BigInt.zero)
+                            recoverable(item).cents > BigInt.zero)
                           TextButton(
                             onPressed: busy ? null : () => recover(item),
                             child: const Text('Registrar reintegro recibido'),
