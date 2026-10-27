@@ -272,8 +272,9 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
   Widget section(String title, IconData icon, List<Widget> children) =>
       NeuHeaderCard(
         title: title,
+        soft: true,
         icon: icon,
-        color: const Color(0xFF61C7BA),
+        color: calculatorIdentity('fluids').color,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -483,7 +484,8 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             ),
           ],
         ]),
-        FilledButton(
+        CalculatorActionButton(
+          id: 'fluids',
           onPressed: loading ? null : calculate,
           child: const Text('Calcular · Fluidoterapia'),
         ),
@@ -548,7 +550,8 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
                   : (v) => setState(() => reviewed = v ?? false),
             ),
             if (widget.onReminder != null)
-              FilledButton.icon(
+              CalculatorActionButton.icon(
+                id: 'fluids',
                 onPressed: reviewed && !kExceeded && patient != null
                     ? () => widget.onReminder!(patient!.id, summary())
                     : null,
