@@ -7,6 +7,7 @@ on:
       - feature/drive-encrypted-backup-20261026
       - fix/integration-review-blockers-20261026
       - feature/grok-manufacturer-vademecum-20261027
+      - fix/hospital-token-refresh-20261027
   workflow_dispatch:
 permissions:
   contents: read
