@@ -7,6 +7,35 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../auth/domain/clinic_membership.dart';
 
+/// Refresh every enrolled clinic even if another clinic rejects the target.
+/// Permanent recipient revocations remove only that clinic's stale enrollment.
+Future<bool> refreshHospitalClinics({
+  required Iterable<String> clinics,
+  required bool Function() isCurrent,
+  required Future<void> Function(String clinic) register,
+  required Future<void> Function(String clinic) discard,
+}) async {
+  var success = true;
+  for (final clinic in clinics) {
+    if (!isCurrent()) return false;
+    try {
+      await register(clinic);
+    } catch (error) {
+      if (!isCurrent()) return false;
+      success = false;
+      if (error is PostgrestException &&
+          error.message.contains('current_hospital_recipient_required')) {
+        try {
+          await discard(clinic);
+        } catch (_) {
+          /* Retry cleanup on next refresh. */
+        }
+      }
+    }
+  }
+  return isCurrent() && success;
+}
+
 /// Device-scoped, explicit opt-in for generic hospital push notifications.
 /// No patient or clinical content is written to Firebase or local preferences.
 class HospitalPushService {
@@ -108,23 +137,25 @@ class HospitalPushService {
     if (_signingOut || client.auth.currentUser?.id != userId) return false;
     try {
       final prefix = 'hospital_push_target:$userId:';
-      final keys = preferences.getKeys()
+      final keys = preferences
+          .getKeys()
           .where((key) => key.startsWith(prefix))
           .toList(growable: false);
-      for (final key in keys) {
-        if (_signingOut || client.auth.currentUser?.id != userId) return false;
-        final clinicId = key.substring(prefix.length);
-        if (clinicId.isEmpty) continue;
-        try {
-          await _register(userId, clinicId, token);
-        } catch (_) {
-          lastFailure = 'No se pudo renovar el destino de los avisos del teléfono.';
-          return false;
-        }
-      }
+      final refreshed = await refreshHospitalClinics(
+        clinics: keys
+            .map((key) => key.substring(prefix.length))
+            .where((clinic) => clinic.isNotEmpty),
+        isCurrent: () => !_signingOut && client.auth.currentUser?.id == userId,
+        register: (clinic) => _register(userId, clinic, token),
+        discard: (clinic) async {
+          await preferences.remove(_targetKey(userId, clinic));
+        },
+      );
       if (_signingOut || client.auth.currentUser?.id != userId) return false;
-      lastFailure = null;
-      return true;
+      lastFailure = refreshed
+          ? null
+          : 'No se pudo renovar el destino de los avisos del teléfono en alguna clínica.';
+      return refreshed;
     } catch (_) {
       lastFailure = 'No se pudo renovar el destino de los avisos del teléfono.';
       return false;
