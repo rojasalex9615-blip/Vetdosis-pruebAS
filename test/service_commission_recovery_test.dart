@@ -14,6 +14,7 @@ class RecoveryRepository implements ServiceCommissionRepository {
   final operations = <String>[];
   String? received, recordedReason;
   Completer<Map<String, dynamic>>? delayed;
+  Completer<void>? delayedRecovery;
   Map<String, dynamic> account(String clinic) => {
     'outstanding': '0',
     'awaiting_collection': '0',
@@ -62,6 +63,9 @@ class RecoveryRepository implements ServiceCommissionRepository {
     String reason,
     String operation,
   ) async {
+    if (clinic == 'a' && delayedRecovery != null) {
+      return delayedRecovery!.future;
+    }
     operations.add(operation);
     writes++;
     received = amount;
@@ -185,6 +189,50 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Servicio b'), findsWidgets);
       expect(find.textContaining('Servicio a'), findsNothing);
+    },
+  );
+  testWidgets(
+    'old clinic write success cannot erase new clinic retry operation',
+    (tester) async {
+      final repo = RecoveryRepository()..delayedRecovery = Completer<void>();
+      Future<void> recover() async {
+        await tester.ensureVisible(find.text('Registrar reintegro recibido'));
+        await tester.tap(find.text('Registrar reintegro recibido'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byWidgetPredicate(
+            (w) =>
+                w is TextField &&
+                w.decoration?.labelText == 'Importe recibido MXN',
+          ),
+          '5',
+        );
+        await tester.enterText(
+          find.byWidgetPredicate(
+            (w) =>
+                w is TextField &&
+                w.decoration?.labelText == 'Motivo del reintegro',
+          ),
+          'Synthetic recovery',
+        );
+        await tester.tap(find.text('Confirmar reintegro recibido'));
+        await tester.pump();
+      }
+
+      await tester.pumpWidget(app(repo, member('a')));
+      await tester.pumpAndSettle();
+      await recover();
+      await tester.pumpWidget(app(repo, member('b')));
+      await tester.pumpAndSettle();
+      repo.failAfterWrite = true;
+      await recover();
+      await tester.pumpAndSettle();
+      repo.delayedRecovery!.complete();
+      await tester.pumpAndSettle();
+      await recover();
+      await tester.pumpAndSettle();
+      expect(repo.operations, hasLength(2));
+      expect(repo.operations.first, repo.operations.last);
     },
   );
   testWidgets(

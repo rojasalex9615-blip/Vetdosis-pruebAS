@@ -1310,10 +1310,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     ),
                                     PopupMenuItem(
                                       value: 'reverse',
-                                      enabled:
-                                          s['has_partial_returns'] != true &&
-                                          s['is_credit'] != true &&
-                                          s['use_line_returns'] != true,
+                                      enabled: _allowFullReverse(model.cut!, s),
                                       child: const Text('Reverso completo'),
                                     ),
                                   ],
@@ -1386,4 +1383,20 @@ class _InventoryScreenState extends State<InventoryScreen> {
       );
     },
   );
+}
+
+// Financial values in closed cuts stay frozen; action flags remain current.
+bool _allowFullReverse(Map<String, dynamic> cut, Map sale) {
+  final actions = cut['live_sale_actions'];
+  if (actions is List) {
+    for (final action in actions) {
+      if (action is Map && action['sale_id'] == sale['id']) {
+        return action['allow_full_reverse'] == true;
+      }
+    }
+    return false;
+  }
+  return sale['has_partial_returns'] != true &&
+      sale['is_credit'] != true &&
+      sale['use_line_returns'] != true;
 }

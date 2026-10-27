@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/inventory/domain/inventory_repository.dart';
 import 'package:vetdosis_pro/modules/inventory/domain/partial_return.dart';
+import 'package:vetdosis_pro/modules/inventory/domain/inventory_models.dart';
 import 'package:vetdosis_pro/modules/inventory/presentation/partial_return_screen.dart';
 
 Map<String, dynamic> line({
@@ -13,6 +14,9 @@ Map<String, dynamic> line({
   String refunded = '0',
   String unit = 'unidad',
 }) => {
+  'commission': '0',
+  'returned_commission': '0',
+  'kind': 'producto',
   'id': 'line',
   'name': 'Producto de prueba',
   'lot': 'A',
@@ -25,17 +29,32 @@ Map<String, dynamic> line({
 
 class ReturnRepository implements InventoryRepository {
   String actor = 'person';
+  int reads = 0;
+  bool stale = false;
   final writes = <Map<String, dynamic>>[];
   @override
-  Future<dynamic> read(String command, Map<String, dynamic> args) async => {
-    'clinic_id': 'clinic',
-    'actor_id': actor,
-    'lines': [line(total: '30')],
-  };
+  Future<dynamic> read(String command, Map<String, dynamic> args) async {
+    reads++;
+    return {
+      'schema_version': 3,
+      'account': {
+        'net_total': '30',
+        'paid': '30',
+        'refunded': '0',
+        'balance': '0',
+      },
+      'clinic_id': 'clinic',
+      'actor_id': actor,
+      'lines': [line(total: '30')],
+    };
+  }
+
   @override
   Future<dynamic> write(String command, Map<String, dynamic> args) async {
     writes.add(args);
-    throw StateError('Synthetic lost response');
+    throw StateError(
+      stale ? 'return_workspace_changed' : 'Synthetic lost response',
+    );
   }
 
   @override
@@ -91,6 +110,23 @@ void main() {
       '2.50',
     );
   });
+  test('return CSV preserves recovered cost beside refund', () {
+    final csv = cutCsv({
+      'totals': <String, dynamic>{},
+      'partial_returns': [
+        {
+          'id': 'return',
+          'sale_id': 'sale',
+          'amount': '10.00',
+          'refund_amount': '5.00',
+          'cost': '2.35',
+          'commission_reduction': '1.00',
+        },
+      ],
+    });
+    expect(csv, contains('Costo de mercancía reingresada MXN'));
+    expect(csv, contains('2.35'));
+  });
   testWidgets('a workspace from a different actor cannot submit', (
     tester,
   ) async {
@@ -100,9 +136,61 @@ void main() {
     expect(find.text('Registrar devolución'), findsNothing);
     expect(repo.writes, isEmpty);
   });
+  testWidgets('stale return asks for refresh and discards old confirmation', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repo = ReturnRepository()..stale = true;
+    await tester.pumpWidget(app(repo));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byType(DropdownButtonFormField<Map<String, dynamic>>),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Producto de prueba').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), '1');
+    await tester.enterText(find.byType(TextField).at(1), 'Damaged');
+    await tester.tap(
+      find.text(
+        'Confirmo cantidad, motivo, saldo, comisión y dinero devuelto al cliente',
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Registrar devolución'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Actualiza venta y saldo antes'),
+      findsOneWidget,
+    );
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
+    await tester.tap(find.text('Actualizar venta y saldo'));
+    await tester.pumpAndSettle();
+    expect(repo.reads, 2);
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile).last).value,
+      false,
+    );
+    expect(
+      tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+      isEmpty,
+    );
+    expect(repo.writes, hasLength(1));
+    expect(repo.writes.single['p_expected_returned_quantity'], '0');
+  });
   testWidgets(
     'explicit confirmation, default no restock, and retry operation survive a lost response',
     (tester) async {
+      tester.view.physicalSize = const Size(1000, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final repo = ReturnRepository();
       await tester.pumpWidget(app(repo));
       await tester.pumpAndSettle();
@@ -114,12 +202,13 @@ void main() {
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).at(0), '1');
       await tester.enterText(find.byType(TextField).at(1), 'Producto dañado');
+      await tester.ensureVisible(find.text('Registrar devolución'));
       expect(
         tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
         isNull,
       );
       final confirmation = find.text(
-        'Confirmo cantidad, motivo e importe que devolví al cliente',
+        'Confirmo cantidad, motivo, saldo, comisión y dinero devuelto al cliente',
       );
       await tester.ensureVisible(confirmation);
       await tester.tap(confirmation);

@@ -145,6 +145,8 @@ class _CreditAccountsScreenState extends State<CreditAccountsScreen> {
       setState(() {
         busy = false;
         selected = null;
+        key = null;
+        operation = null;
         confirmed = false;
         amount.clear();
         reference.clear();

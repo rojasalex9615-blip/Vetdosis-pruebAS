@@ -5,6 +5,7 @@ test_database="partial_return_race"
 work_dir=$(mktemp -d)
 docker exec "$container_name" createdb -U postgres -T postgres "$test_database"
 trap 'docker exec "$container_name" dropdb -U postgres --force "$test_database" >/dev/null; rm -rf "$work_dir"' EXIT
+has_v3=$(docker exec "$container_name" psql -U postgres -d "$test_database" -Atc "select to_regprocedure('public.inv_sale_return_v3(uuid,uuid,uuid,text,text,boolean,text,text,text,text,uuid,text,text)') is not null")
 for race in quantity reversal;do
  seed=da
  if [ "$race" = reversal ];then seed=db;fi
@@ -22,6 +23,9 @@ SQL
  pids=()
  for operation in aa bb;do
   action="select public.inv_sale_return(:'sale',:'shift',:'line','1','efectivo',false,'Synthetic return race','10','00000000-0000-0000-0000-000000000150',repeat('$seed$operation',12));"
+  if [ "$has_v3" = t ];then
+   action="select public.inv_sale_return_v3(:'sale',:'shift',:'line','1','efectivo',false,'Synthetic return race','10','10','0','00000000-0000-0000-0000-000000000150',repeat('$seed$operation',12),'0');"
+  fi
   if [ "$race" = reversal ] && [ "$operation" = bb ];then
    action="select public.inv_sale_reverse(:'sale',:'shift','Synthetic full reversal race',repeat('$seed$operation',12));"
   fi
