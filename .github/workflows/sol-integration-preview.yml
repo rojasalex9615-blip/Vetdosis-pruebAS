@@ -10,6 +10,7 @@ on:
       - fix/hospital-token-refresh-20261027
       - fix/hospital-target-revocation-20261027
       - fix/hospital-runtime-fcm-cache-20261027
+      - feature/commission-recovery-20261027
   workflow_dispatch:
 permissions:
   contents: read
@@ -48,6 +49,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --test supabase/tests/hospital_delivery.test.mjs supabase/tests/hospital_dispatch_auth.test.mjs supabase/tests/hospital_fcm_token.test.mjs
+      - name: Probar reintegros de comisiones y respaldo financiero
+        run: bash supabase/tests/run_service_commission_recoveries.sh
       - name: Probar revocacion, reintentos y permisos en PostgreSQL aislado
         run: HOSPITAL_TEST_CHANNELS=1 HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
   android-preview:

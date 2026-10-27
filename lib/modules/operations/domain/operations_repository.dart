@@ -102,6 +102,8 @@ abstract interface class AppointmentPatientRepository {
 /// Individual service commissions from Sol's per-act settlement contract.
 /// Separate from periodic CommissionRepository; no implicit payment.
 abstract interface class ServiceCommissionRepository {
+  Future<void> recordServiceCommissionRecovery(String clinic, String settlement,
+      String amount, String method, String reference, String reason, String operation);
   Future<Map<String, dynamic>> commissionServiceAccount(String clinic, {int offset = 0});
   Future<void> settleServiceCommission(String clinic, String serviceAct,
       String method, String reference, String operation);
