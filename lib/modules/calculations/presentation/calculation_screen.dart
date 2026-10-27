@@ -1,3 +1,4 @@
+import '../../../core/widgets/calculator_surface.dart';
 import '../../patients/domain/patient_repository.dart';
 import 'fluid_therapy_panel.dart';
 import '../../incubation/presentation/incubation_screen.dart';
@@ -154,13 +155,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
       final refs = catalog.references.where((r) => r.type == type).toList();
       final chosen = refs.where((r) => r.id == referenceId).toList();
       final reference = chosen.isEmpty ? null : chosen.single;
-      return Column(
+      final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Cálculos clínicos',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          CalculatorHeading(id: selected, title: 'Cálculos clínicos'),
           if (widget.showAviculture)
             OutlinedButton.icon(
               onPressed: () => Navigator.push(
@@ -405,9 +403,11 @@ class _CalculationScreenState extends State<CalculationScreen> {
                   ),
                   decoration: InputDecoration(
                     labelText: f.label,
-                    helperText: f.zero
-                        ? 'Permite 0 si el MVZ así lo indica.'
-                        : null,
+                    helperMaxLines: 4,
+                    helperText: [
+                      ?calculatorUnitHint(f.label),
+                      if (f.zero) 'Permite 0 si el MVZ así lo indica.',
+                    ].join('\n'),
                   ),
                   onChanged: (v) {
                     values[f.id] = v;
@@ -504,6 +504,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
           ],
         ],
       );
+      // Fluidotherapy already owns a surface for standalone use.
+      return selected == 'fluids'
+          ? content
+          : CalculatorSurface(id: selected, child: content);
     },
   );
 }

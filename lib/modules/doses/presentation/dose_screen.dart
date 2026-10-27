@@ -1,3 +1,4 @@
+import '../../../core/widgets/calculator_surface.dart';
 import 'dart:convert';
 import '../../patients/domain/recorded_weight.dart';
 import 'package:file_picker/file_picker.dart';
@@ -233,7 +234,9 @@ class _DoseScreenState extends State<DoseScreen> {
     super.initState();
     model = DoseViewModel(widget.repository ?? AssetCatalogRepository());
     model.load().then((_) {
-      if (mounted && widget.initialDrug != null) model.select(widget.initialDrug!);
+      if (mounted && widget.initialDrug != null) {
+        model.select(widget.initialDrug!);
+      }
     });
     refreshPersonal();
   }
@@ -293,12 +296,12 @@ class _DoseScreenState extends State<DoseScreen> {
           ? null
           : DoseCatalog(general.version, [...general.drugs, ...personal]);
       final selected = model.drug;
-      return Column(
+      final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Calcular dosis de un producto',
-            style: Theme.of(context).textTheme.headlineMedium,
+          const CalculatorHeading(
+            id: 'dose',
+            title: 'Calcular dosis de un producto',
           ),
           const SizedBox(height: 16),
           if (widget.recordedWeight != null)
@@ -582,6 +585,7 @@ class _DoseScreenState extends State<DoseScreen> {
           ],
         ],
       );
+      return CalculatorSurface(id: 'dose', child: content);
     },
   );
 }
