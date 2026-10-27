@@ -6,6 +6,7 @@ import '../domain/appointment_care.dart';
 class SupabaseOperationsRepository
     implements
         OperationsRepository,
+        StaffMedicalRepository,
         AppointmentPatientRepository,
         AppointmentLinksRepository,
         AppointmentCareRepository,
@@ -403,6 +404,15 @@ class SupabaseOperationsRepository
       },
     );
   }
+
+  @override
+  Future<Map<String,dynamic>> staffMedicalWorkspace(String clinic,String actor) async => Map<String,dynamic>.from(await client.rpc('ops_staff_medical_workspace',params:{'p_clinic':clinic,'p_actor':actor}) as Map);
+  @override
+  Future<void> staffMedicalWrite(Map<String,dynamic> parameters) async { await client.rpc('ops_staff_medical_write',params:parameters); }
+  @override
+  Future<Map<String,dynamic>> staffMedicalDirectory(String clinic,String actor,{int offset=0}) async => Map<String,dynamic>.from(await client.rpc('ops_staff_medical_directory',params:{'p_clinic':clinic,'p_actor':actor,'p_offset':offset}) as Map);
+  @override
+  Future<Map<String,dynamic>> staffMedicalView(String clinic,String actor,String subject,String purpose) async => Map<String,dynamic>.from(await client.rpc('ops_staff_medical_view',params:{'p_clinic':clinic,'p_actor':actor,'p_subject':subject,'p_purpose':purpose}) as Map);
 
   @override
   Future<List<Map<String, dynamic>>> medical(

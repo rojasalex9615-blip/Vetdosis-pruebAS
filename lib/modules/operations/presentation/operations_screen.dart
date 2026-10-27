@@ -1,3 +1,4 @@
+import 'staff_medical_screen.dart';
 import '../domain/service_catalog.dart';
 import '../../ai/domain/ai_repository.dart';
 import 'appointment_message_screen.dart';
@@ -121,7 +122,10 @@ class _OperationsScreenState extends State<OperationsScreen>
     return switch (value) {
       'appointments' => 'appointment.read o appointment.manage',
       'services' => 'service.read o service.manage',
-      'tasks' || 'messages' || 'notices' || 'private_messages' => 'team.read o team.manage',
+      'tasks' ||
+      'messages' ||
+      'notices' ||
+      'private_messages' => 'team.read o team.manage',
       'suppliers' => 'supplier.read o supplier.manage',
       'acts' => 'service.act.read o service.act.record',
       _ => 'permiso de operación',
@@ -426,86 +430,26 @@ class _OperationsScreenState extends State<OperationsScreen>
   }
 
   Future<void> medical() async {
-    try {
-      var profiles = await widget.repository.medical(widget.member.clinicId);
-      if (!mounted) return;
-      final own = profiles
-          .where((p) => p['user_id'] == widget.member.userId)
-          .firstOrNull;
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => RxEntryScreen(
-            title: 'Mi ficha médica · acceso restringido',
-            initial: Map<String, dynamic>.from(own?['details'] as Map? ?? {}),
-            fields: const [
-              RxField('blood', 'Grupo sanguíneo'),
-              RxField('allergies', 'Alergias'),
-              RxField('conditions', 'Antecedentes'),
-              RxField('vaccines', 'Vacunación'),
-              RxField('emergency', 'Contacto de emergencia'),
-              RxField(
-                'consent',
-                'Consiento el registro; solo yo y el admin de esta clínica podrán consultarlo',
-                type: 'checkbox',
-                required: true,
-              ),
-              RxField(
-                'erase',
-                'Retirar la ficha y su consentimiento',
-                type: 'checkbox',
-              ),
-            ],
-            submit: (d, op) async {
-              if (d['consent'] != true) {
-                throw const FormatException('Confirma tu consentimiento.');
-              }
-              final erase = d.remove('erase') == true;
-              d.remove('consent');
-              await widget.repository.medical(
-                widget.member.clinicId,
-                details: erase ? {} : d,
-                consent: true,
-              );
-            },
+    final repository = widget.repository;
+    if (repository is! StaffMedicalRepository) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'La ficha privada requiere la versión actualizada del servicio.',
           ),
         ),
       );
-      if (admin && mounted) {
-        profiles = await widget.repository.medical(widget.member.clinicId);
-      }
-      if (admin && mounted && profiles.isNotEmpty) {
-        await showDialog<void>(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Fichas consentidas del personal'),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  for (final p in profiles)
-                    ListTile(
-                      title: Text(person(p['user_id'] as String)),
-                      subtitle: Text('${p['details']}'),
-                    ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(c),
-                child: const Text('Cerrar'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(operationError(e))));
-      }
+      return;
     }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StaffMedicalScreen(
+          repository: repository as StaffMedicalRepository,
+          member: widget.member,
+        ),
+      ),
+    );
   }
 
   @override
@@ -961,7 +905,12 @@ class _OperationsScreenState extends State<OperationsScreen>
                   type: 'select',
                   options: people,
                 ),
-                RxField('mentioned_user_ids', 'Etiquetar integrantes', type: 'multi_select', options: people),
+                RxField(
+                  'mentioned_user_ids',
+                  'Etiquetar integrantes',
+                  type: 'multi_select',
+                  options: people,
+                ),
                 const RxField(
                   'priority',
                   'Prioridad',
@@ -1015,38 +964,72 @@ class _OperationsScreenState extends State<OperationsScreen>
         if (activeSection == 'messages' || activeSection == 'notices') ...[
           if (canWrite('team.manage', legacy: !widget.member.isPersonal))
             FilledButton(
-              onPressed: () => form(activeSection == 'notices' ? 'Publicar aviso' : 'Mensaje al grupo', 'message', [
-                RxField(
-                  'category',
-                  'Categoría',
-                  type: 'select',
-                  options: activeSection == 'notices' ? const {'aviso': 'Aviso'} : const {
-                    'general': 'General',
-                    'urgente': 'Urgente',
-                    'turno': 'Turno',
-                  },
-                  required: true,
-                ),
-                const RxField(
-                  'body',
-                  'Mensaje (sin datos sensibles de pacientes o personal)',
-                  required: true,
-                ),
-                RxField('mentioned_user_ids', 'Etiquetar integrantes', type: 'multi_select', options: people),
-              ]),
-              child: Text(activeSection == 'notices' ? 'Publicar aviso' : 'Escribir al grupo'),
+              onPressed: () => form(
+                activeSection == 'notices'
+                    ? 'Publicar aviso'
+                    : 'Mensaje al grupo',
+                'message',
+                [
+                  RxField(
+                    'category',
+                    'Categoría',
+                    type: 'select',
+                    options: activeSection == 'notices'
+                        ? const {'aviso': 'Aviso'}
+                        : const {
+                            'general': 'General',
+                            'urgente': 'Urgente',
+                            'turno': 'Turno',
+                          },
+                    required: true,
+                  ),
+                  const RxField(
+                    'body',
+                    'Mensaje (sin datos sensibles de pacientes o personal)',
+                    required: true,
+                  ),
+                  RxField(
+                    'mentioned_user_ids',
+                    'Etiquetar integrantes',
+                    type: 'multi_select',
+                    options: people,
+                  ),
+                ],
+              ),
+              child: Text(
+                activeSection == 'notices'
+                    ? 'Publicar aviso'
+                    : 'Escribir al grupo',
+              ),
             ),
-          for (final m in model.rows('messages').where((m) => (m['category'] == 'aviso') == (activeSection == 'notices')))
+          for (final m
+              in model
+                  .rows('messages')
+                  .where(
+                    (m) =>
+                        (m['category'] == 'aviso') ==
+                        (activeSection == 'notices'),
+                  ))
             ListTile(
               title: Text('${m['category']} · ${m['body']}'),
-              subtitle: Text('${person(m['author_id'] as String)} · ${m['created_at']}${(m['mentioned_user_ids'] as List? ?? []).isEmpty ? '' : ' · Etiquetas: ${(m['mentioned_user_ids'] as List).map((id) => person('$id')).join(', ')}'}'),
+              subtitle: Text(
+                '${person(m['author_id'] as String)} · ${m['created_at']}${(m['mentioned_user_ids'] as List? ?? []).isEmpty ? '' : ' · Etiquetas: ${(m['mentioned_user_ids'] as List).map((id) => person('$id')).join(', ')}'}',
+              ),
             ),
         ],
         if (activeSection == 'private_messages') ...[
           FilledButton(
             onPressed: () => form('Mensaje privado', 'private_message', [
-              RxField('recipient_id', 'Buscar integrante del equipo', type: 'search_select', required: true,
-                options: {for (final e in people.entries) if (e.key != widget.member.userId) e.key: e.value}),
+              RxField(
+                'recipient_id',
+                'Buscar integrante del equipo',
+                type: 'search_select',
+                required: true,
+                options: {
+                  for (final e in people.entries)
+                    if (e.key != widget.member.userId) e.key: e.value,
+                },
+              ),
               const RxField('body', 'Mensaje privado', required: true),
             ]),
             child: const Text('Escribir mensaje privado'),
@@ -1054,9 +1037,11 @@ class _OperationsScreenState extends State<OperationsScreen>
           for (final m in model.rows('private_messages'))
             ListTile(
               title: Text('${m['body']}'),
-              subtitle: Text(m['author_id'] == widget.member.userId
-                  ? 'Para ${person(m['recipient_id'] as String)} · ${m['created_at']}'
-                  : 'De ${person(m['author_id'] as String)} · ${m['created_at']}'),
+              subtitle: Text(
+                m['author_id'] == widget.member.userId
+                    ? 'Para ${person(m['recipient_id'] as String)} · ${m['created_at']}'
+                    : 'De ${person(m['author_id'] as String)} · ${m['created_at']}',
+              ),
             ),
         ],
         if (activeSection == 'suppliers') ...[
@@ -1271,10 +1256,16 @@ class _OperationsScreenState extends State<OperationsScreen>
             activeSection != 'appointments' &&
             activeSection != 'blocked' &&
             (section == 'notices'
-                ? model.rows('messages').where((m) => m['category'] == 'aviso').isEmpty
+                ? model
+                      .rows('messages')
+                      .where((m) => m['category'] == 'aviso')
+                      .isEmpty
                 : section == 'messages'
-                    ? model.rows('messages').where((m) => m['category'] != 'aviso').isEmpty
-                    : model.rows(section).isEmpty))
+                ? model
+                      .rows('messages')
+                      .where((m) => m['category'] != 'aviso')
+                      .isEmpty
+                : model.rows(section).isEmpty))
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text('Sin registros visibles en esta sección.'),

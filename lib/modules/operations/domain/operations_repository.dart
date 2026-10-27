@@ -108,3 +108,11 @@ abstract interface class ServiceCommissionRepository {
   Future<void> settleServiceCommission(String clinic, String serviceAct,
       String method, String reference, String operation);
 }
+
+/// Versioned, owner-scoped consent and audited administrative access.
+abstract interface class StaffMedicalRepository {
+  Future<Map<String,dynamic>> staffMedicalWorkspace(String clinic,String actor);
+  Future<void> staffMedicalWrite(Map<String,dynamic> parameters);
+  Future<Map<String,dynamic>> staffMedicalDirectory(String clinic,String actor,{int offset=0});
+  Future<Map<String,dynamic>> staffMedicalView(String clinic,String actor,String subject,String purpose);
+}

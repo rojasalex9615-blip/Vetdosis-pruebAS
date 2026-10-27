@@ -1,0 +1,21 @@
+name: Validar consentimiento y privacidad de ficha del personal
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/*staff_medical_consent_access.sql'
+      - 'supabase/tests/*staff_medical*'
+      - 'supabase/tests/run_permission_clinic_operations.sh'
+      - 'lib/modules/operations/**'
+      - 'test/staff_medical_privacy_test.dart'
+      - '.github/workflows/test-staff-medical-privacy.yml'
+permissions:
+  contents: read
+jobs:
+  staff-medical-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_staff_medical_privacy.sh

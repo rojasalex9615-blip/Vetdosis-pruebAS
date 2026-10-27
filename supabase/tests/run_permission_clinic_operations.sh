@@ -31,4 +31,7 @@ fi
 if [ "${INSTALLMENTS_SERVICE_RETURNS:-0}" = 1 ];then
  bash supabase/tests/installments_service_return_concurrency.sh "$container_name"
 fi
+if [ "${STAFF_MEDICAL_PRIVACY:-0}" = 1 ];then
+ bash supabase/tests/staff_medical_privacy_concurrency.sh "$container_name"
+fi
 echo 'Workspace management and clinic operations permissions passed.'
