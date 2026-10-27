@@ -9,6 +9,7 @@ on:
       - feature/grok-manufacturer-vademecum-20261027
       - fix/hospital-token-refresh-20261027
       - fix/hospital-target-revocation-20261027
+      - fix/hospital-runtime-fcm-cache-20261027
   workflow_dispatch:
 permissions:
   contents: read
@@ -46,7 +47,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-      - run: node --test supabase/tests/hospital_delivery.test.mjs supabase/tests/hospital_dispatch_auth.test.mjs
+      - run: node --test supabase/tests/hospital_delivery.test.mjs supabase/tests/hospital_dispatch_auth.test.mjs supabase/tests/hospital_fcm_token.test.mjs
       - name: Probar revocacion, reintentos y permisos en PostgreSQL aislado
         run: HOSPITAL_TEST_CHANNELS=1 HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
   android-preview:

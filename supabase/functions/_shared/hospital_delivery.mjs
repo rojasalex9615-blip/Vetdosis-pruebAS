@@ -23,7 +23,7 @@ function base64url(bytes) {
   return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }
 
-export async function fcmAccessToken(config, fetcher = fetch) {
+async function requestFcmAccessToken(config, fetcher) {
   const pem = config.fcmKey.replace(/\\n/g, "\n");
   const raw = atob(pem.replace(/-----[^-]+-----|\s/g, ""));
   const key = await crypto.subtle.importKey(
@@ -57,7 +57,25 @@ export async function fcmAccessToken(config, fetcher = fetch) {
   if (typeof result.access_token !== "string" || !result.access_token) {
     throw new Error("provider_response_invalid");
   }
-  return result.access_token;
+  const lifetime = Number.isFinite(result.expires_in) && result.expires_in > 0
+    ? Math.min(result.expires_in, 3600) : 3600;
+  return { token: result.access_token, lifetime };
+}
+
+// Memory-only single-account cache. Identity includes the key so rotation invalidates it.
+let cachedFcmToken = null;
+export async function fcmAccessToken(config, fetcher = fetch, clock = Date.now) {
+  const fingerprint = new Uint8Array(await crypto.subtle.digest(
+    "SHA-256", new TextEncoder().encode(config.fcmKey),
+  ));
+  const identity = JSON.stringify([config.fcmProject, config.fcmEmail, base64url(fingerprint)]);
+  const now = clock();
+  if (cachedFcmToken?.identity === identity && cachedFcmToken.expiresAt > now + 60000) {
+    return cachedFcmToken.token;
+  }
+  const result = await requestFcmAccessToken(config, fetcher);
+  cachedFcmToken = { identity, token: result.token, expiresAt: now + result.lifetime * 1000 };
+  return result.token;
 }
 
 export async function sendHospitalDelivery(item, config, getToken = fcmAccessToken, fetcher = fetch) {
