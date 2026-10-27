@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'neu_identity.dart';
+import 'neu_header_card.dart';
 import 'workspace_panel.dart';
 
 /// Stable identities shared by the tool selector and its calculation surface.
@@ -74,7 +75,13 @@ class CalculatorIcon extends StatelessWidget {
 }
 
 class CalculatorSurface extends StatelessWidget {
-  const CalculatorSurface({super.key, required this.id, required this.child});
+  const CalculatorSurface({
+    super.key,
+    required this.id,
+    required this.child,
+    this.referenceStyle = false,
+  });
+  final bool referenceStyle;
   final String id;
   final Widget child;
   @override
@@ -113,10 +120,34 @@ class CalculatorSurface extends StatelessWidget {
           fillColor: Color.lerp(
             surface,
             dark ? Colors.black : Colors.white,
-            .24,
+            referenceStyle ? .02 : .24,
           ),
-          border: neu ? NeuInputBorder(dark: dark) : null,
-          enabledBorder: neu ? NeuInputBorder(dark: dark) : null,
+          contentPadding: referenceStyle
+              ? const EdgeInsets.symmetric(horizontal: 22, vertical: 20)
+              : base.inputDecorationTheme.contentPadding,
+          border: neu
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.8 : 1)
+              : null,
+          enabledBorder: neu
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.8 : 1)
+              : null,
+          focusedBorder: referenceStyle
+              ? NeuInputBorder(
+                  dark: dark,
+                  depth: 1.8,
+                  borderSide: BorderSide(color: accent, width: 1.5),
+                )
+              : base.inputDecorationTheme.focusedBorder,
+          errorBorder: referenceStyle
+              ? NeuInputBorder(
+                  dark: dark,
+                  depth: 1.8,
+                  borderSide: BorderSide(
+                    color: base.colorScheme.error,
+                    width: 1.5,
+                  ),
+                )
+              : base.inputDecorationTheme.errorBorder,
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
@@ -131,7 +162,7 @@ class CalculatorSurface extends StatelessWidget {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(referenceStyle ? 22 : 20),
         margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
           color: surface,
@@ -150,8 +181,10 @@ class CalculatorSurface extends StatelessWidget {
                 ? accent.withValues(alpha: .22)
                 : Colors.white.withValues(alpha: .75),
           ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: neu ? neuShadows(dark) : null,
+          borderRadius: BorderRadius.circular(referenceStyle ? 36 : 24),
+          boxShadow: neu
+              ? neuShadows(dark, depth: referenceStyle ? 1.6 : 1)
+              : null,
         ),
         child: Material(type: MaterialType.transparency, child: child),
       ),
@@ -189,7 +222,9 @@ class CalculatorSelectorCard extends StatelessWidget {
     required this.id,
     required this.title,
     required this.child,
+    this.referenceStyle = false,
   });
+  final bool referenceStyle;
   final String id, title;
   final Widget child;
   @override
@@ -197,6 +232,18 @@ class CalculatorSelectorCard extends StatelessWidget {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final identity = calculatorIdentity(id);
+    if (referenceStyle) {
+      return NeuHeaderCard(
+        title: title,
+        icon: identity.icon,
+        color: identity.color,
+        soft: true,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 22),
+          child: child,
+        ),
+      );
+    }
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       clipBehavior: Clip.antiAlias,
