@@ -222,38 +222,58 @@ class _CalculationScreenState extends State<CalculationScreen> {
             'Los parámetros son indicados por el MVZ. La app no selecciona tratamientos. Los resultados no se guardan en el expediente ni emiten recetas automáticamente.',
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: selected,
-            isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Herramienta'),
-            items: [
-              for (final d in catalog.calculations)
-                DropdownMenuItem(
-                  value: d.id,
-                  child: Text(
-                    d.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          CalculatorSelectorCard(
+            id: selected,
+            title: 'Herramienta',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey('tool:$selected'),
+              initialValue: selected,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+              isDense: false,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
                 ),
-              for (final entry in {
-                'protocols': 'Protocolos por etapas',
-                'vitals': 'Constantes fisiológicas',
-                'metabolic': 'Peso metabólico en exóticos',
-                'withdrawals': 'Tiempos de retiro',
-              }.entries)
-                DropdownMenuItem(
-                  value: entry.key,
-                  child: Text(
-                    entry.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                  borderSide: BorderSide(color: Color(0xFFBCCBD3)),
                 ),
-            ],
-            onChanged: (v) {
-              if (v != null) reset(v);
-            },
+                filled: true,
+              ),
+              items: [
+                for (final d in catalog.calculations)
+                  DropdownMenuItem(
+                    value: d.id,
+                    child: Text(
+                      d.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                for (final entry in {
+                  'protocols': 'Protocolos por etapas',
+                  'vitals': 'Constantes fisiológicas',
+                  'metabolic': 'Peso metabólico en exóticos',
+                  'withdrawals': 'Tiempos de retiro',
+                }.entries)
+                  DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(
+                      entry.value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: (v) {
+                if (v != null) reset(v);
+              },
+            ),
           ),
           const SizedBox(height: 16),
           if (type.isNotEmpty) ...[

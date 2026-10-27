@@ -106,6 +106,9 @@ class CalculatorSurface extends StatelessWidget {
           ),
         ),
         inputDecorationTheme: base.inputDecorationTheme.copyWith(
+          labelStyle: base.textTheme.bodyMedium?.copyWith(fontSize: 14),
+          floatingLabelStyle: base.textTheme.bodySmall?.copyWith(fontSize: 12),
+          helperStyle: base.textTheme.bodySmall?.copyWith(fontSize: 12),
           filled: true,
           fillColor: Color.lerp(
             surface,
@@ -177,4 +180,62 @@ class CalculatorHeading extends StatelessWidget {
 String? calculatorUnitHint(String label) {
   final unit = RegExp(r'\(([^)]+)\)').firstMatch(label)?.group(1);
   return unit == null ? null : 'Unidad: $unit';
+}
+
+/// Keeps the selector label outside its field so it never overlaps the value.
+class CalculatorSelectorCard extends StatelessWidget {
+  const CalculatorSelectorCard({
+    super.key,
+    required this.id,
+    required this.title,
+    required this.child,
+  });
+  final String id, title;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final identity = calculatorIdentity(id);
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: dark
+            ? theme.colorScheme.surface
+            : Colors.white.withValues(alpha: .65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: identity.color.withValues(alpha: .3)),
+        boxShadow: theme.extension<WorkspaceStyle>()?.neumorphic == true
+            ? neuShadows(dark)
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: identity.color,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(identity.icon, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(padding: const EdgeInsets.all(14), child: child),
+        ],
+      ),
+    );
+  }
 }
