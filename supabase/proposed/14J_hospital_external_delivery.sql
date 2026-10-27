@@ -176,4 +176,20 @@ grant execute on function public.hospital_delivery_target_set(uuid,text,text,boo
  public.hospital_delivery_target_revoke(uuid,uuid) to authenticated;
 grant execute on function public.hospital_delivery_claim(integer),
  public.hospital_delivery_finish(uuid,boolean,text,text) to service_role;
+-- Preserve the existing authorization and workspace payload; expose actual transport state.
+alter function public.hospital_automation_workspace(uuid,uuid) set schema private;
+alter function private.hospital_automation_workspace(uuid,uuid)
+ rename to hospital_automation_workspace_before_delivery;
+revoke all on function private.hospital_automation_workspace_before_delivery(uuid,uuid)
+ from public,anon,authenticated,service_role;
+create function public.hospital_automation_workspace(p_clinic uuid,p_stay uuid default null)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare workspace jsonb;begin
+ workspace=private.hospital_automation_workspace_before_delivery(p_clinic,p_stay);
+ return jsonb_set(workspace,'{runtime,external_delivery_enabled}',
+   (select to_jsonb(external_delivery_enabled) from private.hospital_automation_runtime));
+end$$;
+revoke all on function public.hospital_automation_workspace(uuid,uuid)
+ from public,anon,authenticated,service_role;
+grant execute on function public.hospital_automation_workspace(uuid,uuid) to authenticated;
 commit;

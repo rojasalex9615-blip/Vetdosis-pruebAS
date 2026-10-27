@@ -16,11 +16,19 @@ select pg_temp.delivery_assert(private.hospital_notice_recipient(:'clinic','0000
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000151',false);
 set role authenticated;
 select pg_temp.delivery_error($q$select public.hospital_delivery_target_set(current_setting('test.clinic')::uuid,'fcm','synthetic_device_token_123456',false)$q$,'explicit_delivery_consent_required');
+select pg_temp.delivery_assert((public.hospital_automation_workspace(:'clinic')->'runtime'->>'external_delivery_enabled')::boolean=false,'workspace omits disabled external delivery');
+select pg_temp.delivery_assert((public.hospital_automation_workspace(:'clinic')->'runtime') ?& array['enabled','last_run_at'],'workspace lost existing runtime fields');
 select public.hospital_delivery_target_set(:'clinic','fcm','synthetic_device_token_123456',true) as fcm_target \gset
 select public.hospital_delivery_target_set(:'clinic','whatsapp','+5213312345678',true) as wa_target \gset
 select pg_temp.delivery_error('select public.hospital_delivery_claim(1)','permission denied');
 reset role;
 update private.hospital_automation_runtime set external_delivery_enabled=true;
+set role authenticated;
+select pg_temp.delivery_assert((public.hospital_automation_workspace(:'clinic')->'runtime'->>'external_delivery_enabled')::boolean=true,'workspace does not reflect enabled external delivery');
+reset role;
+set role anon;
+select pg_temp.delivery_error($q$select public.hospital_automation_workspace(current_setting('test.clinic')::uuid)$q$,'permission denied');
+reset role;
 insert into public.hospital_stays(id,clinic_id,patient_id,cage,admitted_by,admitted_at)
 values('00000000-0000-0000-0000-000000000840',:'clinic','00000000-0000-0000-0000-000000000800','Synthetic delivery area','00000000-0000-0000-0000-000000000151',clock_timestamp()-interval '1 day');
 insert into public.hospital_tasks(id,clinic_id,stay_id,kind,label,instructions,due_at,escalation_minutes,created_by,procedure_type_id,authority_grant_id)
