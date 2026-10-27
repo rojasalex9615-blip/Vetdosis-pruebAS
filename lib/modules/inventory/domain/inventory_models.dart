@@ -119,6 +119,18 @@ String cutCsv(Map<String, dynamic> cut) {
     ['REVERSOS DEL TURNO'],
     for (final r in (cut['reversals'] as List? ?? []).cast<Map>())
       [r['sale_id'], r['created_at'], r['reason']],
+    ['DEVOLUCIONES PARCIALES DEL TURNO'],
+    for (final r in (cut['partial_returns'] as List? ?? []).cast<Map>())
+      [
+        r['sale_id'],
+        r['line_id'],
+        r['quantity'],
+        r['amount'],
+        r['method'],
+        r['restocked'],
+        r['reason'],
+        r['created_at'],
+      ],
     ['MOVIMIENTOS DE EFECTIVO'],
     for (final m in (cut['cash_movements'] as List? ?? []).cast<Map>())
       [m['kind'], m['amount'], m['reason'], m['created_at']],
