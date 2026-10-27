@@ -29,6 +29,7 @@ class IncidentRepository extends ClosedVialRepository {
                       'quantity': '2',
                       'unit': 'ml',
                       'observed_at': '2026-10-27T06:00:00Z',
+                      'reported_at': '2026-10-27T06:20:00Z',
                       'incidence': 'Aplicación reportada con frasco cerrado',
                     },
                   ]
@@ -133,10 +134,26 @@ void main() {
     (tester) async {
       final repo = IncidentRepository()..more = true;
       await showVials(tester, repo, IncidentClinical());
+      expect(
+        find.textContaining('Observada: 2026-10-27T06:00:00Z'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Registrada: 2026-10-27T06:20:00Z'),
+        findsOneWidget,
+      );
       expect(find.textContaining('100 incidencias accesibles'), findsOneWidget);
       await tester.ensureVisible(find.text('Ver caso de la incidencia'));
       await tester.tap(find.text('Ver caso de la incidencia'));
       await tester.pumpAndSettle();
+      expect(
+        tester
+            .state<FormFieldState<String>>(
+              find.byType(DropdownButtonFormField<String>).first,
+            )
+            .value,
+        'Medicación',
+      );
       expect(find.text('Caso para revisión'), findsOneWidget);
       expect(find.text('Reportar aplicación realizada'), findsOneWidget);
       expect(repo.writes, 0);

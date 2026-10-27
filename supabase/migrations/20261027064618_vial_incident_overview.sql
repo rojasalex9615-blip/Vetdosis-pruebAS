@@ -1,7 +1,5 @@
 -- Candidate after 13F and vial reconciliation retry candidate. Read-only overview.
 begin;
-create index vial_movement_chronology on public.medication_vial_movements(clinic_id,vial_id,created_at);
-create index vial_record_incidents on public.medication_records(clinic_id,vial_id,reported_at desc,id) where incidence<>'';
 alter function public.rx_vials(uuid) set schema private;
 alter function private.rx_vials(uuid) rename to vials_before_incident_overview;
 revoke all on function private.vials_before_incident_overview(uuid) from public,anon,authenticated,service_role;

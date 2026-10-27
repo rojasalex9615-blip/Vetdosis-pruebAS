@@ -1404,6 +1404,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
           label: const Text('Actualizar'),
         ),
         DropdownButtonFormField<String>(
+          key: ValueKey('prescribing-section-$section'),
           initialValue: section,
           decoration: const InputDecoration(labelText: 'Apartado'),
           items: [
@@ -1683,7 +1684,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     for (final incident
                         in (v['incidents'] as List? ?? []).cast<Map>()) ...[
                       Text(
-                        'Incidencia pendiente de revisión · ${incident['quantity']} ${incident['unit']} · ${incident['observed_at']}\n${incident['incidence']}',
+                        'Incidencia pendiente de revisión · ${incident['quantity']} ${incident['unit']}\nObservada: ${incident['observed_at']} · Registrada: ${incident['reported_at']}\n${incident['incidence']}',
                       ),
                       TextButton(
                         onPressed: model.busy

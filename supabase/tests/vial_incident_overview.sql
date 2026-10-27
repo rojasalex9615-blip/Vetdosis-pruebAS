@@ -49,3 +49,5 @@ set role authenticated;
 select e as limited from jsonb_array_elements(public.rx_vials(:'clinic')) e where e->>'id'=:'vial' \gset
 select pg_temp.overview_assert(jsonb_array_length(:'limited'::jsonb->'incidents')=100 and (:'limited'::jsonb->>'more_incidents')::boolean,'preview truncated without notice or exceeded bound');
 reset role;
+
+select pg_temp.overview_assert((select count(*)=2 and bool_and(indisvalid and indisready) from pg_index where indexrelid in ('public.vial_movement_chronology'::regclass,'public.vial_record_incidents'::regclass)),'concurrent indexes not ready and valid');

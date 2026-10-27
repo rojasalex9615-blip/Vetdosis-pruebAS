@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/*vial_incident_overview.sql'
+      - 'supabase/migrations/*vial_*_index_concurrent.sql'
+      - 'supabase/tests/vial_index_write_compatibility.sh'
+      - 'supabase/tests/run_permission_medication.sh'
       - 'supabase/tests/*vial_incident_overview*'
       - 'supabase/tests/run_vial_reconciliation_retries.sh'
       - 'lib/modules/prescribing/**'

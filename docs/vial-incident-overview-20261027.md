@@ -46,3 +46,33 @@ Migración generada con Supabase CLI:
 Incluye índices por clínica/frasco/fecha para el resumen. No aplicada a Pruebas
 ni producción. Pendientes revisión de CodeRabbit, integración y prueba con APK
 consolidada y dos clínicas.
+
+## Correcciones tras revisión de CodeRabbit
+
+Sobre el SHA 9208f5e se verificaron tres observaciones menores. El selector de
+apartado ahora cambia su identidad junto con la sección y una prueba comprueba
+el valor del FormFieldState después de abrir el caso. La vista distingue la
+fecha observada y la registrada; esta última determina el orden del resumen.
+
+Los índices se retiraron del candidato transaccional aún no desplegado y se
+separaron en dos migraciones generadas con Supabase CLI:
+
+- `20261027141227_vial_movement_index_concurrent.sql`.
+- `20261027141229_vial_incident_index_concurrent.sql`.
+
+Cada archivo contiene un único CREATE INDEX CONCURRENTLY, fuera de BEGIN/COMMIT.
+No envolver estos pasos en una transacción ni usar psql --single-transaction.
+Se verificó el soporte de comandos no transaccionales en el código de la versión
+CLI instalada 2.122.0 (`apps/cli-go/pkg/migration/file.go`, etiqueta v2.122.0).
+Un instalador distinto debe conservar esa ejecución fuera de transacción.
+
+El runner local aplica los archivos en conexiones separadas y verifica indisvalid
+/ indisready. Una prueba adicional en clon PostgreSQL detiene el RPC real después
+de insertar medication_records y antes de medication_vial_movements, crea ambos
+índices concurrentemente y comprueba que migración y aplicación terminan sin
+deadlock, con una sola aplicación y un único descuento. No se prueba con datos
+reales ni se aplica el candidato a una instancia remota.
+
+Si un build concurrente se interrumpe, inspeccionar el índice antes de reintentar:
+no se usa IF NOT EXISTS para ocultar un índice inválido. Su recuperación requiere
+un paso explícito revisado; no se elimina automáticamente un índice existente.
