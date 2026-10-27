@@ -105,3 +105,10 @@ set role authenticated;
 select pg_temp.expect_financial(format('select public.inv_sale_return_workspace(%L,%L)',:'drug_sale',:'later_shift'),'non_medication_sale_required');
 select pg_temp.expect_financial(format('select public.inv_sale_return_v3(%L,%L,%L,%L,%L,false,%L,%L,%L,%L,%L,%L,%L)',:'drug_sale',:'later_shift',:'drug_line','1','efectivo','Excluded mixed refund','10','10','0',auth.uid(),repeat('ed51',12),'0'),'non_medication_sale_required');
 reset role;
+-- A service with only reversed sales must not remain awaiting collection.
+select pg_temp.check_financial((select count(*)>0 and bool_and(private.service_commission_net(a.id,a.clinic_id)=0)
+ from public.clinic_service_acts a where a.clinic_id=:'clinic'
+ and exists(select 1 from public.inventory_sale_lines l where l.service_act_id=a.id and l.clinic_id=a.clinic_id)
+ and not exists(select 1 from public.inventory_sale_lines l where l.service_act_id=a.id and l.clinic_id=a.clinic_id
+  and not exists(select 1 from public.inventory_sale_reversals r where r.sale_id=l.sale_id and r.clinic_id=l.clinic_id))),
+ 'fully reversed service still has a net commission');
