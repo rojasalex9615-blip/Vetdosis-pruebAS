@@ -220,6 +220,15 @@ class SupabaseOperationsRepository
   }
 
   @override
+  Future<void> recordServiceCommissionRecovery(String clinic, String settlement,
+      String amount, String method, String reference, String reason, String operation) async {
+    await client.rpc('ops_commission_recovery', params: {
+      'p_clinic': clinic, 'p_settlement': settlement, 'p_amount': amount,
+      'p_method': method, 'p_reference': reference, 'p_reason': reason, 'p_operation': operation,
+    });
+  }
+
+  @override
   Future<Map<String, dynamic>> commissionServiceAccount(String clinic, {int offset = 0}) async =>
       Map<String, dynamic>.from(await client.rpc('ops_commission_account',
           params: {'p_clinic': clinic, 'p_offset': offset}) as Map);
