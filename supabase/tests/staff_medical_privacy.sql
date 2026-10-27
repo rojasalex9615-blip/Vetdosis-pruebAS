@@ -9,6 +9,19 @@ select :'workspace'::jsonb->>'member_since' as member_since,:'workspace'::jsonb-
 select pg_temp.medical_assert(:'workspace'::jsonb->'profile'='null'::jsonb and (:'workspace'::jsonb->>'revision')::bigint=0,'initial workspace has another person profile');
 select public.ops_staff_medical_write(:'clinic','save','{"allergies":"HEALTH-NOT-IN-LOGS","emergency":"Synthetic contact"}',true,1,:'notice_hash',0,:'member_since',auth.uid(),repeat('ea01',12)) as acceptance \gset
 select pg_temp.medical_assert(public.ops_staff_medical_write(:'clinic','save','{"emergency":"Synthetic contact","allergies":" HEALTH-NOT-IN-LOGS "}',true,1,:'notice_hash',0,:'member_since',auth.uid(),repeat('ea01',12))=:'acceptance'::uuid,'retry duplicated acceptance');
+reset role;
+begin;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000150',false);
+set role authenticated;
+select public.permission_grant(:'clinic',auth.uid(),'backup.export',null,clock_timestamp()+interval '1 day','Synthetic own profile export');
+select public.ops_staff_medical_workspace(:'clinic',auth.uid())->>'member_since' as admin_since \gset
+select public.ops_staff_medical_write(:'clinic','save','{"allergies":"OWN-PRIVATE-HEALTH"}',true,1,:'notice_hash',0,:'admin_since',auth.uid(),repeat('ee01',12));
+select public.clinic_export(:'clinic')::jsonb->'tables'->'my_staff_medical_profile' as own_export \gset
+select pg_temp.medical_assert(jsonb_array_length(:'own_export'::jsonb)=1 and not (:'own_export'::jsonb->0 ? 'details'),'own profile export contains medical details');
+reset role;
+rollback;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000181',false);
+set role authenticated;
 select pg_temp.medical_error(format('select public.ops_staff_medical_write(%L,%L,%L,false,1,%L,1,%L,%L,%L)',:'clinic','save','{"blood":"Synthetic"}',:'notice_hash',:'member_since','00000000-0000-0000-0000-000000000181',repeat('ea02',12)),'staff_medical_consent_required');
 select pg_temp.medical_error(format('select public.ops_staff_medical_directory(%L,%L)',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_read_required');
 select pg_temp.medical_error('select count(*) from public.staff_medical_profiles','permission denied');
@@ -38,6 +51,7 @@ select pg_temp.medical_error(format('select public.ops_staff_medical_write(%L,%L
 select public.ops_staff_medical_write(:'clinic','withdraw',null,false,null,null,1,:'member_since',auth.uid(),repeat('ea04',12)) as withdrawal \gset
 select pg_temp.medical_assert(public.ops_staff_medical_write(:'clinic','withdraw',null,false,null,null,1,:'member_since',auth.uid(),repeat('ea04',12))=:'withdrawal'::uuid,'withdraw retry created another event');
 select pg_temp.medical_assert(public.ops_staff_medical_workspace(:'clinic',auth.uid())->'profile'='null'::jsonb,'withdrawal retained active profile');
+select pg_temp.medical_error(format('select public.ops_staff_medical_write(%L,%L,null,false,null,null,2,%L,%L,%L)',:'clinic','withdraw',:'member_since',auth.uid(),repeat('ea14',12)),'staff_medical_profile_unavailable');
 reset role;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000150',false);
 set role authenticated;
@@ -65,3 +79,23 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000153'
 set role authenticated;
 select pg_temp.medical_error(format('select public.ops_staff_medical_workspace(%L,%L)',:'clinic',auth.uid()),'clinic_membership_required');
 reset role;
+-- Purge is a separate owner-only, reviewed maintenance operation. Roll back fixtures.
+begin;
+select pg_temp.medical_assert(not has_function_privilege('authenticated','private.staff_medical_purge(uuid,uuid)','EXECUTE') and not has_function_privilege('service_role','private.staff_medical_purge(uuid,uuid)','EXECUTE'),'purge exposed to app');
+select pg_temp.medical_error(format('delete from private.staff_medical_events where clinic_id=%L and user_id=%L',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_history_is_immutable');
+select pg_temp.medical_error(format('select private.staff_medical_purge(%L,%L)',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_retention_not_released');
+insert into private.staff_medical_retention_decisions values(:'clinic','00000000-0000-0000-0000-000000000181',clock_timestamp()+interval '1 day',false,'Synthetic reviewed decision',clock_timestamp());
+select pg_temp.medical_error(format('select private.staff_medical_purge(%L,%L)',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_retention_not_released');
+update private.staff_medical_retention_decisions set purge_after=clock_timestamp()-interval '1 second',legal_hold=true;
+select pg_temp.medical_error(format('select private.staff_medical_purge(%L,%L)',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_retention_not_released');
+update private.staff_medical_retention_decisions set legal_hold=false;
+select pg_temp.medical_error(format('select private.staff_medical_purge(%L,%L)',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_withdrawal_required');
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000181',false);
+set role authenticated;
+select public.ops_staff_medical_write(:'clinic','withdraw',null,false,null,null,3,:'member_since',auth.uid(),repeat('ef01',12));
+reset role;
+select private.staff_medical_purge(:'clinic','00000000-0000-0000-0000-000000000181');
+select pg_temp.medical_assert(not exists(select 1 from private.staff_medical_events where clinic_id=:'clinic' and user_id='00000000-0000-0000-0000-000000000181'),'purge retained events');
+select pg_temp.medical_assert(not exists(select 1 from private.staff_medical_state where clinic_id=:'clinic' and user_id='00000000-0000-0000-0000-000000000181'),'purge retained state');
+select pg_temp.medical_assert(not exists(select 1 from private.staff_medical_purge_permits),'purge permit survived');
+rollback;

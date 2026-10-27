@@ -27,6 +27,16 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000150'
 set role authenticated;
 select public.permission_grant(:'clinic',auth.uid(),'staff.medical.read',null,clock_timestamp()+interval '1 day','Synthetic concurrent medical read');
 SQL
+# A separate connection owns the release barrier until the reader is visibly blocked.
+docker exec -e PGAPPNAME=staff-medical-barrier -i "$container_name" psql -U postgres -d "$test_database" -v ON_ERROR_STOP=1 > "$work_dir/barrier.log" 2>&1 <<'SQL' &
+select pg_advisory_lock(771158);
+select pg_sleep(30);
+SQL
+barrier_pid=$!
+for attempt in {1..40};do
+ if [ "$(docker exec "$container_name" psql -U postgres -d "$test_database" -Atc 'select pg_try_advisory_lock(771158)')" = f ];then break;fi
+ sleep 0.05
+done
 docker exec -i "$container_name" psql -U postgres -d "$test_database" -v ON_ERROR_STOP=1 > "$work_dir/withdraw.log" 2>&1 <<'SQL' &
 begin;
 select id as clinic from public.clinics where name='Synthetic medication permissions' \gset
@@ -35,7 +45,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000181'
 set role authenticated;
 select public.ops_staff_medical_write(:'clinic','withdraw',null,false,null,null,4,:'member_since',auth.uid(),repeat('edcc',12));
 select pg_advisory_xact_lock(771156);
-select pg_sleep(2);
+select pg_advisory_xact_lock(771158);
 commit;
 SQL
 writer_pid=$!
@@ -45,13 +55,22 @@ for attempt in {1..40};do
  sleep 0.1
 done
 if [ "$ready" != true ];then cat "$work_dir/withdraw.log";exit 1;fi
-if docker exec -i "$container_name" psql -U postgres -d "$test_database" -v ON_ERROR_STOP=1 > "$work_dir/read.log" 2>&1 <<'SQL'
+docker exec -e PGAPPNAME=staff-medical-reader -i "$container_name" psql -U postgres -d "$test_database" -v ON_ERROR_STOP=1 > "$work_dir/read.log" 2>&1 <<'SQL' &
 select id as clinic from public.clinics where name='Synthetic medication permissions' \gset
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000150',false);
 set role authenticated;
 select public.ops_staff_medical_view(:'clinic','00000000-0000-0000-0000-000000000181','emergency',auth.uid());
 SQL
-then echo 'Read returned withdrawn health information';exit 1;fi
+reader_pid=$!
+blocked=false
+for attempt in {1..60};do
+ if [ "$(docker exec "$container_name" psql -U postgres -d "$test_database" -Atc "select count(*) from pg_stat_activity where datname='$test_database' and application_name='staff-medical-reader' and wait_event_type='Lock'")" -ge 1 ];then blocked=true;break;fi
+ sleep 0.05
+done
+if [ "$blocked" != true ];then echo 'Reader did not wait for withdrawal';cat "$work_dir/read.log";exit 1;fi
+docker exec "$container_name" psql -U postgres -d "$test_database" -Atc "select pg_terminate_backend(pid) from pg_stat_activity where datname='$test_database' and application_name='staff-medical-barrier'" >/dev/null
+wait "$barrier_pid" || true
+if wait "$reader_pid";then echo 'Read returned withdrawn health information';exit 1;fi
 wait "$writer_pid" || { cat "$work_dir/withdraw.log";exit 1; }
 grep -q 'staff_medical_profile_unavailable' "$work_dir/read.log" || { cat "$work_dir/read.log";exit 1; }
 docker exec -i "$container_name" psql -U postgres -d "$test_database" -v ON_ERROR_STOP=1 <<'SQL'
