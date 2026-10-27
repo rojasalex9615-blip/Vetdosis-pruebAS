@@ -10,6 +10,8 @@ def main():
     if sha != os.environ['GITHUB_SHA']:
         raise SystemExit('Checkout does not match workflow commit')
     modules = {
+        'manufacturer_catalog': 'assets/clinical/manufacturer_research.v1.json',
+        'manufacturer_calculator': 'lib/modules/doses/presentation/commercial_package_dose_screen.dart',
         'settings': 'lib/modules/clinic_experience/presentation/clinic_experience_screen.dart',
         'navigation': 'lib/modules/core/domain/section_catalog.dart',
         'launcher': 'android/app/src/main/res/mipmap-anydpi/vetdosis_launcher.xml',
@@ -22,7 +24,13 @@ def main():
             raise SystemExit(f'Missing integration module: {name}: {path}')
     output = Path('build/preview')
     output.mkdir(parents=True, exist_ok=True)
+    manufacturer = json.loads(Path(modules['manufacturer_catalog']).read_text())
     manifest = {
+        'manufacturer_research': {
+            'source_sha256': manufacturer['source_sha256'],
+            'products': len(manufacturer['products']),
+            'reports': len(manufacturer['reports']),
+        },
         'source_repository': os.environ['GITHUB_REPOSITORY'],
         'source_sha': sha,
         'integration_sha': sha,

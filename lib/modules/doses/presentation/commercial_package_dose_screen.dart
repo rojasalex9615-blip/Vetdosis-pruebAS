@@ -1,3 +1,5 @@
+import '../domain/manufacturer_catalog.dart';
+import 'manufacturer_catalog_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/commercial_package_dose.dart';
@@ -7,7 +9,8 @@ import '../domain/quantity.dart';
 /// Until product labels have been verified and published as reviewed data,
 /// the professional transcribes the actual package instruction manually.
 class CommercialPackageDoseScreen extends StatefulWidget {
-  const CommercialPackageDoseScreen({super.key});
+  const CommercialPackageDoseScreen({super.key, this.initialProduct});
+  final ManufacturerProduct? initialProduct;
 
   @override
   State<CommercialPackageDoseScreen> createState() =>
@@ -26,6 +29,48 @@ class _CommercialPackageDoseScreenState
   final labelAmount = TextEditingController();
   final perKg = TextEditingController();
 
+  ManufacturerProduct? selectedProduct;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialProduct != null) selectProduct(widget.initialProduct);
+  }
+
+  void selectProduct(ManufacturerProduct? value) {
+    selectedProduct = value;
+    for (final c in [
+      product,
+      presentation,
+      labelWording,
+      species,
+      route,
+      frequency,
+      animalWeight,
+      labelAmount,
+      perKg,
+    ]) {
+      c.clear();
+    }
+    product.text = value?.name ?? '';
+    proportionalConfirmed = false;
+    tabletSplitAllowedByLabel = false;
+    tabletParts = 2;
+    unit = CommercialPackageUnit.ml;
+    result = null;
+    error = null;
+  }
+
+  Future<void> chooseProduct() async {
+    final next = await Navigator.push<ManufacturerProduct>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ManufacturerCatalogScreen(selectOnly: true),
+      ),
+    );
+    if (!mounted || next == null) return;
+    setState(() => selectProduct(next));
+  }
+
   CommercialPackageUnit unit = CommercialPackageUnit.ml;
   bool proportionalConfirmed = false;
   bool tabletSplitAllowedByLabel = false;
@@ -36,8 +81,15 @@ class _CommercialPackageDoseScreenState
   @override
   void dispose() {
     for (final c in [
-      product, presentation, labelWording, species, route, frequency,
-      animalWeight, labelAmount, perKg,
+      product,
+      presentation,
+      labelWording,
+      species,
+      route,
+      frequency,
+      animalWeight,
+      labelAmount,
+      perKg,
     ]) {
       c.dispose();
     }
@@ -77,8 +129,8 @@ class _CommercialPackageDoseScreenState
       );
       final calculated = dose.calculate(
         Quantity.parse(animalWeight.text),
-        tabletPartsAllowed: unit == CommercialPackageUnit.tablet &&
-                tabletSplitAllowedByLabel
+        tabletPartsAllowed:
+            unit == CommercialPackageUnit.tablet && tabletSplitAllowedByLabel
             ? tabletParts
             : 1,
       );
@@ -104,6 +156,7 @@ class _CommercialPackageDoseScreenState
     padding: const EdgeInsets.only(bottom: 12),
     child: TextField(
       controller: controller,
+      readOnly: controller == product && selectedProduct != null,
       maxLines: maxLines,
       keyboardType: numeric
           ? const TextInputType.numberWithOptions(decimal: true)
@@ -136,6 +189,22 @@ class _CommercialPackageDoseScreenState
             'transcriben del empaque y no se precargan automáticamente.',
           ),
           const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: chooseProduct,
+            icon: const Icon(Icons.search),
+            label: const Text('Elegir producto del catálogo de fabricantes'),
+          ),
+          if (selectedProduct != null) ...[
+            ManufacturerEvidence(product: selectedProduct!),
+            const Text(
+              'Transcribe y confirma la pauta específica del fabricante. '
+              'La forma farmacéutica del índice no indica por sí sola la concentración ni la presentación.',
+            ),
+            TextButton(
+              onPressed: () => setState(() => selectProduct(null)),
+              child: const Text('Usar entrada manual sin ficha seleccionada'),
+            ),
+          ],
           field(product, 'Nombre comercial'),
           field(presentation, 'Presentación / concentración del empaque'),
           field(species, 'Especie indicada'),
@@ -149,16 +218,15 @@ class _CommercialPackageDoseScreenState
           field(frequency, 'Intervalo o frecuencia indicada'),
           const SizedBox(height: 6),
           field(animalWeight, 'Peso del animal (kg)', numeric: true),
+          field(labelAmount, 'Cantidad indicada en el empaque', numeric: true),
           field(
-            labelAmount, 'Cantidad indicada en el empaque',
-            numeric: true,
-          ),
-          field(
-            perKg, 'Por cada cuántos kg',
+            perKg,
+            'Por cada cuántos kg',
             numeric: true,
             helper: 'Ejemplo: 10',
           ),
           DropdownButtonFormField<CommercialPackageUnit>(
+            key: ValueKey(unit),
             initialValue: unit,
             isExpanded: true,
             decoration: const InputDecoration(
@@ -187,9 +255,7 @@ class _CommercialPackageDoseScreenState
               result = null;
               error = null;
             }),
-            title: const Text(
-              'La pauta del empaque es proporcional al peso',
-            ),
+            title: const Text('La pauta del empaque es proporcional al peso'),
             subtitle: const Text(
               'No usar esta calculadora para dosis fijas por animal, '
               'rangos de peso, escalas ni refuerzos vacunales.',
@@ -249,43 +315,44 @@ class _CommercialPackageDoseScreenState
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
-          if (result != null) Card(
-            margin: const EdgeInsets.only(top: 14),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Cantidad aritmética del producto',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    result!.quantityText,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  if (result!.tablets?.fractionWarning != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        result!.tablets!.fractionWarning!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
+          if (result != null)
+            Card(
+              margin: const EdgeInsets.only(top: 14),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Cantidad aritmética del producto',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      result!.quantityText,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    if (result!.tablets?.fractionWarning != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          result!.tablets!.fractionWarning!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
                       ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'No es una prescripción ni indica una administración. '
+                      'No se redondean tabletas ni volúmenes. Verifica '
+                      'la ficha vigente, especie, vía, contraindicaciones, '
+                      'duración y tiempos de retiro cuando apliquen.',
                     ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'No es una prescripción ni indica una administración. '
-                    'No se redondean tabletas ni volúmenes. Verifica '
-                    'la ficha vigente, especie, vía, contraindicaciones, '
-                    'duración y tiempos de retiro cuando apliquen.',
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
