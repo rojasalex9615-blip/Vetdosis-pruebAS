@@ -91,7 +91,7 @@ El propietario de la base puede registrar, por clínica/persona, una decisión e
 `private.staff_medical_retention_decisions` con fecha de elegibilidad,
 `legal_hold=false` y referencia a la política o ticket aprobado (sin datos de
 salud). `private.staff_medical_purge(clinic,user)` verifica la decisión vencida,
-exige ficha ya retirada y elimina únicamente el historial mínimo, estado y recibos
+exige ficha ya retirada y membresía previamente terminada, y elimina únicamente el historial mínimo, estado y recibos
 médicos de ese ámbito, además de accesos que identifiquen a esa persona como
 sujeto o actor. Registra la referencia de mantenimiento sin contenido médico.
 Este paso es irreversible y debe ejecutarse por un operador autorizado, después
@@ -100,7 +100,7 @@ de comprobar las obligaciones y el alcance de respaldos; no se ejecutó aquí.
 Ni el usuario de aplicación, ni un administrador de clínica, ni `service_role`
 pueden registrar la decisión o invocar la purga. Los eventos siguen rechazando
 UPDATE y DELETE ordinarios, incluso por el propietario; solo la función de
-mantenimiento abre una autorización interna limitada a transacción/ámbito. No
+mantenimiento abre una autorización interna limitada a transacción/ámbito. La membresía ausente impide recrear una ficha con un formulario antiguo al reiniciar la revisión. No
 hay cascadas silenciosas ni un interruptor GUC manipulable por el cliente.
 La eliminación completa de cuentas conserva las restricciones de otros módulos y
 requiere su propio flujo; esta función solo resuelve las referencias nuevas del

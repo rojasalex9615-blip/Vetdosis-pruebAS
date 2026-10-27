@@ -94,6 +94,8 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000181'
 set role authenticated;
 select public.ops_staff_medical_write(:'clinic','withdraw',null,false,null,null,3,:'member_since',auth.uid(),repeat('ef01',12));
 reset role;
+select pg_temp.medical_error(format('select private.staff_medical_purge(%L,%L)',:'clinic','00000000-0000-0000-0000-000000000181'),'staff_medical_membership_removal_required');
+delete from public.clinic_members where clinic_id=:'clinic' and user_id='00000000-0000-0000-0000-000000000181';
 select private.staff_medical_purge(:'clinic','00000000-0000-0000-0000-000000000181');
 select pg_temp.medical_assert(not exists(select 1 from private.staff_medical_events where clinic_id=:'clinic' and user_id='00000000-0000-0000-0000-000000000181'),'purge retained events');
 select pg_temp.medical_assert(not exists(select 1 from private.staff_medical_state where clinic_id=:'clinic' and user_id='00000000-0000-0000-0000-000000000181'),'purge retained state');
