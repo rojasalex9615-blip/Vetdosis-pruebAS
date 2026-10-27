@@ -1,3 +1,4 @@
+import '../../../core/widgets/calculator_surface.dart';
 import 'package:flutter/material.dart';
 import '../domain/quantity.dart';
 
@@ -147,6 +148,8 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(
         labelText: label,
+        helperText: calculatorUnitHint(label),
+        helperMaxLines: 3,
         border: const OutlineInputBorder(),
       ),
       onChanged: (_) => setState(() {
@@ -219,19 +222,20 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       );
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) =>
+      CalculatorSurface(id: mode.name, child: form(context));
+
+  Widget form(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text(
-        'Operaciones de dosis',
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
+      CalculatorHeading(id: mode.name, title: 'Operaciones de dosis'),
       const SizedBox(height: 8),
       const Text(
         'Operaciones matemáticas. Ingresa únicamente parámetros ya indicados y confirma las unidades y la presentación con el MVZ.',
       ),
       const SizedBox(height: 16),
       DropdownButtonFormField<DoseMathMode>(
+        isExpanded: true,
         initialValue: mode,
         decoration: const InputDecoration(
           labelText: 'Tipo de cálculo',
@@ -239,7 +243,14 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         ),
         items: DoseMathMode.values
             .map(
-              (item) => DropdownMenuItem(value: item, child: Text(item.label)),
+              (item) => DropdownMenuItem(
+                value: item,
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             )
             .toList(),
         onChanged: (value) => setState(() {
