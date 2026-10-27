@@ -6,16 +6,16 @@ const neuLavender = Color(0xFF7860B5);
 const neuMint = Color(0xFF98E7D9);
 const neuLilac = Color(0xFFC5A8EF);
 
-List<BoxShadow> neuShadows(bool dark) => [
+List<BoxShadow> neuShadows(bool dark, {double depth = 1}) => [
   BoxShadow(
     color: dark ? const Color(0x80000000) : const Color(0x80B8BDCE),
-    offset: const Offset(5, 5),
-    blurRadius: 16,
+    offset: Offset(5 * depth, 5 * depth),
+    blurRadius: 16 * depth,
   ),
   BoxShadow(
     color: dark ? const Color(0x402F4053) : const Color(0xF2FFFFFF),
-    offset: const Offset(-5, -5),
-    blurRadius: 16,
+    offset: Offset(-5 * depth, -5 * depth),
+    blurRadius: 16 * depth,
   ),
 ];
 
@@ -23,11 +23,13 @@ List<BoxShadow> neuShadows(bool dark) => [
 class NeuInputBorder extends OutlineInputBorder {
   const NeuInputBorder({
     this.dark = false,
+    this.depth = 1,
     super.borderSide = BorderSide.none,
     super.borderRadius = const BorderRadius.all(Radius.circular(24)),
     super.gapPadding = 4,
   });
   final bool dark;
+  final double depth;
 
   @override
   NeuInputBorder copyWith({
@@ -36,6 +38,7 @@ class NeuInputBorder extends OutlineInputBorder {
     double? gapPadding,
   }) => NeuInputBorder(
     dark: dark,
+    depth: depth,
     borderSide: borderSide ?? this.borderSide,
     borderRadius: borderRadius ?? this.borderRadius,
     gapPadding: gapPadding ?? this.gapPadding,
@@ -55,10 +58,13 @@ class NeuInputBorder extends OutlineInputBorder {
     canvas.clipRRect(shape);
     for (final entry in [
       (
-        const Offset(3, 3),
+        Offset(3 * depth, 3 * depth),
         dark ? const Color(0x90000000) : const Color(0x99AEB5C7),
       ),
-      (const Offset(-3, -3), dark ? const Color(0x503E5063) : Colors.white),
+      (
+        Offset(-3 * depth, -3 * depth),
+        dark ? const Color(0x503E5063) : Colors.white,
+      ),
     ]) {
       final outside = Path()
         ..fillType = PathFillType.evenOdd
@@ -68,7 +74,7 @@ class NeuInputBorder extends OutlineInputBorder {
         outside,
         Paint()
           ..color = entry.$2
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 * depth),
       );
     }
     canvas.restore();
@@ -137,41 +143,114 @@ class VetDosisBrand extends StatelessWidget {
   }
 }
 
-class NeuPrimaryButton extends StatelessWidget {
+class NeuPrimaryButton extends StatefulWidget {
   const NeuPrimaryButton({
     super.key,
     required this.onPressed,
     required this.child,
+    this.soft = false,
+    this.color,
   });
   final VoidCallback? onPressed;
   final Widget child;
+  final bool soft;
+  final Color? color;
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(26),
-      boxShadow: onPressed == null
-          ? null
-          : neuShadows(Theme.of(context).brightness == Brightness.dark),
-      gradient: onPressed == null
-          ? null
-          : const LinearGradient(colors: [neuMint, neuLilac]),
-    ),
-    child: FilledButton(
-      style: FilledButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        foregroundColor: neuInk,
-        shadowColor: Colors.transparent,
-        minimumSize: const Size(0, 54),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-        textStyle: const TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-        ),
+  State<NeuPrimaryButton> createState() => _NeuPrimaryButtonState();
+}
+
+class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
+  final states = WidgetStatesController();
+  @override
+  void dispose() {
+    states.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    if (widget.soft) {
+      final color = widget.color ?? (dark ? const Color(0xFF284D4C) : neuMint);
+      return ListenableBuilder(
+        listenable: states,
+        builder: (context, _) {
+          final pressed = states.value.contains(WidgetState.pressed);
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: pressed
+                    ? [
+                        color,
+                        Color.lerp(color, Colors.white, dark ? .01 : .08)!,
+                      ]
+                    : [
+                        Color.lerp(color, Colors.white, dark ? .06 : .24)!,
+                        color,
+                      ],
+              ),
+              boxShadow: widget.onPressed == null
+                  ? null
+                  : neuShadows(dark, depth: pressed ? .3 : 1.2),
+            ),
+            child: FilledButton(
+              statesController: states,
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: dark ? Colors.white : neuInk,
+                minimumSize: const Size(0, 58),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 18,
+                ),
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              onPressed: widget.onPressed,
+              child: widget.child,
+            ),
+          );
+        },
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: widget.onPressed == null
+            ? null
+            : neuShadows(Theme.of(context).brightness == Brightness.dark),
+        gradient: widget.onPressed == null
+            ? null
+            : const LinearGradient(colors: [neuMint, neuLilac]),
       ),
-      onPressed: onPressed,
-      child: child,
-    ),
-  );
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: neuInk,
+          shadowColor: Colors.transparent,
+          minimumSize: const Size(0, 54),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        onPressed: widget.onPressed,
+        child: widget.child,
+      ),
+    );
+  }
 }

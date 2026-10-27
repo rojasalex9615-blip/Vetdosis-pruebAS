@@ -10,7 +10,9 @@ class NeuHeaderCard extends StatelessWidget {
     required this.child,
     this.onTap,
     this.trailing,
+    this.soft = false,
   });
+  final bool soft;
   final String title;
   final IconData icon;
   final Color color;
@@ -20,7 +22,11 @@ class NeuHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final base = Theme.of(context).scaffoldBackgroundColor;
     return WorkspacePanel(
+      radius: soft ? 32 : 24,
+      depth: soft ? 1.35 : 1,
+      softLighting: soft,
       child: InkWell(
         onTap: onTap,
         child: Column(
@@ -28,7 +34,19 @@ class NeuHeaderCard extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              color: color.withValues(alpha: dark ? .25 : .20),
+              decoration: BoxDecoration(
+                color: soft ? null : color.withValues(alpha: dark ? .25 : .20),
+                gradient: soft
+                    ? LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color.lerp(base, color, dark ? .28 : .2)!,
+                          Color.lerp(base, Colors.white, dark ? .02 : .20)!,
+                        ],
+                      )
+                    : null,
+              ),
               child: Row(
                 children: [
                   Icon(icon),

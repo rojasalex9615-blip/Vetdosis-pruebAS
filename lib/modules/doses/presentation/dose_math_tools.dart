@@ -1,3 +1,6 @@
+import '../../../core/widgets/workspace_panel.dart';
+import '../../../core/widgets/neu_identity.dart';
+import '../../../core/widgets/neu_header_card.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import 'package:flutter/material.dart';
 import '../domain/quantity.dart';
@@ -14,7 +17,14 @@ enum DoseMathMode {
 
 /// Arithmetic helpers only. All clinical inputs are supplied by the clinician.
 class DoseMathTools extends StatefulWidget {
-  const DoseMathTools({super.key, this.onChoosePatient});
+  const DoseMathTools({
+    super.key,
+    this.onChoosePatient,
+    this.visualReference = false,
+  });
+
+  /// Opt-in reference only; disabled in production navigation until approved.
+  final bool visualReference;
   final Future<void> Function()? onChoosePatient;
 
   @override
@@ -37,6 +47,8 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       key: TextEditingController(),
   };
   DoseMathMode mode = DoseMathMode.concentration;
+  bool get referenceStyle =>
+      widget.visualReference && mode == DoseMathMode.concentration;
   String fromUnit = 'kg';
   String toUnit = 'g';
   String? result;
@@ -141,25 +153,74 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         _ => throw const FormatException('Unidad no disponible.'),
       };
 
-  Widget _field(String key, String label) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: TextField(
-      key: ValueKey(key),
-      controller: _controllers[key],
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-        labelText: label,
-        helperText: calculatorUnitHint(label),
-        helperMaxLines: 3,
-        border: const OutlineInputBorder(),
+  Widget _field(String key, String label) {
+    void change(String _) => setState(() {
+      result = null;
+      formula = null;
+      concentrationDetail = null;
+      error = null;
+    });
+    if (!referenceStyle) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: TextField(
+          key: ValueKey(key),
+          controller: _controllers[key],
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: label,
+            helperText: calculatorUnitHint(label),
+            helperMaxLines: 3,
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: change,
+        ),
+      );
+    }
+    final unit = RegExp(r'\(([^)]+)\)').firstMatch(label)?.group(1);
+    return Builder(
+      builder: (context) => Padding(
+        padding: const EdgeInsets.only(bottom: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
+              child: Text(
+                label.replaceFirst(RegExp(r'\s*\([^)]+\)'), ''),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Semantics(
+              label: label,
+              child: TextField(
+                key: ValueKey(key),
+                controller: _controllers[key],
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
+                  hintText: '0,00',
+                  suffixText: unit,
+                  suffixStyle: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontSize: 12),
+                ),
+                onChanged: change,
+              ),
+            ),
+          ],
+        ),
       ),
-      onChanged: (_) => setState(() {
-        result = null;
-        formula = null;
-        concentrationDetail = null;
-      }),
-    ),
-  );
+    );
+  }
 
   List<Widget> _inputs() => switch (mode) {
     DoseMathMode.concentration => [
@@ -223,8 +284,15 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       );
 
   @override
-  Widget build(BuildContext context) =>
-      CalculatorSurface(id: mode.name, child: form(context));
+  Widget build(BuildContext context) => CalculatorSurface(
+    id: mode.name,
+    referenceStyle: referenceStyle,
+    child: referenceStyle ? Builder(builder: form) : form(context),
+  );
+
+  Widget resultPanel(Widget child) => referenceStyle
+      ? WorkspacePanel(radius: 32, depth: 1.3, softLighting: true, child: child)
+      : Card(child: child);
 
   Widget form(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -238,9 +306,11 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       CalculatorSelectorCard(
         id: mode.name,
         title: 'Tipo de cálculo',
+        referenceStyle: referenceStyle,
         child: DropdownButtonFormField<DoseMathMode>(
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
           isDense: false,
+          itemHeight: referenceStyle ? null : kMinInteractiveDimension,
           isExpanded: true,
           initialValue: mode,
           decoration: InputDecoration(
@@ -250,10 +320,15 @@ class _DoseMathToolsState extends State<DoseMathTools> {
               horizontal: 12,
               vertical: 12,
             ),
-            enabledBorder: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
-              borderSide: BorderSide(color: Color(0xFFBCCBD3)),
-            ),
+            enabledBorder: referenceStyle
+                ? NeuInputBorder(
+                    depth: 1.8,
+                    dark: Theme.of(context).brightness == Brightness.dark,
+                  )
+                : const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
+                    borderSide: BorderSide(color: Color(0xFFBCCBD3)),
+                  ),
             border: const OutlineInputBorder(),
           ),
           items: DoseMathMode.values
@@ -262,8 +337,11 @@ class _DoseMathToolsState extends State<DoseMathTools> {
                   value: item,
                   child: Text(
                     item.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: referenceStyle ? null : 1,
+                    softWrap: true,
+                    overflow: referenceStyle
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
                   ),
                 ),
               )
@@ -278,18 +356,70 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         ),
       ),
       const SizedBox(height: 16),
-      if (widget.onChoosePatient != null && mode == DoseMathMode.concentration)
-        OutlinedButton.icon(
-          onPressed: widget.onChoosePatient,
-          icon: const Icon(Icons.person_search_outlined),
-          label: const Text('Elegir paciente, peso y fármaco'),
+      if (widget.onChoosePatient != null &&
+          mode == DoseMathMode.concentration) ...[
+        if (referenceStyle)
+          NeuPrimaryButton(
+            soft: true,
+            color: calculatorPastel(mode.name),
+            onPressed: widget.onChoosePatient,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.person_search_outlined, size: 20),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Elegir paciente, peso y fármaco',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          OutlinedButton.icon(
+            onPressed: widget.onChoosePatient,
+            icon: const Icon(Icons.person_search_outlined),
+            label: const Text('Elegir paciente, peso y fármaco'),
+          ),
+        if (referenceStyle) const SizedBox(height: 16),
+      ],
+      if (referenceStyle)
+        NeuHeaderCard(
+          title: 'Datos del cálculo',
+          icon: Icons.tune_rounded,
+          color: calculatorIdentity(mode.name).color,
+          soft: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Column(children: _inputs()),
+          ),
         ),
-      ..._inputs(),
-      FilledButton.icon(
-        onPressed: calculate,
-        icon: const Icon(Icons.calculate_outlined),
-        label: const Text('Calcular'),
-      ),
+      if (!referenceStyle) ..._inputs(),
+      if (referenceStyle) const SizedBox(height: 22),
+      if (referenceStyle)
+        NeuPrimaryButton(
+          soft: true,
+          color: calculatorPastel(mode.name),
+          onPressed: calculate,
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.calculate_outlined, size: 21),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text('Calcular volumen', textAlign: TextAlign.center),
+              ),
+            ],
+          ),
+        )
+      else
+        FilledButton.icon(
+          onPressed: calculate,
+          icon: const Icon(Icons.calculate_outlined),
+          label: const Text('Calcular'),
+        ),
       if (error case final message?)
         Padding(
           padding: const EdgeInsets.only(top: 12),
@@ -300,8 +430,8 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         ),
       if (result case final value?) ...[
         const SizedBox(height: 16),
-        Card(
-          child: Padding(
+        resultPanel(
+          Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
