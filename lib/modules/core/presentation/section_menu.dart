@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../domain/module_access.dart';
+import '../../clinic_experience/domain/clinic_experience.dart';
 import '../domain/navigation_access.dart';
 import '../domain/section_catalog.dart';
 
@@ -11,12 +12,14 @@ class SectionMenu extends StatefulWidget {
     required this.onNavigate,
     this.member,
     this.access,
+    this.experience,
     this.onAccount,
     this.initialGroup,
   });
   final ValueChanged<String> onNavigate;
   final ClinicMembership? member;
   final ModuleAccess? access;
+  final ClinicExperience? experience;
   final VoidCallback? onAccount;
   final String? initialGroup;
   @override
@@ -33,7 +36,8 @@ class _SectionMenuState extends State<SectionMenu> {
           .where(
             (page) =>
                 (page != 'Mi cuenta y clínicas' || widget.onAccount != null) &&
-                navigationAllowed(page, widget.member, widget.access),
+                navigationAllowed(page, widget.member, widget.access) &&
+                (widget.experience?.visible(page) ?? true),
           )
           .toList();
       if (authorized.isEmpty) continue;
@@ -97,21 +101,25 @@ class CalculationMenu extends StatelessWidget {
     required this.onNavigate,
     this.member,
     this.access,
+    this.experience,
   });
   final ValueChanged<String> onNavigate;
   final ClinicMembership? member;
   final ModuleAccess? access;
+  final ClinicExperience? experience;
   @override
   Widget build(BuildContext context) {
-    final canDose = navigationAllowed('Cálculo rápido', member, access);
-    final canClinical = navigationAllowed('Cálculos clínicos', member, access);
+    final canDose = navigationAllowed('Cálculo rápido', member, access) &&
+        (experience?.visible('Cálculo rápido') ?? true);
+    final canClinical = navigationAllowed('Cálculos clínicos', member, access) &&
+        (experience?.visible('Cálculos clínicos') ?? true);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Calculadoras', style: Theme.of(context).textTheme.headlineSmall),
         const Text('Elige la operación que necesitas.'),
         const SizedBox(height: 12),
-        _CalculationChoice(
+        if (experience?.visible('Vademécum') ?? true) _CalculationChoice(
           icon: Icons.menu_book_outlined,
           title: 'Vademécum',
           description: 'Consulta fichas de la app, compartidas con la clínica y personales.',
@@ -125,7 +133,8 @@ class CalculationMenu extends StatelessWidget {
                 'Usa un catálogo con fuente y concentración por presentación; requiere revisión y confirmación.',
             onTap: () => onNavigate('Cálculo rápido'),
           ),
-        if (canDose)
+        if (navigationAllowed('Operaciones de dosis', member, access) &&
+            (experience?.visible('Operaciones de dosis') ?? true))
           _CalculationChoice(
             icon: Icons.calculate_outlined,
             title: 'Otras operaciones de dosis',

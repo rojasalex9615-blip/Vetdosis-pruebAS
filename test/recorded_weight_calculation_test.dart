@@ -32,8 +32,9 @@ RecordedPatientWeight measured() => RecordedPatientWeight(
 );
 Future<void> showCalculator(
   WidgetTester t,
-  Future<bool> Function(RecordedPatientWeight)? validate,
-) async {
+  Future<bool> Function(RecordedPatientWeight)? validate, {
+  Future<void> Function(String)? onReview,
+}) async {
   await t.pumpWidget(
     MaterialApp(
       home: Scaffold(
@@ -42,6 +43,7 @@ Future<void> showCalculator(
             repository: RecordedWeightDoseRepo(),
             recordedWeight: measured(),
             validateRecordedWeight: validate,
+            onReviewPatientInstructions: onReview,
           ),
         ),
       ),
@@ -68,7 +70,10 @@ Future<void> setupCalculation(WidgetTester t) async {
   await t.pumpAndSettle();
   expect(find.text('2 mg/kg · no editable'), findsOneWidget);
   expect(find.text('Dosis seleccionada (mg/kg)'), findsNothing);
-  final step = find.widgetWithText(TextField, 'Graduación de jeringa (mL, opcional)');
+  final step = find.widgetWithText(
+    TextField,
+    'Graduación de jeringa (mL, opcional)',
+  );
   await t.ensureVisible(step);
   await t.enterText(step, '0.01');
   await t.pump();
@@ -121,6 +126,38 @@ void main() {
       expect(t.takeException(), isNull);
     },
   );
+  for (final validAtReview in [true, false]) {
+    testWidgets(
+      'hospital instructions require confirmed calculation and fresh weight: $validAtReview',
+      (t) async {
+        var valid = true;
+        var opened = 0;
+        await showCalculator(
+          t,
+          (_) async => valid,
+          onReview: (patient) async {
+            expect(patient, 'patient');
+            opened++;
+          },
+        );
+        expect(find.text('Revisar indicaciones del paciente'), findsNothing);
+        await setupCalculation(t);
+        await tap(t, 'Usar peso registrado');
+        await tap(t, 'Calcular');
+        await t.ensureVisible(find.byType(CheckboxListTile));
+        await t.tap(find.byType(CheckboxListTile));
+        await t.pump();
+        await tap(t, 'Confirmar por segunda vez');
+        await tap(t, 'Confirmar cálculo');
+        valid = validAtReview;
+        await tap(t, 'Revisar indicaciones del paciente');
+        expect(opened, validAtReview ? 1 : 0);
+        if (!validAtReview) {
+          expect(find.textContaining('Cálculo confirmado.'), findsNothing);
+        }
+      },
+    );
+  }
   testWidgets(
     'source change while confirmation dialog is open clears result and weight',
     (t) async {

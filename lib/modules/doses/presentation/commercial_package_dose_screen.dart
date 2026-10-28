@@ -1,3 +1,8 @@
+import '../../../core/widgets/calculator_surface.dart';
+import 'package:flutter/foundation.dart';
+import '../../patients/domain/recorded_weight.dart';
+import '../domain/manufacturer_catalog.dart';
+import 'manufacturer_catalog_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/commercial_package_dose.dart';
@@ -7,7 +12,15 @@ import '../domain/quantity.dart';
 /// Until product labels have been verified and published as reviewed data,
 /// the professional transcribes the actual package instruction manually.
 class CommercialPackageDoseScreen extends StatefulWidget {
-  const CommercialPackageDoseScreen({super.key});
+  const CommercialPackageDoseScreen({
+    super.key,
+    this.initialProduct,
+    this.recordedWeight,
+    this.validateRecordedWeight,
+  });
+  final RecordedPatientWeight? recordedWeight;
+  final Future<bool> Function(RecordedPatientWeight)? validateRecordedWeight;
+  final ManufacturerProduct? initialProduct;
 
   @override
   State<CommercialPackageDoseScreen> createState() =>
@@ -26,18 +39,132 @@ class _CommercialPackageDoseScreenState
   final labelAmount = TextEditingController();
   final perKg = TextEditingController();
 
+  ManufacturerProduct? selectedProduct;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialProduct != null) selectProduct(widget.initialProduct);
+  }
+
+  void selectProduct(ManufacturerProduct? value) {
+    generation++;
+    checkingWeight = false;
+    weightApplied = false;
+    selectedProduct = value;
+    for (final c in [
+      product,
+      presentation,
+      labelWording,
+      species,
+      route,
+      frequency,
+      animalWeight,
+      labelAmount,
+      perKg,
+    ]) {
+      c.clear();
+    }
+    product.text = value?.name ?? '';
+    proportionalConfirmed = false;
+    tabletSplitAllowedByLabel = false;
+    tabletParts = 2;
+    unit = CommercialPackageUnit.ml;
+    result = null;
+    error = null;
+  }
+
+  Future<void> chooseProduct() async {
+    final next = await Navigator.push<ManufacturerProduct>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ManufacturerCatalogScreen(selectOnly: true),
+      ),
+    );
+    if (!mounted || next == null) return;
+    setState(() => selectProduct(next));
+  }
+
   CommercialPackageUnit unit = CommercialPackageUnit.ml;
   bool proportionalConfirmed = false;
   bool tabletSplitAllowedByLabel = false;
   int tabletParts = 2;
   CommercialPackageResult? result;
   String? error;
+  bool checkingWeight = false, weightApplied = false;
+  int generation = 0;
+  List<Object> get inputSnapshot => [
+    product.text,
+    presentation.text,
+    labelWording.text,
+    species.text,
+    route.text,
+    frequency.text,
+    animalWeight.text,
+    labelAmount.text,
+    perKg.text,
+    unit.name,
+    proportionalConfirmed,
+    tabletSplitAllowedByLabel,
+    tabletParts,
+  ];
+  @override
+  void didUpdateWidget(covariant CommercialPackageDoseScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previous = oldWidget.recordedWeight, next = widget.recordedWeight;
+    if ((previous == null) != (next == null) ||
+        (previous != null && next != null && !previous.sameMeasurement(next)) ||
+        oldWidget.validateRecordedWeight != widget.validateRecordedWeight) {
+      generation++;
+      checkingWeight = false;
+      weightApplied = false;
+      animalWeight.clear();
+      result = null;
+      error = null;
+    }
+  }
+
+  Future<bool> useRecordedWeight() async {
+    final source = widget.recordedWeight;
+    if (source == null || checkingWeight) return false;
+    final revision = generation;
+    setState(() {
+      checkingWeight = true;
+      result = null;
+      error = null;
+    });
+    var valid = false;
+    try {
+      valid = await widget.validateRecordedWeight?.call(source) ?? false;
+    } catch (_) {
+      valid = false;
+    }
+    if (!mounted || generation != revision) return false;
+    valid = valid && widget.recordedWeight?.sameMeasurement(source) == true;
+    setState(() {
+      checkingWeight = false;
+      weightApplied = valid;
+      animalWeight.text = valid ? source.kg : '';
+      if (!valid) {
+        error =
+            'El peso registrado ya no se pudo comprobar. Revisa el paciente y la medición antes de continuar.';
+      }
+    });
+    return valid;
+  }
 
   @override
   void dispose() {
+    generation++;
     for (final c in [
-      product, presentation, labelWording, species, route, frequency,
-      animalWeight, labelAmount, perKg,
+      product,
+      presentation,
+      labelWording,
+      species,
+      route,
+      frequency,
+      animalWeight,
+      labelAmount,
+      perKg,
     ]) {
       c.dispose();
     }
@@ -52,7 +179,27 @@ class _CommercialPackageDoseScreenState
     });
   }
 
-  void calculate() {
+  Future<void> calculate() async {
+    if (checkingWeight) return;
+    if (widget.recordedWeight != null) {
+      if (!weightApplied) {
+        setState(() {
+          result = null;
+          error = 'Revisa y selecciona el peso registrado antes de calcular.';
+        });
+        return;
+      }
+      final snapshot = inputSnapshot;
+      if (!await useRecordedWeight() || !mounted) return;
+      if (!listEquals(snapshot, inputSnapshot)) {
+        setState(() {
+          result = null;
+          error =
+              'Los datos cambiaron durante la comprobación. Revísalos antes de calcular.';
+        });
+        return;
+      }
+    }
     try {
       if (!proportionalConfirmed) {
         throw const FormatException(
@@ -77,8 +224,8 @@ class _CommercialPackageDoseScreenState
       );
       final calculated = dose.calculate(
         Quantity.parse(animalWeight.text),
-        tabletPartsAllowed: unit == CommercialPackageUnit.tablet &&
-                tabletSplitAllowedByLabel
+        tabletPartsAllowed:
+            unit == CommercialPackageUnit.tablet && tabletSplitAllowedByLabel
             ? tabletParts
             : 1,
       );
@@ -104,6 +251,9 @@ class _CommercialPackageDoseScreenState
     padding: const EdgeInsets.only(bottom: 12),
     child: TextField(
       controller: controller,
+      readOnly:
+          (controller == product && selectedProduct != null) ||
+          (controller == animalWeight && widget.recordedWeight != null),
       maxLines: maxLines,
       keyboardType: numeric
           ? const TextInputType.numberWithOptions(decimal: true)
@@ -121,172 +271,220 @@ class _CommercialPackageDoseScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Vademécum comercial')),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
-        children: [
-          Text(
-            'Dosificar según el empaque',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'La pauta pertenece a la formulación y presentación específica '
-            'del laboratorio. No se sustituye por la dosis general del '
-            'principio activo. Hasta cotejar cada ficha, los datos se '
-            'transcriben del empaque y no se precargan automáticamente.',
-          ),
-          const SizedBox(height: 16),
-          field(product, 'Nombre comercial'),
-          field(presentation, 'Presentación / concentración del empaque'),
-          field(species, 'Especie indicada'),
-          field(
-            labelWording,
-            'Posología literal del empaque',
-            maxLines: 2,
-            helper: 'Ejemplo aritmético ficticio: 1 tableta por 10 kg',
-          ),
-          field(route, 'Vía de administración indicada'),
-          field(frequency, 'Intervalo o frecuencia indicada'),
-          const SizedBox(height: 6),
-          field(animalWeight, 'Peso del animal (kg)', numeric: true),
-          field(
-            labelAmount, 'Cantidad indicada en el empaque',
-            numeric: true,
-          ),
-          field(
-            perKg, 'Por cada cuántos kg',
-            numeric: true,
-            helper: 'Ejemplo: 10',
-          ),
-          DropdownButtonFormField<CommercialPackageUnit>(
-            initialValue: unit,
-            isExpanded: true,
-            decoration: const InputDecoration(
-              labelText: 'Unidad del empaque',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              for (final u in CommercialPackageUnit.values)
-                DropdownMenuItem(value: u, child: Text(u.label)),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() {
-                unit = value;
-                result = null;
-                error = null;
-              });
-            },
-          ),
-          const SizedBox(height: 12),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: proportionalConfirmed,
-            onChanged: (v) => setState(() {
-              proportionalConfirmed = v ?? false;
-              result = null;
-              error = null;
-            }),
-            title: const Text(
-              'La pauta del empaque es proporcional al peso',
-            ),
-            subtitle: const Text(
-              'No usar esta calculadora para dosis fijas por animal, '
-              'rangos de peso, escalas ni refuerzos vacunales.',
-            ),
-          ),
-          if (unit == CommercialPackageUnit.tablet) ...[
-            const Divider(),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: tabletSplitAllowedByLabel,
-              onChanged: (v) => setState(() {
-                tabletSplitAllowedByLabel = v ?? false;
-                result = null;
-                error = null;
-              }),
-              title: const Text('El empaque permite fraccionar la tableta'),
-              subtitle: const Text(
-                'Confirma que ESTA presentación permite dividirla '
-                '(ranura, recubrimiento, liberación y estabilidad). '
-                'No se autoriza partirla por el resultado del cálculo.',
+        child: CalculatorSurface(
+          id: 'manufacturer',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Dosificar según el empaque',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
-            if (tabletSplitAllowedByLabel)
-              DropdownButtonFormField<int>(
-                key: ValueKey(tabletParts),
-                initialValue: tabletParts,
+              const SizedBox(height: 8),
+              const Text(
+                'La pauta pertenece a la formulación y presentación específica '
+                'del laboratorio. No se sustituye por la dosis general del '
+                'principio activo. Hasta cotejar cada ficha, los datos se '
+                'transcriben del empaque y no se precargan automáticamente.',
+              ),
+              const SizedBox(height: 16),
+              CalculatorSelectorCard(
+                id: 'manufacturer',
+                title: 'Producto del fabricante',
+                child: OutlinedButton.icon(
+                  onPressed: chooseProduct,
+                  icon: const Icon(Icons.search),
+                  label: const Text(
+                    'Elegir producto del catálogo de fabricantes',
+                  ),
+                ),
+              ),
+              if (selectedProduct != null) ...[
+                ManufacturerEvidence(product: selectedProduct!),
+                const Text(
+                  'Transcribe y confirma la pauta específica del fabricante. '
+                  'La forma farmacéutica del índice no indica por sí sola la concentración ni la presentación.',
+                ),
+                TextButton(
+                  onPressed: () => setState(() => selectProduct(null)),
+                  child: const Text(
+                    'Usar entrada manual sin ficha seleccionada',
+                  ),
+                ),
+              ],
+              field(product, 'Nombre comercial'),
+              field(presentation, 'Presentación / concentración del empaque'),
+              field(species, 'Especie indicada'),
+              field(
+                labelWording,
+                'Posología literal del empaque',
+                maxLines: 2,
+                helper: 'Ejemplo aritmético ficticio: 1 tableta por 10 kg',
+              ),
+              field(route, 'Vía de administración indicada'),
+              field(frequency, 'Intervalo o frecuencia indicada'),
+              const SizedBox(height: 6),
+              if (widget.recordedWeight case final source?) ...[
+                Text(
+                  '${source.patientName} · ${source.kg} kg · ${source.observedAt.toLocal()}\nPaciente: ${source.patientId} · Caso: ${source.caseId} · Medición: ${source.id}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                OutlinedButton(
+                  onPressed: checkingWeight ? null : useRecordedWeight,
+                  child: const Text('Usar peso registrado'),
+                ),
+                if (checkingWeight) const LinearProgressIndicator(),
+              ],
+              field(animalWeight, 'Peso del animal (kg)', numeric: true),
+              field(
+                labelAmount,
+                'Cantidad indicada en el empaque',
+                numeric: true,
+              ),
+              field(
+                perKg,
+                'Por cada cuántos kg',
+                numeric: true,
+                helper: 'Ejemplo: 10',
+              ),
+              DropdownButtonFormField<CommercialPackageUnit>(
+                key: ValueKey(unit),
+                initialValue: unit,
+                isExpanded: true,
                 decoration: const InputDecoration(
-                  labelText: 'Fracción mínima admitida por la etiqueta',
+                  labelText: 'Unidad del empaque',
                   border: OutlineInputBorder(),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 2, child: Text('Mitades (½)')),
-                  DropdownMenuItem(value: 4, child: Text('Cuartos (¼)')),
-                  DropdownMenuItem(value: 8, child: Text('Octavos (⅛)')),
+                items: [
+                  for (final u in CommercialPackageUnit.values)
+                    DropdownMenuItem(value: u, child: Text(u.label)),
                 ],
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
-                    tabletParts = value;
+                    unit = value;
                     result = null;
                     error = null;
                   });
                 },
               ),
-          ],
-          const SizedBox(height: 14),
-          FilledButton.icon(
-            onPressed: calculate,
-            icon: const Icon(Icons.calculate_outlined),
-            label: const Text('Calcular cantidad según empaque'),
-          ),
-          if (error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 12),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: proportionalConfirmed,
+                onChanged: (v) => setState(() {
+                  proportionalConfirmed = v ?? false;
+                  result = null;
+                  error = null;
+                }),
+                title: const Text(
+                  'La pauta del empaque es proporcional al peso',
+                ),
+                subtitle: const Text(
+                  'No usar esta calculadora para dosis fijas por animal, '
+                  'rangos de peso, escalas ni refuerzos vacunales.',
+                ),
               ),
-            ),
-          if (result != null) Card(
-            margin: const EdgeInsets.only(top: 14),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Cantidad aritmética del producto',
-                    style: Theme.of(context).textTheme.titleMedium,
+              if (unit == CommercialPackageUnit.tablet) ...[
+                const Divider(),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: tabletSplitAllowedByLabel,
+                  onChanged: (v) => setState(() {
+                    tabletSplitAllowedByLabel = v ?? false;
+                    result = null;
+                    error = null;
+                  }),
+                  title: const Text('El empaque permite fraccionar la tableta'),
+                  subtitle: const Text(
+                    'Confirma que ESTA presentación permite dividirla '
+                    '(ranura, recubrimiento, liberación y estabilidad). '
+                    'No se autoriza partirla por el resultado del cálculo.',
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    result!.quantityText,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  if (result!.tablets?.fractionWarning != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        result!.tablets!.fractionWarning!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
+                ),
+                if (tabletSplitAllowedByLabel)
+                  DropdownButtonFormField<int>(
+                    key: ValueKey(tabletParts),
+                    initialValue: tabletParts,
+                    decoration: const InputDecoration(
+                      labelText: 'Fracción mínima admitida por la etiqueta',
+                      border: OutlineInputBorder(),
                     ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'No es una prescripción ni indica una administración. '
-                    'No se redondean tabletas ni volúmenes. Verifica '
-                    'la ficha vigente, especie, vía, contraindicaciones, '
-                    'duración y tiempos de retiro cuando apliquen.',
+                    items: const [
+                      DropdownMenuItem(value: 2, child: Text('Mitades (½)')),
+                      DropdownMenuItem(value: 4, child: Text('Cuartos (¼)')),
+                      DropdownMenuItem(value: 8, child: Text('Octavos (⅛)')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() {
+                        tabletParts = value;
+                        result = null;
+                        error = null;
+                      });
+                    },
                   ),
-                ],
+              ],
+              const SizedBox(height: 14),
+              CalculatorActionButton.icon(
+                id: 'manufacturer',
+                onPressed: checkingWeight ? null : calculate,
+                icon: const Icon(Icons.calculate_outlined),
+                label: const Text('Calcular cantidad según empaque'),
               ),
-            ),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+              if (result != null)
+                Card(
+                  margin: const EdgeInsets.only(top: 14),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cantidad aritmética del producto',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          result!.quantityText,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        if (result!.tablets?.fractionWarning != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              result!.tablets!.fractionWarning!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'No es una prescripción ni indica una administración. '
+                          'No se redondean tabletas ni volúmenes. Verifica '
+                          'la ficha vigente, especie, vía, contraindicaciones, '
+                          'duración y tiempos de retiro cuando apliquen.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

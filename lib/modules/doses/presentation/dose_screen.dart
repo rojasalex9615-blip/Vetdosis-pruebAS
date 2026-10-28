@@ -1,3 +1,4 @@
+import '../../../core/widgets/calculator_surface.dart';
 import 'dart:convert';
 import '../../patients/domain/recorded_weight.dart';
 import 'package:file_picker/file_picker.dart';
@@ -21,6 +22,8 @@ class DoseScreen extends StatefulWidget {
     this.recordedWeight,
     this.validateRecordedWeight,
     this.initialDrug,
+    this.onChoosePatient,
+    this.onReviewPatientInstructions,
   });
   final CatalogRepository? repository;
   final PersonalDoseRepository? personalRepository;
@@ -29,6 +32,8 @@ class DoseScreen extends StatefulWidget {
   final RecordedPatientWeight? recordedWeight;
   final Future<bool> Function(RecordedPatientWeight)? validateRecordedWeight;
   final DrugDose? initialDrug;
+  final Future<void> Function()? onChoosePatient;
+  final Future<void> Function(String patientId)? onReviewPatientInstructions;
   @override
   State<DoseScreen> createState() => _DoseScreenState();
 }
@@ -196,7 +201,8 @@ class _DoseScreenState extends State<DoseScreen> {
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancelar'),
             ),
-            FilledButton(
+            CalculatorActionButton(
+              id: 'dose',
               onPressed: () => Navigator.pop(context, true),
               child: const Text('Importar'),
             ),
@@ -233,7 +239,9 @@ class _DoseScreenState extends State<DoseScreen> {
     super.initState();
     model = DoseViewModel(widget.repository ?? AssetCatalogRepository());
     model.load().then((_) {
-      if (mounted && widget.initialDrug != null) model.select(widget.initialDrug!);
+      if (mounted && widget.initialDrug != null) {
+        model.select(widget.initialDrug!);
+      }
     });
     refreshPersonal();
   }
@@ -293,14 +301,34 @@ class _DoseScreenState extends State<DoseScreen> {
           ? null
           : DoseCatalog(general.version, [...general.drugs, ...personal]);
       final selected = model.drug;
-      return Column(
+      final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Calcular dosis de un producto',
-            style: Theme.of(context).textTheme.headlineMedium,
+          const CalculatorHeading(
+            id: 'dose',
+            title: 'Calcular dosis de un producto',
           ),
           const SizedBox(height: 16),
+          if (widget.recordedWeight == null && widget.onChoosePatient != null)
+            CalculatorSelectorCard(
+              id: 'dose',
+              title: 'Paciente y dosis indicada',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Usa un peso registrado y después elige el principio activo, nombre comercial o dosis personal.',
+                  ),
+                  const SizedBox(height: 8),
+                  CalculatorActionButton.icon(
+                    id: 'dose',
+                    onPressed: widget.offline ? null : widget.onChoosePatient,
+                    icon: const Icon(Icons.person_search_outlined),
+                    label: const Text('Elegir paciente y peso registrado'),
+                  ),
+                ],
+              ),
+            ),
           if (widget.recordedWeight != null)
             Card(
               child: Padding(
@@ -308,7 +336,10 @@ class _DoseScreenState extends State<DoseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(weightContext),
+                    Text(
+                      weightContext,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                     const Text(
                       'Comprueba que esta medición corresponde al paciente y es adecuada para este cálculo. No actualiza tratamientos vigentes.',
                     ),
@@ -327,7 +358,10 @@ class _DoseScreenState extends State<DoseScreen> {
           OutlinedButton.icon(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => const CommercialPackageDoseScreen(),
+                builder: (_) => CommercialPackageDoseScreen(
+                  recordedWeight: widget.recordedWeight,
+                  validateRecordedWeight: widget.validateRecordedWeight,
+                ),
               ),
             ),
             icon: const Icon(Icons.medication_liquid_outlined),
@@ -405,7 +439,7 @@ class _DoseScreenState extends State<DoseScreen> {
             const SizedBox(height: 16),
             TextField(
               decoration: const InputDecoration(
-                labelText: 'Buscar fármaco o marca comercial',
+                labelText: 'Buscar principio activo o nombre comercial',
                 prefixIcon: Icon(Icons.search),
               ),
               onChanged: (s) => setState(() => query = s),
@@ -414,7 +448,7 @@ class _DoseScreenState extends State<DoseScreen> {
               ListTile(
                 title: Text(item.name),
                 subtitle: Text(
-                  '${item.species} · ${item.personal ? 'Dosis personal' : 'Base general'} · ${item.evidence.verified ? 'Verificada' : 'Sin verificar'}',
+                  '${item.species} · ${item.personal ? 'Dosis personal' : 'Base general'} · ${item.evidence.verified ? 'Verificada' : 'Sin verificar'}\nPresentaciones: ${item.presentations.map((p) => p.brand).join(', ')}',
                 ),
                 selected: selected == item,
                 onTap: () => model.select(item),
@@ -488,7 +522,8 @@ class _DoseScreenState extends State<DoseScreen> {
                   ),
               ],
               const SizedBox(height: 16),
-              FilledButton(
+              CalculatorActionButton(
+                id: 'dose',
                 onPressed: checkingWeight ? null : calculate,
                 child: const Text('Calcular'),
               ),
@@ -532,7 +567,8 @@ class _DoseScreenState extends State<DoseScreen> {
                   ? (_) => model.review()
                   : null,
             ),
-            FilledButton(
+            CalculatorActionButton(
+              id: 'dose',
               onPressed:
                   model.stage == ConfirmationStage.reviewed &&
                       r.canConfirm &&
@@ -555,7 +591,8 @@ class _DoseScreenState extends State<DoseScreen> {
                               onPressed: () => Navigator.pop(context, false),
                               child: const Text('Volver a revisar'),
                             ),
-                            FilledButton(
+                            CalculatorActionButton(
+                              id: 'dose',
                               onPressed: () => Navigator.pop(context, true),
                               child: const Text('Confirmar cálculo'),
                             ),
@@ -579,9 +616,30 @@ class _DoseScreenState extends State<DoseScreen> {
               const Text(
                 'Cálculo confirmado. No registra una administración ni genera una receta.',
               ),
+            if (model.stage == ConfirmationStage.confirmed &&
+                widget.recordedWeight != null &&
+                widget.onReviewPatientInstructions != null)
+              OutlinedButton.icon(
+                onPressed: checkingWeight
+                    ? null
+                    : () async {
+                        if (!await checkWeight() ||
+                            !mounted ||
+                            !identical(model.result, r) ||
+                            model.stage != ConfirmationStage.confirmed) {
+                          return;
+                        }
+                        await widget.onReviewPatientInstructions!(
+                          widget.recordedWeight!.patientId,
+                        );
+                      },
+                icon: const Icon(Icons.assignment_outlined),
+                label: const Text('Revisar indicaciones del paciente'),
+              ),
           ],
         ],
       );
+      return CalculatorSurface(id: 'dose', child: content);
     },
   );
 }

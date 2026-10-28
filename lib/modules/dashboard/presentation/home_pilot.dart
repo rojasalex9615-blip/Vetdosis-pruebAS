@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../../../core/widgets/neu_identity.dart';
@@ -47,37 +48,43 @@ class HomeSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: selected
-            ? theme.colorScheme.primary.withValues(alpha: .08)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
+    return AccentGlow(
+      color: theme.colorScheme.primary,
+      enabled: selected,
+      emphasis: .65,
+      radius: 24,
+      child: Container(
+        decoration: BoxDecoration(
           color: selected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.outlineVariant.withValues(alpha: .5),
+              ? theme.colorScheme.primary.withValues(alpha: .08)
+              : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant.withValues(alpha: .5),
+          ),
+          boxShadow: theme.extension<WorkspaceStyle>()?.neumorphic == true
+              ? neuShadows(dark)
+              : [
+                  BoxShadow(
+                    color: dark ? Colors.black26 : const Color(0xFFDDE4EE),
+                    offset: const Offset(5, 6),
+                    blurRadius: 14,
+                  ),
+                  BoxShadow(
+                    color: dark ? const Color(0xFF1C2935) : Colors.white,
+                    offset: const Offset(-4, -4),
+                    blurRadius: 12,
+                  ),
+                ],
         ),
-        boxShadow: theme.extension<WorkspaceStyle>()?.neumorphic == true
-            ? neuShadows(dark)
-            : [
-                BoxShadow(
-                  color: dark ? Colors.black26 : const Color(0xFFDDE4EE),
-                  offset: const Offset(5, 6),
-                  blurRadius: 14,
-                ),
-                BoxShadow(
-                  color: dark ? const Color(0xFF1C2935) : Colors.white,
-                  offset: const Offset(-4, -4),
-                  blurRadius: 12,
-                ),
-              ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(padding: padding, child: child),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
     );
   }
@@ -215,15 +222,22 @@ class HomeModuleGrid extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: VetColors.lavender.withValues(alpha: .24),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              sectionIcon(actions[i].$2),
-                              color: Theme.of(context).colorScheme.primary,
+                          AccentGlow(
+                            color: Theme.of(context).colorScheme.primary,
+                            radius: 16,
+                            emphasis: 1,
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: VetColors.lavender.withValues(
+                                  alpha: .24,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                sectionIcon(actions[i].$2),
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 12),

@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import '../../../core/widgets/neu_header_card.dart';
@@ -272,8 +273,9 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
   Widget section(String title, IconData icon, List<Widget> children) =>
       NeuHeaderCard(
         title: title,
+        soft: true,
         icon: icon,
-        color: const Color(0xFF61C7BA),
+        color: calculatorIdentity('fluids').color,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -368,14 +370,14 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             spacing: 8,
             children: [
               for (final p in [0, 5, 7, 8, 10, 12])
-                ChoiceChip(
+                glowChip(ChoiceChip(
                   label: Text('$p%'),
                   selected: fields['percent']!.text == '$p',
                   onSelected: (_) {
                     invalidate();
                     setState(() => fields['percent']!.text = '$p');
                   },
-                ),
+                )),
             ],
           ),
           const Text(
@@ -483,7 +485,8 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             ),
           ],
         ]),
-        FilledButton(
+        CalculatorActionButton(
+          id: 'fluids',
           onPressed: loading ? null : calculate,
           child: const Text('Calcular · Fluidoterapia'),
         ),
@@ -548,7 +551,8 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
                   : (v) => setState(() => reviewed = v ?? false),
             ),
             if (widget.onReminder != null)
-              FilledButton.icon(
+              CalculatorActionButton.icon(
+                id: 'fluids',
                 onPressed: reviewed && !kExceeded && patient != null
                     ? () => widget.onReminder!(patient!.id, summary())
                     : null,

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "received_on": "2026-10-27",
+  "local_file": "padron_quimicofarmaceuticos_grupo_I.csv",
+  "sha256": "5370e946c47a6cb795a03f931c6971e308666f3ed1c4d0f27601ccdbfee6e18a",
+  "rows": 471,
+  "claimed_source_url": "https://repodatos.atdt.gob.mx/api_update/senasica/productos_quimico-farmaceuticos_clasificados_grupo_i_vigentes/padron_quimicofarmaceuticos_grupo_I.csv",
+  "source_attribution": "URL supplied by user; uploaded CSV bytes retained unchanged",
+  "remote_bytes_compared": false,
+  "publisher_update_date": null,
+  "retrieval_status": "http_403",
+  "legal_documents": [
+    {
+      "url": "https://www.gob.mx/cms/uploads/attachment/file/555910/ACUERDO_por_el_que_se_modifica_el_diverso_por_el_que_se_establece_la_clasificaci_n_y_prescripci_n_de_los_productos_farmac_uticos_veterinarios_por_el_nivel_de_riesgo_de_sus_ingredientes_activos__1_.pdf",
+      "retrieval_status": "http_403",
+      "content_reviewed": false
+    },
+    {
+      "url": "https://www.gob.mx/cms/uploads/attachment/file/555911/ACUERDO_por_el_que_se_establece_la_clasificaci_n_y_prescripci_n_de_los_productos_farmac_uticos_veterinarios_por_el_nivel_de_riesgo_de_sus_ingredientes_activos.pdf",
+      "retrieval_status": "http_403",
+      "content_reviewed": false
+    }
+  ],
+  "official_source_contents_verified": false,
+  "classification_published_to_app": false,
+  "catalog_match_method": "accent/case/punctuation-normalized product name only; candidate review, not product identity validation",
+  "catalog_sha256": "e9011f8d4935cb76b9319d61e25b2393a20851eba6b972cbd0e635b544ecb135",
+  "match_counts": {
+    "single_name_candidate": 28,
+    "ambiguous_name": 2,
+    "no_exact_name_candidate": 441
+  },
+  "notes": [
+    "Do not infer Group II/III or unrestricted status from absence in this Group I list.",
+    "Verify registration, manufacturer and exact commercial presentation before linking to an app product.",
+    "Do not infer prescription, retention, reporting, expiry or disposal rules from the CSV group field alone.",
+    "One original product name contains a question mark: 17 ?Eta; preserve until source review."
+  ]
+}

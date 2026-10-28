@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import '../domain/hospital_history.dart';
 import 'hospital_history_screen.dart';
 import '../../patients/domain/patient_contacts.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/domain/patient_repository.dart';
 import '../application/hospital_alerts.dart';
+import '../application/hospital_push_service.dart';
 import '../domain/hospital_models.dart';
 import '../domain/hospital_care.dart';
 import 'hospital_care_form.dart';
@@ -25,6 +27,7 @@ class HospitalScreen extends StatefulWidget {
     required this.patients,
     required this.member,
     required this.alerts,
+    this.pushService,
     this.onRecordMedication,
     this.clinical,
     this.onCalculateWeight,
@@ -39,6 +42,7 @@ class HospitalScreen extends StatefulWidget {
   final PatientRepository patients;
   final ClinicMembership member;
   final HospitalAlerts alerts;
+  final HospitalPushService? pushService;
   final ClinicalRepository? clinical;
   final HospitalWeightCalculation? onCalculateWeight;
   final bool Function(ClinicMembership)? contextIsCurrent;
@@ -321,6 +325,7 @@ class _HospitalScreenState extends State<HospitalScreen> {
           repository: source as HospitalAutomationRepository,
           member: widget.member,
           stayId: stayId,
+          pushService: widget.pushService,
         ),
       ),
     );
@@ -831,16 +836,16 @@ class _HospitalScreenState extends State<HospitalScreen> {
                 icon: const Icon(Icons.calendar_today),
                 label: Text('Fecha: ${day.toIso8601String().substring(0, 10)}'),
               ),
-              ChoiceChip(
+              glowChip(ChoiceChip(
                 label: const Text('Fichas por jaula'),
                 selected: !table,
                 onSelected: (_) => setState(() => table = false),
-              ),
-              ChoiceChip(
+              )),
+              glowChip(ChoiceChip(
                 label: const Text('Paciente × hora'),
                 selected: table,
                 onSelected: (_) => setState(() => table = true),
-              ),
+              )),
             ],
           ),
           if (visibleStays.isEmpty && !model.busy && model.error == null)

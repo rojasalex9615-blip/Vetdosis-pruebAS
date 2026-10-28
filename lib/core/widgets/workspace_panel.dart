@@ -13,7 +13,15 @@ class WorkspaceStyle extends ThemeExtension<WorkspaceStyle> {
 }
 
 class WorkspacePanel extends StatelessWidget {
-  const WorkspacePanel({super.key, required this.child});
+  const WorkspacePanel({
+    super.key,
+    required this.child,
+    this.radius = 24,
+    this.depth = 1,
+    this.softLighting = false,
+  });
+  final double radius, depth;
+  final bool softLighting;
   final Widget child;
   @override
   Widget build(BuildContext context) {
@@ -25,12 +33,29 @@ class WorkspacePanel extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: neuShadows(theme.brightness == Brightness.dark),
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: neuShadows(
+          theme.brightness == Brightness.dark,
+          depth: depth,
+        ),
+        gradient: softLighting
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(
+                    theme.scaffoldBackgroundColor,
+                    Colors.white,
+                    theme.brightness == Brightness.dark ? .025 : .28,
+                  )!,
+                  theme.scaffoldBackgroundColor,
+                ],
+              )
+            : null,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(radius),
         clipBehavior: Clip.antiAlias,
         child: child,
       ),

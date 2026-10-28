@@ -1,3 +1,4 @@
+import 'manufacturer_catalog_screen.dart';
 import 'package:flutter/material.dart';
 import '../data/catalog_repository.dart';
 import '../data/personal_dose_repository.dart';
@@ -52,7 +53,11 @@ class _VademecumScreenState extends State<VademecumScreen> {
         .toLowerCase().contains(query.toLowerCase())).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text('Vademécum', style: Theme.of(context).textTheme.headlineMedium),
-      const Text('Consulta fuentes y presentaciones antes de calcular. La base de la app empieza vacía y no sustituye la revisión profesional.'),
+      const Text('Consulta fuentes y presentaciones antes de calcular.'),
+      OutlinedButton.icon(icon: const Icon(Icons.menu_book),
+        label: const Text('Catálogo comercial y dosis del fabricante'),
+        onPressed: () => Navigator.push<void>(context, MaterialPageRoute(
+          builder: (_) => ManufacturerCatalogScreen(canCalculate: widget.canCalculate)))),
       if (busy) const LinearProgressIndicator(),
       if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
       TextField(decoration: const InputDecoration(labelText: 'Buscar fármaco o nombre comercial', prefixIcon: Icon(Icons.search)),

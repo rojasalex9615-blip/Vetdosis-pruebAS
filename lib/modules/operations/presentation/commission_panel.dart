@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../inventory/domain/inventory_models.dart';
 import '../domain/operations_repository.dart';
+import 'service_commission_panel.dart';
 
 class CommissionPanel extends StatefulWidget {
   const CommissionPanel({super.key, required this.repository, required this.member});
@@ -123,6 +124,25 @@ class _CommissionPanelState extends State<CommissionPanel> {
           FilledButton(onPressed: busy || payOn == null ? null : saveSchedule, child: const Text('Guardar calendario')),
           if (schedule != null) OutlinedButton(onPressed: busy ? null : payPeriod, child: const Text('Registrar pago y abrir siguiente periodo')),
         ],
+        if (widget.repository is ServiceCommissionRepository)
+          TextButton.icon(
+            onPressed: busy ? null : () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: const Text('Comisiones por servicio')),
+                  body: SingleChildScrollView(
+                    child: ServiceCommissionPanel(
+                      repository: widget.repository as ServiceCommissionRepository,
+                      member: widget.member,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('Liquidaciones individuales por servicio (beta)'),
+          ),
         const Divider(),
         const Text('Liquidaciones registradas'),
         for (final row in payments.take(12))
