@@ -1,3 +1,4 @@
+import 'accent_glow.dart';
 import 'package:flutter/material.dart';
 
 const neuBackground = Color(0xFFEBECF2);
@@ -176,80 +177,90 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
         listenable: states,
         builder: (context, _) {
           final pressed = states.value.contains(WidgetState.pressed);
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 140),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(32),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: pressed
-                    ? [
-                        color,
-                        Color.lerp(color, Colors.white, dark ? .01 : .08)!,
-                      ]
-                    : [
-                        Color.lerp(color, Colors.white, dark ? .06 : .24)!,
-                        color,
-                      ],
-              ),
-              boxShadow: widget.onPressed == null
-                  ? null
-                  : neuShadows(dark, depth: pressed ? .3 : 1.2),
-            ),
-            child: FilledButton(
-              statesController: states,
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                foregroundColor: dark ? Colors.white : neuInk,
-                minimumSize: const Size(0, 58),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 18,
+          return AccentGlow(
+            color: color,
+            enabled: widget.onPressed != null,
+            emphasis: pressed ? .65 : 1,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: pressed
+                      ? [
+                          color,
+                          Color.lerp(color, Colors.white, dark ? .01 : .08)!,
+                        ]
+                      : [
+                          Color.lerp(color, Colors.white, dark ? .06 : .24)!,
+                          color,
+                        ],
                 ),
-                shape: const StadiumBorder(),
-                textStyle: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+                boxShadow: widget.onPressed == null
+                    ? null
+                    : neuShadows(dark, depth: pressed ? .3 : 1.2),
               ),
-              onPressed: widget.onPressed,
-              child: widget.child,
+              child: FilledButton(
+                statesController: states,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  foregroundColor: dark ? Colors.white : neuInk,
+                  minimumSize: const Size(0, 58),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 18,
+                  ),
+                  shape: const StadiumBorder(),
+                  textStyle: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                onPressed: widget.onPressed,
+                child: widget.child,
+              ),
             ),
           );
         },
       );
     }
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        boxShadow: widget.onPressed == null
-            ? null
-            : neuShadows(Theme.of(context).brightness == Brightness.dark),
-        gradient: widget.onPressed == null
-            ? null
-            : const LinearGradient(colors: [neuMint, neuLilac]),
-      ),
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          foregroundColor: neuInk,
-          shadowColor: Colors.transparent,
-          minimumSize: const Size(0, 54),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+    return AccentGlow(
+      color: widget.color ?? neuMint,
+      enabled: widget.onPressed != null,
+      radius: 26,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: widget.onPressed == null
+              ? null
+              : neuShadows(Theme.of(context).brightness == Brightness.dark),
+          gradient: widget.onPressed == null
+              ? null
+              : const LinearGradient(colors: [neuMint, neuLilac]),
         ),
-        onPressed: widget.onPressed,
-        child: widget.child,
+        child: FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: neuInk,
+            shadowColor: Colors.transparent,
+            minimumSize: const Size(0, 54),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(26),
+            ),
+            textStyle: const TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          onPressed: widget.onPressed,
+          child: widget.child,
+        ),
       ),
     );
   }
