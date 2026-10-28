@@ -1,0 +1,19 @@
+00:00 +0: loading /workspace/vetdosis-p64/test/hospital_calculation_refresh_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: Real CoreShell keeps patient query through refresh and opens the persisted-weight calculator
+00:01 +1: Confirmed module revocation clears the open patient picker
+00:01 +2: A failed or malformed permission recheck denies calculation; stale allowed results cannot restore access
+00:01 +3: Configured access starts denied until verified and ignores completion after disposal
+00:01 +4: An overlapping auth refresh resolves the waiting check as allowed
+00:01 +5: An overlapping auth refresh resolves the waiting check as revoked
+00:01 +6: An overlapping auth refresh resolves the waiting check as error
+00:01 +7: Disposal resolves a waiting check before its RPC completes
+00:01 +8: Real patient route owns access through pop and teardown
+00:02 +9: Real patient route owns access through signout and teardown
+00:02 +10: Live clinic change invalidates patient/weight context
+00:02 +11: Live role change invalidates patient/weight context
+00:02 +12: Live user change invalidates patient/weight context
+00:02 +13: Live offline change invalidates patient/weight context
+00:02 +14: Live membership change invalidates patient/weight context
+00:02 +15: (tearDownAll)
+00:02 +15: All tests passed!

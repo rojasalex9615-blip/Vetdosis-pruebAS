@@ -1,0 +1,8 @@
+04:36 +684 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: Known capacities round down per independent surface
+04:36 +685 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: Equipment rounds up and never omits a fractional requirement
+04:36 +686 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: Reciprocal density, units and count validation
+04:36 +687 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: Design selection warns on unverified and outside range
+04:36 +688 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: CSV rejects shifted columns and reversed limits
+04:36 +689 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: View model reports procedures, invalid values and clears previous result
+04:36 +690 ~1: /workspace/vetdosis-p64/test/aviculture_test.dart: Versioned assets preserve missing data and do not preselect design
+04:37 +691 ~1: All tests passed!
