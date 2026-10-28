@@ -1,0 +1,66 @@
+name: Build Android candidate APK (Pruebas only)
+on:
+  push:
+    branches:
+      - build/android-apk-candidate-20261028
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_TEST_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_TEST_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify test-only backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$SUPABASE_URL" || -z "$SUPABASE_PUBLISHABLE_KEY" ]]; then
+            echo "::error::Set repository variables SUPABASE_TEST_URL and SUPABASE_TEST_PUBLISHABLE_KEY (publishable/anon key only)."
+            exit 1
+          fi
+          if [[ "$SUPABASE_URL" != "https://wtrelwtztkddfktrfdpb.supabase.co" ]]; then
+            echo "::error::Build blocked: backend is not the authorized Pruebas project."
+            exit 1
+          fi
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.38.1'
+          cache: true
+      - name: Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Dependencies
+        run: flutter pub get
+      - name: Compile debug beta candidate
+        shell: bash
+        run: |
+          flutter build apk --debug --flavor beta \
+            --dart-define=APP_CHANNEL=beta \
+            --dart-define=SUPABASE_EXISTING_SCHEMA=true \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+      - name: Checksum and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p candidate
+          apk="$(find build/app/outputs/flutter-apk -maxdepth 1 -name '*beta*debug*.apk' -print -quit)"
+          test -n "$apk"
+          cp "$apk" candidate/vetdosis-beta-debug-candidate.apk
+          (cd candidate && sha256sum vetdosis-beta-debug-candidate.apk > SHA256SUMS.txt)
+          printf 'Commit: %s\nBranch: %s\nBackend: Pruebas wtrelwtztkddfktrfdpb\nBuild: debug beta candidate; fictitious data only\n' "$GITHUB_SHA" "$GITHUB_REF_NAME" > candidate/BUILD_INFO.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vetdosis-beta-debug-candidate
+          path: candidate/
+          retention-days: 7
