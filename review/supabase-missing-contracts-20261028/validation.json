@@ -1,0 +1,52 @@
+{
+  "branch": "feature/supabase-missing-contracts-20261028",
+  "base_pr": 64,
+  "base_sha": "08e87e606af5dda3c407956b85410ac0b1f3760b",
+  "project_ref": "wtrelwtztkddfktrfdpb",
+  "remote_schema_changed": true,
+  "remote_rehearsal_executed": true,
+  "android_qa": false,
+  "flutter": {
+    "passed": 685,
+    "skipped": 1,
+    "analyze": "clean"
+  },
+  "python_tests": 96,
+  "postgres_version": "17.11",
+  "sql_isolated_upgrade": "passed",
+  "client_named_contracts": 27,
+  "legacy_replay_only_contracts": 2,
+  "affected_remote_functions_rechecked": 15,
+  "affected_remote_function_drift": [],
+  "indexes_observed_present": [],
+  "artifacts_sha256": {
+    "contracts-authorized-rollback.sql": "e9f24883aff42e4a65c1579cbbc54bcee18a02e5bffb050fb30fbf6b74db0187",
+    "contracts-authorized-commit.sql": "87fd7ec476fcca82608f73ca1bc76d81e357b8b95bff3f052e1fd31f9b540433"
+  },
+  "base_pr_review_threads": {
+    "unresolved": 3,
+    "major": 1,
+    "minor": 2
+  },
+  "authorization_received": true,
+  "initial_remote_rehearsal": {
+    "sha": "7cc9cb06c4869671863051de86784d567df559b0",
+    "passed": true,
+    "rollback_objects_absent": true
+  },
+  "review_corrections": [
+    "exact_15_signature_set",
+    "runtime_cluster_database_identity"
+  ],
+  "installed_code_sha": "aa5d369b8627f88e2bdc7cdcac6965d2a83046da",
+  "migration_version": "20261028114405",
+  "installed_rpc_count": 29,
+  "installed_named_arguments_checked": 27,
+  "installed_concurrent_indexes": 2,
+  "coderabbit_corrective_review": {
+    "completed": true,
+    "new_blocking_findings": 0,
+    "trivial_findings": 1,
+    "trivial_preservation_test_added": true
+  }
+}
