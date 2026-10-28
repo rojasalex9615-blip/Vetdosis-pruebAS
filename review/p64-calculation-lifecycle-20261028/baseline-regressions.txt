@@ -4,7 +4,7 @@
 00:03 +0 -1: An overlapping auth refresh resolves the waiting check as allowed [E]
   TimeoutException after 0:00:03.000000: Test timed out after 3 seconds.
   dart:isolate  _RawReceivePort._handleMessage
-  
+
 00:03 +0 -1: Real patient route owns access through pop and teardown
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -29,7 +29,7 @@ The test description was:
 00:05 +0 -2: Real patient route owns access through pop and teardown [E]
   Test failed. See exception logs above.
   The test description was: Real patient route owns access through pop and teardown
-  
+
 00:05 +0 -2: Real patient route owns access through signout and teardown
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
@@ -54,7 +54,7 @@ The test description was:
 00:05 +0 -3: Real patient route owns access through signout and teardown [E]
   Test failed. See exception logs above.
   The test description was: Real patient route owns access through signout and teardown
-  
+
 00:05 +0 -3: (tearDownAll)
 00:05 +0 -3: Some tests failed.
 
