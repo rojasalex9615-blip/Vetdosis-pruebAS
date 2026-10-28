@@ -82,12 +82,15 @@ class GoogleDriveBackupClient implements DriveBackupClient {
   }
 
   @override
-  Future<void> disconnect(String userId, String clinicId) async {
+  Future<bool> disconnect(String userId, String clinicId) async {
     await _initialize();
     final saved = await _saved(userId, clinicId);
-    if (saved == null) return;
-    await _signIn
-        .disconnect(); // Revokes this app's Google grant on the device.
+    if (saved == null) return false;
+    final active = _account ?? await _signIn.attemptLightweightAuthentication();
+    final revoked = active != null && active.id == saved.accountId;
+    if (revoked) {
+      await _signIn.disconnect();
+    }
     _account = null;
     final prefs = await SharedPreferences.getInstance();
     for (final key in prefs.getKeys().where(
@@ -104,6 +107,7 @@ class GoogleDriveBackupClient implements DriveBackupClient {
         }
       }
     }
+    return revoked;
   }
 
   Future<GoogleSignInAccount> _linkedAccount(

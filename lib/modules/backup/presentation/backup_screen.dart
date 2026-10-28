@@ -233,7 +233,7 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   Future<void> disconnectDrive() async {
-    await widget.drive!.disconnect(
+    final revoked = await widget.drive!.disconnect(
       widget.member.userId,
       widget.member.clinicId,
     );
@@ -241,8 +241,9 @@ class _BackupScreenState extends State<BackupScreen> {
     setState(() {
       driveConnection = null;
       driveHistory = const [];
-      result =
-          'Se revocó el acceso a Drive y se quitó el vínculo local. Los archivos existentes permanecen en Drive.';
+      result = revoked
+          ? 'Se revocó el acceso a Drive y se quitó el vínculo local. Los archivos existentes permanecen en Drive.'
+          : 'Se quitó el vínculo local. No se pudo confirmar la revocación en Google; revisa los accesos de tu cuenta Google. Los archivos existentes permanecen en Drive.';
     });
   }
 

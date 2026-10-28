@@ -25,7 +25,9 @@ abstract interface class DriveBackupClient {
   bool get configured;
   Future<DriveConnection?> connection(String userId, String clinicId);
   Future<DriveConnection> connect(String userId, String clinicId);
-  Future<void> disconnect(String userId, String clinicId);
+
+  /// True only when Google confirmed revocation for the linked account.
+  Future<bool> disconnect(String userId, String clinicId);
   Future<DriveBackupReceipt> uploadVerified(
     String userId,
     String clinicId,
