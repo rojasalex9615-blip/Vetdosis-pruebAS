@@ -1,3 +1,4 @@
+import 'accent_glow.dart';
 import 'package:flutter/material.dart';
 import 'neu_identity.dart';
 import 'neu_header_card.dart';
@@ -77,13 +78,17 @@ class CalculatorIcon extends StatelessWidget {
     final color = dark
         ? Color.lerp(identity.color, Colors.white, .5)!
         : identity.color;
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .1),
-        borderRadius: BorderRadius.circular(12),
+    return AccentGlow(
+      color: color,
+      radius: 12,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: .1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(identity.icon, color: color, size: 24),
       ),
-      child: Icon(identity.icon, color: color, size: 24),
     );
   }
 }
