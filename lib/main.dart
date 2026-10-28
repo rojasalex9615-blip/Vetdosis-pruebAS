@@ -24,6 +24,7 @@ import 'modules/attendance/domain/attendance_repository.dart';
 import 'modules/attendance/data/supabase_attendance_repository.dart';
 import 'modules/backup/domain/backup_repository.dart';
 import 'modules/backup/data/supabase_backup_repository.dart';
+import 'modules/backup/data/google_drive_backup_client.dart';
 import 'modules/inventory/domain/inventory_repository.dart';
 import 'modules/inventory/data/supabase_inventory_repository.dart';
 import 'modules/prescribing/domain/prescribing_repository.dart';
@@ -70,7 +71,8 @@ Future<void> main() async {
     defaultValue: true,
   );
   const googleEnabled = bool.fromEnvironment('SUPABASE_GOOGLE_ENABLED');
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android &&
+  if (!kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android &&
       channel == 'beta') {
     try {
       await Firebase.initializeApp();
@@ -117,7 +119,9 @@ Future<void> main() async {
     identity = SupabaseIdentityRepository(Supabase.instance.client);
     clinical = SupabaseClinicalRepository(Supabase.instance.client);
     prescribing = SupabasePrescribingRepository(Supabase.instance.client);
-    referenceLibrary = SupabaseReferenceLibraryRepository(Supabase.instance.client);
+    referenceLibrary = SupabaseReferenceLibraryRepository(
+      Supabase.instance.client,
+    );
     inventory = SupabaseInventoryRepository(Supabase.instance.client);
     operations = SupabaseOperationsRepository(Supabase.instance.client);
     attendance = SupabaseAttendanceRepository(Supabase.instance.client);
@@ -126,7 +130,9 @@ Future<void> main() async {
     support = SupabaseSupportRepository(Supabase.instance.client);
     subscriptions = SupabaseSubscriptionRepository(Supabase.instance.client);
     moduleAccess = SupabaseModuleAccessRepository(Supabase.instance.client);
-    experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
+    experienceRepository = SupabaseClinicExperienceRepository(
+      Supabase.instance.client,
+    );
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     final authRepository = SupabaseAuthRepository(
@@ -161,8 +167,11 @@ Future<void> main() async {
   );
   final alerts = HospitalAlerts(backend, await SharedPreferences.getInstance());
   await alerts.initialize();
-  if (auth != null && Firebase.apps.isNotEmpty && channel == 'beta' &&
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+  if (auth != null &&
+      Firebase.apps.isNotEmpty &&
+      channel == 'beta' &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android) {
     final service = HospitalPushService(
       Supabase.instance.client,
       FirebaseMessaging.instance,
@@ -215,6 +224,7 @@ Future<void> main() async {
       operations: operations,
       attendance: attendance,
       backup: backup,
+      driveBackup: GoogleDriveBackupClient(),
       ai: ai,
       subscriptions: subscriptions,
       support: support,
