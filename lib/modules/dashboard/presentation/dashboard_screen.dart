@@ -404,7 +404,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Alertas y recordatorios',
               routeVisible('Hospitalización')
                   ? 'Hospitalización'
-                  : 'Agenda',
+                  : routeVisible('Agenda')
+                      ? 'Agenda'
+                      : 'Inventario',
               [
                 if (m.canSummarize('hospital') && routeVisible('Hospitalización'))
                   unavailable(

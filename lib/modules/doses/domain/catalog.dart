@@ -1,5 +1,22 @@
 import 'dart:convert';
 import 'quantity.dart';
+// Lookup aid only; matching never certifies a dose or product.
+String normalizeDoseCatalogSearch(String text) {
+  var value = text.toLowerCase().trim();
+  const accents = <String, String>{
+    'á': 'a', 'à': 'a', 'ä': 'a', 'â': 'a',
+    'é': 'e', 'è': 'e', 'ë': 'e', 'ê': 'e',
+    'í': 'i', 'ì': 'i', 'ï': 'i', 'î': 'i',
+    'ó': 'o', 'ò': 'o', 'ö': 'o', 'ô': 'o',
+    'ú': 'u', 'ù': 'u', 'ü': 'u', 'û': 'u',
+    'ñ': 'n',
+  };
+  for (final entry in accents.entries) {
+    value = value.replaceAll(entry.key, entry.value);
+  }
+  return value;
+}
+
 
 String requiredText(Map<String, dynamic> map, String key) {
   final value = map[key];
@@ -176,14 +193,14 @@ class DoseCatalog {
     );
   }
   List<DrugDose> search(String text, {String? species}) {
-    final query = text.toLowerCase().trim();
+    final query = normalizeDoseCatalogSearch(text);
     return drugs
         .where(
           (d) =>
               (species == null || d.species == species) &&
-              ('${d.name} ${d.presentations.map((p) => p.brand).join(' ')}')
-                  .toLowerCase()
-                  .contains(query),
+              normalizeDoseCatalogSearch(
+                '${d.name} ${d.presentations.map((p) => p.brand).join(' ')}',
+              ).contains(query),
         )
         .toList();
   }
