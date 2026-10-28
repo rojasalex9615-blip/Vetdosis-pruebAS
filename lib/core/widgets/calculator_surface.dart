@@ -81,6 +81,7 @@ class CalculatorIcon extends StatelessWidget {
     return AccentGlow(
       color: color,
       radius: 12,
+      emphasis: 1, // Preserve the badge glow approved by Ale.
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(

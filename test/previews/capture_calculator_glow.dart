@@ -129,9 +129,11 @@ void main() {
               final bytes = await picture.toByteData(
                 format: ui.ImageByteFormat.png,
               );
-              final file = File(
-                'review/accent-glow-preview-20261028/${glow ? 'glow' : 'sin-glow'}.png',
+              const directory = String.fromEnvironment(
+                'GLOW_PREVIEW_DIR',
+                defaultValue: 'review/accent-glow-preview-20261028',
               );
+              final file = File('$directory/${glow ? 'glow' : 'sin-glow'}.png');
               await file.parent.create(recursive: true);
               await file.writeAsBytes(bytes!.buffer.asUint8List());
               picture.dispose();
