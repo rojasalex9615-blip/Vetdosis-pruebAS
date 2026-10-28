@@ -90,7 +90,24 @@ jobs:
         shell: bash
         run: |
           mkdir -p build/preview
-          printf '{"repository":"%s","commit":"%s","source_sol":"%s","source_drive":"%s","source_visual":"%s","type":"debug-preview-not-for-distribution"}\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "rojasalex9615-blip/Vet-dosis-pruebas@b64ff80ca84bff29977f747c6052848da5103ad6" "rojasalex9615-blip/Vet-dosis-pruebas@5de05e6" "rojasalex9615-blip/Vetdosis-pruebAS@abd2f22cb0aa279f7ef0ce0f3a8ffea57ef72635" > build/preview/BUILD-SOURCES.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('build/preview/BUILD-SOURCES.json').write_text(json.dumps({
+            'source_repository': 'rojasalex9615-blip/Vet-dosis-pruebas',
+            'source_sha': 'b64ff80ca84bff29977f747c6052848da5103ad6',
+            'source_drive_sha': '5de05e606d3b407b9dfeed9e0f3221aca26468d4',
+            'source_visual_repository': 'rojasalex9615-blip/Vetdosis-pruebAS',
+            'source_visual_sha': 'abd2f22cb0aa279f7ef0ce0f3a8ffea57ef72635',
+            'source_clinic_experience_sha': '80b845881519012bbf26640e875e2cfd54d4d3d5',
+            'integration_repository': os.environ['GITHUB_REPOSITORY'],
+            'integration_sha': os.environ['GITHUB_SHA'],
+            'workflow_run': os.environ['GITHUB_RUN_ID'],
+            'modules_present': ['clinic_experience', 'section_catalog', 'launcher',
+                                'hospital_push', 'service_commissions', 'drive_backup'],
+            'type': 'debug-preview-not-for-distribution',
+          }, sort_keys=True) + '\n')
+          PY
           (cd build && sha256sum app/outputs/flutter-apk/app-beta-debug.apk > preview/SHA256SUMS.txt)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
