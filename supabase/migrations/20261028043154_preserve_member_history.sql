@@ -25,6 +25,10 @@ begin
      and new.clinic_id is not distinct from old.clinic_id then return new;end if;
  end if;
  if actor is null then return new;end if;
+ -- Match remove_clinic_member: clinic first, member second. The FK's AFTER
+ -- check would otherwise acquire clinic last and could deadlock the remover.
+ perform 1 from public.clinics where id=clinic for key share;
+ if not found then raise exception 'clinic_not_found';end if;
  perform 1 from public.clinic_members where clinic_id=clinic and user_id=actor for key share;
  if not found then raise exception 'current_member_required';end if;
  return new;

@@ -14,10 +14,11 @@ wait_query() {
 docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
 insert into auth.users(id,email,email_confirmed_at) values
  ('00000000-0000-0000-0000-000000000292','p0-race-remove@example.test',now()),
- ('00000000-0000-0000-0000-000000000293','p0-race-assign@example.test',now());
+ ('00000000-0000-0000-0000-000000000293','p0-race-assign@example.test',now()),
+ ('00000000-0000-0000-0000-000000000294','p0-race-lock-order@example.test',now());
 insert into public.clinic_members(clinic_id,user_id,role)
  select id,u,'auxiliar' from public.clinics cross join unnest(array[
- '00000000-0000-0000-0000-000000000292'::uuid,'00000000-0000-0000-0000-000000000293'::uuid]) u
+ '00000000-0000-0000-0000-000000000292'::uuid,'00000000-0000-0000-0000-000000000293'::uuid,'00000000-0000-0000-0000-000000000294'::uuid]) u
  where name='Synthetic medication permissions';
 SQL
 # Removal wins: the waiting assignment must recheck and deny after commit.
@@ -77,3 +78,55 @@ do $$begin
 end$$;
 SQL
 echo 'Membership races passed: removed-before-assign denies; assigned-before-remove retains history.'
+
+# Hold the INSERT between its BEFORE guard and AFTER FK check. With inverted
+# member->clinic ordering this deterministically creates a two-row lock cycle.
+docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
+create function private.p0_assignment_barrier() returns trigger language plpgsql as $$begin
+ if new.title='P0 interleaved lock order' then
+  perform pg_advisory_xact_lock(774294);
+  perform pg_sleep(4);
+ end if;
+ return new;
+end$$;
+create trigger zz_p0_assignment_barrier before insert on public.clinic_tasks
+ for each row execute function private.p0_assignment_barrier();
+SQL
+docker exec -e PGAPPNAME=p0_lock_order_assign -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 > "$work_dir/lock-assign.log" 2>&1 <<'SQL' &
+begin;
+set local lock_timeout='8s';
+set local deadlock_timeout='200ms';
+insert into public.clinic_tasks(clinic_id,title,assigned_to,priority,created_by)
+ select id,'P0 interleaved lock order','00000000-0000-0000-0000-000000000294','media','00000000-0000-0000-0000-000000000150'
+ from public.clinics where name='Synthetic medication permissions';
+commit;
+SQL
+writer=$!
+wait_query "select not pg_try_advisory_lock(774294)"
+docker exec -e PGAPPNAME=p0_lock_order_remove -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 > "$work_dir/lock-remove.log" 2>&1 <<'SQL' &
+begin;
+set local lock_timeout='8s';
+set local deadlock_timeout='200ms';
+select id as clinic from public.clinics where name='Synthetic medication permissions' \gset
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000150',true);
+set local role authenticated;
+select public.remove_clinic_member(:'clinic','00000000-0000-0000-0000-000000000294');
+commit;
+SQL
+remover=$!
+wait_query "select exists(select 1 from pg_stat_activity where application_name='p0_lock_order_remove' and cardinality(pg_blocking_pids(pid))>0)"
+failed=0
+wait "$writer" || failed=1
+wait "$remover" || failed=1
+if [ "$failed" = 1 ];then cat "$work_dir/lock-assign.log" "$work_dir/lock-remove.log";exit 1;fi
+docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 <<'SQL'
+do $$begin
+ if not exists(select 1 from public.clinic_tasks where title='P0 interleaved lock order')
+ or exists(select 1 from public.clinic_members where user_id='00000000-0000-0000-0000-000000000294') then
+  raise exception 'interleaved_lock_order_failed';
+ end if;
+end$$;
+drop trigger zz_p0_assignment_barrier on public.clinic_tasks;
+drop function private.p0_assignment_barrier();
+SQL
+echo 'Interleaved BEFORE/AFTER lock-order race passed without deadlock.'
