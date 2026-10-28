@@ -1,0 +1,345 @@
+{
+  "appointment_care_snapshot": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 289,
+      "params": [
+        "p_appointments",
+        "p_clinic"
+      ]
+    }
+  ],
+  "appointment_care_write": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 325,
+      "params": [
+        "p_action",
+        "p_appointment",
+        "p_clinic",
+        "p_data",
+        "p_operation",
+        "p_version"
+      ]
+    }
+  ],
+  "appointment_patient_links": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 348,
+      "params": [
+        "p_appointments",
+        "p_clinic"
+      ]
+    }
+  ],
+  "inv_credit_accounts": [
+    {
+      "file": "lib/modules/inventory/presentation/credit_accounts_screen.dart",
+      "line": 80,
+      "params": [
+        "p_clinic",
+        "p_offset"
+      ]
+    }
+  ],
+  "inv_sale_collect": [
+    {
+      "file": "lib/modules/inventory/presentation/credit_accounts_screen.dart",
+      "line": 135,
+      "params": [
+        "p_actor",
+        "p_amount",
+        "p_method",
+        "p_operation",
+        "p_reference",
+        "p_sale",
+        "p_shift"
+      ]
+    }
+  ],
+  "inv_sale_credit_post": [
+    {
+      "file": "lib/modules/inventory/presentation/sale_screen.dart",
+      "line": 454,
+      "kind": "reviewed dynamic command and assembled map",
+      "params": [
+        "p_actor",
+        "p_debtor",
+        "p_expected_total",
+        "p_initial_amount",
+        "p_lines",
+        "p_method",
+        "p_operation",
+        "p_shift"
+      ]
+    }
+  ],
+  "inv_sale_return": [],
+  "inv_sale_return_v2": [],
+  "inv_sale_return_v3": [
+    {
+      "file": "lib/modules/inventory/presentation/partial_return_screen.dart",
+      "line": 159,
+      "params": [
+        "p_actor",
+        "p_expected_amount",
+        "p_expected_commission",
+        "p_expected_refund",
+        "p_expected_returned_quantity",
+        "p_line",
+        "p_method",
+        "p_operation",
+        "p_quantity",
+        "p_reason",
+        "p_restock",
+        "p_sale",
+        "p_shift"
+      ]
+    }
+  ],
+  "inv_sale_return_workspace": [
+    {
+      "file": "lib/modules/inventory/presentation/partial_return_screen.dart",
+      "line": 92,
+      "params": [
+        "p_sale",
+        "p_shift"
+      ]
+    }
+  ],
+  "ops_commission_recovery": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 226,
+      "params": [
+        "p_amount",
+        "p_clinic",
+        "p_method",
+        "p_operation",
+        "p_reason",
+        "p_reference",
+        "p_settlement"
+      ]
+    }
+  ],
+  "ops_staff_medical_directory": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 413,
+      "params": [
+        "p_actor",
+        "p_clinic",
+        "p_offset"
+      ]
+    }
+  ],
+  "ops_staff_medical_view": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 415,
+      "params": [
+        "p_actor",
+        "p_clinic",
+        "p_purpose",
+        "p_subject"
+      ]
+    }
+  ],
+  "ops_staff_medical_workspace": [
+    {
+      "file": "lib/modules/operations/data/supabase_operations_repository.dart",
+      "line": 409,
+      "params": [
+        "p_actor",
+        "p_clinic"
+      ]
+    }
+  ],
+  "ops_staff_medical_write": [
+    {
+      "file": "lib/modules/operations/presentation/staff_medical_screen.dart",
+      "line": 208,
+      "kind": "reviewed assembled map passed through repository",
+      "params": [
+        "p_action",
+        "p_actor",
+        "p_clinic",
+        "p_consent",
+        "p_details",
+        "p_expected_revision",
+        "p_member_since",
+        "p_notice_hash",
+        "p_notice_version",
+        "p_operation"
+      ]
+    }
+  ],
+  "patient_activity_snapshot": [
+    {
+      "file": "lib/modules/patients/data/supabase_patient_repository.dart",
+      "line": 217,
+      "params": [
+        "p_clinic"
+      ]
+    }
+  ],
+  "patient_contact_log": [
+    {
+      "file": "lib/modules/patients/data/supabase_patient_repository.dart",
+      "line": 201,
+      "params": [
+        "p_clinic",
+        "p_data",
+        "p_operation",
+        "p_owner",
+        "p_patient"
+      ]
+    }
+  ],
+  "patient_contact_save": [
+    {
+      "file": "lib/modules/patients/data/supabase_patient_repository.dart",
+      "line": 180,
+      "params": [
+        "p_clinic",
+        "p_data",
+        "p_operation",
+        "p_owner",
+        "p_patient",
+        "p_version"
+      ]
+    }
+  ],
+  "patient_contact_snapshot": [
+    {
+      "file": "lib/modules/patients/data/supabase_patient_repository.dart",
+      "line": 165,
+      "params": [
+        "p_clinic",
+        "p_patient"
+      ]
+    }
+  ],
+  "restore_apply_owners": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 147,
+      "params": [
+        "p_clinic",
+        "p_owner_payload_sha256",
+        "p_preflight",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_apply_patients": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 183,
+      "params": [
+        "p_clinic",
+        "p_patient_payload_sha256",
+        "p_preflight",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_prepare_owners": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 129,
+      "params": [
+        "p_archive_sha256",
+        "p_clinic",
+        "p_owners",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_prepare_patients": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 165,
+      "params": [
+        "p_archive_sha256",
+        "p_clinic",
+        "p_patients",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_preview_conflicts": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 68,
+      "params": [
+        "p_archive_sha256",
+        "p_clinic",
+        "p_manifest",
+        "p_manifest_sha256",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_preview_discard": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 196,
+      "params": [
+        "p_clinic",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_preview_get": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 56,
+      "params": [
+        "p_clinic"
+      ]
+    }
+  ],
+  "restore_preview_plan": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 89,
+      "params": [
+        "p_archive_sha256",
+        "p_clinic",
+        "p_conflict_manifest_sha256",
+        "p_dependencies",
+        "p_dependency_manifest_sha256",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_preview_preflight": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 110,
+      "params": [
+        "p_archive_sha256",
+        "p_clinic",
+        "p_conflict_manifest_sha256",
+        "p_dependency_manifest_sha256",
+        "p_stage"
+      ]
+    }
+  ],
+  "restore_preview_stage": [
+    {
+      "file": "lib/modules/backup/data/supabase_backup_repository.dart",
+      "line": 40,
+      "params": [
+        "p_archive_sha256",
+        "p_clinic",
+        "p_format",
+        "p_source_server_at",
+        "p_table_counts",
+        "p_version"
+      ]
+    }
+  ]
+}

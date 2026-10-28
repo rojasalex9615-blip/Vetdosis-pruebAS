@@ -1,0 +1,31 @@
+{
+  "branch": "feature/supabase-missing-contracts-20261028",
+  "base_pr": 64,
+  "base_sha": "08e87e606af5dda3c407956b85410ac0b1f3760b",
+  "project_ref": "wtrelwtztkddfktrfdpb",
+  "remote_schema_changed": false,
+  "remote_rehearsal_executed": false,
+  "android_qa": false,
+  "flutter": {
+    "passed": 685,
+    "skipped": 1,
+    "analyze": "clean"
+  },
+  "python_tests": 94,
+  "postgres_version": "17.11",
+  "sql_isolated_upgrade": "passed",
+  "client_named_contracts": 27,
+  "legacy_replay_only_contracts": 2,
+  "affected_remote_functions_rechecked": 15,
+  "affected_remote_function_drift": [],
+  "indexes_observed_present": [],
+  "artifacts_sha256": {
+    "contracts-reviewed-rollback.sql": "89e5a2f9495090235898ed6038e21c755a61e6cd1d72e871d2c84f3969988923",
+    "contracts-reviewed-commit.sql": "07c64d5decc0370b2077add18ea8c00feeb1784718cd15da2c605fe1c2938851"
+  },
+  "base_pr_review_threads": {
+    "unresolved": 3,
+    "major": 1,
+    "minor": 2
+  }
+}

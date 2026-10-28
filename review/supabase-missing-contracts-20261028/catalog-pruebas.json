@@ -1,0 +1,1034 @@
+{
+  "functions": [
+    {
+      "name": "inv_totals",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "private",
+      "returns": "jsonb",
+      "arg_names": [
+        "clinic",
+        "shift",
+        "start_time",
+        "end_time"
+      ],
+      "signature": "private.inv_totals(uuid,uuid,timestamp with time zone,timestamp with time zone)",
+      "source_md5": "a5621cd705f5d0af3aeb58418ae2abba",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": false
+    },
+    {
+      "name": "backup_workspace",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.backup_workspace(uuid)",
+      "source_md5": "ed0c5e66cb33136f35de7ef8a18b73f8",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "clinic_export",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "text",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.clinic_export(uuid)",
+      "source_md5": "17b5677cefc2eec535774b42b7fbda62",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "clinic_statistics",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.clinic_statistics(uuid)",
+      "source_md5": "6eb9bf0bcba1c723e91e577b49edddb6",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "commission_account",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.commission_account(uuid)",
+      "source_md5": "6376cd7c49f3a5e7fe6fe2f81590cacd",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "commission_period_pay",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "uuid",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.commission_period_pay(uuid)",
+      "source_md5": "6ade29ac5f0c1115a9b2844c10aaf292",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "inv_ai_insights",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.inv_ai_insights(uuid)",
+      "source_md5": "a10ccf37d03bc779e662d510e74c446c",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "inv_dashboard",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.inv_dashboard(uuid)",
+      "source_md5": "49017620f7d8f975b93b65b6d571812a",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "inv_sale_reverse",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "uuid",
+      "arg_names": [
+        "p_sale",
+        "p_shift",
+        "p_reason",
+        "p_operation"
+      ],
+      "signature": "public.inv_sale_reverse(uuid,uuid,text,text)",
+      "source_md5": "3381bb7a26bcefd2c196ae4fcf16636f",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "inv_shift_snapshot",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_shift"
+      ],
+      "signature": "public.inv_shift_snapshot(uuid)",
+      "source_md5": "d0c01128d85aee2e04544046c8cd5db4",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "ops_commission_account",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic",
+        "p_offset"
+      ],
+      "signature": "public.ops_commission_account(uuid,integer)",
+      "source_md5": "2f7b2923778f2d9520047b68423bcaa7",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "ops_commission_settle",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "uuid",
+      "arg_names": [
+        "p_clinic",
+        "p_act",
+        "p_method",
+        "p_reference",
+        "p_operation"
+      ],
+      "signature": "public.ops_commission_settle(uuid,uuid,text,text,text)",
+      "source_md5": "6f97fad7f846248edb818a0199029a6b",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "ops_medical",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic",
+        "p_details",
+        "p_consent"
+      ],
+      "signature": "public.ops_medical(uuid,jsonb,boolean)",
+      "source_md5": "4958f6d51a3c943a6379cdf115b65454",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "rx_vial_close",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "uuid",
+      "arg_names": [
+        "p_id",
+        "p_measured",
+        "p_reason",
+        "p_operation"
+      ],
+      "signature": "public.rx_vial_close(uuid,text,text,text)",
+      "source_md5": "97ab40eb2447032d3e8b5c09828f6c6c",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "rx_vials",
+      "config": [
+        "search_path=\"\""
+      ],
+      "schema": "public",
+      "returns": "jsonb",
+      "arg_names": [
+        "p_clinic"
+      ],
+      "signature": "public.rx_vials(uuid)",
+      "source_md5": "0f9ad484e953b678c5a8eee2ae78bcaf",
+      "anon_execute": false,
+      "security_definer": true,
+      "authenticated_execute": true
+    }
+  ],
+  "relations": [
+    {
+      "schema": "private",
+      "name": "ai_context_sources"
+    },
+    {
+      "schema": "private",
+      "name": "ai_credentials"
+    },
+    {
+      "schema": "private",
+      "name": "ai_daily_usage"
+    },
+    {
+      "schema": "private",
+      "name": "attendance_secrets"
+    },
+    {
+      "schema": "private",
+      "name": "beta_audit"
+    },
+    {
+      "schema": "private",
+      "name": "beta_builds"
+    },
+    {
+      "schema": "private",
+      "name": "beta_email_approvals"
+    },
+    {
+      "schema": "private",
+      "name": "beta_enrollments"
+    },
+    {
+      "schema": "private",
+      "name": "beta_integration_receipts"
+    },
+    {
+      "schema": "private",
+      "name": "beta_invites"
+    },
+    {
+      "schema": "private",
+      "name": "beta_policy"
+    },
+    {
+      "schema": "private",
+      "name": "beta_privacy_notices"
+    },
+    {
+      "schema": "private",
+      "name": "beta_release_policy"
+    },
+    {
+      "schema": "private",
+      "name": "beta_session_builds"
+    },
+    {
+      "schema": "private",
+      "name": "beta_sponsor_events"
+    },
+    {
+      "schema": "private",
+      "name": "beta_terms"
+    },
+    {
+      "schema": "private",
+      "name": "beta_workspace_grants"
+    },
+    {
+      "schema": "private",
+      "name": "clinic_responsible_designations"
+    },
+    {
+      "schema": "private",
+      "name": "clinical_case_intakes"
+    },
+    {
+      "schema": "private",
+      "name": "clinical_rapid_tests"
+    },
+    {
+      "schema": "private",
+      "name": "clinical_scope_bindings"
+    },
+    {
+      "schema": "private",
+      "name": "clinical_scope_revocations"
+    },
+    {
+      "schema": "private",
+      "name": "death_attestations"
+    },
+    {
+      "schema": "private",
+      "name": "form_artifacts"
+    },
+    {
+      "schema": "private",
+      "name": "form_authorship_attestations"
+    },
+    {
+      "schema": "private",
+      "name": "form_flow_artifacts"
+    },
+    {
+      "schema": "private",
+      "name": "form_flow_events"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_automation_runtime"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_care_results"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_daily_orders"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_delivery_targets"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_isolation_areas"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_isolations"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_notice_deliveries"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_notice_responses"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_notice_routes"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_notices"
+    },
+    {
+      "schema": "private",
+      "name": "hospital_order_stops"
+    },
+    {
+      "schema": "private",
+      "name": "member_job_labels"
+    },
+    {
+      "schema": "private",
+      "name": "member_permission_grants"
+    },
+    {
+      "schema": "private",
+      "name": "permission_catalog"
+    },
+    {
+      "schema": "private",
+      "name": "permission_policy"
+    },
+    {
+      "schema": "private",
+      "name": "permission_revocations"
+    },
+    {
+      "schema": "private",
+      "name": "platform_admins"
+    },
+    {
+      "schema": "private",
+      "name": "prescription_consultation_attestations"
+    },
+    {
+      "schema": "private",
+      "name": "procedure_types"
+    },
+    {
+      "schema": "private",
+      "name": "professional_profile_versions"
+    },
+    {
+      "schema": "private",
+      "name": "professional_revocations"
+    },
+    {
+      "schema": "private",
+      "name": "professional_verifications"
+    },
+    {
+      "schema": "private",
+      "name": "reward_policy"
+    },
+    {
+      "schema": "private",
+      "name": "rx_artifacts"
+    },
+    {
+      "schema": "private",
+      "name": "rx_standing_acceptances"
+    },
+    {
+      "schema": "private",
+      "name": "rx_standing_events"
+    },
+    {
+      "schema": "private",
+      "name": "rx_standing_reviews"
+    },
+    {
+      "schema": "private",
+      "name": "starter_ai_config"
+    },
+    {
+      "schema": "private",
+      "name": "starter_ai_global_usage"
+    },
+    {
+      "schema": "private",
+      "name": "starter_ai_requests"
+    },
+    {
+      "schema": "private",
+      "name": "starter_ai_user_usage"
+    },
+    {
+      "schema": "private",
+      "name": "support_operator_audit"
+    },
+    {
+      "schema": "private",
+      "name": "support_operators"
+    },
+    {
+      "schema": "private",
+      "name": "team_duty_cancellations"
+    },
+    {
+      "schema": "private",
+      "name": "team_duty_entries"
+    },
+    {
+      "schema": "private",
+      "name": "vet_operation_receipts"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_catalogos_laboratorios_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_indice_ingredientes_comerciales_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_indice_principios_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_inventario_comercial_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_mederilab_catalogo_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_productos_componentes_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_qwen_dosis_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_qwen_farmacos_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_qwen_marcas_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_relacion_productos_principios_revision"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_virbac_producto_activos"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_virbac_producto_dosis"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_virbac_producto_dosis_activos"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_virbac_producto_tiempos_espera"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_virbac_productos"
+    },
+    {
+      "schema": "private",
+      "name": "vetdosis_zoetis_holland_catalogo_revision"
+    },
+    {
+      "schema": "private",
+      "name": "workspace_usage"
+    },
+    {
+      "schema": "public",
+      "name": "F\u00e1rmacos"
+    },
+    {
+      "schema": "public",
+      "name": "F\u00e1rmacos personalizados"
+    },
+    {
+      "schema": "public",
+      "name": "account_identity"
+    },
+    {
+      "schema": "public",
+      "name": "account_workspaces"
+    },
+    {
+      "schema": "public",
+      "name": "ai_chats"
+    },
+    {
+      "schema": "public",
+      "name": "ai_connections"
+    },
+    {
+      "schema": "public",
+      "name": "ai_messages"
+    },
+    {
+      "schema": "public",
+      "name": "ai_requests"
+    },
+    {
+      "schema": "public",
+      "name": "attendance_consents"
+    },
+    {
+      "schema": "public",
+      "name": "attendance_corrections"
+    },
+    {
+      "schema": "public",
+      "name": "attendance_events"
+    },
+    {
+      "schema": "public",
+      "name": "attendance_settings"
+    },
+    {
+      "schema": "public",
+      "name": "audit_log"
+    },
+    {
+      "schema": "public",
+      "name": "case_staff_assignments"
+    },
+    {
+      "schema": "public",
+      "name": "catalog_review_reports"
+    },
+    {
+      "schema": "public",
+      "name": "catalog_review_status_history"
+    },
+    {
+      "schema": "public",
+      "name": "client_loyalty_balances"
+    },
+    {
+      "schema": "public",
+      "name": "client_loyalty_movements"
+    },
+    {
+      "schema": "public",
+      "name": "client_marketing_preferences"
+    },
+    {
+      "schema": "public",
+      "name": "client_service_contact_preferences"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_appointments"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_attendance_schedule"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_commission_payments"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_commission_schedule"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_document_settings"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_experience_settings"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_invitations"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_members"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_messages"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_private_messages"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_productivity_profiles"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_professional_authorizations"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_promotions"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_service_acts"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_service_commission_settlements"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_services"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_staff_contacts"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_suppliers"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_task_routines"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_tasks"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_week_plan_batches"
+    },
+    {
+      "schema": "public",
+      "name": "clinic_week_plans"
+    },
+    {
+      "schema": "public",
+      "name": "clinical_cases"
+    },
+    {
+      "schema": "public",
+      "name": "clinical_death_records"
+    },
+    {
+      "schema": "public",
+      "name": "clinical_observations"
+    },
+    {
+      "schema": "public",
+      "name": "clinical_procedure_acts"
+    },
+    {
+      "schema": "public",
+      "name": "clinical_vital_sets"
+    },
+    {
+      "schema": "public",
+      "name": "clinics"
+    },
+    {
+      "schema": "public",
+      "name": "controlled_drug_report_items"
+    },
+    {
+      "schema": "public",
+      "name": "controlled_drug_reports"
+    },
+    {
+      "schema": "public",
+      "name": "controlled_drug_reviews"
+    },
+    {
+      "schema": "public",
+      "name": "dose_personal_entries"
+    },
+    {
+      "schema": "public",
+      "name": "form_documents"
+    },
+    {
+      "schema": "public",
+      "name": "form_signatures"
+    },
+    {
+      "schema": "public",
+      "name": "form_template_versions"
+    },
+    {
+      "schema": "public",
+      "name": "form_templates"
+    },
+    {
+      "schema": "public",
+      "name": "hospital_stays"
+    },
+    {
+      "schema": "public",
+      "name": "hospital_tasks"
+    },
+    {
+      "schema": "public",
+      "name": "inventario"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_application_charges"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_application_tariffs"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_cash_movements"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_cash_shifts"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_catalog_service_sales"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_clinic_settings"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_delivery_grants"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_delivery_revocations"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_delivery_tickets"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_dispensing_limits"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_invoice_requests"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_order_approvals"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_order_drafts"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_sale_lines"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_sale_reversals"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_sales"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_stock_movements"
+    },
+    {
+      "schema": "public",
+      "name": "inventory_vial_links"
+    },
+    {
+      "schema": "public",
+      "name": "lotes_inventario"
+    },
+    {
+      "schema": "public",
+      "name": "medication_product_versions"
+    },
+    {
+      "schema": "public",
+      "name": "medication_records"
+    },
+    {
+      "schema": "public",
+      "name": "medication_vial_movements"
+    },
+    {
+      "schema": "public",
+      "name": "medication_vial_reconciliations"
+    },
+    {
+      "schema": "public",
+      "name": "medication_vials"
+    },
+    {
+      "schema": "public",
+      "name": "payment_reconciliations"
+    },
+    {
+      "schema": "public",
+      "name": "payment_transactions"
+    },
+    {
+      "schema": "public",
+      "name": "person_procedure_authorizations"
+    },
+    {
+      "schema": "public",
+      "name": "person_procedure_revocations"
+    },
+    {
+      "schema": "public",
+      "name": "prescription_items"
+    },
+    {
+      "schema": "public",
+      "name": "prescriptions"
+    },
+    {
+      "schema": "public",
+      "name": "preventive_appointment_links"
+    },
+    {
+      "schema": "public",
+      "name": "preventive_evidence"
+    },
+    {
+      "schema": "public",
+      "name": "preventive_plan_retirements"
+    },
+    {
+      "schema": "public",
+      "name": "preventive_plans"
+    },
+    {
+      "schema": "public",
+      "name": "professional_delegation_revocations"
+    },
+    {
+      "schema": "public",
+      "name": "professional_delegations"
+    },
+    {
+      "schema": "public",
+      "name": "professional_profiles"
+    },
+    {
+      "schema": "public",
+      "name": "reward_credits"
+    },
+    {
+      "schema": "public",
+      "name": "rx_regulatory_versions"
+    },
+    {
+      "schema": "public",
+      "name": "staff_display_names"
+    },
+    {
+      "schema": "public",
+      "name": "staff_medical_profiles"
+    },
+    {
+      "schema": "public",
+      "name": "subscription_grants"
+    },
+    {
+      "schema": "public",
+      "name": "subscription_payments"
+    },
+    {
+      "schema": "public",
+      "name": "subscription_plans"
+    },
+    {
+      "schema": "public",
+      "name": "subscription_requests"
+    },
+    {
+      "schema": "public",
+      "name": "subscription_revocations"
+    },
+    {
+      "schema": "public",
+      "name": "support_attachments"
+    },
+    {
+      "schema": "public",
+      "name": "support_messages"
+    },
+    {
+      "schema": "public",
+      "name": "support_tickets"
+    },
+    {
+      "schema": "public",
+      "name": "terms_acceptances"
+    },
+    {
+      "schema": "public",
+      "name": "vet_owners"
+    },
+    {
+      "schema": "public",
+      "name": "vet_patient_events"
+    },
+    {
+      "schema": "public",
+      "name": "vet_patients"
+    }
+  ],
+  "server_version": "17.11",
+  "profile": "observed-test-catalog",
+  "project_ref": "wtrelwtztkddfktrfdpb",
+  "observed_at_utc": "2026-10-28"
+}

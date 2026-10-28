@@ -1,0 +1,16 @@
+name: Validar actualización incremental de contratos
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s scripts/supabase -p test_missing_contracts.py -v
+      - run: python3 scripts/supabase/missing_contracts_local_test.py
