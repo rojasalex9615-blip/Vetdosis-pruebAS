@@ -1,0 +1,38 @@
+name: Validar integración local Pequeñas especies
+on:
+  pull_request:
+    paths:
+      - 'scripts/validation/**'
+      - 'supabase/tests/run_small_animal_integration.sh'
+      - 'supabase/tests/small_animal_integration.sql'
+      - 'supabase/tests/run_patient_appointment_integration.sh'
+      - 'supabase/tests/run_restore_preview_staging.sh'
+      - '.github/workflows/validate-small-animal-integration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Preparar renderer con lockfile existente
+        run: |
+          npm ci --prefix supabase --ignore-scripts
+          if ! command -v pdftotext >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y poppler-utils
+          fi
+      - name: Ensayar contratos, aislamiento, respaldo y PDF sin servicios remotos
+        run: python3 scripts/validation/validate_small_animals.py --output build/small-animals-validation
+      - name: Conservar resultados sintéticos
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: small-animals-local-validation-${{ github.sha }}
+          path: build/small-animals-validation/
+          if-no-files-found: error
+          retention-days: 7

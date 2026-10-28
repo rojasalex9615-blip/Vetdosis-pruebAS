@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'ai_labels.dart';
 import 'starter_help_panel.dart';
 import 'dart:convert';
@@ -16,14 +17,20 @@ class AiScreen extends StatefulWidget {
     required this.repository,
     required this.member,
     this.initialDraft,
+    this.draftTitle = 'Ayuda de soporte',
+    this.returnDraft = false,
     this.canManageWorkspace = false,
     this.configurationOnly = false,
+    this.preferredProvider,
   });
   final AiRepository repository;
   final ClinicMembership member;
   final String? initialDraft;
+  final String draftTitle;
+  final bool returnDraft;
   final bool canManageWorkspace;
   final bool configurationOnly;
+  final String? preferredProvider;
   @override
   State<AiScreen> createState() => _AiScreenState();
 }
@@ -44,7 +51,32 @@ class _AiScreenState extends State<AiScreen> {
       composer.text = widget.initialDraft!;
       initializeSupportChat();
     } else {
-      vm.load();
+      vm.load().then((_) => selectPreferredConnection());
+    }
+  }
+
+  Future<void> selectPreferredConnection() async {
+    if (!mounted || widget.configurationOnly || connection != null ||
+        widget.preferredProvider == null) {
+      return;
+    }
+    final candidates = vm.rows('connections').where(
+      (row) => row['provider'] == widget.preferredProvider,
+    );
+    if (candidates.isEmpty) return; // Never select a missing key.
+    final id = candidates.first['id'] as String;
+    try {
+      final available = await widget.repository.models(id);
+      if (mounted && connection == null) {
+        setState(() {
+          connection = id;
+          modelOptions = available;
+          model = null; // The user must choose the model and consent.
+          consent = false;
+        });
+      }
+    } catch (_) {
+      // An expired or revoked provider is not silently substituted.
     }
   }
 
@@ -52,7 +84,7 @@ class _AiScreenState extends State<AiScreen> {
     await run(() async {
       final id = await widget.repository.create(
         widget.member.clinicId,
-        'Ayuda de soporte',
+        widget.draftTitle,
         newOperationId(),
       );
       await vm.load(chat: id);
@@ -319,7 +351,7 @@ class _AiScreenState extends State<AiScreen> {
                   Wrap(
                     children: [
                       for (final r in ClinicRole.values)
-                        FilterChip(
+                        glowChip(FilterChip(
                           label: Text(r.label),
                           selected: audience.contains(r.name),
                           onSelected: (yes) => set(
@@ -327,7 +359,7 @@ class _AiScreenState extends State<AiScreen> {
                                 ? audience.add(r.name)
                                 : audience.remove(r.name),
                           ),
-                        ),
+                        )),
                     ],
                   ),
                 const Text(
@@ -533,6 +565,12 @@ class _AiScreenState extends State<AiScreen> {
                           : 'Usuario',
                     ),
                     SelectableText(m['body'] as String),
+                    if (widget.returnDraft && m['role'] == 'assistant')
+                      TextButton.icon(
+                        onPressed: working ? null : () => Navigator.pop(context, m['body'] as String),
+                        icon: const Icon(Icons.edit_note),
+                        label: const Text('Usar como borrador editable'),
+                      ),
                   ],
                 ),
               ),

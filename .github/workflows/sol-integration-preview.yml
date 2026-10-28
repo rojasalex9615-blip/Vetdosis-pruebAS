@@ -1,0 +1,126 @@
+name: "PREVIEW NO DISTRIBUIR - VetDosis Sol y Clinica"
+on:
+  push:
+    branches:
+      - integration/sol6-sol61-visual-preview-20261026
+      - integration/consolidation-20261026
+      - feature/drive-encrypted-backup-20261026
+      - fix/integration-review-blockers-20261026
+      - feature/grok-manufacturer-vademecum-20261027
+      - fix/hospital-token-refresh-20261027
+      - fix/hospital-target-revocation-20261027
+      - fix/hospital-runtime-fcm-cache-20261027
+      - feature/commission-recovery-20261027
+      - feature/partial-product-returns-20261027
+      - feature/installments-service-returns-20261027
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vetdosis-sol-preview-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test --timeout 5m --concurrency 2
+  backend-local-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s scripts/supabase -p 'test_encrypted_storage_backup.py'
+      - run: python3 -m unittest discover -s scripts/supabase -p 'test_restore_database_backup_isolated.py'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: node --test supabase/tests/hospital_delivery.test.mjs supabase/tests/hospital_dispatch_auth.test.mjs supabase/tests/hospital_fcm_token.test.mjs
+      - name: Probar abonos, devoluciones, comisiones y respaldo financiero
+        run: bash supabase/tests/run_installments_service_returns.sh
+      - name: Probar revocacion, reintentos y permisos en PostgreSQL aislado
+        run: HOSPITAL_TEST_CHANNELS=1 HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
+  android-preview:
+    needs: [flutter-qa, backend-local-qa]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Guardar procedencia del build
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -f lib/modules/clinic_experience/presentation/clinic_experience_screen.dart
+          test -f lib/modules/hospital/application/hospital_push_service.dart
+          test -f lib/modules/operations/presentation/service_commission_panel.dart
+          test -f scripts/supabase/encrypted_storage_backup.py
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Verified SHA: $GITHUB_SHA"
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Crear configuracion de pruebas sin exponer la clave
+        env:
+          TEST_PUBLISHABLE_KEY: ${{ vars.SUPABASE_TEST_PUBLISHABLE_KEY || secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          # Public Supabase client key from Pruebas; not a service_role secret.
+          # CI var/secret overrides the fallback if configured.
+          key=os.environ.get("TEST_PUBLISHABLE_KEY","").strip() or 'sb_publishable_8IHRZcv_Dvs65VMv4N-I7A_xD5ckZLF'
+          if key and not key.startswith("sb_publishable_"):
+              raise SystemExit("Invalid public test key")
+          Path("supabase/config.preview.local.json").write_text(json.dumps({
+            "SUPABASE_URL":"https://wtrelwtztkddfktrfdpb.supabase.co",
+            "SUPABASE_PUBLISHABLE_KEY": key,
+            "SUPABASE_EXISTING_SCHEMA": True,
+            "SUPABASE_GOOGLE_ENABLED": False
+          }))
+          if not key:
+              print("PREVIEW SIN SESION: clave publicable ausente en este repositorio")
+          PY
+      - name: Compilar APK de DEPURACION, sin firmar para beta ni publicar
+        run: >
+          flutter build apk --debug --flavor beta
+          --target-platform android-arm64
+          --dart-define=APP_CHANNEL=beta
+          --dart-define-from-file=supabase/config.preview.local.json
+      - name: Escribir manifest de fuentes
+        shell: bash
+        run: |
+          python3 scripts/build/preview_manifest.py
+          (cd build && sha256sum app/outputs/flutter-apk/app-beta-debug.apk > preview/SHA256SUMS.txt)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vetdosis-sol6-sol61-preview-NO-DISTRIBUIR
+          path: |
+            build/app/outputs/flutter-apk/app-beta-debug.apk
+            build/preview/BUILD-SOURCES.json
+            build/preview/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7

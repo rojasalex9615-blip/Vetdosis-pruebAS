@@ -1,4 +1,7 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
+import '../../calculations/data/reference_library_repository.dart';
+import '../../calculations/presentation/reference_library_screen.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart' show newOperationId;
 import 'clinical_models.dart';
@@ -14,6 +17,7 @@ class ClinicalVitalsScreen extends StatefulWidget {
     required this.caseData,
     this.latestWeight,
     this.referenceCatalog,
+    this.referenceLibrary,
   });
 
   final ClinicalRepository repository;
@@ -21,6 +25,7 @@ class ClinicalVitalsScreen extends StatefulWidget {
   final ClinicalCase caseData;
   final String? latestWeight;
   final VitalReferenceCatalog? referenceCatalog;
+  final ReferenceLibraryRepository? referenceLibrary;
 
   @override
   State<ClinicalVitalsScreen> createState() => _ClinicalVitalsScreenState();
@@ -283,13 +288,13 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             runSpacing: 8,
             children: [
               for (final option in options.entries)
-                ChoiceChip(
+                glowChip(ChoiceChip(
                   label: Text(option.value),
                   selected: value == option.key,
                   onSelected: busy
                       ? null
                       : (selected) => changed(selected ? option.key : null),
-                ),
+                )),
             ],
           ),
         ],
@@ -561,6 +566,15 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                                 'del catálogo ${widget.referenceCatalog!.version}. Estar dentro '
                                 'de un rango de referencia no equivale a un diagnóstico.',
                       ),
+                      if (widget.referenceLibrary != null)
+                        TextButton.icon(
+                          onPressed: () => Navigator.push<void>(context, MaterialPageRoute(builder: (_) => ReferenceLibraryScreen(
+                            repository: widget.referenceLibrary!,
+                            clinicId: widget.member.clinicId,
+                          ))),
+                          icon: const Icon(Icons.menu_book_outlined),
+                          label: const Text('Consultar referencias fisiológicas'),
+                        ),
                     ],
                   ),
                 ),

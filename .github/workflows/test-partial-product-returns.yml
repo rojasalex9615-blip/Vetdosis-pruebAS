@@ -1,0 +1,21 @@
+name: Validar devoluciones parciales de productos
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/*partial_product_returns.sql'
+      - 'supabase/tests/*partial_product*'
+      - 'supabase/tests/run_permission_clinic_operations.sh'
+      - 'lib/modules/inventory/**'
+      - 'test/partial_product_return_test.dart'
+      - '.github/workflows/test-partial-product-returns.yml'
+permissions:
+  contents: read
+jobs:
+  partial-returns-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_partial_product_returns.sh

@@ -1,4 +1,9 @@
+import 'credit_accounts_screen.dart';
+import 'partial_return_screen.dart';
+import '../../../core/widgets/neu_record_card.dart';
 import '../../identity/domain/identity_repository.dart';
+import '../../ai/domain/ai_repository.dart';
+import 'inventory_insights_screen.dart';
 import '../../exports/domain/branded_export.dart';
 import '../../exports/presentation/branded_export_action.dart';
 import 'payments_screen.dart';
@@ -8,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../doses/domain/quantity.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
@@ -26,8 +32,10 @@ class InventoryScreen extends StatefulWidget {
     this.identity,
     this.initialSearch = '',
     this.initialSection = 'stock',
+    this.ai,
   });
   final InventoryRepository repository;
+  final AiRepository? ai;
   final ClinicMembership member;
   final IdentityRepository? identity;
   final String initialSearch;
@@ -71,6 +79,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
     searchController.dispose();
     model.dispose();
     super.dispose();
+  }
+
+  Future<void> inventoryIdeas() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => InventoryInsightsScreen(
+          repository: widget.repository,
+          member: widget.member,
+          ai: widget.ai,
+        ),
+      ),
+    );
   }
 
   Future<void> entry(
@@ -384,12 +405,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> sale() async {
+    var loading = 'cargos y entregas';
     try {
       final workflow = Map<String, dynamic>.from(
         await widget.repository.read('inv_workflow_dashboard', {
           'p_clinic': widget.member.clinicId,
         }),
       );
+      loading = 'servicios del catálogo';
+      var catalogServices = <Map<String, dynamic>>[];
+      var catalogUnavailable = false;
+      if (model.canManual) {
+        try {
+          catalogServices =
+              (await widget.repository.read('inv_catalog_services', {
+                        'p_clinic': widget.member.clinicId,
+                      })
+                      as List)
+                  .map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList();
+        } on PostgrestException catch (e) {
+          if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+          catalogUnavailable = true;
+        }
+      }
+      loading = 'servicios pendientes de cobro';
       final operations = model.managementKnown
           ? {
               'acts': await widget.repository.read('inv_billable_services', {
@@ -408,6 +448,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
         MaterialPageRoute(
           builder: (_) => SaleScreen(
             repository: widget.repository,
+            clinicName: widget.member.clinicName,
+            creditSupported: model.dashboard?['credit_supported'] == true,
+            actor: widget.member.userId,
             shift: model.ownShift!['id'],
             products: model.dispensingKnown && !model.canDispense
                 ? model.products
@@ -416,6 +459,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 : model.products,
             prescriptions: model.rows('prescription_items'),
             staff: model.rows('staff'),
+            services: catalogServices,
+            catalogUnavailable: catalogUnavailable,
+            canUpdateCatalog: widget.member.role == ClinicRole.admin,
             charges: (workflow['charges'] as List? ?? [])
                 .map((e) => Map<String, dynamic>.from(e))
                 .toList(),
@@ -430,6 +476,70 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
       );
       if (result == true && mounted) await model.load();
+    } catch (e) {
+      if (mounted) {
+        final detail = switch (e) {
+          PostgrestException(:final code) when code != null =>
+            ' (código $code)',
+          ArgumentError() => ' (operación no disponible en esta versión)',
+          TypeError() => ' (respuesta inesperada)',
+          _ => '',
+        };
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error al cargar $loading$detail. ${inventoryError(e)}',
+            ),
+            duration: const Duration(seconds: 10),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> invoiceRequests() async {
+    try {
+      final requests =
+          (await widget.repository.read('inv_invoice_requests', {
+                    'p_clinic': widget.member.clinicId,
+                  })
+                  as List)
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Solicitudes de factura'),
+          content: SizedBox(
+            width: 420,
+            height: 400,
+            child: requests.isEmpty
+                ? const Text('Aún no hay solicitudes de CFDI.')
+                : ListView.builder(
+                    itemCount: requests.length,
+                    itemBuilder: (_, index) {
+                      final request = requests[index];
+                      return ListTile(
+                        title: Text(
+                          '${request['fiscal_name']} · ${request['status']}',
+                        ),
+                        subtitle: Text(
+                          'RFC ${request['rfc']} · ${request['email']}\nVenta ${request['sale_id']} · ${displayMoney(request['total'])}',
+                        ),
+                        isThreeLine: true,
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -505,6 +615,44 @@ class _InventoryScreenState extends State<InventoryScreen> {
       });
     },
   );
+  Future<void> creditAccounts() async {
+    final selectedModel = model;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreditAccountsScreen(
+          repository: widget.repository,
+          member: widget.member,
+          shift: selectedModel.ownShift!['id'] as String,
+          canReturn: selectedModel.canReverse,
+        ),
+      ),
+    );
+    if (mounted && selectedModel == model) await model.load();
+  }
+
+  Future<void> partialReturn(String sale) async {
+    final selectedModel = model;
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PartialReturnScreen(
+          repository: widget.repository,
+          member: widget.member,
+          sale: sale,
+          shift: selectedModel.ownShift!['id'] as String,
+        ),
+      ),
+    );
+    if (mounted && selectedModel == model) {
+      final cutId = selectedModel.cut?['shift_id'];
+      await selectedModel.load();
+      if (cutId is String && mounted && selectedModel == model) {
+        await selectedModel.readCut(cutId);
+      }
+    }
+  }
+
   Future<void> reverse(String id) => entry(
     'Reverso: productos al lote; aplicaciones no se deshacen',
     [
@@ -735,12 +883,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       for (final e in {
-        'gross': 'Ventas menos reversos',
-        'cash': 'Efectivo por ventas/reversos',
+        'gross': 'Ventas netas (incluye saldos por cobrar)',
+        'cash': 'Efectivo recibido menos reembolsos',
         'card': 'Tarjeta',
         'transfer': 'Transferencia',
         'cost': 'Costo de mercancía/servicios',
-        'commission': 'Comisiones',
+        'commission': 'Comisiones del equipo (internas; no se suman al cobro)',
         'margin': 'Margen después de costos y comisiones',
         'expense': 'Gastos capturados en efectivo',
         'recorded_net': 'Resultado con gastos capturados',
@@ -752,7 +900,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             '${e.value}: ${Money.parse(t[e.key] as String, signed: true).display}',
           ),
       const Text(
-        'El resultado no acredita que todos los gastos ni costos pendientes estén incluidos. Ingresos y retiros no se cuentan como ventas/utilidad.',
+        'Las ventas incluyen saldos por cobrar. Los medios muestran pagos recibidos menos reembolsos. El resultado no acredita que todos los gastos ni costos pendientes estén incluidos. Ingresos y retiros no se cuentan como ventas/utilidad.',
       ),
     ],
   );
@@ -774,6 +922,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 onPressed: model.busy ? null : model.load,
                 child: const Text('Actualizar'),
               ),
+              if (model.canPrepareOrder || model.canReadFinance)
+                TextButton.icon(
+                  onPressed: inventoryIdeas,
+                  icon: const Icon(Icons.auto_awesome),
+                  label: const Text(
+                    'Analizar existencias, caducidades y ventas',
+                  ),
+                ),
               if (model.canManage)
                 TextButton(
                   onPressed: model.busy
@@ -941,7 +1097,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 }
                 return true;
               }))
-                Card(
+                NeuRecordCard(
+                  color: const Color(0xFF51BAC6),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -1041,6 +1198,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
             ],
             if (section == 'cash') ...[
+              if (model.dashboard?['credit_supported'] == true &&
+                  model.canCollect &&
+                  model.canReadFinance &&
+                  model.ownShift != null)
+                TextButton(
+                  onPressed: creditAccounts,
+                  child: const Text('Cuentas y abonos'),
+                ),
               if (model.ownShift == null && model.canCollect)
                 FilledButton(
                   onPressed: openShift,
@@ -1067,6 +1232,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       child: const Text('Contar y cerrar turno'),
                     ),
                   ],
+                ),
+              if (model.canReadFinance)
+                TextButton.icon(
+                  onPressed: invoiceRequests,
+                  icon: const Icon(Icons.receipt_long),
+                  label: const Text('Solicitudes de factura'),
                 ),
               if (model.canReadFinance &&
                   model.dashboard!['day_totals'] != null) ...[
@@ -1104,6 +1275,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   fileName: 'corte-${model.cut!["shift_id"]}',
                   rows: () async => csvRows(cutCsv(await freshCut())),
                 ),
+                for (final r
+                    in (model.cut!['partial_returns'] as List? ?? [])
+                        .cast<Map>())
+                  ListTile(
+                    title: Text(
+                      'Cancelado ${displayMoney(r['amount'])} · Reembolsado ${displayMoney(r['refund_amount'] ?? r['amount'])}',
+                    ),
+                    subtitle: Text(
+                      '${r['quantity']} · ${r['method']} · ${r['restocked'] == true ? 'Reingresó al lote' : 'Sin reingreso al lote'}\n${r['reason']}',
+                    ),
+                  ),
                 for (final s in (model.cut!['sales'] as List).cast<Map>())
                   ListTile(
                     title: Text(
@@ -1111,10 +1293,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                     subtitle: Text('${s['created_at']} · ${s['id']}'),
                     trailing: model.canReverse && model.ownShift != null
-                        ? TextButton(
-                            onPressed: () => reverse(s['id']),
-                            child: const Text('Reverso completo'),
-                          )
+                        ? (model.cut!['partial_returns_supported'] == true)
+                              ? PopupMenuButton<String>(
+                                  tooltip: 'Acciones de venta',
+                                  onSelected: (action) {
+                                    if (action == 'partial') {
+                                      partialReturn(s['id'] as String);
+                                    } else {
+                                      reverse(s['id']);
+                                    }
+                                  },
+                                  itemBuilder: (_) => [
+                                    const PopupMenuItem(
+                                      value: 'partial',
+                                      child: Text('Devolver líneas'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'reverse',
+                                      enabled: _allowFullReverse(model.cut!, s),
+                                      child: const Text('Reverso completo'),
+                                    ),
+                                  ],
+                                )
+                              : TextButton(
+                                  onPressed: () => reverse(s['id']),
+                                  child: const Text('Reverso completo'),
+                                )
                         : null,
                   ),
               ],
@@ -1179,4 +1383,20 @@ class _InventoryScreenState extends State<InventoryScreen> {
       );
     },
   );
+}
+
+// Financial values in closed cuts stay frozen; action flags remain current.
+bool _allowFullReverse(Map<String, dynamic> cut, Map sale) {
+  final actions = cut['live_sale_actions'];
+  if (actions is List) {
+    for (final action in actions) {
+      if (action is Map && action['sale_id'] == sale['id']) {
+        return action['allow_full_reverse'] == true;
+      }
+    }
+    return false;
+  }
+  return sale['has_partial_returns'] != true &&
+      sale['is_credit'] != true &&
+      sale['use_line_returns'] != true;
 }

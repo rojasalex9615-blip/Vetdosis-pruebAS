@@ -62,7 +62,32 @@ class Repo implements CatalogRepository {
   Future<DoseCatalog> load() async => DoseCatalog.parse(jsonEncode(fixture()));
 }
 
+class ExactRepo implements CatalogRepository {
+  @override
+  Future<DoseCatalog> load() async {
+    final data = fixture();
+    data['farmacos'][0]['max'] = '1';
+    return DoseCatalog.parse(jsonEncode(data));
+  }
+}
+
 void main() {
+  test('catalog precision survives rounded display dose', () {
+    final tinyFixture = fixture();
+    tinyFixture['farmacos'][0]['min'] = '0.0000005';
+    tinyFixture['farmacos'][0]['max'] = '0.0000005';
+    final tiny = DoseCatalog.parse(jsonEncode(tinyFixture)).drugs.single;
+    final vm = DoseViewModel(Repo())
+      ..select(tiny)
+      ..selectPresentation(tiny.presentations.single);
+    // UI's display may round this value, but computation must not.
+    expect(tiny.prescribedDose, isNotNull);
+    vm.calculate('10', tiny.prescribedDose!.display(), '', '', '');
+    expect(vm.error, isNull);
+    expect(vm.result!.mass.compareTo(Quantity.parse('0.000005')), 0);
+    vm.dispose();
+  });
+
   test('Known fictitious vector: 10 kg × 2 mg/kg / 10 mg/ml', () {
     final r = calc(drug());
     expect(r.mass.display(), '20');
@@ -151,11 +176,33 @@ void main() {
       expect(() => DoseCatalog.parse(jsonEncode(m)), throwsFormatException);
     }
   });
+  test('Manual catalog search ignores accents in names and brands', () {
+    final data = fixture();
+    data['farmacos'][0]['farmaco'] = 'Ácido ficticio';
+    data['farmacos'][0]['presentaciones'][0]['nombre_comercial'] = 'Solución Única';
+    final catalog = DoseCatalog.parse(jsonEncode(data));
+    expect(catalog.search('acido').single.name, 'Ácido ficticio');
+    expect(catalog.search('unica').length, 1);
+    expect(catalog.search('SOLUCION').length, 1);
+    expect(catalog.search('acido', species: 'Otra'), isEmpty);
+  });
   test('Search by brand with species filter', () {
     final c = DoseCatalog.parse(jsonEncode(fixture()));
     expect(c.search('marca').length, 1);
     expect(c.search('marca', species: 'Otra').isEmpty, true);
   });
+  test(
+    'Only an exact dose entry can drive weight-only catalog calculation',
+    () {
+      final map = fixture();
+      map['farmacos'][0]['max'] = '1';
+      final single = DoseCatalog.parse(jsonEncode(map)).drugs.single;
+      expect(single.prescribedDose?.display(), '1');
+      map['farmacos'][0]['max'] = '2';
+      final ranged = DoseCatalog.parse(jsonEncode(map)).drugs.single;
+      expect(ranged.prescribedDose, isNull);
+    },
+  );
   test('Personal draft required fields and 100× warning', () {
     final m = fixture()['farmacos'][0] as Map<String, dynamic>;
     m['max'] = '200';
@@ -166,11 +213,11 @@ void main() {
   test(
     'Double confirmation cannot skip review and edits invalidate it',
     () async {
-      final vm = DoseViewModel(Repo());
+      final vm = DoseViewModel(ExactRepo());
       await vm.load();
       vm.select(vm.catalog!.drugs.single);
       vm.selectPresentation(vm.drug!.presentations.single);
-      vm.calculate('10', '2', '0.1', '', '');
+      vm.calculate('10', '1', '0.1', '', '');
       vm.confirm();
       expect(vm.stage, ConfirmationStage.none);
       vm.review();
@@ -202,7 +249,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: ListView(children: [DoseScreen(repository: Repo())]),
+          body: SingleChildScrollView(
+            child: DoseScreen(repository: ExactRepo()),
+          ),
         ),
       ),
     );
@@ -211,6 +260,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Fuente: Caso aritmético'), findsOneWidget);
     expect(find.text('Presentación comercial'), findsOneWidget);
+    expect(find.text('1 mg/kg · no editable'), findsOneWidget);
+    expect(find.textContaining('Dosis seleccionada (mg/kg)'), findsNothing);
+    await tester.ensureVisible(find.byType(DropdownButtonFormField<Presentation>));
+    await tester.tap(find.byType(DropdownButtonFormField<Presentation>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('Marca ficticia').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(1), '10');
+    await tester.ensureVisible(find.text('Calcular'));
+    await tester.tap(find.text('Calcular'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Volumen calculado: 1 mL'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

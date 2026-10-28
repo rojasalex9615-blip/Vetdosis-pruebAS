@@ -18,6 +18,13 @@ bash supabase/tests/permission_hospital_resolution_concurrency.sh "$container_na
 bash supabase/tests/hospital_isolation_concurrency.sh "$container_name"
 bash supabase/tests/hospital_care_results_concurrency.sh "$container_name"
 bash supabase/tests/hospital_automation_concurrency.sh "$container_name"
+if [ "${HOSPITAL_TEST_CHANNELS:-0}" = 1 ];then
+ for sql_file in supabase/proposed/14J_hospital_external_delivery.sql supabase/tests/hospital_delivery.sql supabase/proposed/14K_hospital_push_targets.sql supabase/tests/hospital_push_targets.sql supabase/tests/hospital_target_transfer.sql supabase/proposed/14L_hospital_delivery_channels.sql supabase/tests/hospital_delivery_channels.sql;do
+  docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 < "$sql_file" > "$work_dir/channels.log" 2>&1 || { echo "FAILED: $sql_file";cat "$work_dir/channels.log";exit 1; }
+ done
+ bash supabase/tests/hospital_target_transfer_concurrency.sh "$container_name"
+ echo 'Hospital delivery, target transfer, revocation and exhausted leases passed.'
+fi
 if [ "${HOSPITAL_TEST_CRON:-0}" = 1 ];then
  for sql_file in supabase/operations/hospital_scheduler.sql supabase/tests/hospital_scheduler.sql;do
   docker exec -i "$container_name" psql -U postgres -v ON_ERROR_STOP=1 < "$sql_file" > "$work_dir/cron.log" 2>&1 || { cat "$work_dir/cron.log";exit 1; }

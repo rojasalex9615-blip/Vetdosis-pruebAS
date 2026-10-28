@@ -1,3 +1,5 @@
+import 'ai_plans_test.dart' show AiFake;
+import 'package:vetdosis_pro/modules/patients/presentation/patient_form.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetdosis_pro/core/app.dart';
@@ -13,8 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/core/domain/module_access.dart';
+import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience.dart';
 import 'package:vetdosis_pro/modules/core/domain/navigation_access.dart';
 import 'package:vetdosis_pro/modules/core/presentation/module_access_boundary.dart';
+import 'package:vetdosis_pro/modules/core/presentation/section_menu.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/dashboard_view_model.dart';
 import 'package:vetdosis_pro/modules/inventory/domain/inventory_repository.dart';
 
@@ -150,6 +154,111 @@ void main() {
     model.dispose();
   });
 
+  testWidgets('clinic preference hides inventory dashboard without revoking server permission', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final authRepository = auth_fixture.FakeAuth();
+    final auth = AuthViewModel(authRepository);
+    await auth.start();
+    final model = CoreViewModel(SettingsRepository(), const AppSettings());
+    final inventory = InventoryProbe();
+    final access = ModuleAccess.read(contract(enabled: 'inventory'));
+    final hidden = ClinicExperience.defaults()
+        .withPage('Inventario', false)
+        .withPage('Escanear producto', false);
+    expect(navigationAllowed('Inventario', member, access), isTrue);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model,
+      auth: auth,
+      inventory: inventory,
+      moduleAccess: access,
+      experience: hidden,
+    )));
+    await tester.pumpAndSettle();
+    expect(find.text('Inventario'), findsNothing);
+    expect(find.textContaining('Existencias disponibles por unidad'), findsNothing);
+    expect(find.byTooltip('Escáner'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    model.dispose();
+    auth.dispose();
+    await authRepository.controller.close();
+  });
+
+  testWidgets('hidden AI module removes the header assistant shortcut', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final authRepository = auth_fixture.FakeAuth();
+    final auth = AuthViewModel(authRepository);
+    await auth.start();
+    final model = CoreViewModel(SettingsRepository(), const AppSettings());
+    final access = ModuleAccess.read(contract(enabled: 'inventory'));
+    final hidden = ClinicExperience.defaults().withPage('Asistente IA', false);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model,
+      auth: auth,
+      ai: AiFake(),
+      moduleAccess: access,
+      experience: hidden,
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Asistente IA'), findsNothing);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model, auth: auth, ai: AiFake(), moduleAccess: access,
+      experience: ClinicExperience.defaults(),
+    )));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Asistente IA'), findsOneWidget);
+
+    // Help is now in the menu, not a floating shortcut.
+    expect(find.byTooltip('Ayuda y soporte'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    model.dispose();
+    auth.dispose();
+    await authRepository.controller.close();
+  });
+
+  testWidgets('drawer receives the clinic module-visibility preferences', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final authRepository = auth_fixture.FakeAuth();
+    final auth = AuthViewModel(authRepository);
+    await auth.start();
+    final model = CoreViewModel(SettingsRepository(), const AppSettings());
+    final config = ClinicExperience.defaults().withPage('Inventario', false);
+    await tester.pumpWidget(MaterialApp(home: CoreShell(
+      model: model,
+      auth: auth,
+      moduleAccess: ModuleAccess.read(contract(enabled: 'inventory')),
+      experience: config,
+    )));
+    await tester.pumpAndSettle();
+    tester.state<ScaffoldState>(find.byType(Scaffold).first).openDrawer();
+    await tester.pumpAndSettle();
+    final drawer = find.byType(Drawer);
+    final menu = tester.widget<SectionMenu>(
+      find.descendant(of: drawer, matching: find.byType(SectionMenu)),
+    );
+    expect(menu.experience?.visible('Inventario'), isFalse);
+    await tester.enterText(
+      find.descendant(of: drawer, matching: find.byType(TextField)).first,
+      'inventario',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: drawer, matching: find.text('Inventario')),
+      findsNothing,
+    );
+    await tester.pumpWidget(const SizedBox());
+    model.dispose();
+    auth.dispose();
+    await authRepository.controller.close();
+  });
+
   testWidgets('dashboard reloads when a same-session grant arrives and clears on revocation', (
     tester,
   ) async {
@@ -173,7 +282,8 @@ void main() {
     await tester.pumpWidget(app(ModuleAccess.read(contract(enabled: 'inventory'))));
     await tester.pumpAndSettle();
     expect(inventory.reads, 1);
-    expect(find.byTooltip('Escáner'), findsOneWidget);
+    // Label OCR belongs to clinical dose permission, not inventory access.
+    expect(find.byTooltip('Escanear etiqueta para dosis'), findsNothing);
     expect(find.textContaining('Existencias disponibles por unidad'), findsOneWidget);
     await tester.pumpWidget(app(ModuleAccess.denied));
     await tester.pumpAndSettle();
@@ -214,7 +324,7 @@ void main() {
     await tester.pumpWidget(app(ModuleAccess.read(contract(enabled: 'patients'))));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Crear paciente'), 250,
-      scrollable: find.byType(Scrollable).last);
+      scrollable: find.descendant(of: find.byType(PatientForm), matching: find.byType(Scrollable)).first);
     await tester.tap(find.text('Crear paciente'));
     await tester.pumpAndSettle();
     expect(patients.writes, 1);
