@@ -10,14 +10,14 @@ class WorkflowQuarantineTest(unittest.TestCase):
     def test_no_remote_job_or_credentials_on_any_event(self):
         text = WORKFLOW.read_text()
         self.assertNotIn('SUPABASE_ACCESS_TOKEN', text)
-        self.assertNotRegex(text, r'\bsecrets\s*(?:\.|\[)')
+        self.assertNotRegex(text, r'(?i)\bsecrets\b')
         self.assertNotIn('remote-readonly:', text)
         self.assertNotRegex(text, r'python3\s+scripts/supabase/module_contract_readonly\.py')
         self.assertNotIn('pull_request_target', text)
 
     def test_secret_reference_detection_covers_dot_and_index_forms(self):
-        pattern = r'\bsecrets\s*(?:\.|\[)'
-        for expression in ["${{ secrets.AUDIT_TOKEN }}", "${{ secrets['AUDIT_TOKEN'] }}", '${{ secrets["AUDIT_TOKEN"] }}', "${{ secrets [ 'AUDIT_TOKEN' ] }}"]:
+        pattern = r'(?i)\bsecrets\b'
+        for expression in ["${{ secrets.AUDIT_TOKEN }}", "${{ secrets['AUDIT_TOKEN'] }}", '${{ secrets["AUDIT_TOKEN"] }}', "${{ secrets [ 'AUDIT_TOKEN' ] }}", "${{ toJSON(secrets) }}", "${{ secrets }}", "${{ toJSON(SeCrEtS) }}"]:
             self.assertRegex(expression, pattern)
 
     def test_local_tests_remain_and_actions_are_immutable(self):

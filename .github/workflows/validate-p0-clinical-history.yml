@@ -5,6 +5,8 @@ on:
       - 'lib/modules/doses/presentation/personal_dose_screen.dart'
       - 'lib/modules/doses/presentation/dose_label_scanner_screen.dart'
       - 'test/personal_dose_ocr_safety_test.dart'
+      - 'test/dose_label_scanner_test.dart'
+      - 'test/dose_test.dart'
       - 'supabase/migrations/*preserve_member_history.sql'
       - 'supabase/tests/*member_history*'
       - 'supabase/tests/run_permission_clinic_operations.sh'
