@@ -1,3 +1,4 @@
+import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import 'widgets/accent_glow.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
@@ -316,6 +317,7 @@ class VetDosisApp extends StatelessWidget {
               model: model,
               auth: auth,
               moduleAccess: access,
+              moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
               personalDoses: personalDoses,
               patients: patients,
@@ -366,6 +368,7 @@ class CoreShell extends StatelessWidget {
     this.subscriptions,
     this.support,
     this.moduleAccess,
+    this.moduleAccessRepository,
     this.experience,
     this.experienceRepository,
     this.experienceReady = false,
@@ -392,6 +395,7 @@ class CoreShell extends StatelessWidget {
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
   final ModuleAccess? moduleAccess;
+  final ModuleAccessRepository? moduleAccessRepository;
   final ClinicExperience? experience;
   final ClinicExperienceRepository? experienceRepository;
   final bool experienceReady;
@@ -421,24 +425,35 @@ class CoreShell extends StatelessWidget {
   Future<void> chooseDosePatient(BuildContext context) async {
     final member = auth?.active;
     if (!canChooseDosePatient || member == null) return;
-    final accessRevision = auth?.accessRevision;
-    await Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => HospitalDosePatientScreen(
-          hospital: hospital!,
-          clinical: clinical!,
-          member: member,
-          sessionChanges: auth,
-          contextIsCurrent: () =>
-              hospitalWeightContext(member) &&
-              auth?.accessRevision == accessRevision &&
-              serverAllowed('Cálculo rápido'),
-          onCalculate: (weight, validate) =>
-              hospitalWeightCalculation(context, weight, validate),
-        ),
-      ),
+    final access = HospitalCalculationAccess(
+      auth: auth!,
+      member: member,
+      initialAccess: moduleAccess,
+      repository: moduleAccessRepository,
     );
+    try {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HospitalDosePatientScreen(
+            hospital: hospital!,
+            clinical: clinical!,
+            member: member,
+            sessionChanges: access,
+            contextIsCurrent: () => access.current,
+            onCalculate: (weight, validate) => hospitalWeightCalculation(
+              context,
+              weight,
+              validate,
+              contextIsCurrent: () => access.current,
+              validateAccess: access.revalidate,
+            ),
+          ),
+        ),
+      );
+    } finally {
+      access.dispose();
+    }
   }
 
   /// Opens the calculator after rechecking session, module access, and weight.
@@ -449,23 +464,28 @@ class CoreShell extends StatelessWidget {
   Future<void> hospitalWeightCalculation(
     BuildContext context,
     RecordedPatientWeight weight,
-    Future<bool> Function(RecordedPatientWeight) validate,
-  ) async {
+    Future<bool> Function(RecordedPatientWeight) validate, {
+    bool Function()? contextIsCurrent,
+    Future<bool> Function()? validateAccess,
+  }) async {
     final member = auth?.active;
+    bool sessionCurrent() =>
+        contextIsCurrent?.call() ??
+        (member != null &&
+            hospitalWeightContext(member) &&
+            serverAllowed('Cálculo rápido'));
     if (member == null ||
-        !hospitalWeightContext(member) ||
-        member.clinicId != weight.clinicId ||
-        !serverAllowed('Cálculo rápido')) {
+        !sessionCurrent() ||
+        member.clinicId != weight.clinicId) {
       return;
     }
     Future<bool> current(RecordedPatientWeight value) async {
-      if (!hospitalWeightContext(member) || !serverAllowed('Cálculo rápido')) {
+      if (!sessionCurrent()) {
         return false;
       }
+      if (validateAccess != null && !await validateAccess()) return false;
       final valid = await validate(value);
-      return valid &&
-          hospitalWeightContext(member) &&
-          serverAllowed('Cálculo rápido');
+      return valid && sessionCurrent();
     }
 
     if (!await current(weight) || !context.mounted) return;
@@ -486,10 +506,11 @@ class CoreShell extends StatelessWidget {
               onReviewPatientInstructions:
                   hospitalAlerts != null && patients != null
                   ? (patientId) async {
-                      if (!hospitalWeightContext(member) ||
-                          !serverAllowed('Cálculo rápido')) {
+                      if (!sessionCurrent() ||
+                          (validateAccess != null && !await validateAccess())) {
                         return;
                       }
+                      if (!context.mounted || !sessionCurrent()) return;
                       // Reuse the complete hospital module, including prescription actions.
                       Navigator.of(context).popUntil((route) => route.isFirst);
                       model.navigate('Hospitalización', patientId: patientId);
@@ -599,10 +620,9 @@ class CoreShell extends StatelessWidget {
                 (model.screen == 'Inicio'
                         ? 44.0
                         : MediaQuery.textScalerOf(context).scale(
-                                Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.fontSize ??
+                                Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge?.fontSize ??
                                     22,
                               ) *
                               1.4) +

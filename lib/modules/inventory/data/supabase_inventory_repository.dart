@@ -47,6 +47,7 @@ class SupabaseInventoryRepository
     'inv_sale_reverse',
     'inv_sale_return',
     'inv_sale_return_v2',
+    'inv_sale_return_v3',
     'inv_sale_credit_post',
     'inv_sale_collect',
     'inv_cash_move',

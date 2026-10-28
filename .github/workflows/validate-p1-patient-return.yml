@@ -1,0 +1,51 @@
+name: Validar P1 de paciente y devolución
+on:
+  pull_request:
+    paths:
+      - 'lib/core/app.dart'
+      - 'lib/modules/auth/presentation/auth_view_model.dart'
+      - 'lib/modules/core/domain/module_access.dart'
+      - 'lib/modules/core/domain/navigation_access.dart'
+      - 'lib/modules/core/presentation/module_access_boundary.dart'
+      - 'lib/modules/hospital/presentation/hospital_calculation_access.dart'
+      - 'lib/modules/hospital/presentation/hospital_dose_patient_screen.dart'
+      - 'lib/modules/hospital/presentation/hospital_weight_screen.dart'
+      - 'lib/modules/hospital/presentation/hospital_weight_view_model.dart'
+      - 'lib/modules/inventory/data/supabase_inventory_repository.dart'
+      - 'lib/modules/inventory/presentation/partial_return_screen.dart'
+      - 'test/hospital_calculation_refresh_test.dart'
+      - 'test/hospital_dose_patient_test.dart'
+      - 'test/hospital_weight_test.dart'
+      - 'test/recorded_weight_calculation_test.dart'
+      - 'test/commercial_recorded_weight_test.dart'
+      - 'test/partial_product_return_test.dart'
+      - 'test/installments_service_returns_test.dart'
+      - 'test/partial_return_supabase_test.dart'
+      - '.github/workflows/validate-p1-patient-return.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  flutter-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test --no-pub test/hospital_calculation_refresh_test.dart test/hospital_dose_patient_test.dart test/hospital_weight_test.dart test/recorded_weight_calculation_test.dart test/commercial_recorded_weight_test.dart test/partial_return_supabase_test.dart test/partial_product_return_test.dart test/installments_service_returns_test.dart
+  financial-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_financial_return_freshness.sh
