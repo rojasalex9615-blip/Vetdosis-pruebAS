@@ -2,6 +2,7 @@ PASS baseline and populated retained-member history
 PASS wrong cluster identity rejected before any source
 PASS complete upgrade with ROLLBACK preserves original catalog
 PASS late failure atomically rolls back the entire upgrade
+PASS postflight detects changed OLD profile value and rollback restores it
 PASS search_path drift rejected before installation
 PASS 27 current client named-argument contracts (legacy v1/v2 replay-only)
 PASS fixture-only install and replay rejection

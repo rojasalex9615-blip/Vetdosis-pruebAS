@@ -1,13 +1,13 @@
 # Actualización incremental de contratos pendientes — Pruebas
 
-Entrega preparada para revisión e instalación autorizada. **No desplegada.**
+**Instalado y verificado en Supabase Pruebas el 2026-10-28, 11:44 UTC**, con autorización de Ale. Código aplicado: `aa5d369b8627f88e2bdc7cdcac6965d2a83046da`. Evidencia: `remote-execution.json` e `installed-contracts.json`. No reejecutar el instalador: el recibo lo rechaza.
 
 Rama `feature/supabase-missing-contracts-20261028`, base #64
 `08e87e606af5dda3c407956b85410ac0b1f3760b`. Cadena: #60 → #63 → #64 → este PR.
 Repositorio `rojasalex9615-blip/Vetdosis-pruebAS`; el repositorio con guiones es otro proyecto.
 Proyecto fijo de destino: **Pruebas**, `wtrelwtztkddfktrfdpb`, PostgreSQL 17.11.
 
-La inspección remota fue solo de metadatos, políticas de activación y asesores;
+La inspección inicial fue solo de metadatos, políticas de activación y asesores;
 no exportó registros ni ejecutó DDL. De los 233 nombres RPC referenciados por el
 cliente/repositorios/allowlists, 29 faltan en el catálogo observado. Dos son
 contratos anteriores de devolución: se incorporan exclusivamente para recuperar
@@ -97,8 +97,8 @@ transaccional probada no equivale a restauración completa del servicio ni de St
 
 ## Pruebas ejecutadas
 
-- `python3 -m unittest discover -s scripts/supabase -p 'test_*.py'`: **94 aprobadas**,
-  incluidas seis pruebas del generador incremental.
+- `python3 -m unittest discover -s scripts/supabase -p 'test_*.py'`: **96 aprobadas**,
+  incluidas ocho pruebas del generador incremental.
 - `python3 scripts/supabase/missing_contracts_local_test.py`: **aprobado** sobre
   PostgreSQL **17.11**, contenedor propio desechable con `--network none`.
   Base explícita con fixtures previos poblados; ensayo completo con ROLLBACK;
@@ -120,8 +120,8 @@ del miembro. No se oculta una pérdida de datos con el cambio de forma.
 
 El ensayo local usa las mismas 17 fuentes y lógica de comprobación, con huellas
 **sintéticas**. No es un clon de Pruebas: sus funciones preexistentes pueden tener
-otros cuerpos. El ensayo remoto del paquete observado sigue pendiente de
-autorización. La existencia de RPC no acredita equivalencia completa de todo el
+otros cuerpos. El ensayo remoto del paquete observado también pasó tras la
+autorización; se aplicó y verificó la migración registrada. La existencia de RPC no acredita equivalencia completa de todo el
 backend, QA entre clínicas con sesiones reales, ni compatibilidad REST completa.
 
 CI nueva: `validate-missing-contracts.yml`, sin credenciales ni operaciones remotas,
@@ -152,11 +152,12 @@ La relectura de #64 encontró **tres hilos nuevos sin resolver** de CodeRabbit:
 
 Se mantienen registrados como dependencias del cliente; este paquete no modifica
 esas rutas ni atribuye a CodeRabbit aprobación de #64 o del conjunto.
-Pendientes además: revisión de este PR, autorización/ensayo/instalación remota,
+Pendientes además: revisión completa de la cadena y
 pruebas HTTP con permisos explícitos y dos clínicas ficticias, QA Android, entrega
 real de avisos/FCM/WhatsApp, recuperación integral de servicio y Storage. El registro
 legal de #20 y RPBI no quedan resueltos por incorporar estos contratos. Sin cambios
-a main, despliegue, APK ni declaración de beta lista para distribución.
+a main, APK ni declaración de beta lista para distribución. El despliegue autorizado
+de este paquete en Pruebas queda detallado abajo.
 
 ## Revisión correctiva y autorización recibida
 
@@ -176,5 +177,46 @@ credencial ni sustituye seleccionar el project_id fijo en la API administrativa.
 Pruebas adicionales: rechazo de cada una de las 15 omisiones para ambas variantes,
 duplicados, identidad ausente/incorrecta y clúster distinto antes del primer source;
 **96 Python aprobadas**, actualización SQL aislada completa nuevamente aprobada.
-Flutter conserva la evidencia de la base sin cambios de código Dart. Revisión
-correctiva y ensayo del paquete nuevo todavía se registrarán por separado.
+Flutter conserva la evidencia de la base sin cambios de código Dart. El ensayo remoto corregido también pasó. La ejecución posterior queda registrada
+en el apartado siguiente.
+
+## Instalación autorizada y verificación final
+
+Migración administrativa `20261028114405_complete_pending_contracts_test_20261028`,
+recibo de plan `312dfe64c46b5668fa22a74ecc828b95d9b0b6fbb1068fb5144374927a931366`.
+Se utilizó `apply_migration` con el cuerpo ensayado dentro de la transacción del
+servicio, sustituyendo el BEGIN/COMMIT exterior por SET TRANSACTION REPEATABLE READ
+y una comprobación explícita del aislamiento. El mismo envoltorio se ensayó antes
+con BEGIN/ROLLBACK. Huella exacta de la carga en `remote-execution.json`.
+Los dos índices se crearon después, con llamadas SQL individuales fuera de
+transacción; ambos están `indisvalid=true`, `indisready=true` y tienen las
+definiciones esperadas. No se reejecutaron fuentes históricas ni se ignoraron errores.
+
+Verificación remota: **29 RPC presentes**, ejecución anónima denegada y ejecución
+autenticada disponible; **27 mapas actuales de argumentos** compatibles. Las
+14 tablas de dominio y el recibo tienen RLS, sin acceso directo de la app. Cero
+destinos de restauración y cero nuevas operaciones financieras/médicas sembradas;
+cero FK restantes hacia `clinic_members`. Valores previos preservados por las
+comprobaciones transaccionales; beta cerrada y política de permisos sin activar.
+No se concedieron permisos personales ni se realizaron importaciones clínicas.
+
+CodeRabbit resolvió el hilo de identidad. El hilo de firmas fue cerrado técnicamente
+por Codex/Sol tras las pruebas, registrado así en el comentario; eso no fue una
+aprobación atribuida al revisor. Su relectura posterior de aa5d369 terminó sin nuevos
+hallazgos bloqueantes y propuso un único **Trivial**: una prueba negativa del guard
+de conservación. Se añadió al runner: altera `staff_medical_profiles.details` solo
+en el fixture, exige `upgrade_changed_existing_data` y verifica que ROLLBACK
+restaura exactamente la huella previa, incluso al añadir consent_event_id.
+
+Asesores antes/después, comparando hallazgos por entidad sin timestamps: RLS sin
+políticas 137→152 (14 tablas y recibo, sin grants directos por diseño); funciones
+definer autenticadas 263→292 (los 29 RPC autorizados mediante sus comprobaciones);
+anónimas 4→4, search_path mutable 1→1, protección de contraseñas filtradas 1→1. No
+aparecieron nuevos hallazgos de ejecución anónima ni de search_path. Los avisos
+previos siguen registrados, sin ajustes ajenos a este paquete. Referencias de
+remediación en el apartado de seguridad y en `remote-execution.json`.
+
+Esta instalación acredita presencia, firmas, privilegios, índices y conservación
+transaccional del backend. No acredita sesiones REST de dos clínicas, flujos reales
+en Android, entrega de avisos ni recuperación completa del servicio. #64 mantiene
+sus tres observaciones de cliente/CI. No se fusionó main ni se generó APK.

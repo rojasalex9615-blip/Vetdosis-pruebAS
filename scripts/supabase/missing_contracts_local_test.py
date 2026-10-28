@@ -69,6 +69,17 @@ def main():
         assert result.returncode and 'synthetic_mid_upgrade_failure' in result.stderr
         assert_baseline(catalog)
         print('PASS late failure atomically rolls back the entire upgrade',flush=True)
+        # Prove preservation of OLD values still works when this upgrade adds
+        # consent_event_id to the same table. Inject only into owned fixtures.
+        profile_hash_sql="select md5(coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text)::text,'[]')) from public.staff_medical_profiles t;"
+        profile_before=query(profile_hash_sql).stdout
+        mutated=sql.replace('do $postflight$',
+            "update public.staff_medical_profiles set details='{\"synthetic\":\"changed\"}'::jsonb where user_id='00000000-0000-0000-0000-000000000290';\ndo $postflight$",1)
+        result=query(mutated,check=False)
+        assert result.returncode and 'upgrade_changed_existing_data: public.staff_medical_profiles' in result.stderr
+        assert query(profile_hash_sql).stdout==profile_before
+        assert_baseline(catalog)
+        print('PASS postflight detects changed OLD profile value and rollback restores it',flush=True)
         drift=sql.replace('do $preflight$',"alter function public.clinic_export(uuid) set search_path='public';\ndo $preflight$",1)
         result=query(drift,check=False)
         assert result.returncode and 'preexisting_contract_drift' in result.stderr

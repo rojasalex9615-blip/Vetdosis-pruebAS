@@ -3,8 +3,8 @@
   "base_pr": 64,
   "base_sha": "08e87e606af5dda3c407956b85410ac0b1f3760b",
   "project_ref": "wtrelwtztkddfktrfdpb",
-  "remote_schema_changed": false,
-  "remote_rehearsal_executed": false,
+  "remote_schema_changed": true,
+  "remote_rehearsal_executed": true,
   "android_qa": false,
   "flutter": {
     "passed": 685,
@@ -37,5 +37,16 @@
   "review_corrections": [
     "exact_15_signature_set",
     "runtime_cluster_database_identity"
-  ]
+  ],
+  "installed_code_sha": "aa5d369b8627f88e2bdc7cdcac6965d2a83046da",
+  "migration_version": "20261028114405",
+  "installed_rpc_count": 29,
+  "installed_named_arguments_checked": 27,
+  "installed_concurrent_indexes": 2,
+  "coderabbit_corrective_review": {
+    "completed": true,
+    "new_blocking_findings": 0,
+    "trivial_findings": 1,
+    "trivial_preservation_test_added": true
+  }
 }
