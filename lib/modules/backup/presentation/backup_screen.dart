@@ -3,6 +3,7 @@ import '../../exports/domain/branded_export.dart';
 import '../../exports/presentation/branded_export_action.dart';
 import '../domain/backup_cipher.dart';
 import '../domain/backup_recovery_report.dart';
+import '../domain/drive_backup_client.dart';
 import 'backup_password_dialog.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -13,6 +14,30 @@ import '../../auth/domain/clinic_membership.dart';
 import '../domain/backup_repository.dart';
 import '../domain/backup_archive.dart';
 import 'backup_view_model.dart';
+
+String backupOperationError(Object error) {
+  if (error is FormatException) return error.message;
+  final code = error.toString();
+  if (code.contains('drive_account_change_requires_disconnect')) {
+    return 'Primero desconecta la cuenta de Drive anterior y después conecta la nueva.';
+  }
+  if (code.contains('drive_account_mismatch')) {
+    return 'La cuenta Google activa es distinta de la vinculada a esta clínica. Reconecta la cuenta correcta.';
+  }
+  if (code.contains('drive_authorization_revoked')) {
+    return 'Google retiró el permiso de Drive. Desconecta y vuelve a autorizar esta cuenta.';
+  }
+  if (code.contains('drive_permission_or_quota')) {
+    return 'Drive rechazó la operación por permisos o espacio disponible. Revisa la cuenta Google.';
+  }
+  if (code.contains('drive_upload_unverified')) {
+    return 'Drive recibió el archivo, pero no se pudo verificar la copia descargada. Revisa los archivos de la clínica antes de volver a subirlo.';
+  }
+  if (code.contains('drive_rate_limited')) {
+    return 'Drive limitó temporalmente las solicitudes. Intenta de nuevo más tarde.';
+  }
+  return 'No se completó la operación. Revisa el archivo, la conexión y tus permisos.';
+}
 
 /// Reports what the platform picker returned, without claiming remote sync.
 @visibleForTesting
@@ -140,11 +165,13 @@ class BackupScreen extends StatefulWidget {
     super.key,
     required this.repository,
     required this.member,
+    this.drive,
     this.identity,
     this.backupOnly = false,
   });
   final BackupRepository repository;
   final ClinicMembership member;
+  final DriveBackupClient? drive;
   final IdentityRepository? identity;
   final bool backupOnly;
   @override
@@ -166,10 +193,86 @@ class _BackupScreenState extends State<BackupScreen> {
   Map<String, dynamic>? restoreOwnerApply;
   Map<String, dynamic>? restorePatientApply;
   String? result;
+  DriveConnection? driveConnection;
+  List<DriveBackupReceipt> driveHistory = const [];
   @override
   void initState() {
     super.initState();
     loadAccess();
+    loadDriveConnection();
+  }
+
+  Future<void> loadDriveConnection() async {
+    final drive = widget.drive;
+    if (drive == null || !drive.configured) return;
+    try {
+      final connection = await drive.connection(
+        widget.member.userId,
+        widget.member.clinicId,
+      );
+      if (mounted) setState(() => driveConnection = connection);
+    } catch (_) {
+      if (mounted) {
+        setState(() => result = 'No se pudo leer el vínculo local de Drive.');
+      }
+    }
+  }
+
+  Future<void> connectDrive() async {
+    final connection = await widget.drive!.connect(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (!mounted) return;
+    setState(() {
+      driveConnection = connection;
+      driveHistory = const [];
+      result =
+          'Cuenta de Drive vinculada en este dispositivo. Solo se subirán respaldos cifrados.';
+    });
+  }
+
+  Future<void> disconnectDrive() async {
+    await widget.drive!.disconnect(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (!mounted) return;
+    setState(() {
+      driveConnection = null;
+      driveHistory = const [];
+      result =
+          'Se revocó el acceso a Drive y se quitó el vínculo local. Los archivos existentes permanecen en Drive.';
+    });
+  }
+
+  Future<void> refreshDriveHistory() async {
+    final history = await widget.drive!.history(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (mounted) setState(() => driveHistory = history);
+  }
+
+  Future<void> uploadDrive() async {
+    final password = await requestBackupPassword(context, creating: true);
+    if (password == null) return;
+    final bytes = await createBackupBytes();
+    final encrypted = await compute(_encryptBackup, (bytes, password));
+    final name =
+        'vetdosis-${scope.name}-${widget.member.clinicId}-${DateTime.now().toUtc().toIso8601String().replaceAll(':', '-')}.vetbackup';
+    final receipt = await widget.drive!.uploadVerified(
+      widget.member.userId,
+      widget.member.clinicId,
+      name,
+      encrypted,
+    );
+    if (!mounted) return;
+    setState(() {
+      driveHistory = [receipt, ...driveHistory];
+      result =
+          'Respaldo cifrado guardado en Drive y verificado mediante descarga (SHA-256: ${receipt.sha256.substring(0, 12)}…). Conserva la contraseña para recuperarlo.';
+    });
   }
 
   Future<void> loadAccess() async {
@@ -248,11 +351,7 @@ class _BackupScreenState extends State<BackupScreen> {
       await f();
     } catch (e) {
       if (mounted) {
-        setState(
-          () => result = e is FormatException
-              ? e.message
-              : 'No se completó la operación. Revisa el archivo, la conexión y tus permisos.',
-        );
+        setState(() => result = backupOperationError(e));
       }
     } finally {
       if (mounted) setState(() => working = false);
@@ -264,6 +363,25 @@ class _BackupScreenState extends State<BackupScreen> {
         ? await requestBackupPassword(context, creating: true)
         : null;
     if (protect && password == null) return;
+    final bytes = await createBackupBytes();
+    final output = protect
+        ? await compute(_encryptBackup, (bytes, password!))
+        : bytes;
+    if (!mounted) return;
+    final savedFile = await FilePicker.saveFile(
+      dialogTitle: 'Guardar respaldo operacional',
+      fileName:
+          'vetdosis-${scope.name}-${widget.member.clinicId}-${DateTime.now().toUtc().toIso8601String().substring(0, 10)}.${protect ? 'vetbackup' : 'json'}',
+      mimeType: protect ? 'application/octet-stream' : 'application/json',
+      bytes: output,
+    );
+    if (!mounted) return;
+    setState(() {
+      result = manualBackupSaveStatus(savedFile: savedFile, encrypted: protect);
+    });
+  }
+
+  Future<Uint8List> createBackupBytes() async {
     final bytes = await BackupArchive.create(
       widget.repository,
       widget.member.clinicId,
@@ -283,21 +401,7 @@ class _BackupScreenState extends State<BackupScreen> {
       },
     );
     BackupArchive.verify(bytes);
-    final output = protect
-        ? await compute(_encryptBackup, (bytes, password!))
-        : bytes;
-    if (!mounted) return;
-    final savedFile = await FilePicker.saveFile(
-      dialogTitle: 'Guardar respaldo operacional',
-      fileName:
-          'vetdosis-${scope.name}-${widget.member.clinicId}-${DateTime.now().toUtc().toIso8601String().substring(0, 10)}.${protect ? 'vetbackup' : 'json'}',
-      mimeType: protect ? 'application/octet-stream' : 'application/json',
-      bytes: output,
-    );
-    if (!mounted) return;
-    setState(() {
-      result = manualBackupSaveStatus(savedFile: savedFile, encrypted: protect);
-    });
+    return bytes;
   }
 
   Future<void> csv({String format = 'csv'}) async {
@@ -895,6 +999,63 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
                   ],
                 ),
+                const Divider(),
+                const Text('Google Drive autenticado'),
+                if (widget.drive?.configured != true)
+                  const Text(
+                    'Requiere configurar el cliente OAuth web de Google para esta beta. Puedes usar el guardado manual mientras tanto.',
+                  ),
+                if (widget.drive?.configured == true) ...[
+                  Text(
+                    driveConnection == null
+                        ? 'Vincula una cuenta Google para esta clínica en este dispositivo.'
+                        : 'Cuenta vinculada en este dispositivo: ${driveConnection!.email}',
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      if (driveConnection == null)
+                        OutlinedButton(
+                          onPressed: working ? null : () => run(connectDrive),
+                          child: const Text('Conectar Drive'),
+                        )
+                      else ...[
+                        FilledButton(
+                          onPressed:
+                              ack &&
+                                  !working &&
+                                  ((scope == BackupScope.clinic &&
+                                          access!.clinic) ||
+                                      (scope == BackupScope.personal &&
+                                          access!.personal))
+                              ? () => run(uploadDrive)
+                              : null,
+                          child: const Text('Subir respaldo cifrado a Drive'),
+                        ),
+                        TextButton(
+                          onPressed: working
+                              ? null
+                              : () => run(refreshDriveHistory),
+                          child: const Text('Ver archivos de esta clínica'),
+                        ),
+                        TextButton(
+                          onPressed: working
+                              ? null
+                              : () => run(disconnectDrive),
+                          child: const Text('Desconectar y revocar acceso'),
+                        ),
+                      ],
+                    ],
+                  ),
+                  for (final entry in driveHistory.take(10))
+                    ListTile(
+                      dense: true,
+                      title: Text(entry.name),
+                      subtitle: Text(
+                        '${entry.createdAt.toLocal()} · ${entry.bytes} bytes',
+                      ),
+                    ),
+                ],
                 if (result != null) Text(result!),
                 if (restoreStage != null &&
                     access!.restorePreview &&

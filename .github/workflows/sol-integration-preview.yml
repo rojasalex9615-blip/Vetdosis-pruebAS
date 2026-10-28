@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - integration/sol6-sol61-visual-preview-20261026
+      - integration/drive-sol-visual-20261028
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,8 +38,11 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test -f lib/modules/clinic_experience/presentation/clinic_experience_screen.dart
+          test -f lib/modules/core/domain/section_catalog.dart
+          test -f android/app/src/main/res/mipmap-anydpi-v26/vetdosis_launcher.xml
           test -f lib/modules/hospital/application/hospital_push_service.dart
           test -f lib/modules/operations/presentation/service_commission_panel.dart
+          test -f lib/modules/backup/data/google_drive_backup_client.dart
           test -f scripts/supabase/encrypted_storage_backup.py
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Verified SHA: $GITHUB_SHA"
@@ -74,16 +78,19 @@ jobs:
               print("PREVIEW SIN SESION: clave publicable ausente en este repositorio")
           PY
       - name: Compilar APK de DEPURACION, sin firmar para beta ni publicar
+        env:
+          GOOGLE_DRIVE_WEB_CLIENT_ID: ${{ vars.GOOGLE_DRIVE_WEB_CLIENT_ID }}
         run: >
           flutter build apk --debug --flavor beta
           --target-platform android-arm64
           --dart-define=APP_CHANNEL=beta
+          --dart-define=GOOGLE_DRIVE_WEB_CLIENT_ID="$GOOGLE_DRIVE_WEB_CLIENT_ID"
           --dart-define-from-file=supabase/config.preview.local.json
       - name: Escribir manifest de fuentes
         shell: bash
         run: |
           mkdir -p build/preview
-          printf '{"repository":"%s","commit":"%s","source_sol":"%s","type":"debug-preview-not-for-distribution"}\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "rojasalex9615-blip/Vet-dosis-pruebas@b64ff80ca84bff29977f747c6052848da5103ad6" > build/preview/BUILD-SOURCES.json
+          printf '{"repository":"%s","commit":"%s","source_sol":"%s","source_drive":"%s","source_visual":"%s","type":"debug-preview-not-for-distribution"}\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "rojasalex9615-blip/Vet-dosis-pruebas@b64ff80ca84bff29977f747c6052848da5103ad6" "rojasalex9615-blip/Vet-dosis-pruebas@5de05e6" "rojasalex9615-blip/Vetdosis-pruebAS@abd2f22cb0aa279f7ef0ce0f3a8ffea57ef72635" > build/preview/BUILD-SOURCES.json
           sha256sum build/app/outputs/flutter-apk/app-beta-debug.apk > build/preview/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
