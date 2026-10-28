@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Opt-in decorative halo. Omitted from the application theme until approved.
+/// Shared decorative halo, enabled by the neumorphic application theme.
 class AccentGlowStyle extends ThemeExtension<AccentGlowStyle> {
   const AccentGlowStyle({this.enabled = false});
   final bool enabled;
@@ -72,4 +72,53 @@ class _AccentHalo extends CustomPainter {
   @override
   bool shouldRepaint(covariant _AccentHalo old) =>
       old.color != color || old.radius != radius || old.emphasis != emphasis;
+}
+
+/// Shared accent icon; neutral/unselected icons keep their original widget.
+class AccentIcon extends StatelessWidget {
+  const AccentIcon(
+    this.icon, {
+    super.key,
+    this.color,
+    this.size,
+    this.emphasis = 1,
+    this.enabled = true,
+  });
+  final IconData icon;
+  final Color? color;
+  final double? size;
+  final double emphasis;
+  final bool enabled;
+  @override
+  Widget build(BuildContext context) => AccentGlow(
+    color: color ?? Theme.of(context).colorScheme.primary,
+    radius: 12,
+    emphasis: emphasis,
+    enabled: enabled,
+    child: Icon(icon, color: color, size: size),
+  );
+}
+
+/// Retains the chip's key, callbacks and selected/disabled state.
+Widget glowChip(Widget chip) =>
+    _AccentChip(key: chip.key == null ? null : ValueKey(chip.key), child: chip);
+
+class _AccentChip extends StatelessWidget {
+  const _AccentChip({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    final selected = switch (child) {
+      ChoiceChip chip => chip.selected && chip.onSelected != null,
+      FilterChip chip => chip.selected && chip.onSelected != null,
+      _ => false,
+    };
+    return AccentGlow(
+      color: Theme.of(context).colorScheme.primary,
+      enabled: selected,
+      emphasis: .6,
+      radius: 16,
+      child: child,
+    );
+  }
 }

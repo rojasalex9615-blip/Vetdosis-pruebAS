@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import '../../../core/widgets/neu_header_card.dart';
@@ -369,14 +370,14 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             spacing: 8,
             children: [
               for (final p in [0, 5, 7, 8, 10, 12])
-                ChoiceChip(
+                glowChip(ChoiceChip(
                   label: Text('$p%'),
                   selected: fields['percent']!.text == '$p',
                   onSelected: (_) {
                     invalidate();
                     setState(() => fields['percent']!.text = '$p');
                   },
-                ),
+                )),
             ],
           ),
           const Text(

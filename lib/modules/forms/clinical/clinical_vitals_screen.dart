@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../calculations/data/reference_library_repository.dart';
 import '../../calculations/presentation/reference_library_screen.dart';
@@ -287,13 +288,13 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             runSpacing: 8,
             children: [
               for (final option in options.entries)
-                ChoiceChip(
+                glowChip(ChoiceChip(
                   label: Text(option.value),
                   selected: value == option.key,
                   onSelected: busy
                       ? null
                       : (selected) => changed(selected ? option.key : null),
-                ),
+                )),
             ],
           ),
         ],

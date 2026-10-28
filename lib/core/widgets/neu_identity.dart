@@ -205,6 +205,7 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
               child: FilledButton(
                 statesController: states,
                 style: FilledButton.styleFrom(
+                  elevation: 0,
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                   foregroundColor: dark ? Colors.white : neuInk,
@@ -244,6 +245,7 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
         ),
         child: FilledButton(
           style: FilledButton.styleFrom(
+            elevation: 0,
             backgroundColor: Colors.transparent,
             foregroundColor: neuInk,
             shadowColor: Colors.transparent,

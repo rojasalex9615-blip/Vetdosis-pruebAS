@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/reference_library_repository.dart';
@@ -115,8 +116,8 @@ class _ReferenceLibraryScreenState extends State<ReferenceLibraryScreen> {
       const Text('Referencias para consulta y evaluación. Los intervalos pendientes no clasifican pacientes ni alimentan recetas o calculadoras. En laboratorio, usa el intervalo del método y analizador que emitió el resultado.'),
       const SizedBox(height: 12),
       Wrap(spacing: 8, children: [
-        ChoiceChip(label: const Text('Constantes y fisiología'), selected: section == 'fisiologia', onSelected: (_) { section = 'fisiologia'; load(reset: true); }),
-        ChoiceChip(label: const Text('Laboratorio'), selected: section == 'laboratorio', onSelected: (_) { section = 'laboratorio'; load(reset: true); }),
+        glowChip(ChoiceChip(label: const Text('Constantes y fisiología'), selected: section == 'fisiologia', onSelected: (_) { section = 'fisiologia'; load(reset: true); })),
+        glowChip(ChoiceChip(label: const Text('Laboratorio'), selected: section == 'laboratorio', onSelected: (_) { section = 'laboratorio'; load(reset: true); })),
       ]),
       const SizedBox(height: 12),
       TextField(

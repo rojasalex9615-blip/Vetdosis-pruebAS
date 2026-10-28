@@ -1,3 +1,4 @@
+import 'widgets/accent_glow.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
@@ -215,6 +216,22 @@ class VetDosisApp extends StatelessWidget {
               ),
             )
           : null,
+      filledButtonTheme: neumorphic
+          ? FilledButtonThemeData(
+              style: ButtonStyle(
+                shadowColor: WidgetStatePropertyAll(
+                  primary.withValues(alpha: .28),
+                ),
+                elevation: WidgetStateProperty.resolveWith(
+                  (states) => states.contains(WidgetState.disabled)
+                      ? 0
+                      : states.contains(WidgetState.pressed)
+                      ? 1
+                      : 2,
+                ),
+              ),
+            )
+          : null,
       chipTheme: neumorphic
           ? ChipThemeData(
               shape: RoundedRectangleBorder(
@@ -232,7 +249,10 @@ class VetDosisApp extends StatelessWidget {
               elevation: 0,
             )
           : null,
-      extensions: [WorkspaceStyle(neumorphic: neumorphic)],
+      extensions: [
+        WorkspaceStyle(neumorphic: neumorphic),
+        AccentGlowStyle(enabled: neumorphic),
+      ],
     );
   }
 
@@ -514,7 +534,7 @@ class CoreShell extends StatelessWidget {
     );
   }
 
-  Widget bottomNavigation() {
+  Widget bottomNavigation(BuildContext context) {
     final destinations = <(String, IconData)>[
       ('Inicio', Icons.home_outlined),
       if (allowed('Agenda')) ('Agenda', Icons.calendar_month_outlined),
@@ -536,7 +556,15 @@ class CoreShell extends StatelessWidget {
       onDestinationSelected: (index) => model.navigate(destinations[index].$1),
       destinations: [
         for (final entry in destinations)
-          NavigationDestination(icon: Icon(entry.$2), label: entry.$1),
+          NavigationDestination(
+            icon: Icon(entry.$2),
+            selectedIcon: AccentIcon(
+              entry.$2,
+              color: Theme.of(context).colorScheme.primary,
+              emphasis: .75,
+            ),
+            label: entry.$1,
+          ),
       ],
     );
   }
@@ -683,16 +711,20 @@ class CoreShell extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: bottomNavigation(),
+      bottomNavigationBar: bottomNavigation(context),
       floatingActionButton:
           auth?.active != null &&
               allowed('Cálculo rápido') &&
               model.screen != 'Escanear etiqueta para dosis'
-          ? FloatingActionButton(
-              heroTag: 'dose-label-scanner',
-              tooltip: 'Escanear etiqueta para dosis',
-              onPressed: () => model.navigate('Escanear etiqueta para dosis'),
-              child: const Icon(Icons.document_scanner_outlined),
+          ? AccentGlow(
+              color: Theme.of(context).colorScheme.primary,
+              radius: 16,
+              child: FloatingActionButton(
+                heroTag: 'dose-label-scanner',
+                tooltip: 'Escanear etiqueta para dosis',
+                onPressed: () => model.navigate('Escanear etiqueta para dosis'),
+                child: const Icon(Icons.document_scanner_outlined),
+              ),
             )
           : null,
       body: SafeArea(
@@ -1433,15 +1465,19 @@ class CoreShell extends StatelessWidget {
     Wrap(
       spacing: 12,
       children: [
-        ChoiceChip(
-          label: const Text('Clásico'),
-          selected: model.settings.visualStyle == 'standard',
-          onSelected: (_) => model.updateSettings(visualStyle: 'standard'),
+        glowChip(
+          ChoiceChip(
+            label: const Text('Clásico'),
+            selected: model.settings.visualStyle == 'standard',
+            onSelected: (_) => model.updateSettings(visualStyle: 'standard'),
+          ),
         ),
-        ChoiceChip(
-          label: const Text('Neu · relieve suave'),
-          selected: model.settings.visualStyle == 'neu',
-          onSelected: (_) => model.updateSettings(visualStyle: 'neu'),
+        glowChip(
+          ChoiceChip(
+            label: const Text('Neu · relieve suave'),
+            selected: model.settings.visualStyle == 'neu',
+            onSelected: (_) => model.updateSettings(visualStyle: 'neu'),
+          ),
         ),
       ],
     ),
@@ -1453,14 +1489,16 @@ class CoreShell extends StatelessWidget {
       runSpacing: 12,
       children: [
         for (var index = 0; index < paletteNames.length; index++)
-          ChoiceChip(
-            label: Text(paletteNames[index]),
-            avatar: CircleAvatar(
-              backgroundColor: paletteColors[index],
-              radius: 8,
+          glowChip(
+            ChoiceChip(
+              label: Text(paletteNames[index]),
+              avatar: CircleAvatar(
+                backgroundColor: paletteColors[index],
+                radius: 8,
+              ),
+              selected: model.settings.palette == index,
+              onSelected: (_) => model.updateSettings(palette: index),
             ),
-            selected: model.settings.palette == index,
-            onSelected: (_) => model.updateSettings(palette: index),
           ),
       ],
     ),

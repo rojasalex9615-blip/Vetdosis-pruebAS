@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import 'growth_panel.dart';
 import 'feeding_panel.dart';
@@ -134,11 +135,11 @@ class _ProductionMenuState extends State<ProductionMenu> {
           runSpacing: 8,
           children: [
             for (final name in productionSpecies[species]!)
-              ChoiceChip(
+              glowChip(ChoiceChip(
                 label: Text(name),
                 selected: activity == name,
                 onSelected: (_) => setState(() => activity = name),
-              ),
+              )),
           ],
         ),
         if (species == 'Aves' && activity != null) ...[

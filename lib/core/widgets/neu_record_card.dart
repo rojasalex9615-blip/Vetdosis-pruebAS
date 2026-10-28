@@ -1,3 +1,4 @@
+import 'accent_glow.dart';
 import 'package:flutter/material.dart';
 import 'workspace_panel.dart';
 
@@ -14,11 +15,16 @@ class NeuRecordCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 5,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(4),
+            AccentGlow(
+              color: color,
+              radius: 4,
+              emphasis: .6,
+              child: Container(
+                width: 5,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ),
             const SizedBox(width: 12),
