@@ -20,7 +20,7 @@ class AccentGlow extends StatelessWidget {
     required this.child,
     this.radius = 32,
     this.enabled = true,
-    this.emphasis = 1,
+    this.emphasis = .75,
   });
   final Color color;
   final Widget child;

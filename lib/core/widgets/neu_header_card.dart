@@ -27,6 +27,7 @@ class NeuHeaderCard extends StatelessWidget {
     return AccentGlow(
       color: color,
       radius: soft ? 32 : 24,
+      emphasis: .65, // Subdue the unmarked card body.
       child: WorkspacePanel(
         radius: soft ? 32 : 24,
         depth: soft ? 1.35 : 1,
@@ -36,26 +37,31 @@ class NeuHeaderCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  // Uniform pastel strip, matching the existing app cards.
-                  color: soft
-                      ? Color.lerp(base, color, dark ? .25 : .22)
-                      : color.withValues(alpha: dark ? .25 : .20),
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleMedium,
+              AccentGlow(
+                color: color,
+                radius: 0,
+                emphasis: 1.4,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    // Uniform pastel strip, matching the existing app cards.
+                    color: soft
+                        ? Color.lerp(base, color, dark ? .25 : .22)
+                        : color.withValues(alpha: dark ? .25 : .20),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(icon),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
-                    ),
-                    ?trailing,
-                  ],
+                      ?trailing,
+                    ],
+                  ),
                 ),
               ),
               child,

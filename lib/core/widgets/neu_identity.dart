@@ -180,7 +180,7 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
           return AccentGlow(
             color: color,
             enabled: widget.onPressed != null,
-            emphasis: pressed ? .65 : 1,
+            emphasis: pressed ? .52 : .8,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               decoration: BoxDecoration(
