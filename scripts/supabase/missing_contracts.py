@@ -13,6 +13,22 @@ from integration_bundle import literal, unwrap
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT = 'wtrelwtztkddfktrfdpb'
+REQUIRED_EXISTING_SIGNATURES = ('private.inv_totals(uuid,uuid,timestamp with time zone,timestamp with time zone)',
+ 'public.backup_workspace(uuid)',
+ 'public.clinic_export(uuid)',
+ 'public.clinic_statistics(uuid)',
+ 'public.commission_account(uuid)',
+ 'public.commission_period_pay(uuid)',
+ 'public.inv_ai_insights(uuid)',
+ 'public.inv_dashboard(uuid)',
+ 'public.inv_sale_reverse(uuid,uuid,text,text)',
+ 'public.inv_shift_snapshot(uuid)',
+ 'public.ops_commission_account(uuid,integer)',
+ 'public.ops_commission_settle(uuid,uuid,text,text,text)',
+ 'public.ops_medical(uuid,jsonb,boolean)',
+ 'public.rx_vial_close(uuid,text,text,text)',
+ 'public.rx_vials(uuid)')
+
 SOURCES = (
     'supabase/adaptations/patient_contacts_appointment_links_v1.sql',
     'supabase/adaptations/appointment_care_v1.sql',
@@ -81,6 +97,11 @@ def plan(catalog, root=ROOT):
         raise ValueError('Catalog must explicitly identify its reviewed or synthetic provenance.')
     if catalog.get('project_ref') != PROJECT:
         raise ValueError('Catalog project does not match the fixed TEST project.')
+    identity = catalog.get('target_identity', {})
+    if (identity.get('database') != 'postgres'
+            or not re.fullmatch(r'[0-9]{1,20}', identity.get('system_identifier', ''))
+            or not re.fullmatch(r'[0-9]{1,10}', identity.get('database_oid', ''))):
+        raise ValueError('Authoritative cluster/database identity is required.')
     texts = sources(root)
     affected = set(re.findall(r'(?i)(?:create\s+(?:or\s+replace\s+)?function|alter\s+function)\s+((?:public|private)\.\w+)', '\n'.join(s for _, s in texts)))
     new_tables = re.findall(r'(?i)create\s+table\s+(?:if\s+not\s+exists\s+)?((?:public|private)\.\w+)', '\n'.join(s for _, s in texts))
@@ -91,8 +112,13 @@ def plan(catalog, root=ROOT):
     if any(name in existing_public for name in MISSING_RPCS):
         raise ValueError('Partial/already installed RPC upgrade requires a new catalog review.')
     existing = [dict(f, signature=signature(f)) for f in catalog['functions'] if f["schema"] + '.' + f['name'] in affected]
+    actual_signatures = [f['signature'] for f in existing]
+    if (len(actual_signatures) != len(set(actual_signatures))
+            or set(actual_signatures) != set(REQUIRED_EXISTING_SIGNATURES)):
+        raise ValueError('Incomplete or unexpected existing-function fingerprint set.')
     return {
         'project_ref': PROJECT,
+        'target_identity': identity,
         'profile': catalog['profile'],
         'generator_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'transaction_unwrapper_sha256': hashlib.sha256((ROOT/'scripts/supabase/integration_bundle.py').read_bytes()).hexdigest(),
@@ -127,6 +153,10 @@ select pg_advisory_xact_lock(hashtextextended('vetdosis-missing-contracts-v1',0)
 do $preflight$
 declare row record; actual oid; missing text;
 begin
+ if current_database() is distinct from {literal(manifest['target_identity']['database'])}
+ or (select oid::text from pg_database where datname=current_database()) is distinct from {literal(manifest['target_identity']['database_oid'])}
+ or (select system_identifier::text from pg_control_system()) is distinct from {literal(manifest['target_identity']['system_identifier'])}
+ then raise exception 'upgrade_target_identity_mismatch';end if;
  if not exists(select 1 from private.beta_policy where not admissions_enabled and not enforcement_enabled)
  or not exists(select 1 from private.permission_policy where not enforcement_enabled and not migration_reviewed) then
   raise exception 'upgrade_requires_closed_dormant_policies';

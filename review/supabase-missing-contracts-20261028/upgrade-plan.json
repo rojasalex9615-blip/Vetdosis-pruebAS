@@ -1,7 +1,12 @@
 {
   "project_ref": "wtrelwtztkddfktrfdpb",
+  "target_identity": {
+    "database": "postgres",
+    "database_oid": "5",
+    "system_identifier": "7692131729119822239"
+  },
   "profile": "observed-test-catalog",
-  "generator_sha256": "c56502a1641370e9f207ae7176a959773d23b79a34ff915f21c53e30c4bd67a8",
+  "generator_sha256": "44bbfc03aed6ed5673ba53618630e94b4245469323222ef6d1d62d746d81bd68",
   "transaction_unwrapper_sha256": "c7f3e36defc775a94eaad9cf1beae783c472d81323e4cbd8d9c42d5e3708155c",
   "source_order": [
     {

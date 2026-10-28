@@ -1,4 +1,5 @@
 PASS baseline and populated retained-member history
+PASS wrong cluster identity rejected before any source
 PASS complete upgrade with ROLLBACK preserves original catalog
 PASS late failure atomically rolls back the entire upgrade
 PASS search_path drift rejected before installation

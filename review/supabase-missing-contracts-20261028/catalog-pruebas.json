@@ -1030,5 +1030,10 @@
   "server_version": "17.11",
   "profile": "observed-test-catalog",
   "project_ref": "wtrelwtztkddfktrfdpb",
-  "observed_at_utc": "2026-10-28"
+  "observed_at_utc": "2026-10-28",
+  "target_identity": {
+    "database": "postgres",
+    "database_oid": "5",
+    "system_identifier": "7692131729119822239"
+  }
 }

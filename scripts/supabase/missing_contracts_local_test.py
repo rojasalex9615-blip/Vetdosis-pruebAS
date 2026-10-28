@@ -13,6 +13,7 @@ import uuid
 from missing_contracts import ROOT, PROJECT, MISSING_RPCS, INDEX_SOURCES, bundle
 
 CATALOG_SQL = """select json_build_object('project_ref','%s','profile','synthetic-local',
+'target_identity',json_build_object('database',current_database(),'database_oid',(select oid::text from pg_database where datname=current_database()),'system_identifier',(select system_identifier::text from pg_control_system())),
 'functions',(select json_agg(json_build_object('schema',n.nspname,'name',p.proname,
 'signature',p.oid::regprocedure::text,'source_md5',md5(p.prosrc),'security_definer',p.prosecdef,
 'arg_names',p.proargnames,'returns',pg_get_function_result(p.oid),'config',p.proconfig,
@@ -53,6 +54,12 @@ def main():
         print('PASS baseline and populated retained-member history',flush=True)
         catalog=json.loads(query(CATALOG_SQL).stdout)
         sql, manifest=bundle(catalog)
+        wrong=json.loads(json.dumps(catalog));wrong['target_identity']['system_identifier']='0'
+        wrong_sql,_=bundle(wrong)
+        result=query(wrong_sql,check=False)
+        assert result.returncode and 'upgrade_target_identity_mismatch' in result.stderr
+        assert_baseline(catalog)
+        print('PASS wrong cluster identity rejected before any source',flush=True)
         query(sql); assert_baseline(catalog)
         print('PASS complete upgrade with ROLLBACK preserves original catalog',flush=True)
         # Abort after all sources, before verification/receipt. Transaction exit

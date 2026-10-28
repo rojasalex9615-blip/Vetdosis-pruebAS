@@ -11,7 +11,7 @@
     "skipped": 1,
     "analyze": "clean"
   },
-  "python_tests": 94,
+  "python_tests": 96,
   "postgres_version": "17.11",
   "sql_isolated_upgrade": "passed",
   "client_named_contracts": 27,
@@ -20,12 +20,22 @@
   "affected_remote_function_drift": [],
   "indexes_observed_present": [],
   "artifacts_sha256": {
-    "contracts-reviewed-rollback.sql": "89e5a2f9495090235898ed6038e21c755a61e6cd1d72e871d2c84f3969988923",
-    "contracts-reviewed-commit.sql": "07c64d5decc0370b2077add18ea8c00feeb1784718cd15da2c605fe1c2938851"
+    "contracts-authorized-rollback.sql": "e9f24883aff42e4a65c1579cbbc54bcee18a02e5bffb050fb30fbf6b74db0187",
+    "contracts-authorized-commit.sql": "87fd7ec476fcca82608f73ca1bc76d81e357b8b95bff3f052e1fd31f9b540433"
   },
   "base_pr_review_threads": {
     "unresolved": 3,
     "major": 1,
     "minor": 2
-  }
+  },
+  "authorization_received": true,
+  "initial_remote_rehearsal": {
+    "sha": "7cc9cb06c4869671863051de86784d567df559b0",
+    "passed": true,
+    "rollback_objects_absent": true
+  },
+  "review_corrections": [
+    "exact_15_signature_set",
+    "runtime_cluster_database_identity"
+  ]
 }

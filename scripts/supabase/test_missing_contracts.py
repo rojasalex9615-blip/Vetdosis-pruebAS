@@ -4,12 +4,11 @@ from missing_contracts import bundle, plan, PROJECT, SOURCES, INDEX_SOURCES, MIS
 
 
 def catalog():
-    return {'project_ref': PROJECT, 'profile': 'synthetic-local', 'relations': [],
-            'functions': [{'schema': 'public', 'name': 'clinic_export',
-                           'signature': 'clinic_export(uuid)', 'source_md5': '0'*32,
-                           'security_definer': True, 'anon_execute': False,
-                           'authenticated_execute': True, 'arg_names': ['p_clinic'],
-                           'returns': 'text', 'config': ['search_path=""']} ]}
+    from pathlib import Path
+    import json
+    result=json.loads((Path(__file__).resolve().parents[2]/'review/supabase-missing-contracts-20261028/catalog-pruebas.json').read_text())
+    result['profile']='synthetic-local'
+    return result
 
 
 class MissingContractTests(unittest.TestCase):
@@ -45,12 +44,30 @@ class MissingContractTests(unittest.TestCase):
     def test_drift_guard_covers_named_arguments_return_type_search_path_and_acl(self):
         original = catalog()
         sql, manifest = bundle(original)
-        self.assertEqual(manifest['existing_functions'][0]['signature'], 'public.clinic_export(uuid)')
+        self.assertEqual(next(f for f in manifest['existing_functions'] if f['name']=='clinic_export')['signature'], 'public.clinic_export(uuid)')
         for text in ['md5(prosrc)', 'pg_get_function_result(oid)', 'proargnames',
                      'proconfig', "has_function_privilege('anon'", 'prosecdef']:
             self.assertIn(text,sql)
         changed=copy.deepcopy(original);changed['functions'][0]['arg_names']=['different']
         self.assertNotEqual(bundle(changed)[0],sql)
+
+    def test_all_fifteen_fingerprints_required_for_either_variant(self):
+        for commit in (False,True):
+            for index in range(15):
+                c=catalog();c['profile']='observed-test-catalog'
+                c['functions'].pop(index)
+                with self.assertRaisesRegex(ValueError,'fingerprint set'): bundle(c,commit=commit)
+        c=catalog();c['functions'].append(copy.deepcopy(c['functions'][0]))
+        with self.assertRaisesRegex(ValueError,'fingerprint set'): bundle(c)
+
+    def test_target_identity_is_required_and_checked_in_generated_sql(self):
+        for identity in ({},{'database':'other','database_oid':'5','system_identifier':'123'}):
+            c=catalog();c['target_identity']=identity
+            with self.assertRaises(ValueError): bundle(c)
+        sql,_=bundle(catalog())
+        self.assertLess(sql.index('upgrade_target_identity_mismatch'),sql.index('-- Source:'))
+        self.assertIn('pg_control_system()',sql)
+        self.assertIn('current_database()',sql)
 
     def test_upgrade_preserves_data_and_does_not_activate_authority_or_restoration(self):
         sql, _ = bundle(catalog())

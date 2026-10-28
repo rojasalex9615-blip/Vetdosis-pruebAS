@@ -157,3 +157,24 @@ pruebas HTTP con permisos explícitos y dos clínicas ficticias, QA Android, ent
 real de avisos/FCM/WhatsApp, recuperación integral de servicio y Storage. El registro
 legal de #20 y RPBI no quedan resueltos por incorporar estos contratos. Sin cambios
 a main, despliegue, APK ni declaración de beta lista para distribución.
+
+## Revisión correctiva y autorización recibida
+
+Ale autorizó ensayo y posterior instalación únicamente en Pruebas, condicionada a
+pruebas y ausencia de bloqueos. El primer ensayo remoto de 7cc9cb0 pasó; después se
+confirmó ausencia de recibo, RPC nuevo, tablas clínica/personal/restauración.
+
+CodeRabbit señaló dos Major antes de instalar: catálogo de huellas incompleto y
+falta de identificación del destino en ejecución. Se exige ahora el conjunto exacto
+de las 15 firmas (también para ensayar) y se compara dentro del SQL la identidad
+`pg_control_system().system_identifier`, nombre y OID de base, observada mediante
+el endpoint fijo de Pruebas. No se confía en un GUC personalizable: los ajustes
+de project_ref no existen en este servidor. Si el clúster cambia, se debe inspeccionar
+y actualizar el catálogo; no omitir el control. Esta identidad de clúster no es una
+credencial ni sustituye seleccionar el project_id fijo en la API administrativa.
+
+Pruebas adicionales: rechazo de cada una de las 15 omisiones para ambas variantes,
+duplicados, identidad ausente/incorrecta y clúster distinto antes del primer source;
+**96 Python aprobadas**, actualización SQL aislada completa nuevamente aprobada.
+Flutter conserva la evidencia de la base sin cambios de código Dart. Revisión
+correctiva y ensayo del paquete nuevo todavía se registrarán por separado.
