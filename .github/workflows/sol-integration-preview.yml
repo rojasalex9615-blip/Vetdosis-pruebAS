@@ -118,3 +118,28 @@ jobs:
             build/preview/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
+  artifact-integrity:
+    needs: android-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: vetdosis-sol6-sol61-preview-NO-DISTRIBUIR
+      - name: Verificar APK descargado y procedencia
+        run: |
+          sha256sum -c preview/SHA256SUMS.txt
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path('preview/BUILD-SOURCES.json').read_text())
+          expected = {'clinic_experience', 'section_catalog', 'launcher',
+                      'hospital_push', 'service_commissions', 'drive_backup'}
+          if (manifest.get('integration_repository') != os.environ['GITHUB_REPOSITORY'] or
+              manifest.get('integration_sha') != os.environ['GITHUB_SHA'] or
+              manifest.get('workflow_run') != os.environ['GITHUB_RUN_ID'] or
+              set(manifest.get('modules_present', [])) != expected or
+              manifest.get('type') != 'debug-preview-not-for-distribution'):
+              raise SystemExit('El artefacto descargado no acredita esta revisión integrada.')
+          print('Integridad y procedencia del artefacto descargado verificadas.')
+          PY
