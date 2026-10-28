@@ -1,5 +1,7 @@
 import 'accent_glow.dart';
+
 import 'package:flutter/material.dart';
+
 import 'neu_identity.dart';
 import 'neu_header_card.dart';
 import 'workspace_panel.dart';
@@ -340,7 +342,13 @@ class CalculatorActionButton extends StatelessWidget {
       Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
       ? NeuPrimaryButton(
           soft: true,
-          color: calculatorPastel(id),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Color.lerp(
+                  Theme.of(context).scaffoldBackgroundColor,
+                  calculatorIdentity(id).color,
+                  .25,
+                )!
+              : calculatorPastel(id),
           onPressed: onPressed,
           child: DefaultTextStyle.merge(
             textAlign: TextAlign.center,
@@ -367,10 +375,8 @@ class CalculatorFieldLabel extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
         child: Text(
           label.replaceFirst(RegExp(r'\s*\([^)]+\)'), ''),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       Semantics(label: label, child: child),

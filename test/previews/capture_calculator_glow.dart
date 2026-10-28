@@ -131,7 +131,7 @@ void main() {
               );
               const directory = String.fromEnvironment(
                 'GLOW_PREVIEW_DIR',
-                defaultValue: 'review/accent-glow-preview-20261028',
+                defaultValue: 'review/glow-header-hierarchy-20261028',
               );
               final file = File('$directory/${glow ? 'glow' : 'sin-glow'}.png');
               await file.parent.create(recursive: true);

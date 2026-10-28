@@ -208,7 +208,9 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
                   elevation: 0,
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  foregroundColor: dark ? Colors.white : neuInk,
+                  foregroundColor: color.computeLuminance() > .4
+                      ? neuInk
+                      : Colors.white,
                   minimumSize: const Size(0, 58),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 22,

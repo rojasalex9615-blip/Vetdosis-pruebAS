@@ -8,7 +8,9 @@ import '../modules/auth/presentation/team_duty_screen.dart';
 import '../modules/review/domain/review_catalog_repository.dart';
 import '../modules/review/presentation/review_catalog_screen.dart';
 import '../modules/auth/domain/auth_repository.dart';
+
 import 'dart:math' as math;
+
 import 'widgets/app_version_label.dart';
 import '../modules/finance/presentation/financial_planning_panel.dart';
 import '../modules/operations/presentation/productivity_screen.dart';
@@ -64,7 +66,9 @@ import '../modules/hospital/presentation/hospital_screen.dart';
 import '../modules/patients/domain/patient_repository.dart';
 import '../modules/patients/domain/recorded_weight.dart';
 import '../modules/patients/presentation/patients_screen.dart';
+
 import 'package:flutter/material.dart';
+
 import '../modules/doses/presentation/dose_screen.dart';
 import '../modules/doses/presentation/dose_label_scanner_screen.dart';
 import '../modules/doses/presentation/vademecum_screen.dart';
@@ -72,7 +76,9 @@ import '../modules/doses/data/catalog_repository.dart';
 import '../modules/doses/presentation/dose_math_tools.dart';
 import '../modules/doses/data/personal_dose_repository.dart';
 import '../modules/auth/domain/clinic_membership.dart';
+
 import 'package:flutter_localizations/flutter_localizations.dart';
+
 import '../modules/core/presentation/core_view_model.dart';
 import '../modules/auth/presentation/auth_view_model.dart';
 import '../modules/auth/presentation/auth_screen.dart';
@@ -558,11 +564,15 @@ class CoreShell extends StatelessWidget {
         for (final entry in destinations)
           NavigationDestination(
             icon: Icon(entry.$2),
-            selectedIcon: AccentIcon(
-              entry.$2,
-              color: Theme.of(context).colorScheme.primary,
-              emphasis: .75,
-            ),
+            selectedIcon:
+                Theme.of(context).extension<WorkspaceStyle>()?.neumorphic ==
+                    true
+                ? AccentIcon(
+                    entry.$2,
+                    color: Theme.of(context).colorScheme.primary,
+                    emphasis: .75,
+                  )
+                : Icon(entry.$2),
             label: entry.$1,
           ),
       ],
@@ -589,9 +599,10 @@ class CoreShell extends StatelessWidget {
                 (model.screen == 'Inicio'
                         ? 44.0
                         : MediaQuery.textScalerOf(context).scale(
-                                Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge?.fontSize ??
+                                Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.fontSize ??
                                     22,
                               ) *
                               1.4) +

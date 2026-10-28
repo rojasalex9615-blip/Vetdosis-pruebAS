@@ -29,6 +29,7 @@ Map<String, dynamic> line({
 
 class ReturnRepository implements InventoryRepository {
   String actor = 'person';
+  int schemaVersion = 3;
   int reads = 0;
   bool stale = false;
   final writes = <Map<String, dynamic>>[];
@@ -36,7 +37,7 @@ class ReturnRepository implements InventoryRepository {
   Future<dynamic> read(String command, Map<String, dynamic> args) async {
     reads++;
     return {
-      'schema_version': 3,
+      'schema_version': schemaVersion,
       'account': {
         'net_total': '30',
         'paid': '30',
@@ -83,6 +84,22 @@ Widget app(ReturnRepository repo) => MaterialApp(
   ),
 );
 void main() {
+  testWidgets(
+    'incompatible return schema explains upgrade without permitting writes',
+    (tester) async {
+      for (final version in [2, 4]) {
+        final repo = ReturnRepository()..schemaVersion = version;
+        await tester.pumpWidget(app(repo));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('La versión de devoluciones'),
+          findsOneWidget,
+        );
+        expect(repo.writes, isEmpty);
+        await tester.pumpWidget(const SizedBox());
+      }
+    },
+  );
   test(
     'cumulative rounding distributes a cent without creating extra money',
     () {

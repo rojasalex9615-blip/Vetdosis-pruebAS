@@ -67,6 +67,8 @@ void main() {
             )
             .painter !=
         null;
+    final originalElement = chipKey.currentContext;
+    expect(originalElement, isNotNull);
     expect(paintsHalo(), isFalse);
     await tester.enterText(find.byType(TextField), '12.5');
     await tester.tap(find.byType(ChoiceChip));
@@ -77,6 +79,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(paintsHalo(), isFalse);
     expect(find.text('12.5'), findsOneWidget);
+    expect(identical(chipKey.currentContext, originalElement), isTrue);
     expect(tester.widget<ChoiceChip>(find.byType(ChoiceChip)).selected, isTrue);
     update(() {
       glow = true;

@@ -1,5 +1,7 @@
 import '../../doses/domain/quantity.dart';
+
 import 'package:flutter/material.dart';
+
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
@@ -88,10 +90,9 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
     try {
       final raw = Map<String, dynamic>.from(
         await widget.repository.read('inv_sale_return_workspace', {
-              'p_sale': widget.sale,
-              'p_shift': widget.shift,
-            })
-            as Map,
+          'p_sale': widget.sale,
+          'p_shift': widget.shift,
+        }) as Map,
       );
       if (!current(revision)) return;
       if (raw['clinic_id'] != widget.member.clinicId ||
@@ -112,11 +113,14 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
               .toList(),
         );
       }
-    } catch (_) {
+    } catch (failure) {
       if (current(revision)) {
         setState(
           () => error =
-              'Esta venta no está disponible para devolución parcial. Requiere turno propio abierto y permisos; se admiten productos no farmacológicos y servicios, con permisos adicionales para servicios.',
+              failure is StateError &&
+                  failure.message == 'return_client_upgrade_required'
+              ? 'La versión de devoluciones de la app y del servidor no coincide. Actualiza la app o solicita revisar la actualización del servidor.'
+              : 'Esta venta no está disponible para devolución parcial. Requiere turno propio abierto y permisos; se admiten productos no farmacológicos y servicios, con permisos adicionales para servicios.',
         );
       }
     } finally {
@@ -139,9 +143,9 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
       if (reason.text.trim().isEmpty) {
         throw const FormatException('Indica el motivo de la devolución.');
       }
-      final canonical = Quantity.parse(
-        quantity.text,
-      ).display(places: 9).replaceAll(',', '.');
+      final canonical = Quantity.parse(quantity.text)
+          .display(places: 9)
+          .replaceAll(',', '.');
       final key =
           '${selected!['id']}|$canonical|$method|$restock|${reason.text.trim()}|${amount.decimal}|${advanced?.refund.decimal}|${advanced?.commission.decimal}|${selected!['returned_quantity']}';
       if (retryKey != key) {
@@ -180,14 +184,12 @@ class _PartialReturnScreenState extends State<PartialReturnScreen> {
             e.toString().contains('return_amount_changed')) {
           setState(() {
             confirmed = false;
-            error =
-                'La venta o el saldo cambiaron. Actualiza venta y saldo antes de registrar otra devolución.';
+            error = 'La venta o el saldo cambiaron. Actualiza venta y saldo antes de registrar otra devolución.';
           });
           return;
         }
         setState(
-          () => error =
-              'No se confirmó el registro. Revisa el historial antes de cambiar datos o iniciar otra devolución; reintentar los mismos datos conserva la operación.',
+          () => error = 'No se confirmó el registro. Revisa el historial antes de cambiar datos o iniciar otra devolución; reintentar los mismos datos conserva la operación.',
         );
       }
     } finally {
