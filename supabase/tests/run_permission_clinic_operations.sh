@@ -34,4 +34,7 @@ fi
 if [ "${STAFF_MEDICAL_PRIVACY:-0}" = 1 ];then
  bash supabase/tests/staff_medical_privacy_concurrency.sh "$container_name"
 fi
+if [ "${MEMBER_HISTORY_PRESERVATION:-0}" = 1 ];then
+ bash supabase/tests/member_history_concurrency.sh "$container_name"
+fi
 echo 'Workspace management and clinic operations permissions passed.'

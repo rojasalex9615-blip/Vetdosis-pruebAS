@@ -1,0 +1,52 @@
+{
+  "date_utc": "2026-10-28",
+  "repository": "rojasalex9615-blip/Vetdosis-pruebAS",
+  "branch": "fix/p0-clinical-data-audit-20261028",
+  "base_sha": "9308469d46493a17f3c01b85c2e32ec30e5d63bd",
+  "tested_code_sha": "57c8631c4e961629ca106755e2fac1fe10abd74f",
+  "acceptance_recorded_in": [
+    31,
+    33
+  ],
+  "flutter": {
+    "passed": 673,
+    "skipped": 1,
+    "failed": 0,
+    "analyze": "clean",
+    "ocr_safety_tests": 5,
+    "ci_focused_tests": 25
+  },
+  "workflow_python_tests": 7,
+  "sql": {
+    "result": "passed",
+    "historical_tables_fingerprinted": 15,
+    "original_fk_failure_reproduced": true,
+    "former_staff_balance_visible_and_settled": true,
+    "assignment_removal_races_verified_both_orders": true,
+    "financial_and_staff_concurrency_regressions": "passed",
+    "command": "bash supabase/tests/run_member_history_preservation.sh",
+    "network": "none; disposable PostgreSQL 17 only"
+  },
+  "remote_workflow": "Quarantined; no Supabase token in PR or manual events",
+  "migration": "supabase/migrations/20261028043154_preserve_member_history.sql",
+  "main_changed": false,
+  "remote_sql_applied": false,
+  "credentials_added": false,
+  "apk_built": false,
+  "android_qa_real": false,
+  "coderabbit_review": "requested after publication; not approval",
+  "next_p1": [
+    "Auth refresh invalidates patient picker using accessRevision",
+    "inv_sale_return_v3 missing from repository write allowlist",
+    "Other #26/#61 findings and contract rollout"
+  ],
+  "followup_review": {
+    "tested_code_sha": "f2f315d903417b93a288dbae7f92d8765d7b4796",
+    "observations_corrected": 3,
+    "workflow_python_tests": 8,
+    "old_order_deadlock_reproduced": true,
+    "clinic_first_order_passed_interleaved_before_after_race": true,
+    "financial_and_staff_combined_sql_passed": true,
+    "dart_changes": false
+  }
+}

@@ -14,11 +14,15 @@ class PersonalDoseScreen extends StatefulWidget {
     required this.clinicId,
     required this.admin,
     required this.general,
+    this.labelReader,
   });
   final PersonalDoseRepository repository;
   final String clinicId;
   final bool admin;
   final List<DrugDose> general;
+
+  /// Optional local capture adapter; OCR text never populates clinical fields.
+  final Future<String?> Function()? labelReader;
   @override
   State<PersonalDoseScreen> createState() => _PersonalDoseScreenState();
 }
@@ -89,21 +93,26 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
     if (mounted) setState(() => entries = result);
   });
   Future<void> scanLabel() => run(() async {
-    final image = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      maxWidth: 2200,
-      imageQuality: 90,
-    );
-    if (image == null) return;
-    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
-    String recognized;
-    try {
-      recognized = (await recognizer.processImage(
-        InputImage.fromFilePath(image.path),
-      )).text;
-    } finally {
-      await recognizer.close();
+    String? recognized;
+    if (widget.labelReader != null) {
+      recognized = await widget.labelReader!();
+    } else {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2200,
+        imageQuality: 90,
+      );
+      if (image == null) return;
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      try {
+        recognized = (await recognizer.processImage(
+          InputImage.fromFilePath(image.path),
+        )).text;
+      } finally {
+        await recognizer.close();
+      }
     }
+    if (recognized == null) return;
     if (!mounted) return;
     if (recognized.trim().isEmpty) {
       throw const FormatException(
@@ -114,7 +123,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Revisar texto de la etiqueta'),
-        content: SingleChildScrollView(child: SelectableText(recognized)),
+        content: SingleChildScrollView(child: SelectableText(recognized!)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -122,50 +131,21 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Usar como borrador'),
+            child: const Text('Conservar solo el texto'),
           ),
         ],
       ),
     );
     if (apply != true || !mounted) return;
-    final lines = recognized
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty);
-    final concentration = RegExp(
-      r'(\d+(?:[.,]\d+)?)\s*mg\s*(?:/|per)\s*m[lL]\b',
-      caseSensitive: false,
-    ).firstMatch(recognized);
-    final dose = RegExp(
-      r'(\d+(?:[.,]\d+)?)\s*mg\s*(?:/|per)\s*kg\b',
-      caseSensitive: false,
-    ).firstMatch(recognized);
-    final ingredient = RegExp(
-      r'(?:active ingredient|ingrediente activo|principio activo)\s*[:：]\s*([^\n\r]+)',
-      caseSensitive: false,
-    ).firstMatch(recognized);
+    // A numeric token can be a range endpoint, withdrawal time, or a different
+    // formulation. Reviewing OCR text does not authorize a clinical value.
+    // Preserve all manually entered fields, units, and provenance unchanged.
     setState(() {
-      labelDraft.text = recognized;
-      if (fields['nombre_comercial']!.text.isEmpty && lines.isNotEmpty) {
-        fields['nombre_comercial']!.text = lines.first;
-      }
-      if (fields['farmaco']!.text.isEmpty && ingredient != null) {
-        fields['farmaco']!.text = ingredient.group(1)!.trim();
-      }
-      if (concentration != null) {
-        fields['concentracion']!.text = concentration
-            .group(1)!
-            .replaceAll(',', '.');
-      }
-      if (dose != null) {
-        fields['min']!.text = dose.group(1)!.replaceAll(',', '.');
-        fields['max']!.text = fields['min']!.text;
-      }
-      fields['fuente_presentacion']!.text =
-          'Etiqueta fotografiada; datos OCR pendientes de verificación manual';
+      labelDraft.text = recognized!;
       verified = false;
     });
   });
+
   Future<void> save() => run(() async {
     String value(String k) => fields[k]!.text.trim();
     final payload = <String, dynamic>{
@@ -247,7 +227,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
           label: const Text('Escanear etiqueta y crear borrador'),
         ),
         const Text(
-          'El texto escaneado puede contener errores. Revisa producto, concentración, dosis y fuente antes de guardar; la foto no se sube automáticamente.',
+          'El OCR conserva solo texto sin verificar. No completa ni reemplaza dosis, intervalos, concentración o fuentes. Transcribe y valida cada dato contra la etiqueta original; la foto no se sube automáticamente.',
         ),
         TextField(
           controller: labelDraft,
@@ -313,6 +293,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: TextField(
               enabled: !busy,
+              key: ValueKey('personal-dose-${pair.$1}'),
               controller: fields[pair.$1],
               decoration: InputDecoration(
                 labelText: pair.$2,
