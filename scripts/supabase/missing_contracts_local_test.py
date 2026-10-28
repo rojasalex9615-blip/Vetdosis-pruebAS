@@ -42,8 +42,10 @@ def main():
         if actual != expected: raise AssertionError('Rollback changed the baseline catalog')
     run(['docker','run','-d','--name',name,'--network','none','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17-alpine'])
     try:
+        # The image boots a temporary Unix-socket server during initdb. Wait
+        # for TCP, which is enabled only by the final server, before fixtures.
         for attempt in range(30):
-            if run(['docker','exec',name,'pg_isready','-U','postgres'],check=False).returncode==0: break
+            if run(['docker','exec',name,'pg_isready','-h','127.0.0.1','-U','postgres'],check=False).returncode==0: break
             time.sleep(1)
         else: raise RuntimeError('PostgreSQL startup failed')
         run(['docker','exec',name,'mkdir','/fixture'])
