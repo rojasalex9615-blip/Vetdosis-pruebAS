@@ -16,6 +16,7 @@ class FakeAuth implements AuthRepository {
   List<ClinicMembership> rows = [member];
   bool failRead = false;
   int inviteCalls = 0;
+  Object? signInFailure;
   Completer<List<ClinicMembership>>? pending;
   @override
   Stream<void> get changes => controller.stream;
@@ -28,6 +29,7 @@ class FakeAuth implements AuthRepository {
 
   @override
   Future<void> signIn(String email, String password) async {
+    if (signInFailure != null) throw signInFailure!;
     userId = 'user-a';
   }
 
