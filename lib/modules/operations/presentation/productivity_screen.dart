@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../core/presentation/module_page.dart';
 import '../../ai/domain/ai_repository.dart';
@@ -230,7 +231,7 @@ class _RoutineEditorState extends State<_RoutineEditor> {
       TextField(controller:area,enabled:!busy,maxLength:150,decoration:const InputDecoration(labelText:'Área')),
       TextField(controller:notes,enabled:!busy,maxLength:2000,maxLines:3,decoration:const InputDecoration(labelText:'Instrucciones y protocolo de la clínica')),
       TextField(controller:minutes,enabled:!busy,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Duración estimada en minutos')),
-      const Text('Días de realización'),Wrap(spacing:4,children:[for(var i=0;i<7;i++)FilterChip(label:Text(_days[i]),selected:days.contains(i),onSelected:busy?null:(v)=>setState(()=>v?days.add(i):days.remove(i)))]),
+      const Text('Días de realización'),Wrap(spacing:4,children:[for(var i=0;i<7;i++)glowChip(FilterChip(label:Text(_days[i]),selected:days.contains(i),onSelected:busy?null:(v)=>setState(()=>v?days.add(i):days.remove(i))))]),
       const Text('Personas que pueden realizarla (se alternan según disponibilidad y carga)'),
       for(final person in widget.people.entries)CheckboxListTile(title:Text(person.value),value:assignees.contains(person.key),onChanged:busy?null:(v)=>setState(()=>v==true?assignees.add(person.key):assignees.remove(person.key))),
       if(assignees.isEmpty)const Text('Sin personas seleccionadas: se crearán tareas sin asignar.'),
@@ -263,7 +264,7 @@ class _AvailabilityEditorState extends State<_AvailabilityEditor>{
     body:ListView(padding:const EdgeInsets.all(16),children:[
       const Text('Selecciona los días en que cada persona puede realizar tareas de apoyo. Puedes dejar todos desmarcados si no participa en el reparto.'),
       for(final person in widget.people.entries)...[Text(person.value,style:Theme.of(context).textTheme.titleMedium),
-        Wrap(spacing:4,children:[for(var i=0;i<7;i++)FilterChip(label:Text(_days[i]),selected:days[person.key]!.contains(i),onSelected:busy?null:(v)=>setState(()=>v?days[person.key]!.add(i):days[person.key]!.remove(i)))])],
+        Wrap(spacing:4,children:[for(var i=0;i<7;i++)glowChip(FilterChip(label:Text(_days[i]),selected:days[person.key]!.contains(i),onSelected:busy?null:(v)=>setState(()=>v?days[person.key]!.add(i):days[person.key]!.remove(i))))])],
       if(error!=null)Text(error!),FilledButton(onPressed:busy?null:save,child:const Text('Guardar disponibilidad')),
     ]));
 }

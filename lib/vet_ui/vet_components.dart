@@ -1,3 +1,4 @@
+import '../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 
 import 'vet_theme.dart';
@@ -70,29 +71,36 @@ class VetActionButton extends StatelessWidget {
       VetActionStyle.neutral => (colors.surfaceContainerLow, colors.onSurface),
       VetActionStyle.destructive => (colors.error, colors.onError),
     };
-    return FilledButton(
-      onPressed: loading ? null : onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: background,
-        foregroundColor: foreground,
-        minimumSize: const Size(48, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: const StadiumBorder(),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (loading)
-            const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else if (icon != null)
-            Icon(icon, size: 20),
-          if (icon != null || loading) const SizedBox(width: 8),
-          Flexible(child: Text(label, textAlign: TextAlign.center)),
-        ],
+    return AccentGlow(
+      color: background,
+      enabled: !loading && onPressed != null && style != VetActionStyle.neutral,
+      emphasis: .8,
+      child: FilledButton(
+        onPressed: loading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: background,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          foregroundColor: foreground,
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: const StadiumBorder(),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (loading)
+              const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else if (icon != null)
+              Icon(icon, size: 20),
+            if (icon != null || loading) const SizedBox(width: 8),
+            Flexible(child: Text(label, textAlign: TextAlign.center)),
+          ],
+        ),
       ),
     );
   }
@@ -167,14 +175,20 @@ class VetModuleTile extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: .15),
-                    borderRadius: BorderRadius.circular(14),
+                AccentGlow(
+                  color: accent,
+                  radius: 14,
+                  emphasis: 1,
+                  enabled: onTap != null,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: .15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: accent),
                   ),
-                  child: Icon(icon, color: accent),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -247,8 +261,10 @@ class VetPracticeSelector extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      AccentIcon(
                         icons[i],
+                        enabled: active,
+                        emphasis: .75,
                         color: active ? VetColors.purple : VetColors.turquoise,
                       ),
                       const SizedBox(height: 5),
@@ -294,7 +310,7 @@ class VetKpiCard extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
     child: Column(
       children: [
-        Icon(icon, color: accent, size: 24),
+        AccentIcon(icon, color: accent, size: 24),
         const SizedBox(height: 7),
         Text(value, style: Theme.of(context).textTheme.titleLarge),
         Text(

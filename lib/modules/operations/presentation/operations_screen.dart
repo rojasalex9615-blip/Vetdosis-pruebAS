@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'staff_medical_screen.dart';
 import '../domain/service_catalog.dart';
 import '../../ai/domain/ai_repository.dart';
@@ -486,11 +487,11 @@ class _OperationsScreenState extends State<OperationsScreen>
               'acts': 'Desempeño',
             }.entries)
               if (!model.explicitPermissions || model.sectionAllowed(e.key))
-                ChoiceChip(
+                glowChip(ChoiceChip(
                   label: Text(e.value),
                   selected: section == e.key,
                   onSelected: (_) => setState(() => section = e.key),
-                ),
+                )),
             TextButton(
               onPressed: model.busy
                   ? null
@@ -569,11 +570,11 @@ class _OperationsScreenState extends State<OperationsScreen>
                   setState(() => appointmentState = value),
             ),
           if (careEnabled) ...[
-            FilterChip(
+            glowChip(FilterChip(
               label: const Text('Atención del día y pendientes anteriores'),
               selected: careDay,
               onSelected: (value) => setState(() => careDay = value),
-            ),
+            )),
             if (model.careWindow != null && careDay)
               Text(
                 '${model.careWindow!['day']} · ${model.careWindow!['timezone']} · ${visibleAppointments.length} citas',

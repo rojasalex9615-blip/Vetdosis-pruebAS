@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'ai_labels.dart';
 import 'starter_help_panel.dart';
 import 'dart:convert';
@@ -350,7 +351,7 @@ class _AiScreenState extends State<AiScreen> {
                   Wrap(
                     children: [
                       for (final r in ClinicRole.values)
-                        FilterChip(
+                        glowChip(FilterChip(
                           label: Text(r.label),
                           selected: audience.contains(r.name),
                           onSelected: (yes) => set(
@@ -358,7 +359,7 @@ class _AiScreenState extends State<AiScreen> {
                                 ? audience.add(r.name)
                                 : audience.remove(r.name),
                           ),
-                        ),
+                        )),
                     ],
                   ),
                 const Text(

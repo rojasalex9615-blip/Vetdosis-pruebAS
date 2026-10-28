@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 
@@ -66,21 +67,21 @@ class AppointmentSummary extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              ChoiceChip(
+              glowChip(ChoiceChip(
                 label: Text('Todas (${rows.length})'),
                 selected: selectedState == null,
                 onSelected: (_) => onStateChanged(null),
-              ),
+              )),
               for (final state in states.entries)
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
-                  child: ChoiceChip(
+                  child: glowChip(ChoiceChip(
                     label: Text(
                       '${state.value} (${rows.where((a) => a['state'] == state.key).length})',
                     ),
                     selected: selectedState == state.key,
                     onSelected: (_) => onStateChanged(state.key),
-                  ),
+                  )),
                 ),
             ],
           ),

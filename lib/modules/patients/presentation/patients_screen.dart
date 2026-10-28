@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import '../domain/patient_contacts.dart';
 import '../../ai/domain/ai_repository.dart';
 import '../domain/patient_timeline.dart';
@@ -314,23 +315,23 @@ class _PatientsScreenState extends State<PatientsScreen>
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    ChoiceChip(
+                    glowChip(ChoiceChip(
                       label: Text('Todos (${model.patients.length})'),
                       selected: selectedActivity == null,
                       onSelected: (_) => setState(() => activityFilter = null),
-                    ),
+                    )),
                     for (final kind in PatientActivityKind.values)
                       if (snapshot.allowed(kind))
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
-                          child: ChoiceChip(
+                          child: glowChip(ChoiceChip(
                             label: Text(
                               '${kind.label} (${snapshot.count(kind, model.patients.map((p) => p.id).toSet())})',
                             ),
                             selected: selectedActivity == kind,
                             onSelected: (_) =>
                                 setState(() => activityFilter = kind),
-                          ),
+                          )),
                         ),
                   ],
                 ),
@@ -365,19 +366,19 @@ class _PatientsScreenState extends State<PatientsScreen>
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  ChoiceChip(
+                  glowChip(ChoiceChip(
                     label: const Text('Todas las especies'),
                     selected: selectedSpecies == null,
                     onSelected: (_) => setState(() => species = null),
-                  ),
+                  )),
                   for (final key in speciesKeys)
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
-                      child: ChoiceChip(
+                      child: glowChip(ChoiceChip(
                         label: Text(speciesNames[key]!),
                         selected: selectedSpecies == key,
                         onSelected: (_) => setState(() => species = key),
-                      ),
+                      )),
                     ),
                 ],
               ),
@@ -606,18 +607,18 @@ class _PatientsScreenState extends State<PatientsScreen>
               Wrap(
                 spacing: 8,
                 children: [
-                  FilterChip(
+                  glowChip(FilterChip(
                     label: const Text('Más antiguas primero'),
                     selected: historyOldestFirst,
                     onSelected: (value) =>
                         setState(() => historyOldestFirst = value),
-                  ),
-                  FilterChip(
+                  )),
+                  glowChip(FilterChip(
                     label: const Text('Agrupar por motivo'),
                     selected: historyByReason,
                     onSelected: (value) =>
                         setState(() => historyByReason = value),
-                  ),
+                  )),
                 ],
               ),
               const Text(

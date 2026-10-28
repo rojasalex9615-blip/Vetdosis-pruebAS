@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import '../domain/hospital_history.dart';
 import 'hospital_history_screen.dart';
 import '../../patients/domain/patient_contacts.dart';
@@ -835,16 +836,16 @@ class _HospitalScreenState extends State<HospitalScreen> {
                 icon: const Icon(Icons.calendar_today),
                 label: Text('Fecha: ${day.toIso8601String().substring(0, 10)}'),
               ),
-              ChoiceChip(
+              glowChip(ChoiceChip(
                 label: const Text('Fichas por jaula'),
                 selected: !table,
                 onSelected: (_) => setState(() => table = false),
-              ),
-              ChoiceChip(
+              )),
+              glowChip(ChoiceChip(
                 label: const Text('Paciente × hora'),
                 selected: table,
                 onSelected: (_) => setState(() => table = true),
-              ),
+              )),
             ],
           ),
           if (visibleStays.isEmpty && !model.busy && model.error == null)

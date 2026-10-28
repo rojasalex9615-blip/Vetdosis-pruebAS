@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'dart:io';
 import '../domain/promotion_text.dart';
 import 'dart:ui' as ui;
@@ -88,8 +89,8 @@ class _PromotionImageScreenState extends State<PromotionImageScreen> {
         TextField(controller: footer, maxLength: 80, onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(labelText: 'Nombre de la clínica o cierre')),
         Wrap(spacing: 8, children: [for (var i = 0; i < palettes.length; i++)
-          ChoiceChip(label: Text(['Verde', 'Violeta', 'Coral'][i]), selected: palette == i,
-            onSelected: (_) => setState(() => palette = i)),
+          glowChip(ChoiceChip(label: Text(['Verde', 'Violeta', 'Coral'][i]), selected: palette == i,
+            onSelected: (_) => setState(() => palette = i))),
         ]),
         const SizedBox(height: 16),
         Center(child: RepaintBoundary(key: imageKey, child: SizedBox(width: 360, height: 450,
