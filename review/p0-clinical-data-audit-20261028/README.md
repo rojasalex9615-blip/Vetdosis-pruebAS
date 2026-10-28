@@ -66,3 +66,9 @@ Siguientes P1 identificados, sin resolver por este parche:
 2. #61: `inv_sale_return_v3` falta en la lista de escrituras permitidas del repositorio Supabase. Añadir prueba que use el repositorio real; el fake anterior no detectó este fallo. La función remota además sigue ausente según inspección previa.
 3. Revisar los demás hallazgos nuevos de #26/#61 (permisos de herramientas manuales, prellenado hospitalario, leases, mezcla de contratos, etc.) antes de nueva integración/compilación.
 4. Revisión CodeRabbit, compatibilidad de migraciones/CI y autorización separada para cualquier despliegue. QA en Android solo con APK y SHA identificados.
+
+## Seguimiento de CodeRabbit en #63
+
+Tres observaciones corregidas en `f2f315d903417b93a288dbae7f92d8765d7b4796`: filtro de CI incluye implementación del escáner; prueba de cuarentena detecta secretos por punto y por índice; guarda de asignación toma **clinic antes de member**, igual que la retirada. Ocho pruebas Python aprobadas.
+
+Una barrera de prueba entre el BEFORE de la guarda y el AFTER de la FK reprodujo `deadlock detected` con el orden previo. La misma intercalación pasó con el orden corregido, además de las carreras, historia, pago y regresiones financieras/personales. No hubo cambios Dart en este seguimiento; se conserva la batería Flutter 673/1 omitida de la entrega anterior. Re-revisión solicitada tras publicar.

@@ -39,5 +39,14 @@
     "Auth refresh invalidates patient picker using accessRevision",
     "inv_sale_return_v3 missing from repository write allowlist",
     "Other #26/#61 findings and contract rollout"
-  ]
+  ],
+  "followup_review": {
+    "tested_code_sha": "f2f315d903417b93a288dbae7f92d8765d7b4796",
+    "observations_corrected": 3,
+    "workflow_python_tests": 8,
+    "old_order_deadlock_reproduced": true,
+    "clinic_first_order_passed_interleaved_before_after_race": true,
+    "financial_and_staff_combined_sql_passed": true,
+    "dart_changes": false
+  }
 }
