@@ -7,7 +7,6 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
 
-// FILE RESTORED - see local clone for full keypad version if this is truncated
 String inventoryError(Object error) {
   final planMessage = planActionError(error);
   if (planMessage != null) return planMessage;
@@ -74,9 +73,13 @@ class _SaleScreenState extends State<SaleScreen> {
       if (key == 'C') {
         cashInput = '';
       } else if (key == '⌫') {
-        if (cashInput.isNotEmpty) cashInput = cashInput.substring(0, cashInput.length - 1);
+        if (cashInput.isNotEmpty) {
+          cashInput = cashInput.substring(0, cashInput.length - 1);
+        }
       } else if (key == '.') {
-        if (!cashInput.contains('.')) cashInput = cashInput.isEmpty ? '0.' : '$cashInput.';
+        if (!cashInput.contains('.')) {
+          cashInput = cashInput.isEmpty ? '0.' : '$cashInput.';
+        }
       } else {
         final parts = cashInput.split('.');
         if (parts.length == 2 && parts[1].length >= 2) return;
@@ -91,25 +94,49 @@ class _SaleScreenState extends State<SaleScreen> {
         .map((e) => Map<String, dynamic>.from(e))
         .where((l) => l['expired'] != true && Quantity.parse(l['cantidad'] as String).positive)
         .toList();
-    final rx = widget.prescriptions.where((r) => r['product_version_id'] == p['medication_version_id']).toList();
+    final rx = widget.prescriptions
+        .where((r) => r['product_version_id'] == p['medication_version_id'])
+        .toList();
     await Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => RxEntryScreen(
           title: 'Agregar ${p['nombre']}',
           fields: [
-            RxField('lot', 'Lote exacto', type: 'select', required: true, options: {
-              for (final l in lots) l['id'] as String: '${l['lote']} · ${l['cantidad']} · ${l['caducidad'] ?? 'sin fecha'}',
-            }),
-            const RxField('quantity', 'Cantidad de stock (no dosis)', type: 'quantity', required: true),
+            RxField(
+              'lot',
+              'Lote exacto',
+              type: 'select',
+              required: true,
+              options: {
+                for (final l in lots)
+                  l['id'] as String:
+                      '${l['lote']} · ${l['cantidad']} · ${l['caducidad'] ?? 'sin fecha'}',
+              },
+            ),
+            const RxField(
+              'quantity',
+              'Cantidad de stock (no dosis)',
+              type: 'quantity',
+              required: true,
+            ),
             if (p['m8_kind'] == 'farmaco')
-              RxField('rx', 'Receta emitida / producto exacto', type: 'select', required: true, options: {
-                for (final r in rx) r['id'] as String: '${r['folio'] ?? 'Receta ordinaria'} · ${r['prescription_id']}',
-              }),
+              RxField(
+                'rx',
+                'Receta emitida / producto exacto',
+                type: 'select',
+                required: true,
+                options: {
+                  for (final r in rx)
+                    r['id'] as String:
+                        '${r['folio'] ?? 'Receta ordinaria'} · ${r['prescription_id']}',
+                },
+              ),
           ],
           submit: (d, _) async {
             final q = Quantity.parse(d['quantity'] as String);
-            if (['unidad', 'frasco', 'caja'].contains(p['stock_unit']) && q.n % q.d != BigInt.zero) {
+            if (['unidad', 'frasco', 'caja'].contains(p['stock_unit']) &&
+                q.n % q.d != BigInt.zero) {
               throw const FormatException('Cantidad entera por envase.');
             }
             final lot = lots.firstWhere((l) => l['id'] == d['lot']);
@@ -145,9 +172,15 @@ class _SaleScreenState extends State<SaleScreen> {
             const RxField('price', 'Precio unitario MXN', required: true),
             const RxField('cost', 'Costo total capturado MXN', required: true),
             const RxField('commission', 'Comisión total capturada MXN', required: true),
-            RxField('professional_id', 'Profesional de la clínica', type: 'select', options: {
-              for (final s in widget.staff) s['id'] as String: '${s['label'] ?? s['id']} · ${s['role']}',
-            }),
+            RxField(
+              'professional_id',
+              'Profesional de la clínica',
+              type: 'select',
+              options: {
+                for (final s in widget.staff)
+                  s['id'] as String: '${s['label'] ?? s['id']} · ${s['role']}',
+              },
+            ),
           ],
           submit: (d, _) async {
             for (final key in ['price', 'cost', 'commission']) {
@@ -164,14 +197,20 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> post() async {
-    setState(() { busy = true; error = null; });
+    setState(() {
+      busy = true;
+      error = null;
+    });
     try {
       await widget.repository.write('inv_sale_post', {
         'p_shift': widget.shift,
         'p_method': method,
         'p_lines': [
           for (final l in lines)
-            Map<String, dynamic>.from(l)..remove('display')..remove('lot_display')..remove('unit'),
+            Map<String, dynamic>.from(l)
+              ..remove('display')
+              ..remove('lot_display')
+              ..remove('unit'),
         ],
         'p_expected_total': total.decimal,
         'p_operation': operation,
@@ -185,11 +224,11 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   String get methodLabel => switch (method) {
-    'efectivo' => 'Efectivo',
-    'tarjeta' => 'Tarjeta',
-    'transferencia' => 'Transferencia',
-    _ => method,
-  };
+        'efectivo' => 'Efectivo',
+        'tarjeta' => 'Tarjeta',
+        'transferencia' => 'Transferencia',
+        _ => method,
+      };
 
   Widget _methodChip(String value, String label, IconData icon) {
     final selected = method == value;
@@ -197,21 +236,37 @@ class _SaleScreenState extends State<SaleScreen> {
     const accent = Color(0xFF2BBBAD);
     return Expanded(
       child: Material(
-        color: selected ? accent.withValues(alpha: 0.18) : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        color: selected
+            ? accent.withValues(alpha: 0.18)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: busy ? null : () => setState(() { method = value; changed(); }),
+          onTap: busy
+              ? null
+              : () => setState(() {
+                    method = value;
+                    changed();
+                  }),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(children: [
-              Icon(icon, size: 22, color: selected ? accent : theme.colorScheme.onSurfaceVariant),
-              const SizedBox(height: 4),
-              Text(label, style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? accent : null,
-              )),
-            ]),
+            child: Column(
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: selected ? accent : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? accent : null,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -220,7 +275,8 @@ class _SaleScreenState extends State<SaleScreen> {
 
   Widget _cartLine(int index) {
     final line = lines[index];
-    final lineTotal = Money.parse(line['price'] as String).times(Quantity.parse(line['quantity'] as String));
+    final lineTotal = Money.parse(line['price'] as String)
+        .times(Quantity.parse(line['quantity'] as String));
     final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -228,27 +284,66 @@ class _SaleScreenState extends State<SaleScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
-      child: Row(children: [
-        Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(color: const Color(0xFF9B6DFF).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
-          child: Icon(line['kind'] == 'producto' ? Icons.medication_outlined : Icons.medical_services_outlined, color: const Color(0xFF9B6DFF), size: 22),
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('${line['display']}', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          Text('${line['quantity']} ${line['unit'] ?? 'servicio'}${line['lot_display'] != null ? ' · Lote ${line['lot_display']}' : ''}',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        ])),
-        Text(lineTotal.display, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-        IconButton(
-          tooltip: 'Quitar del carrito',
-          onPressed: busy ? null : () => setState(() { lines.removeAt(index); changed(); }),
-          icon: const Icon(Icons.close, size: 18),
-        ),
-      ]),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF9B6DFF).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              line['kind'] == 'producto'
+                  ? Icons.medication_outlined
+                  : Icons.medical_services_outlined,
+              color: const Color(0xFF9B6DFF),
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${line['display']}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '${line['quantity']} ${line['unit'] ?? 'servicio'}'
+                  '${line['lot_display'] != null ? ' · Lote ${line['lot_display']}' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            lineTotal.display,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Quitar del carrito',
+            onPressed: busy
+                ? null
+                : () => setState(() {
+                      lines.removeAt(index);
+                      changed();
+                    }),
+            icon: const Icon(Icons.close, size: 18),
+          ),
+        ],
+      ),
     );
   }
 
@@ -263,152 +358,318 @@ class _SaleScreenState extends State<SaleScreen> {
         title: const Text('Caja registradora'),
         actions: [
           if (widget.admin)
-            IconButton(tooltip: 'Agregar servicio manual', onPressed: busy ? null : addService, icon: const Icon(Icons.add_business_outlined)),
+            IconButton(
+              tooltip: 'Agregar servicio manual',
+              onPressed: busy ? null : addService,
+              icon: const Icon(Icons.add_business_outlined),
+            ),
         ],
       ),
-      body: Column(children: [
-        Expanded(child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          children: [
-            Text('Carrito actual', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            if (lines.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35), borderRadius: BorderRadius.circular(18)),
-                child: Column(children: [
-                  Icon(Icons.shopping_bag_outlined, size: 40, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(height: 8),
-                  Text('Aún no hay artículos. Agrega productos o servicios abajo.', textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                ]),
-              )
-            else
-              for (var i = 0; i < lines.length; i++) _cartLine(i),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [accent.withValues(alpha: 0.22), indigo.withValues(alpha: 0.18)]),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text('Total a pagar', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                Text(total.display, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: indigo)),
-              ]),
-            ),
-            const SizedBox(height: 20),
-            Text('Método de pago', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 10),
-            Row(children: [
-              _methodChip('efectivo', 'Efectivo', Icons.payments_outlined),
-              const SizedBox(width: 8),
-              _methodChip('tarjeta', 'Tarjeta', Icons.credit_card),
-              const SizedBox(width: 8),
-              _methodChip('transferencia', 'Transferencia', Icons.swap_horiz),
-            ]),
-            if (method == 'efectivo') ...[
-              const SizedBox(height: 16),
-              Row(children: [
-                Expanded(child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(16)),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Recibido', style: theme.textTheme.labelMedium),
-                    Text(cashReceived?.display ?? (cashInput.isEmpty ? '\\$0.00' : '\\$$cashInput'),
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                  ]),
-                )),
-                const SizedBox(width: 10),
-                Expanded(child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: (change != null && change!.cents >= BigInt.zero)
-                        ? accent.withValues(alpha: 0.15)
-                        : theme.colorScheme.errorContainer.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Cambio', style: theme.textTheme.labelMedium),
-                    Text(change == null ? '—' : change!.display,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: change != null && change!.cents < BigInt.zero ? theme.colorScheme.error : accent,
-                      )),
-                  ]),
-                )),
-              ]),
-              const SizedBox(height: 12),
-              _NumericKeypad(onKey: busy ? null : onKey),
-            ],
-            const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 8),
-            Text('Agregar al carrito', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text('Venta en MXN. El servidor confirma lote, stock, precio y permisos al cobrar.',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 8),
-            for (final p in widget.products.where((p) => p['m8_enabled'] == true && p['active'] == true))
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(backgroundColor: accent.withValues(alpha: 0.15),
-                  child: const Icon(Icons.medication_liquid_outlined, color: accent, size: 20)),
-                title: Text('${p['nombre']}'),
-                subtitle: Text('${Money.parse(p['precio_venta']).display} · ${p['stock_unit']} · stock ${p['stock']}'),
-                trailing: IconButton.filledTonal(onPressed: busy ? null : () => addProduct(p), icon: const Icon(Icons.add)),
-              ),
-            if (widget.charges.isNotEmpty || widget.acts.isNotEmpty || widget.deliveries.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text('Cobrar aplicaciones y entregas ya registradas', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-              for (final entry in [
-                ...widget.charges.where((c) => c['paid'] != true).map((c) => (c, 'charge_id')),
-                ...widget.acts.where((c) => c['paid'] != true).map((c) => (c, 'service_act_id')),
-                ...widget.deliveries.where((c) => c['paid'] != true).map((c) => (c, 'delivery_id')),
-              ])
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('${entry.\$1['name']}'),
-                  subtitle: Text(displayMoney(entry.\$1['price'])),
-                  trailing: IconButton(
-                    onPressed: busy ? null : () {
-                      if (lines.any((l) => l[entry.\$2] == entry.\$1['id'])) return;
-                      setState(() {
-                        lines.add({'kind': 'servicio', entry.\$2: entry.\$1['id'], 'quantity': '1', 'price': entry.\$1['price'], 'display': entry.\$1['name']});
-                        changed();
-                      });
-                    },
-                    icon: const Icon(Icons.add_circle_outline),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              children: [
+                Text(
+                  'Carrito actual',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-            ],
-            const SizedBox(height: 8),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              value: reviewed,
-              title: const Text('Revisé cantidades, lotes, receta y total a cobrar.'),
-              onChanged: busy ? null : (v) => setState(() => reviewed = v ?? false),
-            ),
-            if (error != null)
-              Padding(padding: const EdgeInsets.only(bottom: 8),
-                child: Text(error!, style: TextStyle(color: theme.colorScheme.error))),
-          ],
-        )),
-        SafeArea(top: false, child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: SizedBox(
-            width: double.infinity, height: 52,
-            child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: indigo, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-              onPressed: busy || !reviewed || lines.isEmpty ||
-                  (method == 'efectivo' && cashInput.isNotEmpty && (change == null || change!.cents < BigInt.zero))
-                  ? null : post,
-              child: Text(busy ? 'Registrando…' : 'Cobrar · ${total.display} · $methodLabel',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                const SizedBox(height: 8),
+                if (lines.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 40,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Aún no hay artículos. Agrega productos o servicios abajo.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  for (var i = 0; i < lines.length; i++) _cartLine(i),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.22),
+                        indigo.withValues(alpha: 0.18),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total a pagar',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        total.display,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: indigo,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Método de pago',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _methodChip('efectivo', 'Efectivo', Icons.payments_outlined),
+                    const SizedBox(width: 8),
+                    _methodChip('tarjeta', 'Tarjeta', Icons.credit_card),
+                    const SizedBox(width: 8),
+                    _methodChip(
+                      'transferencia',
+                      'Transferencia',
+                      Icons.swap_horiz,
+                    ),
+                  ],
+                ),
+                if (method == 'efectivo') ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Recibido', style: theme.textTheme.labelMedium),
+                              Text(
+                                cashReceived?.display ??
+                                    (cashInput.isEmpty ? r'$0.00' : '\$$cashInput'),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: (change != null &&
+                                    change!.cents >= BigInt.zero)
+                                ? accent.withValues(alpha: 0.15)
+                                : theme.colorScheme.errorContainer
+                                    .withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Cambio', style: theme.textTheme.labelMedium),
+                              Text(
+                                change == null ? '—' : change!.display,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: change != null &&
+                                          change!.cents < BigInt.zero
+                                      ? theme.colorScheme.error
+                                      : accent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _NumericKeypad(onKey: busy ? null : onKey),
+                ],
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  'Agregar al carrito',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Venta en MXN. El servidor confirma lote, stock, precio y permisos al cobrar.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final p in widget.products.where(
+                  (p) => p['m8_enabled'] == true && p['active'] == true,
+                ))
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: accent.withValues(alpha: 0.15),
+                      child: const Icon(
+                        Icons.medication_liquid_outlined,
+                        color: accent,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text('${p['nombre']}'),
+                    subtitle: Text(
+                      '${Money.parse(p['precio_venta']).display} · ${p['stock_unit']} · stock ${p['stock']}',
+                    ),
+                    trailing: IconButton.filledTonal(
+                      onPressed: busy ? null : () => addProduct(p),
+                      icon: const Icon(Icons.add),
+                    ),
+                  ),
+                if (widget.charges.isNotEmpty ||
+                    widget.acts.isNotEmpty ||
+                    widget.deliveries.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Cobrar aplicaciones y entregas ya registradas',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  for (final entry in [
+                    ...widget.charges
+                        .where((c) => c['paid'] != true)
+                        .map((c) => (c, 'charge_id')),
+                    ...widget.acts
+                        .where((c) => c['paid'] != true)
+                        .map((c) => (c, 'service_act_id')),
+                    ...widget.deliveries
+                        .where((c) => c['paid'] != true)
+                        .map((c) => (c, 'delivery_id')),
+                  ])
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('${entry.$1['name']}'),
+                      subtitle: Text(displayMoney(entry.$1['price'])),
+                      trailing: IconButton(
+                        onPressed: busy
+                            ? null
+                            : () {
+                                if (lines.any(
+                                  (l) => l[entry.$2] == entry.$1['id'],
+                                )) {
+                                  return;
+                                }
+                                setState(() {
+                                  lines.add({
+                                    'kind': 'servicio',
+                                    entry.$2: entry.$1['id'],
+                                    'quantity': '1',
+                                    'price': entry.$1['price'],
+                                    'display': entry.$1['name'],
+                                  });
+                                  changed();
+                                });
+                              },
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
+                    ),
+                ],
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: reviewed,
+                  title: const Text(
+                    'Revisé cantidades, lotes, receta y total a cobrar.',
+                  ),
+                  onChanged: busy
+                      ? null
+                      : (v) => setState(() => reviewed = v ?? false),
+                ),
+                if (error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      error!,
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                  ),
+              ],
             ),
           ),
-        )),
-      ]),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: indigo,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: busy ||
+                          !reviewed ||
+                          lines.isEmpty ||
+                          (method == 'efectivo' &&
+                              cashInput.isNotEmpty &&
+                              (change == null || change!.cents < BigInt.zero))
+                      ? null
+                      : post,
+                  child: Text(
+                    busy
+                        ? 'Registrando…'
+                        : 'Cobrar · ${total.display} · $methodLabel',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -420,33 +681,58 @@ class _NumericKeypad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final keys = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9'], ['.', '0', '⌫']];
-    return Column(children: [
-      for (final row in keys)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(children: [
-            for (var i = 0; i < row.length; i++) ...[
-              if (i > 0) const SizedBox(width: 8),
-              Expanded(child: Material(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: onKey == null ? null : () => onKey!(row[i]),
-                  onLongPress: onKey == null || row[i] != '⌫' ? null : () => onKey!('C'),
-                  child: SizedBox(height: 48, child: Center(
-                    child: Text(row[i], style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                  )),
-                ),
-              )),
-            ],
-          ]),
+    final keys = [
+      ['1', '2', '3'],
+      ['4', '5', '6'],
+      ['7', '8', '9'],
+      ['.', '0', '⌫'],
+    ];
+    return Column(
+      children: [
+        for (final row in keys)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                for (var i = 0; i < row.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: Material(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: onKey == null ? null : () => onKey!(row[i]),
+                        onLongPress: onKey == null || row[i] != '⌫'
+                            ? null
+                            : () => onKey!('C'),
+                        child: SizedBox(
+                          height: 48,
+                          child: Center(
+                            child: Text(
+                              row[i],
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: onKey == null ? null : () => onKey!('C'),
+            child: const Text('Limpiar'),
+          ),
         ),
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton(onPressed: onKey == null ? null : () => onKey!('C'), child: const Text('Limpiar')),
-      ),
-    ]);
+      ],
+    );
   }
 }
