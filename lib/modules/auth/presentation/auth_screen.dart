@@ -44,9 +44,22 @@ class _AuthScreenState extends State<AuthScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Image.asset(
+                    'assets/branding/logo.png',
+                    width: 140,
+                    height: 140,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.pets, size: 96),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Text(
                   model?.signedIn == true ? 'Tu clínica' : 'Bienvenido',
                   style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
                 ),
                 TextButton(
                   onPressed: () => Navigator.push(
@@ -473,6 +486,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                           },
                     child: const Text('Crear clínica'),
                   ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: _inviteCode,
                     autocorrect: false,
@@ -493,20 +507,20 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                 ],
               ),
             TextButton(
-              onPressed: model.busy ? null : model.refresh,
-              child: const Text('Actualizar mis permisos'),
-            ),
-            if (model.error != null) Text(model.error!),
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: model.busy
-                  ? null
-                  : () async {
-                      await model.signOut();
-                      if (context.mounted) Navigator.pop(context);
-                    },
+              onPressed: model.busy ? null : model.signOut,
               child: const Text('Cerrar sesión'),
             ),
+            if (model.busy)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            if (model.error != null)
+              Text(
+                model.error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (model.message != null) Text(model.message!),
           ],
         ),
       );
