@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../../core/domain/navigation_access.dart';
-import '../../auth/domain/staff_labels.dart';
 import '../../inventory/domain/inventory_models.dart';
 import '../../hospital/application/hospital_alerts.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
@@ -181,7 +180,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     builder: (context, _) {
       final m = model;
       final stats = m.statistics;
-      final totals = m.dayTotals;
       final statisticsPanel = panel('Estadísticas', 'Estadísticas', [
         unavailable(
           'Estadísticas',
@@ -524,75 +522,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        '${m.products.length} artículos activos · ${m.lowStock.length} por revisar',
+                        '${m.lowStock.length} productos bajos · ${m.stock?.products.length ?? 0} activos',
                       ),
-                      if (m.canSeeClinicSales)
-                        metrics([
-                          (
-                            'Valor a costo',
-                            m.valueAtCost?.display ?? 'No disponible',
-                          ),
-                          (
-                            'Valor a venta',
-                            m.valueAtSale?.display ?? 'No disponible',
-                          ),
-                          (
-                            'Margen potencial',
-                            m.potentialMargin?.display ?? 'No disponible',
-                          ),
-                        ]),
-                      const Text(
-                        'Existencias disponibles por unidad; no incluye lotes caducados.',
+                      FilledButton.tonal(
+                        onPressed: openingCash || m.busy ? null : openCash,
+                        child: const Text('Abrir turno de caja'),
                       ),
-                      if (m.stockByUnit == null)
-                        const Text('Existencias por unidad no disponibles.'),
-                      for (final e
-                          in (m.stockByUnit ?? <String, Quantity>{}).entries)
-                        Text('${e.value.display()} ${e.key}'),
-                      const Text(
-                        'Margen potencial antes de comisiones y gastos; no es utilidad neta.',
-                      ),
-                      TextField(
-                        controller: search,
-                        decoration: const InputDecoration(
-                          labelText: 'Buscar producto por nombre o código',
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      if (search.text.trim().isNotEmpty)
-                        for (final p
-                            in m.products
-                                .where(
-                                  (p) =>
-                                      '${p['nombre']} ${p['codigo_barras'] ?? ''}'
-                                          .toLowerCase()
-                                          .contains(
-                                            search.text.trim().toLowerCase(),
-                                          ),
-                                )
-                                .take(5))
-                          ListTile(
-                            title: Text('${p['nombre']}'),
-                            subtitle: Text(
-                              'Disponible: ${p['available_stock']}',
-                            ),
-                            onTap: () => widget.onNavigate('Inventario'),
-                          ),
                     ],
                   ),
                 ),
               ]),
             ],
           ],
-          const SizedBox(height: 16),
         ],
       );
     },
   );
 }
 
-/// Tarjeta grande de módulo principal (estilo captura dashboard).
 class _ModuleCard extends StatelessWidget {
   const _ModuleCard({
     required this.title,
@@ -600,7 +547,6 @@ class _ModuleCard extends StatelessWidget {
     required this.accent,
     required this.onTap,
   });
-
   final String title;
   final IconData icon;
   final Color accent;
@@ -609,28 +555,19 @@ class _ModuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = isDark
-        ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55)
-        : Colors.white;
-    final iconBg = accent.withValues(alpha: isDark ? 0.22 : 0.14);
-
     return Material(
-      color: cardColor,
-      elevation: isDark ? 0 : 1.5,
-      shadowColor: accent.withValues(alpha: 0.18),
-      borderRadius: BorderRadius.circular(22),
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isDark
-                  ? theme.colorScheme.outlineVariant.withValues(alpha: 0.4)
-                  : const Color(0xFFE8EEF4),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
             ),
           ),
           child: Column(
@@ -640,20 +577,17 @@ class _ModuleCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(18),
+                  color: accent.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 28, color: accent),
+                child: Icon(icon, color: accent, size: 28),
               ),
               const SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
