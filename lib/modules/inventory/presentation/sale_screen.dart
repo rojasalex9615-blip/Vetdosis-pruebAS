@@ -230,10 +230,10 @@ class _SaleScreenState extends State<SaleScreen> {
               required: true,
             ),
             const RxField('price', 'Precio unitario MXN', required: true),
-            const RxField('cost', 'Costo TOTAL capturado MXN', required: true),
+            const RxField('cost', 'Costo total capturado MXN', required: true),
             const RxField(
               'commission',
-              'Comisión TOTAL capturada MXN',
+              'Comisión total capturada MXN',
               required: true,
             ),
             RxField(
@@ -299,138 +299,385 @@ class _SaleScreenState extends State<SaleScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Punto de venta')),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Venta interna en MXN. Los precios capturados son finales; no se genera factura fiscal. El servidor confirma lote, caducidad, stock, precio y permisos al registrar.',
-          ),
-          for (final p in widget.products.where(
-            (p) => p['m8_enabled'] == true && p['active'] == true,
-          ))
-            ListTile(
-              title: Text(
-                '${p['nombre']} · ${Money.parse(p['precio_venta']).display}',
-              ),
-              subtitle: Text('${p['stock_unit']} · stock ${p['stock']}'),
-              trailing: IconButton(
-                onPressed: busy ? null : () => addProduct(p),
-                icon: const Icon(Icons.add_shopping_cart),
-              ),
-            ),
-          if (widget.admin)
-            TextButton(
-              onPressed: busy ? null : addService,
-              child: const Text('Agregar servicio y comisión manual'),
-            ),
-          const Divider(),
-          const Text(
-            'Cobrar aplicaciones y entregas ya registradas (sin descontar stock de nuevo)',
-          ),
-          for (final entry in [
-            ...widget.charges
-                .where((c) => c['paid'] != true)
-                .map((c) => (c, 'charge_id')),
-            ...widget.acts
-                .where((c) => c['paid'] != true)
-                .map((c) => (c, 'service_act_id')),
-            ...widget.deliveries
-                .where((c) => c['paid'] != true)
-                .map((c) => (c, 'delivery_id')),
-          ])
-            ListTile(
-              title: Text(
-                '${entry.$1['name']} · ${displayMoney(entry.$1['price'])}',
-              ),
-              trailing: IconButton(
-                onPressed: busy
-                    ? null
-                    : () {
-                        if (lines.any((l) => l[entry.$2] == entry.$1['id'])) {
-                          return;
-                        }
-                        setState(() {
-                          lines.add({
-                            'kind': 'servicio',
-                            entry.$2: entry.$1['id'],
-                            'quantity': '1',
-                            'price': entry.$1['price'],
-                            'display': entry.$1['name'],
-                          });
-                          changed();
-                        });
-                      },
-                icon: const Icon(Icons.add),
-              ),
-            ),
+  String get methodLabel => switch (method) {
+        'efectivo' => 'Efectivo',
+        'tarjeta' => 'Tarjeta',
+        'transferencia' => 'Transferencia',
+        _ => method,
+      };
 
-          for (var index = 0; index < lines.length; index++)
-            ListTile(
-              title: Text(
-                '${lines[index]['display']} · ${lines[index]['quantity']} ${lines[index]['unit'] ?? 'servicio'}',
-              ),
-              subtitle: Text(
-                '${lines[index]['lot_display'] ?? ''} · ${Money.parse(lines[index]['price']).times(Quantity.parse(lines[index]['quantity'])).display}',
-              ),
-              trailing: IconButton(
-                onPressed: busy
-                    ? null
-                    : () {
-                        setState(() {
-                          lines.removeAt(index);
-                          changed();
-                        });
-                      },
-                icon: const Icon(Icons.delete_outline),
-              ),
+  Widget _methodChip(String value, String label, IconData icon) {
+    final selected = method == value;
+    final theme = Theme.of(context);
+    final accent = const Color(0xFF2BBBAD);
+    return Expanded(
+      child: Material(
+        color: selected
+            ? accent.withValues(alpha: 0.18)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: busy
+              ? null
+              : () => setState(() {
+                    method = value;
+                    changed();
+                  }),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: selected ? accent : theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: selected ? accent : null,
+                  ),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _cartLine(int index) {
+    final line = lines[index];
+    final lineTotal = Money.parse(line['price'] as String)
+        .times(Quantity.parse(line['quantity'] as String));
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF9B6DFF).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              line['kind'] == 'producto'
+                  ? Icons.medication_outlined
+                  : Icons.medical_services_outlined,
+              color: const Color(0xFF9B6DFF),
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${line['display']}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '${line['quantity']} ${line['unit'] ?? 'servicio'}'
+                  '${line['lot_display'] != null ? ' · Lote ${line['lot_display']}' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Text(
-            'Total: ${total.display}',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          DropdownButtonFormField<String>(
-            initialValue: method,
-            decoration: const InputDecoration(labelText: 'Método de pago'),
-            items: [
-              for (final m in ['efectivo', 'tarjeta', 'transferencia'])
-                DropdownMenuItem(value: m, child: Text(m)),
-            ],
-            onChanged: busy
-                ? null
-                : (m) {
-                    if (m != null) {
-                      setState(() {
-                        method = m;
-                        changed();
-                      });
-                    }
-                  },
-          ),
-          CheckboxListTile(
-            value: reviewed,
-            title: const Text(
-              'Revisé cantidades de venta, lotes, receta y total a cobrar.',
+            lineTotal.display,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
-            onChanged: busy
-                ? null
-                : (v) => setState(() => reviewed = v ?? false),
           ),
-          if (error != null)
-            Text(
-              error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          FilledButton(
-            onPressed: busy || !reviewed || lines.isEmpty ? null : post,
-            child: Text(busy ? 'Registrando…' : 'Registrar venta y pago'),
+          IconButton(
+            tooltip: 'Quitar del carrito',
+            onPressed: busy
+                ? null
+                : () => setState(() {
+                      lines.removeAt(index);
+                      changed();
+                    }),
+            icon: const Icon(Icons.close, size: 18),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = const Color(0xFF2BBBAD);
+    final indigo = const Color(0xFF5B8DEF);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Caja registradora'),
+        actions: [
+          if (widget.admin)
+            IconButton(
+              tooltip: 'Agregar servicio manual',
+              onPressed: busy ? null : addService,
+              icon: const Icon(Icons.add_business_outlined),
+            ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              children: [
+                Text(
+                  'Carrito actual',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (lines.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 40,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Aún no hay artículos. Agrega productos o servicios abajo.',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  for (var i = 0; i < lines.length; i++) _cartLine(i),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.22),
+                        indigo.withValues(alpha: 0.18),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total a pagar',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        total.display,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: indigo,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Método de pago',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    _methodChip('efectivo', 'Efectivo', Icons.payments_outlined),
+                    const SizedBox(width: 8),
+                    _methodChip('tarjeta', 'Tarjeta', Icons.credit_card),
+                    const SizedBox(width: 8),
+                    _methodChip(
+                      'transferencia',
+                      'Transferencia',
+                      Icons.swap_horiz,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 8),
+                Text(
+                  'Agregar al carrito',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Venta en MXN. El servidor confirma lote, stock, precio y permisos al cobrar.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final p in widget.products.where(
+                  (p) => p['m8_enabled'] == true && p['active'] == true,
+                ))
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: accent.withValues(alpha: 0.15),
+                      child: Icon(
+                        Icons.medication_liquid_outlined,
+                        color: accent,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text('${p['nombre']}'),
+                    subtitle: Text(
+                      '${Money.parse(p['precio_venta']).display} · ${p['stock_unit']} · stock ${p['stock']}',
+                    ),
+                    trailing: IconButton.filledTonal(
+                      onPressed: busy ? null : () => addProduct(p),
+                      icon: const Icon(Icons.add),
+                    ),
+                  ),
+                if (widget.charges.isNotEmpty ||
+                    widget.acts.isNotEmpty ||
+                    widget.deliveries.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Cobrar aplicaciones y entregas ya registradas',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  for (final entry in [
+                    ...widget.charges
+                        .where((c) => c['paid'] != true)
+                        .map((c) => (c, 'charge_id')),
+                    ...widget.acts
+                        .where((c) => c['paid'] != true)
+                        .map((c) => (c, 'service_act_id')),
+                    ...widget.deliveries
+                        .where((c) => c['paid'] != true)
+                        .map((c) => (c, 'delivery_id')),
+                  ])
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('${entry.$1['name']}'),
+                      subtitle: Text(displayMoney(entry.$1['price'])),
+                      trailing: IconButton(
+                        onPressed: busy
+                            ? null
+                            : () {
+                                if (lines.any(
+                                  (l) => l[entry.$2] == entry.$1['id'],
+                                )) {
+                                  return;
+                                }
+                                setState(() {
+                                  lines.add({
+                                    'kind': 'servicio',
+                                    entry.$2: entry.$1['id'],
+                                    'quantity': '1',
+                                    'price': entry.$1['price'],
+                                    'display': entry.$1['name'],
+                                  });
+                                  changed();
+                                });
+                              },
+                        icon: const Icon(Icons.add_circle_outline),
+                      ),
+                    ),
+                ],
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: reviewed,
+                  title: const Text(
+                    'Revisé cantidades, lotes, receta y total a cobrar.',
+                  ),
+                  onChanged: busy
+                      ? null
+                      : (v) => setState(() => reviewed = v ?? false),
+                ),
+                if (error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      error!,
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: indigo,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed:
+                      busy || !reviewed || lines.isEmpty ? null : post,
+                  child: Text(
+                    busy
+                        ? 'Registrando…'
+                        : 'Cobrar · ${total.display} · $methodLabel',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
