@@ -481,6 +481,14 @@ void main() {
         ),
       );
       await tester.pump();
+      // The total is above the charge rows in the same ListView; reveal it
+      // before asserting so the finder does not skip an off-screen widget.
+      await tester.scrollUntilVisible(
+        find.text('Total a pagar'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('\$30,00 MXN'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.byType(CheckboxListTile),
