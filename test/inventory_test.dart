@@ -591,6 +591,14 @@ void main() {
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
     expect(repo.writes, hasLength(1));
 
+    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    await tester.tap(find.byType(BackButton).last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+
     await tester.enterText(debtorField, 'Otra cuenta ficticia');
     await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tester.pumpAndSettle();
