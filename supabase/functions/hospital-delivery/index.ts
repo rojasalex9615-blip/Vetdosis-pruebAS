@@ -19,8 +19,10 @@ Deno.serve(async (request) => {
     Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { persistSession: false } },
   );
+  // Each provider request has a 15-second timeout; keep the claimed batch well
+  // below the two-minute lease so later notices are not sent after lease expiry.
   const { data: batch, error: claimError } = await server.rpc("hospital_delivery_claim", {
-    p_limit: 20, p_channels: config.channels,
+    p_limit: 4, p_channels: config.channels,
   });
   if (claimError || !Array.isArray(batch)) return reply({ error: "queue_unavailable" }, 503);
   let sent = 0;
