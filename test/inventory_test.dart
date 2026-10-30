@@ -263,8 +263,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // ListView builds children lazily; reveal the product before locating its button.
-    await tester.ensureVisible(find.text('Producto ficticio'));
+    // ListView builds children lazily; scroll until the product row exists.
+    await tester.scrollUntilVisible(
+      find.text('Producto ficticio'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
     await tester.pumpAndSettle();
     final productTile = find.ancestor(
       of: find.text('Producto ficticio'),
@@ -328,8 +332,12 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      // Reveal each lazy ListTile before finding its trailing add button.
-      await tester.ensureVisible(find.text('Aplicación 0,5 ml · receta única'));
+      // Scroll until each lazy ListTile exists before finding its trailing add button.
+      await tester.scrollUntilVisible(
+        find.text('Aplicación 0,5 ml · receta única'),
+        200,
+        scrollable: find.byType(Scrollable),
+      );
       await tester.pumpAndSettle();
       final firstCharge = find.ancestor(
         of: find.text('Aplicación 0,5 ml · receta única'),
@@ -342,7 +350,11 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.ensureVisible(find.text('Siguiente aplicación 0,5 ml · receta única'));
+      await tester.scrollUntilVisible(
+        find.text('Siguiente aplicación 0,5 ml · receta única'),
+        200,
+        scrollable: find.byType(Scrollable),
+      );
       await tester.pumpAndSettle();
       final secondCharge = find.ancestor(
         of: find.text('Siguiente aplicación 0,5 ml · receta única'),
@@ -356,7 +368,11 @@ void main() {
       );
       await tester.pump();
       // Adding an already-added charge must not create a duplicate line.
-      await tester.ensureVisible(find.text('Aplicación 0,5 ml · receta única'));
+      await tester.scrollUntilVisible(
+        find.text('Aplicación 0,5 ml · receta única'),
+        200,
+        scrollable: find.byType(Scrollable),
+      );
       await tester.pumpAndSettle();
       await tester.tap(
         find.descendant(
