@@ -108,6 +108,13 @@ Future<void> addScannedProductToSale(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   test('Money uses exact cents, comma input and known decimal subtotal', () {
     expect((Money.parse('0.10') + Money.parse('0,20')).decimal, '0.30');
@@ -297,7 +304,7 @@ void main() {
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
     await tester.ensureVisible(find.text('Registrar venta y pago'));
-    await tester.tap(find.text('Registrar venta y pago'));
+    await tapVisible(tester, find.text('Registrar venta y pago'));
     await tester.pumpAndSettle();
     expect(repo.writes.single['p_expected_total'], '0.20');
     expect(repo.writes.single['p_method'], 'efectivo');
@@ -349,7 +356,7 @@ void main() {
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
       await tester.ensureVisible(find.text('Registrar venta y pago'));
-      await tester.tap(find.text('Registrar venta y pago'));
+      await tapVisible(tester, find.text('Registrar venta y pago'));
       await tester.pumpAndSettle();
       final lines = (repo.writes.single['p_lines'] as List).cast<Map>();
       expect(lines.length, 2);
@@ -542,9 +549,9 @@ void main() {
       matching: find.byIcon(Icons.add),
     ));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Registrar venta y pago'));
+    await tapVisible(tester, find.text('Registrar venta y pago'));
     await tester.pumpAndSettle();
     expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
     expect(repo.writes, hasLength(1));
@@ -584,9 +591,9 @@ void main() {
           widget.decoration?.labelText == 'Titular o referencia de la cuenta',
     );
     await tester.enterText(debtorField, 'Cuenta ficticia');
-    await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Registrar venta con saldo'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
     await tester.pumpAndSettle();
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
     expect(repo.writes, hasLength(1));
@@ -600,9 +607,9 @@ void main() {
     expect(repo.writes, hasLength(1));
 
     await tester.enterText(debtorField, 'Otra cuenta ficticia');
-    await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Registrar venta con saldo'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
     await tester.pumpAndSettle();
 
     expect(
