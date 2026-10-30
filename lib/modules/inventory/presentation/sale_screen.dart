@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/plan_errors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
 import 'barcode_screen.dart';
+import 'credit_accounts_screen.dart';
 
 String inventoryError(Object error) {
   final planMessage = planActionError(error);
@@ -167,6 +169,8 @@ class SaleScreen extends StatefulWidget {
     this.deliveries = const [],
     this.acts = const [],
     this.scanBarcode,
+    this.member,
+    this.canReturn = false,
   });
   final InventoryRepository repository;
   final String shift;
@@ -181,6 +185,8 @@ class SaleScreen extends StatefulWidget {
   final List<Map<String, dynamic>> charges, deliveries, acts;
   @visibleForTesting
   final Future<String?> Function(BuildContext context)? scanBarcode;
+  final ClinicMembership? member;
+  final bool canReturn;
   @override
   State<SaleScreen> createState() => _SaleScreenState();
 }
@@ -775,14 +781,19 @@ class _SaleScreenState extends State<SaleScreen> {
         title: const Text('Verifica el resultado de la venta'),
         content: const Text(
           'La respuesta del servidor no confirmó si la venta con saldo quedó registrada. '
-          'Revisa manualmente el historial de ventas y la cuenta antes de continuar. '
-          'Esta pantalla no puede comprobar ese resultado automáticamente.',
+          'Revisa manualmente el historial de ventas y la cuenta. Puedes abrir Cuentas y abonos '
+          'sin cerrar esta venta; esta pantalla no comprueba el resultado automáticamente.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, 'blocked'),
             child: const Text('Seguir bloqueada'),
           ),
+          if (widget.member != null)
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'accounts'),
+              child: const Text('Abrir cuentas y abonos'),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, 'exists'),
             child: const Text('La venta sí existe'),
@@ -795,6 +806,25 @@ class _SaleScreenState extends State<SaleScreen> {
       ),
     );
     if (!mounted || result == null || result == 'blocked') return;
+    if (result == 'accounts' && widget.member != null) {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreditAccountsScreen(
+            repository: widget.repository,
+            member: widget.member!,
+            shift: widget.shift,
+            canReturn: widget.canReturn,
+          ),
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          error = 'El resultado de la venta sigue sin confirmarse. Revisa Cuentas y abonos; cualquier reintento conservará la operación original.';
+        });
+      }
+      return;
+    }
     if (result == 'exists') {
       // Close and refresh the caller instead of posting a possible duplicate.
       setState(() {
