@@ -24,6 +24,7 @@ import 'modules/attendance/domain/attendance_repository.dart';
 import 'modules/attendance/data/supabase_attendance_repository.dart';
 import 'modules/backup/domain/backup_repository.dart';
 import 'modules/backup/data/supabase_backup_repository.dart';
+import 'modules/backup/data/google_drive_backup_client.dart';
 import 'modules/inventory/domain/inventory_repository.dart';
 import 'modules/inventory/data/supabase_inventory_repository.dart';
 import 'modules/prescribing/domain/prescribing_repository.dart';
@@ -215,6 +216,7 @@ Future<void> main() async {
       operations: operations,
       attendance: attendance,
       backup: backup,
+      googleDriveBackup: GoogleDriveBackupClient(),
       ai: ai,
       subscriptions: subscriptions,
       support: support,

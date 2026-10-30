@@ -49,6 +49,7 @@ import '../modules/operations/presentation/commission_panel.dart';
 import '../modules/attendance/domain/attendance_repository.dart';
 import '../modules/attendance/presentation/attendance_screen.dart';
 import '../modules/backup/domain/backup_repository.dart';
+import '../modules/backup/domain/drive_backup_client.dart' as drive_auth;
 import '../modules/backup/presentation/backup_screen.dart';
 import '../modules/inventory/domain/inventory_repository.dart';
 import '../modules/inventory/presentation/inventory_screen.dart';
@@ -114,6 +115,7 @@ class VetDosisApp extends StatelessWidget {
     this.operations,
     this.attendance,
     this.backup,
+    this.googleDriveBackup,
     this.ai,
     this.subscriptions,
     this.support,
@@ -139,6 +141,7 @@ class VetDosisApp extends StatelessWidget {
   final OperationsRepository? operations;
   final AttendanceRepository? attendance;
   final BackupRepository? backup;
+  final drive_auth.DriveBackupClient? googleDriveBackup;
   final AiRepository? ai;
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
@@ -333,6 +336,7 @@ class VetDosisApp extends StatelessWidget {
               operations: operations,
               attendance: attendance,
               backup: backup,
+              googleDriveBackup: googleDriveBackup,
               ai: ai,
               subscriptions: subscriptions,
               support: support,
@@ -364,6 +368,7 @@ class CoreShell extends StatelessWidget {
     this.operations,
     this.attendance,
     this.backup,
+    this.googleDriveBackup,
     this.ai,
     this.subscriptions,
     this.support,
@@ -391,6 +396,7 @@ class CoreShell extends StatelessWidget {
   final OperationsRepository? operations;
   final AttendanceRepository? attendance;
   final BackupRepository? backup;
+  final drive_auth.DriveBackupClient? googleDriveBackup;
   final AiRepository? ai;
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
@@ -1337,6 +1343,7 @@ class CoreShell extends StatelessWidget {
                           ),
                           identity: identity,
                           repository: backup!,
+                          googleDrive: googleDriveBackup,
                           member: auth!.active!,
                           backupOnly: model.screen == 'Respaldo',
                         )
