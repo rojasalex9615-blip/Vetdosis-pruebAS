@@ -240,6 +240,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('\$0,00 MXN'), findsOneWidget);
+    expect(find.byTooltip('Escanear código de barras'), findsOneWidget);
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
     expect(repo.writes, isEmpty);
