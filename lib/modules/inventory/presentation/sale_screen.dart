@@ -104,14 +104,18 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> scanProduct() async {
-    final code = widget.scanBarcode != null
-        ? await widget.scanBarcode!(context)
-        : await Navigator.push<String>(
-            context,
-            MaterialPageRoute<String>(
-              builder: (_) => const BarcodeScreen(),
-            ),
-          );
+    final scanFn = widget.scanBarcode;
+    final String? code;
+    if (scanFn != null) {
+      code = await scanFn(context);
+    } else {
+      code = await Navigator.push<String>(
+        context,
+        MaterialPageRoute<String>(
+          builder: (_) => const BarcodeScreen(),
+        ),
+      );
+    }
     if (!mounted || code == null) return;
     final normalized = code.trim();
     final matches = widget.products.where(
@@ -121,12 +125,13 @@ class _SaleScreenState extends State<SaleScreen> {
           p['codigo_barras']?.toString().trim() == normalized,
     ).toList();
 
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
     if (matches.length != 1) {
       final message = matches.isEmpty
           ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
           : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
       setState(() => error = message);
-      final messenger = ScaffoldMessenger.of(context);
       // Always show the latest scan result, never queue stale feedback.
       messenger.clearSnackBars();
       messenger.showSnackBar(SnackBar(content: Text(message)));
@@ -134,7 +139,7 @@ class _SaleScreenState extends State<SaleScreen> {
     }
 
     // A successful scan supersedes any earlier failed-scan notification.
-    ScaffoldMessenger.of(context).clearSnackBars();
+    messenger.clearSnackBars();
     setState(() => error = null);
     // Reutiliza el flujo de venta manual: elegir lote y cantidad, revisar y
     // confirmar el cobro. Escanear nunca modifica el inventario por sí solo.
