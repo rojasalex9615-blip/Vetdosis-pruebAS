@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
-import '../../core/domain/section_catalog.dart';
 import '../domain/clinic_experience.dart';
 import '../domain/clinic_experience_repository.dart';
 
