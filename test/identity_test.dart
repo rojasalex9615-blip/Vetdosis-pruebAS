@@ -82,7 +82,7 @@ void main() {
     },
   );
   testWidgets(
-    'Buscador sin acentos navega y escáner flotante abre su apartado',
+    'Buscador sin acentos navega y OCR requiere sesion clinica',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final repository = SettingsRepository();
@@ -99,9 +99,10 @@ void main() {
       await tester.tap(result);
       await tester.pumpAndSettle();
       expect(model.screen, 'Cálculos clínicos');
-      await tester.tap(find.byTooltip('Escáner'));
-      await tester.pumpAndSettle();
-      expect(model.screen, 'Escanear producto');
+      // Clinical OCR appears only with a signed-in authorized clinician.
+      expect(find.byTooltip('Escáner'), findsNothing);
+      expect(find.byTooltip('Escanear etiqueta para dosis'), findsNothing);
+      expect(model.screen, 'Cálculos clínicos');
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       model.dispose();

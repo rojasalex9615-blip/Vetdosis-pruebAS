@@ -1,3 +1,7 @@
+import '../modules/clinic_experience/domain/clinic_experience.dart';
+import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
+import '../modules/clinic_experience/presentation/clinic_experience_boundary.dart';
+import '../modules/clinic_experience/presentation/clinic_experience_screen.dart';
 import '../modules/auth/presentation/team_duty_screen.dart';
 import '../modules/review/domain/review_catalog_repository.dart';
 import '../modules/review/presentation/review_catalog_screen.dart';
@@ -59,6 +63,7 @@ import '../modules/patients/domain/recorded_weight.dart';
 import '../modules/patients/presentation/patients_screen.dart';
 import 'package:flutter/material.dart';
 import '../modules/doses/presentation/dose_screen.dart';
+import '../modules/doses/presentation/dose_label_scanner_screen.dart';
 import '../modules/doses/presentation/vademecum_screen.dart';
 import '../modules/doses/data/catalog_repository.dart';
 import '../modules/doses/presentation/dose_math_tools.dart';
@@ -102,6 +107,7 @@ class VetDosisApp extends StatelessWidget {
     this.subscriptions,
     this.support,
     this.moduleAccess,
+    this.experienceRepository,
     this.reviewCatalog,
   });
   final CoreViewModel model;
@@ -125,6 +131,7 @@ class VetDosisApp extends StatelessWidget {
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
   final ModuleAccessRepository? moduleAccess;
+  final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
@@ -271,7 +278,11 @@ class VetDosisApp extends StatelessWidget {
           member: auth?.active,
           repository: moduleAccess,
           revision: auth?.accessRevision ?? 0,
-          builder: (access) => CoreShell(
+          builder: (access) => ClinicExperienceBoundary(
+            member: auth?.active,
+            repository: experienceRepository,
+            revision: auth?.accessRevision ?? 0,
+            builder: (experience, ready, reload) => CoreShell(
             model: model,
             auth: auth,
             moduleAccess: access,
@@ -292,6 +303,11 @@ class VetDosisApp extends StatelessWidget {
             ai: ai,
             subscriptions: subscriptions,
             support: support,
+            experience: experience,
+            experienceRepository: experienceRepository,
+            experienceReady: ready,
+            onExperienceSaved: reload,
+          ),
           ),
         );
 }
@@ -318,6 +334,10 @@ class CoreShell extends StatelessWidget {
     this.subscriptions,
     this.support,
     this.moduleAccess,
+    this.experience,
+    this.experienceRepository,
+    this.experienceReady = false,
+    this.onExperienceSaved,
     this.reviewCatalog,
   });
   final CoreViewModel model;
@@ -339,6 +359,10 @@ class CoreShell extends StatelessWidget {
   final SubscriptionRepository? subscriptions;
   final SupportRepository? support;
   final ModuleAccess? moduleAccess;
+  final ClinicExperience? experience;
+  final ClinicExperienceRepository? experienceRepository;
+  final bool experienceReady;
+  final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
 
   /// Whether [member] still matches an online session allowed hospital access.
@@ -347,7 +371,7 @@ class CoreShell extends StatelessWidget {
       auth?.offline == false &&
       auth?.active?.userId == member.userId &&
       auth?.active?.clinicId == member.clinicId &&
-      allowed('Hospitalización') &&
+      serverAllowed('Hospitalización') &&
       [
         ClinicRole.admin,
         ClinicRole.mvz,
@@ -368,17 +392,17 @@ class CoreShell extends StatelessWidget {
     if (member == null ||
         !hospitalWeightContext(member) ||
         member.clinicId != weight.clinicId ||
-        !allowed('Cálculo rápido')) {
+        !serverAllowed('Cálculo rápido')) {
       return;
     }
     Future<bool> current(RecordedPatientWeight value) async {
-      if (!hospitalWeightContext(member) || !allowed('Cálculo rápido')) {
+      if (!hospitalWeightContext(member) || !serverAllowed('Cálculo rápido')) {
         return false;
       }
       final valid = await validate(value);
       return valid &&
           hospitalWeightContext(member) &&
-          allowed('Cálculo rápido');
+          serverAllowed('Cálculo rápido');
     }
 
     if (!await current(weight) || !context.mounted) return;
@@ -403,8 +427,12 @@ class CoreShell extends StatelessWidget {
     );
   }
 
-  bool allowed(String page) =>
+  // Authorization is independent of the clinic's navigation preferences.
+  bool serverAllowed(String page) =>
       navigationAllowed(page, auth?.active, moduleAccess);
+
+  bool allowed(String page) =>
+      serverAllowed(page) && (experience?.visible(page) ?? true);
   Future<void> openAccount(BuildContext context) async {
     if (auth == null) return;
     await Navigator.push(
@@ -542,11 +570,12 @@ class CoreShell extends StatelessWidget {
               ),
               onPressed: () => openAccount(context),
             ),
-          IconButton(
-            tooltip: 'Ajustes',
-            onPressed: () => model.navigate('Ajustes'),
-            icon: const Icon(Icons.tune),
-          ),
+          if (ai != null && auth?.active != null && allowed('Asistente IA'))
+            IconButton(
+              tooltip: 'Asistente IA',
+              onPressed: () => model.navigate('Asistente IA'),
+              icon: const Icon(Icons.auto_awesome_outlined),
+            ),
         ],
       ),
       drawer: Drawer(
@@ -588,6 +617,7 @@ class CoreShell extends StatelessWidget {
                 child: SectionMenu(
                   member: auth?.active,
                   access: moduleAccess,
+                  experience: experience,
                   onNavigate: (page) {
                     Navigator.pop(context);
                     model.navigate(page);
@@ -605,33 +635,16 @@ class CoreShell extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: bottomNavigation(),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (allowed('Escanear producto')) ...[
-            FloatingActionButton.small(
-              heroTag: 'scanner',
-              tooltip: 'Escáner',
-              onPressed: () => model.navigate('Escanear producto'),
-              child: const Icon(Icons.qr_code_scanner),
-            ),
-            const SizedBox(height: 12),
-          ],
-          FloatingActionButton.small(
-            heroTag: 'assistant',
-            tooltip: 'Asistente IA',
-            onPressed: () => model.navigate('Asistente IA'),
-            child: const Icon(Icons.auto_awesome),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton.small(
-            heroTag: 'support',
-            tooltip: 'Ayuda y soporte',
-            onPressed: () => model.navigate('Ayuda y soporte'),
-            child: const Icon(Icons.help_outline),
-          ),
-        ],
-      ),
+      floatingActionButton: auth?.active != null &&
+              allowed('Cálculo rápido') &&
+              model.screen != 'Escanear etiqueta para dosis'
+          ? FloatingActionButton(
+              heroTag: 'dose-label-scanner',
+              tooltip: 'Escanear etiqueta para dosis',
+              onPressed: () => model.navigate('Escanear etiqueta para dosis'),
+              child: const Icon(Icons.document_scanner_outlined),
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -696,9 +709,16 @@ class CoreShell extends StatelessWidget {
                 const SizedBox(height: 28),
                 if (auth?.active != null &&
                     moduleAccess != null &&
-                    !allowed(model.screen))
+                    !serverAllowed(model.screen))
                   const Text(
                     'Este apartado no está disponible con tus permisos actuales.',
+                  )
+                else if (auth?.active != null &&
+                    !(experience?.visible(model.screen) ?? true) &&
+                    !(model.screen == 'Hospitalización' &&
+                        serverAllowed('Hospitalización')))
+                  const Text(
+                    'Este apartado está oculto en los ajustes de esta clínica.',
                   )
                 else if (model.screen == 'Inicio')
                   ...home(context)
@@ -720,6 +740,7 @@ class CoreShell extends StatelessWidget {
                   SectionMenu(
                     member: auth?.active,
                     access: moduleAccess,
+                    experience: experience,
                     initialGroup: model.branch == ClinicalBranch.management
                         ? 'Administración y finanzas'
                         : null,
@@ -740,6 +761,7 @@ class CoreShell extends StatelessWidget {
                   CalculationMenu(
                     member: auth?.active,
                     access: moduleAccess,
+                    experience: experience,
                     onNavigate: model.navigate,
                   )
                 else if (model.screen == 'Producción y grandes especies')
@@ -766,6 +788,16 @@ class CoreShell extends StatelessWidget {
                         )
                       : const Text(
                           'El cálculo clínico requiere acceso de MVZ o administrador.',
+                        )
+                else if (model.screen == 'Escanear etiqueta para dosis')
+                  auth?.active != null && allowed('Cálculo rápido')
+                      ? DoseLabelScannerScreen(
+                          member: auth!.active!,
+                          personalRepository: personalDoses,
+                          offline: auth!.offline,
+                        )
+                      : const Text(
+                          'La lectura de etiquetas para dosis requiere acceso de MVZ o administrador.',
                         )
                 else if (model.screen == 'Vademécum')
                   VademecumScreen(
@@ -907,7 +939,7 @@ class CoreShell extends StatelessWidget {
                                 clinical: clinical,
                                 contextIsCurrent: hospitalWeightContext,
                                 sessionChanges: auth,
-                                onCalculateWeight: allowed('Cálculo rápido')
+                                onCalculateWeight: serverAllowed('Cálculo rápido')
                                     ? (weight, validate) =>
                                           hospitalWeightCalculation(
                                             context,
@@ -1161,6 +1193,7 @@ class CoreShell extends StatelessWidget {
                       auth?.active?.clinicId,
                       auth?.offline,
                       moduleAccess,
+                      experience?.revision,
                     )),
                     model: DashboardViewModel(
                       member: auth?.active,
@@ -1169,6 +1202,7 @@ class CoreShell extends StatelessWidget {
                     ),
                     offline: auth?.offline ?? false,
                     statisticsOnly: true,
+                    isVisible: allowed,
                     onNavigate: model.navigate,
                   )
                 else if (model.screen == 'Respaldo' ||
@@ -1187,7 +1221,7 @@ class CoreShell extends StatelessWidget {
                         )
                 else if (model.screen == 'Asistente IA')
                   ai != null && auth?.active != null && auth?.offline != true
-                      ? AiScreen(repository: ai!, member: auth!.active!)
+                      ? AiScreen(repository: ai!, member: auth!.active!, preferredProvider: experience?.defaultAiProvider)
                       : const Text('El asistente requiere cuenta y conexión.')
                 else if (model.screen == 'Planes')
                   subscriptions != null &&
@@ -1282,6 +1316,7 @@ class CoreShell extends StatelessWidget {
     _ModuleSearch(
       member: auth?.active,
       moduleAccess: moduleAccess,
+      experience: experience,
       onNavigate: model.navigate,
     ),
     DashboardScreen(
@@ -1291,6 +1326,7 @@ class CoreShell extends StatelessWidget {
         auth?.active?.role,
         auth?.offline,
         moduleAccess,
+        experience?.revision,
       )),
       model: DashboardViewModel(
         member: auth?.active,
@@ -1305,6 +1341,7 @@ class CoreShell extends StatelessWidget {
       offline: auth?.offline ?? false,
       homePilot: true,
       alerts: hospitalAlerts,
+      isVisible: allowed,
       onNavigate: model.navigate,
     ),
     FirstStepsBanner(
@@ -1416,6 +1453,27 @@ class CoreShell extends StatelessWidget {
           ),
         ),
       ),
+    if (auth?.active != null)
+      ListTile(
+        leading: const Icon(Icons.tune_outlined),
+        title: const Text('Perfil, módulos y flujos de la clínica'),
+        subtitle: Text(!experienceReady
+            ? 'Configuración compartida aún no disponible en el servidor.'
+            : auth?.active?.role == ClinicRole.admin
+              ? 'Elige secciones, submódulos, procesos y proveedor IA predeterminado.'
+              : 'Solo la administración puede modificar estas preferencias.'),
+        onTap: experienceRepository == null || !experienceReady ? null : () async {
+          await Navigator.push<void>(context, MaterialPageRoute(
+            builder: (_) => ClinicExperienceScreen(
+              member: auth!.active!,
+              initial: experience ?? ClinicExperience.defaults(),
+              repository: experienceRepository!,
+              ready: experienceReady,
+              onSaved: onExperienceSaved,
+            ),
+          ));
+        },
+      ),
     Text(
       'Configura tus herramientas',
       style: Theme.of(context).textTheme.titleLarge,
@@ -1493,6 +1551,7 @@ class CoreShell extends StatelessWidget {
                           repository: ai!,
                           member: auth!.active!,
                           configurationOnly: true,
+                          preferredProvider: experience?.defaultAiProvider,
                         ),
                       ),
                     ),
@@ -1504,7 +1563,7 @@ class CoreShell extends StatelessWidget {
             }
           },
         ),
-    if (allowed('Hospitalización')) ...[
+    if (serverAllowed('Hospitalización')) ...[
       const Divider(),
       Text(
         'Alertas y recordatorios',
@@ -1592,10 +1651,12 @@ class _ModuleSearch extends StatefulWidget {
   const _ModuleSearch({
     required this.member,
     required this.moduleAccess,
+    required this.experience,
     required this.onNavigate,
   });
   final ClinicMembership? member;
   final ModuleAccess? moduleAccess;
+  final ClinicExperience? experience;
   final ValueChanged<String> onNavigate;
   @override
   State<_ModuleSearch> createState() => _ModuleSearchState();
@@ -1648,6 +1709,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
         .where(
           (p) =>
               navigationAllowed(p, widget.member, widget.moduleAccess) &&
+               (widget.experience?.visible(p) ?? true) &&
               normalize(p).contains(normalize(query.trim())),
         )
         .toList();

@@ -188,26 +188,26 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(HomePracticeSelector), findsOneWidget);
       expect(
-        Theme.of(tester.element(find.byTooltip('Ajustes'))).colorScheme.primary,
+        Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary,
         original,
       );
       core.navigate('Agenda');
       await tester.pumpAndSettle();
       expect(find.byType(HomePracticeSelector), findsNothing);
       expect(
-        Theme.of(tester.element(find.byTooltip('Ajustes'))).colorScheme.primary,
+        Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary,
         original,
       );
       core.navigate('Pacientes');
       await tester.pumpAndSettle();
       expect(
-        Theme.of(tester.element(find.byTooltip('Ajustes'))).colorScheme.primary,
+        Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary,
         original,
       );
       core.navigate('Ajustes');
       await tester.pumpAndSettle();
       expect(
-        Theme.of(tester.element(find.byTooltip('Ajustes'))).colorScheme.primary,
+        Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary,
         original,
       );
       expect(core.settings.palette, 1);

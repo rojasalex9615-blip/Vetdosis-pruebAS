@@ -4,6 +4,8 @@ import 'modules/identity/domain/identity_repository.dart';
 import 'modules/identity/data/supabase_identity_repository.dart';
 import 'modules/core/domain/build_channel.dart';
 import 'modules/core/domain/module_access.dart';
+import 'modules/clinic_experience/domain/clinic_experience_repository.dart';
+import 'modules/clinic_experience/data/supabase_clinic_experience_repository.dart';
 import 'modules/core/data/supabase_module_access_repository.dart';
 import 'modules/support/domain/support_repository.dart';
 import 'modules/support/data/supabase_support_repository.dart';
@@ -81,6 +83,7 @@ Future<void> main() async {
   SubscriptionRepository? subscriptions;
   SupportRepository? support;
   ModuleAccessRepository? moduleAccess;
+  ClinicExperienceRepository? experienceRepository;
   ReviewCatalogRepository? reviewCatalog;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
@@ -108,6 +111,7 @@ Future<void> main() async {
     support = SupabaseSupportRepository(Supabase.instance.client);
     subscriptions = SupabaseSubscriptionRepository(Supabase.instance.client);
     moduleAccess = SupabaseModuleAccessRepository(Supabase.instance.client);
+    experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     final authRepository = SupabaseAuthRepository(
@@ -177,6 +181,7 @@ Future<void> main() async {
       subscriptions: subscriptions,
       support: support,
       moduleAccess: moduleAccess,
+      experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
       hospitalAlerts: alerts,
       requireAuth: true,

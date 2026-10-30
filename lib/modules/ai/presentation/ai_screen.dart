@@ -20,6 +20,7 @@ class AiScreen extends StatefulWidget {
     this.returnDraft = false,
     this.canManageWorkspace = false,
     this.configurationOnly = false,
+    this.preferredProvider,
   });
   final AiRepository repository;
   final ClinicMembership member;
@@ -28,6 +29,7 @@ class AiScreen extends StatefulWidget {
   final bool returnDraft;
   final bool canManageWorkspace;
   final bool configurationOnly;
+  final String? preferredProvider;
   @override
   State<AiScreen> createState() => _AiScreenState();
 }
@@ -48,7 +50,32 @@ class _AiScreenState extends State<AiScreen> {
       composer.text = widget.initialDraft!;
       initializeSupportChat();
     } else {
-      vm.load();
+      vm.load().then((_) => selectPreferredConnection());
+    }
+  }
+
+  Future<void> selectPreferredConnection() async {
+    if (!mounted || widget.configurationOnly || connection != null ||
+        widget.preferredProvider == null) {
+      return;
+    }
+    final candidates = vm.rows('connections').where(
+      (row) => row['provider'] == widget.preferredProvider,
+    );
+    if (candidates.isEmpty) return; // Never select a missing key.
+    final id = candidates.first['id'] as String;
+    try {
+      final available = await widget.repository.models(id);
+      if (mounted && connection == null) {
+        setState(() {
+          connection = id;
+          modelOptions = available;
+          model = null; // The user must choose the model and consent.
+          consent = false;
+        });
+      }
+    } catch (_) {
+      // An expired or revoked provider is not silently substituted.
     }
   }
 
