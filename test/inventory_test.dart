@@ -262,6 +262,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    // ListView builds children lazily; reveal the product before locating its button.
+    await tester.ensureVisible(find.text('Producto ficticio'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.add).first);
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
@@ -318,10 +321,17 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // Reveal each lazy ListTile before finding its trailing add button.
+      await tester.ensureVisible(find.text('Aplicación 0,5 ml · receta única'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.add_circle_outline).first);
       await tester.pump();
+      await tester.ensureVisible(find.text('Siguiente aplicación 0,5 ml · receta única'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.add_circle_outline).last);
       await tester.pump();
+      await tester.ensureVisible(find.text('Aplicación 0,5 ml · receta única'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.add_circle_outline).first);
       await tester.pump();
       expect(find.text('\$30,00 MXN'), findsOneWidget);
