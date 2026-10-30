@@ -27,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Java
-        uses: actions/setup-java@ddc835b5b4f5d4fb7b9a4e1f2e1d0c5d4e0b9c7a
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
