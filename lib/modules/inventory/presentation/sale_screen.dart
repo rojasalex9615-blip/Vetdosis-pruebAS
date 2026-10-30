@@ -125,6 +125,7 @@ class _SaleScreenState extends State<SaleScreen> {
       return;
     }
 
+    setState(() => error = null);
     // Reutiliza el flujo de venta manual: elegir lote y cantidad, revisar y
     // confirmar el cobro. Escanear nunca modifica el inventario por sí solo.
     await addProduct(matches.single);
