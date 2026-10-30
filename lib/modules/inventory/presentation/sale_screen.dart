@@ -105,6 +105,49 @@ String inventoryError(Object error) {
   return 'No se pudo completar la operación. Comprueba conexión y permisos antes de reintentar.';
 }
 
+bool isConfirmedCreditRejection(Object error) {
+  if (error is FormatException || error is ArgumentError) return true;
+  if (planActionError(error) != null) return true;
+  final text = error is PostgrestException
+      ? error.message.toLowerCase()
+      : error.toString().toLowerCase();
+  const confirmedCodes = [
+    'explicit_permission_required',
+    'inventory_read_permission_required',
+    'cash_collection_permission_required',
+    'verified_dispensing_permission_required',
+    'dispensing_limit_reauthorization_required',
+    'dispensing_limit_authority_changed',
+    'legacy_delivery_delegation_disabled',
+    'dispensing_quantity_authorization_required',
+    'dispensing_authorized_quantity_exceeded',
+    'application_already_paid',
+    'delivery_already_paid',
+    'application_tariff_required',
+    'use_current_application_record',
+    'expired_lot_blocked',
+    'insufficient_stock',
+    'sale_price_changed',
+    'sale_total_changed',
+    'service_version_changed',
+    'price_below_service_commission',
+    'catalog_service_line_invalid',
+    'closed_shift',
+    'verified_medication_reference_required',
+    'quantified_dispensing_professional_only',
+    'issued_matching_prescription_required',
+    'ordinary_dispensing_delegation_required',
+    'whole_package_required',
+    'product_revision_conflict_or_legacy',
+    'legacy_stock_reconciliation_required',
+    'inventory_admin_required',
+    'controlled_reversal_professional_only',
+    'vial_inventory_identity_mismatch',
+    'reorder_below_minimum',
+  ];
+  return confirmedCodes.any(text.contains);
+}
+
 class SaleScreen extends StatefulWidget {
   const SaleScreen({
     super.key,
@@ -473,6 +516,8 @@ class _SaleScreenState extends State<SaleScreen> {
       busy = true;
       if (!creditOutcomeUncertain) error = null;
     });
+    var writeAttempted = false;
+    var writeSucceeded = false;
     try {
       final args = <String, dynamic>{
         'p_shift': widget.shift,
@@ -520,6 +565,7 @@ class _SaleScreenState extends State<SaleScreen> {
         }
       }
       args['p_operation'] = credit ? creditOperation : operation;
+      writeAttempted = true;
       final saleId = await widget.repository.write(
         credit
             ? 'inv_sale_credit_post'
@@ -528,6 +574,7 @@ class _SaleScreenState extends State<SaleScreen> {
             : 'inv_sale_post',
         args,
       );
+      writeSucceeded = true;
       if (mounted) {
         setState(() {
           creditOutcomeUncertain = false;
@@ -540,14 +587,26 @@ class _SaleScreenState extends State<SaleScreen> {
         if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
+      final confirmedRejection =
+          credit &&
+          writeAttempted &&
+          !writeSucceeded &&
+          isConfirmedCreditRejection(e);
       if (mounted) {
         setState(() {
-          if (credit && e is! FormatException) {
+          if (confirmedRejection) {
+            creditOutcomeUncertain = false;
+            creditRetryKey = null;
+            creditOperation = null;
+          } else if (credit && writeAttempted && !writeSucceeded) {
             creditOutcomeUncertain = true;
           }
           error = e is FormatException
               ? e.message
-              : credit
+              : credit &&
+                    writeAttempted &&
+                    !writeSucceeded &&
+                    !confirmedRejection
               ? 'No se confirmó el registro. Revisa las cuentas antes de iniciar otra venta; reintentar los mismos datos conserva la operación.'
               : inventoryError(e);
         });
