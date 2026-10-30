@@ -6,10 +6,21 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
+import 'barcode_screen.dart';
 
 String inventoryError(Object error) {
+  final text = error.toString();
   final planMessage = planActionError(error);
   if (planMessage != null) return planMessage;
+  if (text.contains('quantified_dispensing_professional_only')) {
+    return 'Esta dispensación requiere un MVZ habilitado.';
+  }
+  if (text.contains('dispensing_authorized_quantity_exceeded')) {
+    return 'La cantidad excede el total autorizado en ventas anteriores.';
+  }
+  if (text.contains('ordinary_dispensing_delegation_required')) {
+    return 'Se requiere un permiso vigente para delegar esta dispensación.';
+  }
   return 'No se pudo completar la operación. Comprueba conexión y permisos antes de reintentar.';
 }
 
@@ -25,12 +36,15 @@ class SaleScreen extends StatefulWidget {
     this.charges = const [],
     this.deliveries = const [],
     this.acts = const [],
+    this.scanBarcode,
   });
   final InventoryRepository repository;
   final String shift;
   final List<Map<String, dynamic>> products, prescriptions, staff;
   final bool admin;
   final List<Map<String, dynamic>> charges, deliveries, acts;
+  @visibleForTesting
+  final Future<String?> Function(BuildContext context)? scanBarcode;
   @override
   State<SaleScreen> createState() => _SaleScreenState();
 }
@@ -87,6 +101,49 @@ class _SaleScreenState extends State<SaleScreen> {
       }
       error = null;
     });
+  }
+
+  Future<void> scanProduct() async {
+    final scanFn = widget.scanBarcode;
+    final String? code;
+    if (scanFn != null) {
+      code = await scanFn(context);
+    } else {
+      code = await Navigator.push<String>(
+        context,
+        MaterialPageRoute<String>(
+          builder: (_) => const BarcodeScreen(),
+        ),
+      );
+    }
+    if (!mounted || code == null) return;
+    final normalized = code.trim();
+    final matches = widget.products.where(
+      (p) =>
+          p['active'] == true &&
+          p['m8_enabled'] == true &&
+          p['codigo_barras']?.toString().trim() == normalized,
+    ).toList();
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (matches.length != 1) {
+      final message = matches.isEmpty
+          ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
+          : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
+      setState(() => error = message);
+      // Always show the latest scan result, never queue stale feedback.
+      messenger.clearSnackBars();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
+
+    // A successful scan supersedes any earlier failed-scan notification.
+    messenger.clearSnackBars();
+    setState(() => error = null);
+    // Reutiliza el flujo de venta manual: elegir lote y cantidad, revisar y
+    // confirmar el cobro. Escanear nunca modifica el inventario por sí solo.
+    await addProduct(matches.single);
   }
 
   Future<void> addProduct(Map<String, dynamic> p) async {
@@ -357,6 +414,11 @@ class _SaleScreenState extends State<SaleScreen> {
       appBar: AppBar(
         title: const Text('Caja registradora'),
         actions: [
+          IconButton(
+            tooltip: 'Escanear código de barras',
+            onPressed: busy ? null : scanProduct,
+            icon: const Icon(Icons.qr_code_scanner),
+          ),
           if (widget.admin)
             IconButton(
               tooltip: 'Agregar servicio manual',
@@ -424,17 +486,26 @@ class _SaleScreenState extends State<SaleScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Total a pagar',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          'Total a pagar',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      Text(
-                        total.display,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: indigo,
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            total.display,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: indigo,
+                            ),
+                          ),
                         ),
                       ),
                     ],

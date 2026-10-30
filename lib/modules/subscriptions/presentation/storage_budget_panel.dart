@@ -46,8 +46,6 @@ class StorageBudgetPanel extends StatelessWidget {
             LinearProgressIndicator(
               value: budget.fraction,
               color: color,
-              semanticsLabel: 'Almacenamiento estimado utilizado',
-              semanticsValue: '${budget.percent}%',
             ),
             const SizedBox(height: 12),
             Text(message),

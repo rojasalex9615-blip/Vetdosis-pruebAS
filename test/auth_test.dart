@@ -80,6 +80,8 @@ void main() {
       ),
     );
     expect(find.text('Continuar con Google'), findsNothing);
+    await tester.ensureVisible(find.text('Ingresar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Ingresar'));
     await tester.pumpAndSettle();
     expect(find.text('Ingresa un correo válido'), findsOneWidget);
