@@ -278,7 +278,7 @@ void main() {
           prescriptions: [],
           staff: [],
           admin: false,
-          scanBarcode: (_) async => '  FICTICIO  \\n',
+          scanBarcode: (_) async => '  FICTICIO  \n',
         ),
       ),
     );
