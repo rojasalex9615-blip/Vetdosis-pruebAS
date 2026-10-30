@@ -636,6 +636,53 @@ void main() {
   });
 
 
+  testWidgets('uncertain credit checkout can inspect accounts without losing its operation', (tester) async {
+    final repo = Repo()..writeFailure = StateError('Synthetic network timeout');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          member: member,
+          canReturn: false,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          creditSupported: true,
+          actor: 'mvz-test',
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await addScannedProductToSale(tester);
+    await tester.tap(find.text('Registrar abono y dejar saldo pendiente'));
+    await tester.pumpAndSettle();
+    final debtorField = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == 'Titular o referencia de la cuenta',
+    );
+    await tester.enterText(debtorField, 'Cuenta ficticia');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    final originalOperation = repo.writes.single['p_operation'];
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+
+    await tapVisible(tester, find.text('Verificar resultado de la venta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abrir cuentas y abonos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cuentas y abonos'), findsOneWidget);
+    await tester.tap(find.byType(BackButton).last);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('sigue sin confirmarse'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    expect(repo.writes, hasLength(2));
+    expect(repo.writes[1]['p_operation'], originalOperation);
+  });
+
   testWidgets('confirmed insufficient stock rejection does not lock credit checkout', (tester) async {
     final repo = Repo()
       ..writeFailure = PostgrestException(
