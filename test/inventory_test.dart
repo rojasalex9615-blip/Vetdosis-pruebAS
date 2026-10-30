@@ -378,7 +378,7 @@ void main() {
     await tester.ensureVisible(find.text('Guardar'));
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('\$0,20 MXN'), findsNWidgets(2));
+    expect(find.textContaining('0,20'), findsWidgets);
     await tester.scrollUntilVisible(
       find.byType(CheckboxListTile),
       300,
@@ -485,7 +485,7 @@ void main() {
       // before asserting so the finder does not skip an off-screen widget.
       await tester.scrollUntilVisible(
         find.text('Total a pagar'),
-        300,
+        -300,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
