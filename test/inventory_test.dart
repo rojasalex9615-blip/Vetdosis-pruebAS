@@ -737,6 +737,7 @@ void main() {
     await tester.enterText(debtorField, 'Cuenta ficticia');
     await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tapVisible(tester, find.text('Registrar venta con saldo'));
+    final rejectedOperation = repo.writes.single['p_operation'];
 
     expect(find.textContaining('El stock cambió o no alcanza'), findsOneWidget);
     expect(find.text('Verificar resultado de la venta'), findsNothing);
@@ -749,6 +750,11 @@ void main() {
     expect(find.textContaining('El stock cambió o no alcanza'), findsOneWidget);
     expect(find.text('Verificar resultado de la venta'), findsNothing);
     expect(repo.writes, hasLength(2));
+    expect(
+      repo.writes[1]['p_operation'],
+      isNot(rejectedOperation),
+      reason: 'a confirmed rejection allows a fresh operation after correcting the payload',
+    );
   });
 
 }
