@@ -46,8 +46,24 @@ void main() {
     expect(config.visible('Hospitalización'), true);
     expect(config.withPage('Ajustes', false).visible('Ajustes'), true);
     expect(config.withPage('Modo revisión', false).visible('Modo revisión'), true);
-    expect(config.withPage('Hospitalización', false).visible('Hospitalización'), false);
+    expect(config.withPage('Hospitalización', false).visible('Hospitalización'), true);
+    expect(config.withPage('Asistente IA', false).visible('Asistente IA'), true);
     expect(config.withPage('Hospitalización', false).visible('Pacientes'), true);
+  });
+
+  test('legacy settings cannot hide protected destinations and production appears once', () {
+    final defaults = ClinicExperience.defaults();
+    expect(experienceVisibilityGroups.where((g) => g.title == 'Producción animal').length, 1);
+    final settings = defaults.toJson()
+      ..['hidden_pages'] = ['Hospitalización', 'Asistente IA', 'Inventario'];
+    final restored = ClinicExperience.fromServer({
+      'schema_version': 1, 'revision': 2, 'settings': settings,
+    });
+    expect(restored.visible('Hospitalización'), isTrue);
+    expect(restored.visible('Asistente IA'), isTrue);
+    expect(restored.visible('Inventario'), isFalse);
+    expect(restored.hiddenPages, isNot(contains('Hospitalización')));
+    expect(restored.hiddenPages, isNot(contains('Asistente IA')));
   });
 
   test('presets differ without changing permissions or saved workflow choices', () {
@@ -60,7 +76,7 @@ void main() {
     final hospital = ClinicExperience.forPreset(ClinicPreset.hospital, previous: custom);
     final production = ClinicExperience.forPreset(ClinicPreset.production, previous: custom);
     expect(hospital.visible('Hospitalización'), true);
-    expect(production.visible('Hospitalización'), false);
+    expect(production.visible('Hospitalización'), true);
     expect(production.visible('Producción y grandes especies'), true);
     expect(hospital.visible('Producción y grandes especies'), false);
     expect(hospital.flow('dose'), ClinicalFlowMode.free);
@@ -150,7 +166,7 @@ void main() {
       ClinicPreset.custom, previous: original,
     );
     expect(custom.hiddenPages, original.hiddenPages);
-    expect(custom.visible('Hospitalización'), isFalse);
+    expect(custom.visible('Hospitalización'), isTrue);
     expect(custom.visible('Inventario'), isFalse);
     expect(custom.flow('dose'), ClinicalFlowMode.mandatory);
     expect(custom.revision, 6);
