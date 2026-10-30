@@ -692,6 +692,52 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   @override
+  Future<void> resolveUncertainCreditSale() async {
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Verifica el resultado de la venta'),
+        content: const Text(
+          'La respuesta del servidor no confirmó si la venta con saldo quedó registrada. '
+          'Revisa manualmente el historial de ventas y la cuenta antes de continuar. '
+          'Esta pantalla no puede comprobar ese resultado automáticamente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'blocked'),
+            child: const Text('Seguir bloqueada'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'exists'),
+            child: const Text('La venta sí existe'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, 'not_found'),
+            child: const Text('No aparece; permitir otro intento'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || result == null || result == 'blocked') return;
+    if (result == 'exists') {
+      // Close and refresh the caller instead of posting a possible duplicate.
+      Navigator.pop(context, true);
+      return;
+    }
+    if (result == 'not_found') {
+      setState(() {
+        creditOutcomeUncertain = false;
+        creditRetryKey = null;
+        creditOperation = null;
+        error = null;
+        scanFeedback = null;
+        reviewed = false;
+        operation = newOperationId();
+      });
+    }
+  }
+
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Punto de venta')),
     body: SingleChildScrollView(
@@ -898,6 +944,12 @@ class _SaleScreenState extends State<SaleScreen> {
             Text(
               scanFeedback!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (creditOutcomeUncertain)
+            OutlinedButton.icon(
+              onPressed: busy ? null : resolveUncertainCreditSale,
+              icon: const Icon(Icons.fact_check_outlined),
+              label: const Text('Verificar resultado de la venta'),
             ),
           FilledButton(
             onPressed: busy ||
