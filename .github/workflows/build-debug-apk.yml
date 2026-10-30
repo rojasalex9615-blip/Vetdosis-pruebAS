@@ -20,12 +20,16 @@ jobs:
           cache: true
       - name: Preparar configuración del proyecto de pruebas
         env:
-          SUPABASE_TEST_PUBLISHABLE_KEY: ${{ vars.SUPABASE_TEST_PUBLISHABLE_KEY || secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
+          SUPABASE_TEST_PUBLISHABLE_KEY_VARIABLE: ${{ vars.SUPABASE_TEST_PUBLISHABLE_KEY }}
+          SUPABASE_TEST_PUBLISHABLE_KEY_SECRET: ${{ secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
         run: |
           python3 - <<'PY'
           import json, os
           from pathlib import Path
-          key = os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY', '').strip()
+          key = (
+              os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY_VARIABLE', '').strip()
+              or os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY_SECRET', '').strip()
+          )
           if not key:
               raise SystemExit('Falta SUPABASE_TEST_PUBLISHABLE_KEY en Actions Variables o Secrets; se configura una sola vez, no se introduce al ejecutar el workflow.')
           if not key.startswith('sb_publishable_'):
