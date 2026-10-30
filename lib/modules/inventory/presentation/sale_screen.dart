@@ -8,8 +8,18 @@ import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
 
 String inventoryError(Object error) {
+  final text = error.toString();
   final planMessage = planActionError(error);
   if (planMessage != null) return planMessage;
+  if (text.contains('quantified_dispensing_professional_only')) {
+    return 'Esta dispensación requiere un MVZ habilitado.';
+  }
+  if (text.contains('dispensing_authorized_quantity_exceeded')) {
+    return 'La cantidad excede el total autorizado en ventas anteriores.';
+  }
+  if (text.contains('ordinary_dispensing_delegation_required')) {
+    return 'Se requiere un permiso vigente para delegar esta dispensación.';
+  }
   return 'No se pudo completar la operación. Comprueba conexión y permisos antes de reintentar.';
 }
 
@@ -424,17 +434,26 @@ class _SaleScreenState extends State<SaleScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Total a pagar',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          'Total a pagar',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                      Text(
-                        total.display,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: indigo,
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            total.display,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: indigo,
+                            ),
+                          ),
                         ),
                       ),
                     ],
