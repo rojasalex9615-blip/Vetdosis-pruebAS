@@ -1,5 +1,13 @@
 import '../../core/domain/section_catalog.dart';
 
+/// Pages that can be configured per clinic. This intentionally includes routes
+/// that are not standalone navigation groups, so old saved visibility choices
+/// remain valid while the main menu stays concise.
+const experienceVisibilityGroups = [
+  ...sectionGroups,
+  SectionGroup('Producción animal', ['Producción y grandes especies']),
+];
+
 /// Only presentation preferences. Never grants permission, skips validation or
 /// changes the server-side clinical/audit contracts.
 enum ClinicPreset { general, smallAnimals, hospital, production, custom }
@@ -37,7 +45,7 @@ const aiExperienceProviders = <String, String>{
 };
 
 Set<String> get configurableExperiencePages => {
-  for (final group in sectionGroups)
+  for (final group in experienceVisibilityGroups)
     for (final page in group.pages)
       if (!protectedExperiencePages.contains(page)) page,
 };
@@ -99,11 +107,11 @@ class ClinicExperience {
         'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
       },
       ClinicPreset.general || ClinicPreset.custom => <String>{
-        for (final group in sectionGroups) group.title,
+        for (final group in experienceVisibilityGroups) group.title,
       },
     };
     final hide = <String>{
-      for (final group in sectionGroups)
+      for (final group in experienceVisibilityGroups)
         if (!enabledGroups.contains(group.title))
           for (final page in group.pages)
             if (!protectedExperiencePages.contains(page)) page,
@@ -145,7 +153,7 @@ class ClinicExperience {
   /// displayed). It does not touch clinical data, permissions, alarms, workflow
   /// preferences, provider connections, or other module groups.
   ClinicExperience restoreModuleVisibility(String groupTitle) {
-    final groups = sectionGroups.where(
+    final groups = experienceVisibilityGroups.where(
       (group) => group.title == groupTitle,
     );
     if (groups.isEmpty) return this;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience.dart';
+import 'package:vetdosis_pro/modules/core/domain/section_catalog.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/domain/clinic_experience_repository.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/presentation/clinic_experience_screen.dart';
 import 'package:vetdosis_pro/modules/clinic_experience/presentation/clinic_experience_boundary.dart';
@@ -367,4 +368,48 @@ void main() {
       FilledButton, 'Guardar configuración de la clínica',
     )).onPressed, isNull);
   });
+
+  test('production visibility remains configurable while preserving the existing menu', () {
+    const page = 'Producción y grandes especies';
+    expect(sectionGroups.any((group) => group.pages.contains(page)), isTrue);
+    expect(configurableExperiencePages.contains(page), isTrue);
+
+    final smallAnimals = ClinicExperience.forPreset(ClinicPreset.smallAnimals);
+    final hospital = ClinicExperience.forPreset(ClinicPreset.hospital);
+    final production = ClinicExperience.forPreset(ClinicPreset.production);
+    expect(smallAnimals.visible(page), isFalse);
+    expect(hospital.visible(page), isFalse);
+    expect(production.visible(page), isTrue);
+
+    final hidden = ClinicExperience.defaults().withPage(page, false);
+    final restored = ClinicExperience.fromServer({
+      'schema_version': 1,
+      'revision': 5,
+      'settings': hidden.toJson(),
+    });
+    expect(restored.visible(page), isFalse);
+    expect(
+      restored.restoreModuleVisibility('Producción animal').visible(page),
+      isTrue,
+    );
+  });
+
+  testWidgets('production visibility remains editable in clinic settings', (tester) async {
+    final repo = FakeExperienceRepository();
+    await tester.pumpWidget(MaterialApp(home: ClinicExperienceScreen(
+      member: administrator,
+      initial: repo.stored,
+      repository: repo,
+      ready: true,
+    )));
+    final group = find.text('Producción animal');
+    await tester.scrollUntilVisible(
+      group, 220, scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(group);
+    await tester.pumpAndSettle();
+    expect(find.text('Producción y grandes especies'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
 }

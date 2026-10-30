@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/plan_errors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
 import 'barcode_screen.dart';
+import 'credit_accounts_screen.dart';
 
 String inventoryError(Object error) {
   final planMessage = planActionError(error);
@@ -105,6 +107,49 @@ String inventoryError(Object error) {
   return 'No se pudo completar la operación. Comprueba conexión y permisos antes de reintentar.';
 }
 
+bool isConfirmedCreditRejection(Object error) {
+  if (error is FormatException || error is ArgumentError) return true;
+  if (planActionError(error) != null) return true;
+  final text = error is PostgrestException
+      ? error.message.toLowerCase()
+      : error.toString().toLowerCase();
+  const confirmedCodes = [
+    'explicit_permission_required',
+    'inventory_read_permission_required',
+    'cash_collection_permission_required',
+    'verified_dispensing_permission_required',
+    'dispensing_limit_reauthorization_required',
+    'dispensing_limit_authority_changed',
+    'legacy_delivery_delegation_disabled',
+    'dispensing_quantity_authorization_required',
+    'dispensing_authorized_quantity_exceeded',
+    'application_already_paid',
+    'delivery_already_paid',
+    'application_tariff_required',
+    'use_current_application_record',
+    'expired_lot_blocked',
+    'insufficient_stock',
+    'sale_price_changed',
+    'sale_total_changed',
+    'service_version_changed',
+    'price_below_service_commission',
+    'catalog_service_line_invalid',
+    'closed_shift',
+    'verified_medication_reference_required',
+    'quantified_dispensing_professional_only',
+    'issued_matching_prescription_required',
+    'ordinary_dispensing_delegation_required',
+    'whole_package_required',
+    'product_revision_conflict_or_legacy',
+    'legacy_stock_reconciliation_required',
+    'inventory_admin_required',
+    'controlled_reversal_professional_only',
+    'vial_inventory_identity_mismatch',
+    'reorder_below_minimum',
+  ];
+  return confirmedCodes.any(text.contains);
+}
+
 class SaleScreen extends StatefulWidget {
   const SaleScreen({
     super.key,
@@ -123,6 +168,9 @@ class SaleScreen extends StatefulWidget {
     this.charges = const [],
     this.deliveries = const [],
     this.acts = const [],
+    this.scanBarcode,
+    this.member,
+    this.canReturn = false,
   });
   final InventoryRepository repository;
   final String shift;
@@ -135,6 +183,10 @@ class SaleScreen extends StatefulWidget {
   final bool catalogUnavailable;
   final String clinicName;
   final List<Map<String, dynamic>> charges, deliveries, acts;
+  @visibleForTesting
+  final Future<String?> Function(BuildContext context)? scanBarcode;
+  final ClinicMembership? member;
+  final bool canReturn;
   @override
   State<SaleScreen> createState() => _SaleScreenState();
 }
@@ -142,11 +194,15 @@ class SaleScreen extends StatefulWidget {
 class _SaleScreenState extends State<SaleScreen> {
   final lines = <Map<String, dynamic>>[];
   String method = 'efectivo', operation = newOperationId();
-  String? error;
+  String? error, scanFeedback;
   bool busy = false, reviewed = false, credit = false;
+  bool creditOutcomeUncertain = false;
   final initialAmount = TextEditingController(text: '0');
   final debtor = TextEditingController();
   String? creditRetryKey, creditOperation;
+  List<Map<String, dynamic>>? creditRetryLines;
+  String? creditRetryMethod, creditRetryInitialAmount, creditRetryDebtor;
+  bool allowPopAfterVerifiedSale = false;
   @override
   void dispose() {
     initialAmount.dispose();
@@ -176,14 +232,23 @@ class _SaleScreenState extends State<SaleScreen> {
   void changed() {
     reviewed = false;
     operation = newOperationId();
-    error = null;
+    scanFeedback = null;
+    // An uncertain credit-sale result survives edits until the same operation
+    // is retried or the account is verified; never silently clear the warning.
+    if (!creditOutcomeUncertain) error = null;
   }
 
   Future<void> scanProduct() async {
-    final code = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (_) => const BarcodeScreen()),
-    );
+    final scanFn = widget.scanBarcode;
+    final String? code;
+    if (scanFn != null) {
+      code = await scanFn(context);
+    } else {
+      code = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (_) => const BarcodeScreen()),
+      );
+    }
     if (!mounted || code == null) return;
     await addByCode(code);
   }
@@ -218,24 +283,34 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> addByCode(String code) async {
+    final normalized = code.trim();
     final matches = widget.products
         .where(
           (p) =>
               p['m8_enabled'] == true &&
               p['active'] == true &&
-              (p['codigo_barras']?.toString().trim() == code.trim() ||
-                  p['barcode']?.toString().trim() == code.trim()),
+              (p['codigo_barras']?.toString().trim() == normalized ||
+                  p['barcode']?.toString().trim() == normalized),
         )
         .toList();
-    if (matches.length == 1) {
-      await addProduct(matches.single);
-    } else {
-      setState(
-        () => error = matches.isEmpty
-            ? 'No se encontró un producto activo con ese código de barras.'
-            : 'El código coincide con varios productos. Selecciona uno de la lista.',
-      );
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (matches.length != 1) {
+      final message = matches.isEmpty
+          ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
+          : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
+      setState(() => scanFeedback = message);
+      // Mostrar solo el resultado más reciente del escáner.
+      messenger.clearSnackBars();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+      return;
     }
+    // Un escaneo válido sustituye cualquier aviso de un escaneo anterior.
+    messenger.clearSnackBars();
+    setState(() => scanFeedback = null);
+    // La venta sigue el flujo existente: lote, cantidad, revisión y cobro.
+    // Escanear por sí solo no modifica el inventario.
+    await addProduct(matches.single);
   }
 
   Future<void> addProduct(Map<String, dynamic> p) async {
@@ -448,8 +523,10 @@ class _SaleScreenState extends State<SaleScreen> {
   Future<void> post() async {
     setState(() {
       busy = true;
-      error = null;
+      if (!creditOutcomeUncertain) error = null;
     });
+    var writeAttempted = false;
+    var writeSucceeded = false;
     try {
       final args = <String, dynamic>{
         'p_shift': widget.shift,
@@ -463,6 +540,11 @@ class _SaleScreenState extends State<SaleScreen> {
         ],
         'p_expected_total': total.decimal,
       };
+      if (creditOutcomeUncertain && !credit) {
+        throw const FormatException(
+          'El resultado de la venta con saldo anterior sigue sin confirmarse. Reactiva la venta con saldo y reintenta exactamente los mismos datos, o verifica la cuenta antes de continuar.',
+        );
+      }
       if (credit) {
         if (!creditEligible) {
           throw const FormatException(
@@ -481,12 +563,24 @@ class _SaleScreenState extends State<SaleScreen> {
           'p_actor': widget.actor,
         });
         final key = jsonEncode(args);
+        if (creditOutcomeUncertain && key != creditRetryKey) {
+          throw const FormatException(
+            'El resultado de la venta con saldo anterior sigue sin confirmarse. No cambies los datos; reintenta exactamente la misma operación o verifica la cuenta antes de continuar.',
+          );
+        }
         if (key != creditRetryKey) {
           creditRetryKey = key;
           creditOperation = newOperationId();
+          creditRetryLines = lines
+              .map((line) => Map<String, dynamic>.from(line))
+              .toList();
+          creditRetryMethod = method;
+          creditRetryInitialAmount = initialAmount.text;
+          creditRetryDebtor = debtor.text;
         }
       }
       args['p_operation'] = credit ? creditOperation : operation;
+      writeAttempted = true;
       final saleId = await widget.repository.write(
         credit
             ? 'inv_sale_credit_post'
@@ -495,19 +589,50 @@ class _SaleScreenState extends State<SaleScreen> {
             : 'inv_sale_post',
         args,
       );
+      writeSucceeded = true;
       if (mounted) {
+        setState(() {
+          creditOutcomeUncertain = false;
+          creditRetryKey = null;
+          creditOperation = null;
+          creditRetryLines = null;
+          creditRetryMethod = null;
+          creditRetryInitialAmount = null;
+          creditRetryDebtor = null;
+          error = null;
+          scanFeedback = null;
+        });
         await receiptActions('$saleId');
         if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
+      final confirmedRejection =
+          credit &&
+          writeAttempted &&
+          !writeSucceeded &&
+          isConfirmedCreditRejection(e);
       if (mounted) {
-        setState(
-          () => error = e is FormatException
+        setState(() {
+          if (confirmedRejection) {
+            creditOutcomeUncertain = false;
+            creditRetryKey = null;
+            creditOperation = null;
+            creditRetryLines = null;
+            creditRetryMethod = null;
+            creditRetryInitialAmount = null;
+            creditRetryDebtor = null;
+          } else if (credit && writeAttempted && !writeSucceeded) {
+            creditOutcomeUncertain = true;
+          }
+          error = e is FormatException
               ? e.message
-              : credit
+              : credit &&
+                    writeAttempted &&
+                    !writeSucceeded &&
+                    !confirmedRejection
               ? 'No se confirmó el registro. Revisa las cuentas antes de iniciar otra venta; reintentar los mismos datos conserva la operación.'
-              : inventoryError(e),
-        );
+              : inventoryError(e);
+        });
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -648,8 +773,102 @@ class _SaleScreenState extends State<SaleScreen> {
     return pdf.save();
   }
 
+  Future<void> resolveUncertainCreditSale() async {
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Verifica el resultado de la venta'),
+        content: const Text(
+          'La respuesta del servidor no confirmó si la venta con saldo quedó registrada. '
+          'Revisa manualmente el historial de ventas y la cuenta. Puedes abrir Cuentas y abonos '
+          'sin cerrar esta venta; esta pantalla no comprueba el resultado automáticamente.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'blocked'),
+            child: const Text('Seguir bloqueada'),
+          ),
+          if (widget.member != null)
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'accounts'),
+              child: const Text('Abrir cuentas y abonos'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'exists'),
+            child: const Text('La venta sí existe'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, 'not_found'),
+            child: const Text('No aparece; reintentar mismos datos'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || result == null || result == 'blocked') return;
+    if (result == 'accounts' && widget.member != null) {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreditAccountsScreen(
+            repository: widget.repository,
+            member: widget.member!,
+            shift: widget.shift,
+            canReturn: widget.canReturn,
+          ),
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          error = 'El resultado de la venta sigue sin confirmarse. Revisa Cuentas y abonos; cualquier reintento conservará la operación original.';
+        });
+      }
+      return;
+    }
+    if (result == 'exists') {
+      // Close and refresh the caller instead of posting a possible duplicate.
+      setState(() {
+        creditOutcomeUncertain = false;
+        allowPopAfterVerifiedSale = true;
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) Navigator.pop(context, true);
+      return;
+    }
+    if (result == 'not_found') {
+      final snapshot = creditRetryLines;
+      if (snapshot == null || creditRetryKey == null || creditOperation == null) {
+        setState(() {
+          error = 'No se pudo restaurar la operación original. Mantén el bloqueo y consulta el historial antes de continuar.';
+        });
+        return;
+      }
+      setState(() {
+        lines
+          ..clear()
+          ..addAll(snapshot.map((line) => Map<String, dynamic>.from(line)));
+        method = creditRetryMethod ?? method;
+        initialAmount.text = creditRetryInitialAmount ?? initialAmount.text;
+        debtor.text = creditRetryDebtor ?? debtor.text;
+        credit = true;
+        reviewed = false;
+        scanFeedback = null;
+        // Keep the original operation key and payload. A retry must be
+        // idempotent even if the first result is not visible yet.
+        error = 'El resultado sigue sin confirmarse. Se restauraron los datos originales; revisa y reintenta exactamente esta operación.';
+      });
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => PopScope<bool>(
+    canPop: !creditOutcomeUncertain || allowPopAfterVerifiedSale,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop && creditOutcomeUncertain) {
+        resolveUncertainCreditSale();
+      }
+    },
+    child: Scaffold(
     appBar: AppBar(title: const Text('Punto de venta')),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -851,8 +1070,24 @@ class _SaleScreenState extends State<SaleScreen> {
               error!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
+          if (scanFeedback != null)
+            Text(
+              scanFeedback!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (creditOutcomeUncertain)
+            OutlinedButton.icon(
+              onPressed: busy ? null : resolveUncertainCreditSale,
+              icon: const Icon(Icons.fact_check_outlined),
+              label: const Text('Verificar resultado de la venta'),
+            ),
           FilledButton(
-            onPressed: busy || !reviewed || lines.isEmpty ? null : post,
+            onPressed: busy ||
+                    !reviewed ||
+                    lines.isEmpty ||
+                    (creditOutcomeUncertain && !credit)
+                ? null
+                : post,
             child: Text(
               busy
                   ? 'Registrando…'
@@ -863,6 +1098,7 @@ class _SaleScreenState extends State<SaleScreen> {
           ),
         ],
       ),
+    ),
     ),
   );
 }

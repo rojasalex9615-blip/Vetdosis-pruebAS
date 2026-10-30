@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/doses/domain/quantity.dart';
 import 'package:vetdosis_pro/modules/inventory/domain/inventory_models.dart';
@@ -58,6 +59,7 @@ Map<String, dynamic> data() => {
 
 class Repo implements InventoryRepository {
   bool fail = false;
+  Object? writeFailure;
   Completer<dynamic>? pending;
   final List<Map<String, dynamic>> writes = [];
   @override
@@ -73,6 +75,8 @@ class Repo implements InventoryRepository {
   @override
   Future<dynamic> write(String command, Map<String, dynamic> args) async {
     writes.add({'command': command, ...args});
+    final failure = writeFailure;
+    if (failure != null) throw failure;
     return 'id';
   }
 
@@ -86,6 +90,32 @@ class Repo implements InventoryRepository {
   ) async {}
   @override
   Future<String> photoUrl(String path) async => 'https://example.test';
+}
+
+
+Future<void> addScannedProductToSale(WidgetTester tester) async {
+  await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+  await tester.pumpAndSettle();
+  final form = find.byType(Scaffold).last;
+  await tester.tap(find.descendant(
+    of: form,
+    matching: find.byType(DropdownButtonFormField<String>),
+  ).first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.textContaining('Lote ficticio').last);
+  await tester.pumpAndSettle();
+  await tester.enterText(find.byType(TextFormField).first, '1');
+  await tester.tap(find.descendant(of: form, matching: find.text('Guardar')));
+  await tester.pumpAndSettle();
+}
+
+Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  // A focused TextField can keep scheduling caret frames, so don't wait for
+  // full settling before tapping the next control.
+  await tester.pump();
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -277,7 +307,7 @@ void main() {
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
     await tester.ensureVisible(find.text('Registrar venta y pago'));
-    await tester.tap(find.text('Registrar venta y pago'));
+    await tapVisible(tester, find.text('Registrar venta y pago'));
     await tester.pumpAndSettle();
     expect(repo.writes.single['p_expected_total'], '0.20');
     expect(repo.writes.single['p_method'], 'efectivo');
@@ -329,7 +359,7 @@ void main() {
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
       await tester.ensureVisible(find.text('Registrar venta y pago'));
-      await tester.tap(find.text('Registrar venta y pago'));
+      await tapVisible(tester, find.text('Registrar venta y pago'));
       await tester.pumpAndSettle();
       final lines = (repo.writes.single['p_lines'] as List).cast<Map>();
       expect(lines.length, 2);
@@ -350,4 +380,359 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Barcode cancellation leaves checkout untouched', (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => null,
+        ),
+      ),
+    );
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(repo.writes, isEmpty);
+    expect(find.textContaining('No encontré un producto'), findsNothing);
+  });
+
+  testWidgets(
+    'Barcode lookup trims surrounding whitespace and opens lot/quantity flow',
+    (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => '  FICTICIO  \n',
+        ),
+      ),
+    );
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('Barcode lookup reports unknown code without writing', (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => 'UNKNOWN',
+        ),
+      ),
+    );
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('No encontré un producto activo').hitTestable(),
+      findsOneWidget,
+    );
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('Barcode lookup reports duplicate codes without writing', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('asignado a más de un producto').hitTestable(),
+      findsOneWidget,
+    );
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets(
+    'Consecutive failed barcode scans show only the latest message',
+    (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    var currentScan = 'UNKNOWN';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => currentScan,
+        ),
+      ),
+    );
+    final scanButton = find.text('Escanear producto para la nota de venta');
+    await tester.tap(scanButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('No encontré un producto activo').hitTestable(),
+      findsOneWidget,
+    );
+    currentScan = 'FICTICIO';
+    await tester.tap(scanButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('asignado a más de un producto').hitTestable(),
+      findsOneWidget,
+    );
+    expect(find.textContaining('No encontré un producto activo'), findsNothing);
+    expect(repo.writes, isEmpty);
+  });
+
+
+  testWidgets('valid scan cancellation preserves an existing checkout warning', (tester) async {
+    final repo = Repo()..writeFailure = StateError('Synthetic checkout failure');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          charges: [
+            {
+              'id': 'charge',
+              'name': 'Cargo ficticio',
+              'price': '1.00',
+              'paid': false,
+            },
+          ],
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    final chargeTile = find.ancestor(
+      of: find.textContaining('Cargo ficticio'),
+      matching: find.byType(ListTile),
+    ).first;
+    await tester.tap(find.descendant(
+      of: chargeTile,
+      matching: find.byIcon(Icons.add),
+    ));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Registrar venta y pago'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    await tester.tap(find.byType(BackButton).last);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+  });
+
+  testWidgets('uncertain credit sale cannot be reposted with changed data', (tester) async {
+    final repo = Repo()..writeFailure = StateError('Synthetic network timeout');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          creditSupported: true,
+          actor: 'mvz-test',
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await addScannedProductToSale(tester);
+    await tester.tap(find.text('Registrar abono y dejar saldo pendiente'));
+    await tester.pumpAndSettle();
+    final debtorField = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == 'Titular o referencia de la cuenta',
+    );
+    await tester.enterText(debtorField, 'Cuenta ficticia');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+    final originalOperation = repo.writes.single['p_operation'];
+
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    await tester.tap(find.byType(BackButton).last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+
+    await tester.enterText(debtorField, 'Otra cuenta ficticia');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('No cambies los datos; reintenta exactamente la misma operación'),
+      findsOneWidget,
+    );
+    expect(repo.writes, hasLength(1));
+
+    await tapVisible(tester, find.text('Verificar resultado de la venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Verifica el resultado de la venta'), findsOneWidget);
+    await tester.tap(find.text('No aparece; reintentar mismos datos'));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(2));
+    expect(repo.writes[1]['p_operation'], originalOperation);
+    expect(repo.writes[1]['p_debtor'], 'Cuenta ficticia');
+  });
+
+
+  testWidgets('uncertain credit checkout can inspect accounts without losing its operation', (tester) async {
+    final repo = Repo()..writeFailure = StateError('Synthetic network timeout');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          member: member,
+          canReturn: false,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          creditSupported: true,
+          actor: 'mvz-test',
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await addScannedProductToSale(tester);
+    await tester.tap(find.text('Registrar abono y dejar saldo pendiente'));
+    await tester.pumpAndSettle();
+    final debtorField = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == 'Titular o referencia de la cuenta',
+    );
+    await tester.enterText(debtorField, 'Cuenta ficticia');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    final originalOperation = repo.writes.single['p_operation'];
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Verifica el resultado de la venta'), findsOneWidget);
+    await tester.tap(find.text('Seguir bloqueada'));
+    await tester.pumpAndSettle();
+    expect(find.text('Punto de venta'), findsOneWidget);
+
+    await tapVisible(tester, find.text('Verificar resultado de la venta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abrir cuentas y abonos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cuentas y abonos'), findsOneWidget);
+    await tester.tap(find.byType(BackButton).last);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('sigue sin confirmarse'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    expect(repo.writes, hasLength(2));
+    expect(repo.writes[1]['p_operation'], originalOperation);
+  });
+
+  testWidgets('confirmed insufficient stock rejection does not lock credit checkout', (tester) async {
+    final repo = Repo()
+      ..writeFailure = PostgrestException(
+        message: 'insufficient_stock',
+        code: 'P0001',
+      );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          creditSupported: true,
+          actor: 'mvz-test',
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await addScannedProductToSale(tester);
+    await tester.tap(find.text('Registrar abono y dejar saldo pendiente'));
+    await tester.pumpAndSettle();
+    final debtorField = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == 'Titular o referencia de la cuenta',
+    );
+    await tester.enterText(debtorField, 'Cuenta ficticia');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+
+    expect(find.textContaining('El stock cambió o no alcanza'), findsOneWidget);
+    expect(find.text('Verificar resultado de la venta'), findsNothing);
+    expect(repo.writes, hasLength(1));
+
+    await tester.enterText(debtorField, 'Cuenta corregida');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+
+    expect(find.textContaining('El stock cambió o no alcanza'), findsOneWidget);
+    expect(find.text('Verificar resultado de la venta'), findsNothing);
+    expect(repo.writes, hasLength(2));
+  });
+
 }
