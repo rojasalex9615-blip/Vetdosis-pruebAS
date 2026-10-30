@@ -399,16 +399,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title: const Text('Ver estadísticas'),
                 children: [statisticsPanel],
               ),
-            if (routeVisible('Hospitalización') || routeVisible('Agenda') || routeVisible('Inventario'))
+            if (routeAuthorized('Hospitalización') || routeVisible('Agenda') || routeVisible('Inventario'))
             panel(
               'Alertas y recordatorios',
-              routeVisible('Hospitalización')
+              routeAuthorized('Hospitalización')
                   ? 'Hospitalización'
                   : routeVisible('Agenda')
                       ? 'Agenda'
                       : 'Inventario',
               [
-                if (m.canSummarize('hospital') && routeVisible('Hospitalización'))
+                if (m.canSummarize('hospital') && routeAuthorized('Hospitalización'))
                   unavailable(
                     'Hospitalización',
                     m.ward != null,
