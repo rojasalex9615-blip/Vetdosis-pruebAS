@@ -126,12 +126,15 @@ class _SaleScreenState extends State<SaleScreen> {
           ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
           : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
       setState(() => error = message);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      final messenger = ScaffoldMessenger.of(context);
+      // Always show the latest scan result, never queue stale feedback.
+      messenger.clearSnackBars();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
       return;
     }
 
+    // A successful scan supersedes any earlier failed-scan notification.
+    ScaffoldMessenger.of(context).clearSnackBars();
     setState(() => error = null);
     // Reutiliza el flujo de venta manual: elegir lote y cantidad, revisar y
     // confirmar el cobro. Escanear nunca modifica el inventario por sí solo.
