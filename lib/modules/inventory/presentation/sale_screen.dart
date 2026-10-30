@@ -58,6 +58,10 @@ String inventoryError(Object error) {
         'Lote caducado o sin caducidad exigida; dispensación bloqueada.',
     'insufficient_stock':
         'El stock cambió o no alcanza. Actualiza el inventario.',
+    'enabled_product_lot_required':
+        'Selecciona un lote activo para cada producto antes de registrar el saldo.',
+    'sale_lines_required':
+        'Agrega al menos un producto o servicio a la venta.',
     'sale_price_changed': 'El precio cambió. Actualiza antes de cobrar.',
     'sale_total_changed':
         'El total no coincide. Revisa el carrito antes de cobrar.',
@@ -129,6 +133,8 @@ bool isConfirmedCreditRejection(Object error) {
     'use_current_application_record',
     'expired_lot_blocked',
     'insufficient_stock',
+    'enabled_product_lot_required',
+    'sale_lines_required',
     'sale_price_changed',
     'sale_total_changed',
     'service_version_changed',
