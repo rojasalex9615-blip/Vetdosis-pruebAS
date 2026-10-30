@@ -600,6 +600,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
     expect(repo.writes, hasLength(1));
+    final originalOperation = repo.writes.single['p_operation'];
 
     await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
@@ -624,12 +625,14 @@ void main() {
     await tapVisible(tester, find.text('Verificar resultado de la venta'));
     await tester.pumpAndSettle();
     expect(find.text('Verifica el resultado de la venta'), findsOneWidget);
-    await tester.tap(find.text('No aparece; permitir otro intento'));
+    await tester.tap(find.text('No aparece; reintentar mismos datos'));
     await tester.pumpAndSettle();
     await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tapVisible(tester, find.text('Registrar venta con saldo'));
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
     expect(repo.writes, hasLength(2));
+    expect(repo.writes[1]['p_operation'], originalOperation);
+    expect(repo.writes[1]['p_debtor'], 'Cuenta ficticia');
   });
 
 
