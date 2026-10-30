@@ -1,0 +1,90 @@
+name: Validación segura de integración VetDosis
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'supabase/**'
+      - 'android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/validate-integration-pr.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vetdosis-integration-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+jobs:
+  flutter:
+    name: Flutter analyze, tests and debug APK (synthetic config)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout integration commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@ddc835b5b4f5d4fb7b9a4e1f2e1d0c5d4e0b9c7a
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.1'
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Static analysis
+        run: flutter analyze
+      - name: Full Flutter test suite
+        run: flutter test --timeout 5m
+      - name: Create synthetic Firebase config for compile-only build
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          config = {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "vetdosis-integration-only",
+              "storage_bucket": "vetdosis-integration-only.invalid"
+            },
+            "client": [{
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": {
+                  "package_name": "io.github.alexcore123r.vetdosis.beta"
+                }
+              },
+              "api_key": [{"current_key": "BUILD_ONLY_NOT_A_REAL_KEY"}]
+            }],
+            "configuration_version": "1"
+          }
+          Path("android/app/google-services.json").write_text(json.dumps(config))
+          PY
+      - name: Build debug beta APK with synthetic non-production values
+        run: >-
+          flutter build apk --debug --flavor beta
+          --dart-define=APP_CHANNEL=integration
+          --dart-define=SUPABASE_URL=https://example.invalid
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_integration_placeholder
+      - name: Remove synthetic Firebase config
+        if: always()
+        run: rm -f android/app/google-services.json
+  isolated-sql:
+    name: SQL module/dashboard tests in isolated Docker PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout integration commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Run isolated two-clinic SQL suite
+        run: bash supabase/tests/run_module_navigation_dashboard.sh
