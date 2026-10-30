@@ -93,7 +93,7 @@ class Repo implements InventoryRepository {
 
 
 Future<void> addScannedProductToSale(WidgetTester tester) async {
-  await tester.tap(find.text('Escanear producto para la nota de venta'));
+  await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
   await tester.pumpAndSettle();
   final form = find.byType(Scaffold).last;
   await tester.tap(find.descendant(
@@ -393,7 +393,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(repo.writes, isEmpty);
     expect(find.textContaining('No encontré un producto'), findsNothing);
@@ -416,7 +416,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(find.text('Agregar Producto ficticio'), findsOneWidget);
     expect(repo.writes, isEmpty);
@@ -437,7 +437,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(
       find.textContaining('No encontré un producto activo').hitTestable(),
@@ -466,7 +466,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(
       find.textContaining('asignado a más de un producto').hitTestable(),
@@ -556,7 +556,7 @@ void main() {
     expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
     expect(repo.writes, hasLength(1));
 
-    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(find.text('Agregar Producto ficticio'), findsOneWidget);
     await tester.tap(find.byType(BackButton).last);
@@ -598,7 +598,7 @@ void main() {
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
     expect(repo.writes, hasLength(1));
 
-    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tapVisible(tester, find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(find.text('Agregar Producto ficticio'), findsOneWidget);
     await tester.tap(find.byType(BackButton).last);
