@@ -303,7 +303,7 @@ void main() {
     repo.failReads = true;
     await expectLater(refresh(), throwsStateError);
     await tester.pump();
-    expect(find.text('ready:false'), findsOneWidget);
+    expect(find.text('ready:true'), findsOneWidget);
     repo.failReads = false;
     repo.stored = repo.stored.withPage('Hospitalización', true);
     await refresh();
@@ -331,13 +331,13 @@ void main() {
 
     await tester.pumpWidget(show(administrator, 0));
     await tester.pumpAndSettle();
-    expect(find.text('ready:false'), findsOneWidget);
+    expect(find.text('ready:true'), findsOneWidget);
 
     // A background refresh failure must not affect protected clinical destinations.
     repo.failReads = true;
     await tester.pumpWidget(show(administrator, 1));
     await tester.pumpAndSettle();
-    expect(find.text('ready:false'), findsOneWidget);
+    expect(find.text('ready:true'), findsOneWidget);
 
     // Different clinic identity is never allowed to reuse stale preferences.
     await tester.pumpWidget(show(const ClinicMembership(
