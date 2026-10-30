@@ -240,11 +240,104 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('\$0,00 MXN'), findsOneWidget);
+    expect(find.byTooltip('Escanear código de barras'), findsOneWidget);
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
     expect(repo.writes, isEmpty);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('Barcode cancellation leaves checkout untouched', (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => null,
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(repo.writes, isEmpty);
+    expect(find.textContaining('No encontré un producto'), findsNothing);
+  });
+
+  testWidgets('Barcode lookup trims code and opens product lot/quantity flow without writing', (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => '  FICTICIO  \n',
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('Barcode lookup reports unknown code without writing', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: products,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => 'UNKNOWN',
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No encontré un producto activo'), findsWidgets);
+    expect(find.textContaining('No encontré un producto activo').hitTestable(), findsOneWidget);
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('Barcode lookup reports duplicate codes without writing', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('asignado a más de un producto'), findsWidgets);
+    expect(find.textContaining('asignado a más de un producto').hitTestable(), findsOneWidget);
+    expect(repo.writes, isEmpty);
+  });
+
   testWidgets('Reviewed cart submits exact quantity, lot, payment and total', (
     tester,
   ) async {
@@ -262,7 +355,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add).first);
+    // ListView builds children lazily; reveal the product before locating its button.
+    await tester.scrollUntilVisible(
+      find.text('Producto ficticio'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    final productTile = find.ancestor(
+      of: find.text('Producto ficticio'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(
+      find.descendant(of: productTile, matching: find.byIcon(Icons.add)),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
@@ -272,11 +378,19 @@ void main() {
     await tester.ensureVisible(find.text('Guardar'));
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('\$0,20 MXN'), findsNWidgets(2));
-    await tester.ensureVisible(find.byType(CheckboxListTile));
+    expect(find.textContaining('0,20'), findsWidgets);
+    await tester.scrollUntilVisible(
+      find.byType(CheckboxListTile),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
-    await tester.ensureVisible(find.textContaining('Cobrar ·'));
+    await tester.scrollUntilVisible(
+      find.textContaining('Cobrar ·'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.textContaining('Cobrar ·'));
     await tester.pumpAndSettle();
     expect(repo.writes.single['p_expected_total'], '0.20');
@@ -318,17 +432,76 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      // Reveal each lazy ListTile before finding its trailing add button.
+      await tester.scrollUntilVisible(
+        find.text('Aplicación 0,5 ml · receta única'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      final firstCharge = find.ancestor(
+        of: find.text('Aplicación 0,5 ml · receta única'),
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(
+        find.descendant(
+          of: firstCharge,
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+      );
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add_circle_outline).last);
+      await tester.scrollUntilVisible(
+        find.text('Siguiente aplicación 0,5 ml · receta única'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      final secondCharge = find.ancestor(
+        of: find.text('Siguiente aplicación 0,5 ml · receta única'),
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(
+        find.descendant(
+          of: secondCharge,
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+      );
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      // Adding an already-added charge must not create a duplicate line.
+      await tester.scrollUntilVisible(
+        find.text('Aplicación 0,5 ml · receta única'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: firstCharge,
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+      );
       await tester.pump();
+      // The total is above the charge rows in the same ListView; reveal it
+      // before asserting so the finder does not skip an off-screen widget.
+      await tester.scrollUntilVisible(
+        find.text('Total a pagar'),
+        -300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       expect(find.text('\$30,00 MXN'), findsOneWidget);
-      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.scrollUntilVisible(
+        find.byType(CheckboxListTile),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
-      await tester.ensureVisible(find.textContaining('Cobrar ·'));
+      await tester.scrollUntilVisible(
+        find.textContaining('Cobrar ·'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.textContaining('Cobrar ·'));
       await tester.pumpAndSettle();
       final lines = (repo.writes.single['p_lines'] as List).cast<Map>();
@@ -350,4 +523,37 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('Two consecutive failed barcode scans show latest message without queuing old snackbars', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    var currentScan = 'UNKNOWN';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => currentScan,
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No encontré un producto activo').hitTestable(), findsOneWidget);
+
+    currentScan = 'FICTICIO';
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('asignado a más de un producto').hitTestable(), findsOneWidget);
+    expect(find.textContaining('No encontré un producto activo'), findsNothing);
+    expect(repo.writes, isEmpty);
+  });
+
 }

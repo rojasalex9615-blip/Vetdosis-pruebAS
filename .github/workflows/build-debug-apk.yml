@@ -1,5 +1,10 @@
 name: Compilar APK de depuración
 on:
+  pull_request:
+    branches:
+      - main
+      - fix/dashboard-visual-build-20261029
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 permissions:
   contents: read
