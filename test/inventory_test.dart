@@ -515,4 +515,37 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('Two consecutive failed barcode scans show latest message without queuing old snackbars', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    var currentScan = 'UNKNOWN';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => currentScan,
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No encontré un producto activo').hitTestable(), findsOneWidget);
+
+    currentScan = 'FICTICIO';
+    await tester.tap(find.byTooltip('Escanear código de barras'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('asignado a más de un producto').hitTestable(), findsOneWidget);
+    expect(find.textContaining('No encontré un producto activo'), findsNothing);
+    expect(repo.writes, isEmpty);
+  });
+
 }
