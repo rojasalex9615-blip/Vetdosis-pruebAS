@@ -369,9 +369,9 @@ void main() {
     )).onPressed, isNull);
   });
 
-  test('production visibility remains configurable outside the menu catalog', () {
+  test('production visibility remains configurable while preserving the existing menu', () {
     const page = 'Producción y grandes especies';
-    expect(sectionGroups.any((group) => group.pages.contains(page)), isFalse);
+    expect(sectionGroups.any((group) => group.pages.contains(page)), isTrue);
     expect(configurableExperiencePages.contains(page), isTrue);
 
     final smallAnimals = ClinicExperience.forPreset(ClinicPreset.smallAnimals);
