@@ -276,8 +276,8 @@ void main() {
     await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
-    await tester.ensureVisible(find.text('Registrar venta y pago'));
-    await tester.tap(find.text('Registrar venta y pago'));
+    await tester.ensureVisible(find.textContaining('Cobrar ·'));
+    await tester.tap(find.textContaining('Cobrar ·'));
     await tester.pumpAndSettle();
     expect(repo.writes.single['p_expected_total'], '0.20');
     expect(repo.writes.single['p_method'], 'efectivo');
@@ -328,8 +328,8 @@ void main() {
       await tester.ensureVisible(find.byType(CheckboxListTile));
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
-      await tester.ensureVisible(find.text('Registrar venta y pago'));
-      await tester.tap(find.text('Registrar venta y pago'));
+      await tester.ensureVisible(find.textContaining('Cobrar ·'));
+      await tester.tap(find.textContaining('Cobrar ·'));
       await tester.pumpAndSettle();
       final lines = (repo.writes.single['p_lines'] as List).cast<Map>();
       expect(lines.length, 2);
