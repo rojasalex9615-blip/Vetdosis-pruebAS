@@ -123,6 +123,7 @@ class SaleScreen extends StatefulWidget {
     this.charges = const [],
     this.deliveries = const [],
     this.acts = const [],
+    this.scanBarcode,
   });
   final InventoryRepository repository;
   final String shift;
@@ -135,6 +136,8 @@ class SaleScreen extends StatefulWidget {
   final bool catalogUnavailable;
   final String clinicName;
   final List<Map<String, dynamic>> charges, deliveries, acts;
+  @visibleForTesting
+  final Future<String?> Function(BuildContext context)? scanBarcode;
   @override
   State<SaleScreen> createState() => _SaleScreenState();
 }
@@ -180,10 +183,16 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> scanProduct() async {
-    final code = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (_) => const BarcodeScreen()),
-    );
+    final scanFn = widget.scanBarcode;
+    final String? code;
+    if (scanFn != null) {
+      code = await scanFn(context);
+    } else {
+      code = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (_) => const BarcodeScreen()),
+      );
+    }
     if (!mounted || code == null) return;
     await addByCode(code);
   }
@@ -218,24 +227,34 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> addByCode(String code) async {
+    final normalized = code.trim();
     final matches = widget.products
         .where(
           (p) =>
               p['m8_enabled'] == true &&
               p['active'] == true &&
-              (p['codigo_barras']?.toString().trim() == code.trim() ||
-                  p['barcode']?.toString().trim() == code.trim()),
+              (p['codigo_barras']?.toString().trim() == normalized ||
+                  p['barcode']?.toString().trim() == normalized),
         )
         .toList();
-    if (matches.length == 1) {
-      await addProduct(matches.single);
-    } else {
-      setState(
-        () => error = matches.isEmpty
-            ? 'No se encontró un producto activo con ese código de barras.'
-            : 'El código coincide con varios productos. Selecciona uno de la lista.',
-      );
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (matches.length != 1) {
+      final message = matches.isEmpty
+          ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
+          : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
+      setState(() => error = message);
+      // Mostrar solo el resultado más reciente del escáner.
+      messenger.clearSnackBars();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+      return;
     }
+    // Un escaneo válido sustituye cualquier aviso de un escaneo anterior.
+    messenger.clearSnackBars();
+    setState(() => error = null);
+    // La venta sigue el flujo existente: lote, cantidad, revisión y cobro.
+    // Escanear por sí solo no modifica el inventario.
+    await addProduct(matches.single);
   }
 
   Future<void> addProduct(Map<String, dynamic> p) async {
