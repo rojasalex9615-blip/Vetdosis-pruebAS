@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/auth_repository.dart';
 import '../domain/clinic_membership.dart';
 import '../../offline/domain/offline_models.dart';
@@ -174,6 +176,50 @@ class AuthViewModel extends ChangeNotifier {
     _notify();
   }
 
+  String _diagnosticCategory(Object exception) {
+    if (exception is AuthException) {
+      switch (exception.code) {
+        case 'invalid_credentials':
+        case 'invalid_login_credentials':
+          return 'auth_invalid_credentials';
+        case 'email_not_confirmed':
+          return 'auth_email_not_confirmed';
+        case 'user_banned':
+          return 'auth_account_unavailable';
+        case 'over_request_rate_limit':
+        case 'over_email_send_rate_limit':
+          return 'auth_rate_limited';
+        default:
+          return 'auth_service_error';
+      }
+    }
+    if (exception is SocketException ||
+        exception is TimeoutException ||
+        exception is HttpException) {
+      return 'network_error';
+    }
+    return 'unexpected_error';
+  }
+
+  String _safeErrorMessage(Object exception) {
+    switch (_diagnosticCategory(exception)) {
+      case 'auth_invalid_credentials':
+        return 'El correo o la contraseña no son correctos.';
+      case 'auth_email_not_confirmed':
+        return 'Confirma tu correo electrónico antes de iniciar sesión.';
+      case 'auth_account_unavailable':
+        return 'Esta cuenta no puede iniciar sesión. Contacta al soporte.';
+      case 'auth_rate_limited':
+        return 'Hay demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+      case 'network_error':
+        return 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
+      case 'auth_service_error':
+        return 'El servicio de acceso devolvió un error. Inténtalo más tarde.';
+      default:
+        return 'No se pudo completar la operación. Verifica los datos y la conexión.';
+    }
+  }
+
   Future<void> _run(
     Future<void> Function() action, {
     bool requireOnline = true,
@@ -194,9 +240,12 @@ class AuthViewModel extends ChangeNotifier {
     } on PendingChanges {
       error =
           'Hay cambios pendientes de sincronizar o revisar. Conéctate antes de cerrar sesión.';
-    } catch (_) {
-      error =
-          'No se pudo completar la operación. Verifica los datos y la conexión.';
+    } catch (exception) {
+      final category = _diagnosticCategory(exception);
+      // Log only an allowlisted category. Never log credentials, email, tokens,
+      // raw server messages, or stack traces from authentication failures.
+      debugPrint('[vetdosis-auth] failure=$category');
+      error = _safeErrorMessage(exception);
     } finally {
       busy = false;
       _notify();
