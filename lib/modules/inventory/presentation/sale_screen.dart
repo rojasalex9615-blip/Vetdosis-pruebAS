@@ -6,6 +6,7 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
+import 'barcode_screen.dart';
 
 String inventoryError(Object error) {
   final text = error.toString();
@@ -97,6 +98,36 @@ class _SaleScreenState extends State<SaleScreen> {
       }
       error = null;
     });
+  }
+
+  Future<void> scanProduct() async {
+    final code = await Navigator.push<String>(
+      context,
+      MaterialPageRoute<String>(
+        builder: (_) => const BarcodeScreen(),
+      ),
+    );
+    if (!mounted || code == null) return;
+    final normalized = code.trim();
+    final matches = widget.products.where(
+      (p) =>
+          p['active'] == true &&
+          p['m8_enabled'] == true &&
+          (p['codigo_barras'] as String?)?.trim() == normalized,
+    ).toList();
+
+    if (matches.length != 1) {
+      setState(() {
+        error = matches.isEmpty
+            ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
+            : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
+      });
+      return;
+    }
+
+    // Reutiliza el flujo de venta manual: elegir lote y cantidad, revisar y
+    // confirmar el cobro. Escanear nunca modifica el inventario por sí solo.
+    await addProduct(matches.single);
   }
 
   Future<void> addProduct(Map<String, dynamic> p) async {
@@ -367,6 +398,11 @@ class _SaleScreenState extends State<SaleScreen> {
       appBar: AppBar(
         title: const Text('Caja registradora'),
         actions: [
+          IconButton(
+            tooltip: 'Escanear código de barras',
+            onPressed: busy ? null : scanProduct,
+            icon: const Icon(Icons.qr_code_scanner),
+          ),
           if (widget.admin)
             IconButton(
               tooltip: 'Agregar servicio manual',
