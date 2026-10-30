@@ -5,6 +5,7 @@ on:
     paths:
       - 'lib/modules/inventory/presentation/sale_screen.dart'
       - 'test/inventory_test.dart'
+      - 'test/clinic_experience_test.dart'
       - 'lib/modules/core/domain/section_catalog.dart'
       - '.github/workflows/validate-caja-barcode.yml'
   workflow_dispatch:
@@ -51,7 +52,7 @@ jobs:
           PY
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test --no-pub --timeout 5m test/inventory_test.dart test/module_navigation_dashboard_test.dart
+      - run: flutter test --no-pub --timeout 5m test/inventory_test.dart test/module_navigation_dashboard_test.dart test/clinic_experience_test.dart
       - name: Generar APK beta de depuración (solo Supabase Pruebas)
         run: flutter build apk --debug --flavor beta --target-platform android-arm64 --dart-define=APP_CHANNEL=beta --dart-define-from-file=supabase/config.test.local.json
       - uses: actions/upload-artifact@v4
