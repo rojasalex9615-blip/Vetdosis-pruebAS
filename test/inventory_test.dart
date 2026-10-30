@@ -690,6 +690,22 @@ void main() {
     expect(repo.writes[1]['p_operation'], originalOperation);
   });
 
+  test('deterministic credit-sale rejections are not treated as uncertain outcomes', () {
+    for (final code in const [
+      'enabled_product_lot_required',
+      'sale_lines_required',
+    ]) {
+      expect(
+        isConfirmedCreditRejection(PostgrestException(
+          message: code,
+          code: 'P0001',
+        )),
+        isTrue,
+        reason: '$code is a confirmed server rejection',
+      );
+    }
+  });
+
   testWidgets('confirmed insufficient stock rejection does not lock credit checkout', (tester) async {
     final repo = Repo()
       ..writeFailure = PostgrestException(
