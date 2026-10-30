@@ -425,24 +425,22 @@ class CoreShell extends StatelessWidget {
   Future<void> chooseDosePatient(BuildContext context) async {
     final member = auth?.active;
     if (!canChooseDosePatient || member == null) return;
-    final access = HospitalCalculationAccess(
-      auth: auth!,
-      member: member,
-      initialAccess: moduleAccess,
-      repository: moduleAccessRepository,
-    );
-    try {
-      await Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => HospitalDosePatientScreen(
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => HospitalCalculationAccessScope(
+          auth: auth!,
+          member: member,
+          initialAccess: moduleAccess,
+          repository: moduleAccessRepository,
+          builder: (routeContext, access) => HospitalDosePatientScreen(
             hospital: hospital!,
             clinical: clinical!,
             member: member,
             sessionChanges: access,
             contextIsCurrent: () => access.current,
             onCalculate: (weight, validate) => hospitalWeightCalculation(
-              context,
+              routeContext,
               weight,
               validate,
               contextIsCurrent: () => access.current,
@@ -450,10 +448,8 @@ class CoreShell extends StatelessWidget {
             ),
           ),
         ),
-      );
-    } finally {
-      access.dispose();
-    }
+      ),
+    );
   }
 
   /// Opens the calculator after rechecking session, module access, and weight.

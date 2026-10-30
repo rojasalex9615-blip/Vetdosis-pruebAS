@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,10 +37,19 @@ class LiveModules implements ModuleAccessRepository {
 }
 
 void main() {
+  late String bundledCatalog;
+  setUpAll(() async {
+    bundledCatalog = await File(
+      'assets/clinical/catalog.v1.json',
+    ).readAsString();
+  });
+
   testWidgets(
     'Real CoreShell keeps patient query through refresh and opens the persisted-weight calculator',
     (tester) async {
-      SharedPreferences.setMockInitialValues({});
+      SharedPreferences.setMockInitialValues({
+        'doses.catalog.v1': bundledCatalog,
+      });
       tester.view.physicalSize = const Size(600, 1300);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -201,6 +211,144 @@ void main() {
       await repo.controller.close();
     },
   );
+
+  for (final outcome in ['allowed', 'revoked', 'error']) {
+    test(
+      'An overlapping auth refresh resolves the waiting check as $outcome',
+      () async {
+        final repo = FakeAuth()..rows = [clinician];
+        final auth = AuthViewModel(repo);
+        await auth.start();
+        final modules = LiveModules();
+        final access = HospitalCalculationAccess(
+          auth: auth,
+          member: clinician,
+          initialAccess: null,
+          repository: modules,
+        );
+        await access.revalidate();
+        final old = Completer<Map<String, dynamic>>();
+        modules.pending = old;
+        final waiting = access.revalidate();
+        final newest = Completer<Map<String, dynamic>>();
+        modules.pending = newest;
+        await auth.refresh(background: true);
+        if (outcome == 'error') {
+          newest.completeError(StateError('Synthetic failed latest check'));
+        } else {
+          newest.complete(
+            contract(enabled: outcome == 'allowed' ? 'hospital' : ''),
+          );
+        }
+        // The original RPC is still pending; it must not block the user's check.
+        expect(await waiting, outcome == 'allowed');
+        expect(access.current, outcome == 'allowed');
+        old.complete(contract(enabled: outcome == 'allowed' ? '' : 'hospital'));
+        await Future<void>.delayed(Duration.zero);
+        expect(access.current, outcome == 'allowed');
+        access.dispose();
+        auth.dispose();
+        await repo.controller.close();
+      },
+    );
+  }
+
+  test('Disposal resolves a waiting check before its RPC completes', () async {
+    final repo = FakeAuth()..rows = [clinician];
+    final auth = AuthViewModel(repo);
+    await auth.start();
+    final response = Completer<Map<String, dynamic>>();
+    final modules = LiveModules()..pending = response;
+    final access = HospitalCalculationAccess(
+      auth: auth,
+      member: clinician,
+      initialAccess: null,
+      repository: modules,
+    );
+    final waiting = access.revalidate();
+    access.dispose();
+    expect(await waiting, isFalse);
+    final reads = modules.reads;
+    expect(await access.revalidate(), isFalse);
+    expect(modules.reads, reads);
+    response.complete(contract(enabled: 'hospital'));
+    await Future<void>.delayed(Duration.zero);
+    expect(access.current, isFalse);
+    auth.dispose();
+    await repo.controller.close();
+  });
+
+  for (final exit in ['pop', 'signout']) {
+    testWidgets('Real patient route owns access through $exit and teardown', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'doses.catalog.v1': bundledCatalog,
+      });
+      tester.view.physicalSize = const Size(600, 1300);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repo = FakeAuth()..rows = [clinician];
+      final auth = AuthViewModel(repo);
+      await auth.start();
+      final modules = LiveModules();
+      final core = CoreViewModel(SettingsRepository(), const AppSettings());
+      core.navigate('Cálculo rápido');
+      await tester.pumpWidget(
+        VetDosisApp(
+          model: core,
+          auth: auth,
+          moduleAccess: modules,
+          hospital: FakeHospital(),
+          clinical: WeightClinical()..entries.add(entry()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final choose = find.text('Elegir paciente y peso registrado');
+      await tester.ensureVisible(choose);
+      await tester.tap(choose);
+      await tester.pumpAndSettle();
+      final picker = find.byType(HospitalDosePatientScreen);
+      final access =
+          tester.widget<HospitalDosePatientScreen>(picker).sessionChanges!
+              as HospitalCalculationAccess;
+      if (exit == 'pop') {
+        Navigator.of(tester.element(picker)).pop();
+        await tester.pump();
+        // The push Future has resolved but its route is still animating out.
+        expect(picker, findsOneWidget);
+        expect(access.current, isTrue);
+        expect(await access.revalidate(), isTrue);
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(
+          find.textContaining('La sesión o los permisos cambiaron'),
+          findsNothing,
+        );
+        await tester.pumpAndSettle();
+      } else {
+        await auth.signOut();
+        await tester.pumpAndSettle();
+        expect(picker, findsNothing);
+        await auth.signIn('synthetic@example.test', 'synthetic-password');
+        await tester.pumpAndSettle();
+      }
+      expect(access.current, isFalse);
+      final reads = modules.reads;
+      expect(await access.revalidate(), isFalse);
+      expect(modules.reads, reads);
+      await auth.refresh(background: true);
+      // The home boundary reloads on the next frame. A leaked route listener
+      // would already have performed an extra RPC synchronously here.
+      expect(modules.reads, reads);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      core.dispose();
+      auth.dispose();
+      await repo.controller.close();
+    });
+  }
 
   for (final change in ['clinic', 'role', 'user', 'offline', 'membership']) {
     test('Live $change change invalidates patient/weight context', () async {

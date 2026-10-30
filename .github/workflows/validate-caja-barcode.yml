@@ -1,0 +1,63 @@
+name: Validar escáner de Caja y navegación visual
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'lib/modules/inventory/presentation/sale_screen.dart'
+      - 'test/inventory_test.dart'
+      - 'test/clinic_experience_test.dart'
+      - 'lib/modules/core/domain/section_catalog.dart'
+      - '.github/workflows/validate-caja-barcode.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: validate-caja-barcode-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-caja-navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - name: Preparar configuración del proyecto de pruebas
+        env:
+          SUPABASE_TEST_PUBLISHABLE_KEY_VARIABLE: ${{ vars.SUPABASE_TEST_PUBLISHABLE_KEY }}
+          SUPABASE_TEST_PUBLISHABLE_KEY_SECRET: ${{ secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          key = (
+              os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY_VARIABLE', '').strip()
+              or os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY_SECRET', '').strip()
+          )
+          if not key:
+              raise SystemExit('Falta SUPABASE_TEST_PUBLISHABLE_KEY en Actions Variables o Secrets.')
+          if not key.startswith('sb_publishable_'):
+              raise SystemExit('SUPABASE_TEST_PUBLISHABLE_KEY debe ser una clave publicable, nunca service_role.')
+          Path('supabase/config.test.local.json').write_text(json.dumps({
+              'SUPABASE_URL': 'https://wtrelwtztkddfktrfdpb.supabase.co',
+              'SUPABASE_PUBLISHABLE_KEY': key,
+              'SUPABASE_EXISTING_SCHEMA': True,
+              'SUPABASE_GOOGLE_ENABLED': False,
+          }))
+          PY
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test --no-pub --timeout 5m test/inventory_test.dart test/module_navigation_dashboard_test.dart test/clinic_experience_test.dart
+      - name: Generar APK beta de depuración (solo Supabase Pruebas)
+        run: flutter build apk --debug --flavor beta --target-platform android-arm64 --dart-define=APP_CHANNEL=beta --dart-define-from-file=supabase/config.test.local.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vetdosis-visual-caja-debug-arm64
+          path: build/app/outputs/flutter-apk/app-beta-debug.apk
+          if-no-files-found: error
+          retention-days: 14
