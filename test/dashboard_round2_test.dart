@@ -45,8 +45,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Valor a costo'), findsNothing);
       expect(find.text('Ventas de hoy'), findsNothing);
-      expect(find.text('Abrir caja'), findsOneWidget);
-      expect(find.text('Equipo y avisos'), findsOneWidget);
+      expect(find.text('Abrir turno de caja'), findsOneWidget);
+      expect(find.text('Alertas y recordatorios'), findsOneWidget);
       expect(find.text('Abrir conversación y herramientas'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
