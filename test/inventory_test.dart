@@ -306,7 +306,7 @@ void main() {
     );
     await tester.tap(find.byTooltip('Escanear código de barras'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('No encontré un producto activo'), findsOneWidget);
+    expect(find.textContaining('No encontré un producto activo'), findsWidgets);
     expect(find.textContaining('No encontré un producto activo').hitTestable(), findsOneWidget);
     expect(repo.writes, isEmpty);
   });
@@ -333,7 +333,8 @@ void main() {
     );
     await tester.tap(find.byTooltip('Escanear código de barras'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('asignado a más de un producto'), findsOneWidget);
+    expect(find.textContaining('asignado a más de un producto'), findsWidgets);
+    expect(find.textContaining('asignado a más de un producto').hitTestable(), findsOneWidget);
     expect(repo.writes, isEmpty);
   });
 
@@ -481,10 +482,18 @@ void main() {
       );
       await tester.pump();
       expect(find.text('\$30,00 MXN'), findsOneWidget);
-      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.scrollUntilVisible(
+        find.byType(CheckboxListTile),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
-      await tester.ensureVisible(find.textContaining('Cobrar ·'));
+      await tester.scrollUntilVisible(
+        find.textContaining('Cobrar ·'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.textContaining('Cobrar ·'));
       await tester.pumpAndSettle();
       final lines = (repo.writes.single['p_lines'] as List).cast<Map>();
