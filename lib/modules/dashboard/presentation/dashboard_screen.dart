@@ -1,4 +1,3 @@
-import '../../doses/domain/quantity.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
@@ -522,7 +521,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        '${m.lowStock.length} productos bajos · ${m.stock?.products.length ?? 0} activos',
+                        '${m.lowStock.length} productos bajos · ${m.products.length} activos',
                       ),
                       FilledButton.tonal(
                         onPressed: openingCash || m.busy ? null : openCash,
