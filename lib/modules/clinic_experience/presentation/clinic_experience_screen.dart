@@ -101,7 +101,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
           const SizedBox(height: 20),
           Text('Módulos y submódulos', style: Theme.of(context).textTheme.titleLarge),
           const Text('Activa solo las opciones que deseas mostrar. Los accesos protegidos, como Ajustes y revisión autorizada, nunca se ocultan.'),
-          for (final group in sectionGroups)
+          for (final group in experienceVisibilityGroups)
             if (group.pages.any(configurableExperiencePages.contains))
               ExpansionTile(
                 title: Text(group.title),
