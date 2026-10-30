@@ -262,7 +262,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+    await tester.tap(find.byIcon(Icons.add).first);
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
@@ -322,9 +322,9 @@ void main() {
       await tester.pump();
       await tester.tap(find.byIcon(Icons.add_circle_outline).last);
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
       await tester.pump();
-      expect(find.text('Total: \$30,00 MXN'), findsOneWidget);
+      expect(find.text('\$30,00 MXN'), findsOneWidget);
       await tester.ensureVisible(find.byType(CheckboxListTile));
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();
