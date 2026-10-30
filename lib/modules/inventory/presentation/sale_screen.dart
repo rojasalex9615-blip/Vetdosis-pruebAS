@@ -36,12 +36,15 @@ class SaleScreen extends StatefulWidget {
     this.charges = const [],
     this.deliveries = const [],
     this.acts = const [],
+    this.scanBarcode,
   });
   final InventoryRepository repository;
   final String shift;
   final List<Map<String, dynamic>> products, prescriptions, staff;
   final bool admin;
   final List<Map<String, dynamic>> charges, deliveries, acts;
+  @visibleForTesting
+  final Future<String?> Function(BuildContext context)? scanBarcode;
   @override
   State<SaleScreen> createState() => _SaleScreenState();
 }
@@ -101,12 +104,14 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> scanProduct() async {
-    final code = await Navigator.push<String>(
-      context,
-      MaterialPageRoute<String>(
-        builder: (_) => const BarcodeScreen(),
-      ),
-    );
+    final code = widget.scanBarcode != null
+        ? await widget.scanBarcode!(context)
+        : await Navigator.push<String>(
+            context,
+            MaterialPageRoute<String>(
+              builder: (_) => const BarcodeScreen(),
+            ),
+          );
     if (!mounted || code == null) return;
     final normalized = code.trim();
     final matches = widget.products.where(
@@ -117,11 +122,13 @@ class _SaleScreenState extends State<SaleScreen> {
     ).toList();
 
     if (matches.length != 1) {
-      setState(() {
-        error = matches.isEmpty
-            ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
-            : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
-      });
+      final message = matches.isEmpty
+          ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
+          : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
+      setState(() => error = message);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
       return;
     }
 
