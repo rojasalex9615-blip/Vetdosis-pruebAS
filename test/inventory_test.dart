@@ -95,12 +95,16 @@ class Repo implements InventoryRepository {
 Future<void> addScannedProductToSale(WidgetTester tester) async {
   await tester.tap(find.text('Escanear producto para la nota de venta'));
   await tester.pumpAndSettle();
-  await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+  final form = find.byType(Scaffold).last;
+  await tester.tap(find.descendant(
+    of: form,
+    matching: find.byType(DropdownButtonFormField<String>),
+  ).first);
   await tester.pumpAndSettle();
   await tester.tap(find.textContaining('Lote ficticio').last);
   await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextFormField).first, '1');
-  await tester.tap(find.text('Guardar'));
+  await tester.tap(find.descendant(of: form, matching: find.text('Guardar')));
   await tester.pumpAndSettle();
 }
 
@@ -548,7 +552,7 @@ void main() {
     await tester.tap(find.text('Escanear producto para la nota de venta'));
     await tester.pumpAndSettle();
     expect(find.text('Agregar Producto ficticio'), findsOneWidget);
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.byType(BackButton).last);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
