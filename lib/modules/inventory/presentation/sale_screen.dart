@@ -691,7 +691,6 @@ class _SaleScreenState extends State<SaleScreen> {
     return pdf.save();
   }
 
-  @override
   Future<void> resolveUncertainCreditSale() async {
     final result = await showDialog<String>(
       context: context,
@@ -738,6 +737,7 @@ class _SaleScreenState extends State<SaleScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Punto de venta')),
     body: SingleChildScrollView(
