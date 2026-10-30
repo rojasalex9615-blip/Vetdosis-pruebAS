@@ -350,4 +350,143 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Barcode cancellation leaves checkout untouched', (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => null,
+        ),
+      ),
+    );
+    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(repo.writes, isEmpty);
+    expect(find.textContaining('No encontré un producto'), findsNothing);
+  });
+
+  testWidgets(
+    'Barcode lookup trims surrounding whitespace and opens lot/quantity flow',
+    (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => '  FICTICIO  \n',
+        ),
+      ),
+    );
+    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('Barcode lookup reports unknown code without writing', (tester) async {
+    final repo = Repo();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => 'UNKNOWN',
+        ),
+      ),
+    );
+    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('No encontré un producto activo').hitTestable(),
+      findsOneWidget,
+    );
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets('Barcode lookup reports duplicate codes without writing', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('asignado a más de un producto').hitTestable(),
+      findsOneWidget,
+    );
+    expect(repo.writes, isEmpty);
+  });
+
+  testWidgets(
+    'Consecutive failed barcode scans show only the latest message',
+    (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
+    final duplicateProducts = [
+      ...products,
+      {...products.single, 'id': 'product-duplicate'},
+    ];
+    var currentScan = 'UNKNOWN';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: duplicateProducts,
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          scanBarcode: (_) async => currentScan,
+        ),
+      ),
+    );
+    final scanButton = find.text('Escanear producto para la nota de venta');
+    await tester.tap(scanButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('No encontré un producto activo').hitTestable(),
+      findsOneWidget,
+    );
+    currentScan = 'FICTICIO';
+    await tester.tap(scanButton);
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('asignado a más de un producto').hitTestable(),
+      findsOneWidget,
+    );
+    expect(find.textContaining('No encontré un producto activo'), findsNothing);
+    expect(repo.writes, isEmpty);
+  });
+
 }
