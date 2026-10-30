@@ -3,10 +3,7 @@ import '../../core/domain/section_catalog.dart';
 /// Pages that can be configured per clinic. This intentionally includes routes
 /// that are not standalone navigation groups, so old saved visibility choices
 /// remain valid while the main menu stays concise.
-const experienceVisibilityGroups = [
-  ...sectionGroups,
-  SectionGroup('Producción animal', ['Producción y grandes especies']),
-];
+const experienceVisibilityGroups = sectionGroups;
 
 /// Only presentation preferences. Never grants permission, skips validation or
 /// changes the server-side clinical/audit contracts.
@@ -27,6 +24,9 @@ extension HospitalNoticeDeliveryChannels on HospitalNoticeDelivery {
 const protectedExperiencePages = <String>{
   'Inicio', 'Ajustes', 'Mi cuenta y clínicas', 'Ayuda y soporte',
   'Modo revisión', 'Más', 'Cálculos', 'Planes',
+  // Clinical alerts and the AI assistant are core destinations, not optional
+  // display preferences. They remain visible regardless of clinic preset.
+  'Hospitalización', 'Asistente IA',
 };
 
 const configurableFlows = <String, String>{
@@ -118,9 +118,6 @@ class ClinicExperience {
     };
     if (preset == ClinicPreset.smallAnimals) {
       hide.addAll({'Planeación financiera', 'Productividad y semana'});
-    }
-    if (preset == ClinicPreset.production) {
-      hide.add('Hospitalización');
     }
     return ClinicExperience(
       preset: preset,
@@ -224,11 +221,17 @@ class ClinicExperience {
     final preset = ClinicPreset.values.where((p) => p.name == settings['preset']).firstOrNull;
     if (preset == null) throw const FormatException('Perfil desconocido.');
     final rawPages = settings['hidden_pages'] as List;
+    // Accept legacy hidden-page entries for newly protected routes, then
+    // normalize them to visible. This avoids breaking existing clinic settings.
+    final knownExperiencePages = experienceVisibilityGroups
+        .expand((group) => group.pages).toSet();
     if (rawPages.any((value) => value is! String ||
-        !configurableExperiencePages.contains(value)) ||
+        !knownExperiencePages.contains(value)) ||
         rawPages.toSet().length != rawPages.length) {
       throw const FormatException('Submódulos desconocidos.');
     }
+    final normalizedHiddenPages = rawPages.cast<String>()
+        .where((page) => !protectedExperiencePages.contains(page)).toSet();
     final modes = Map<String, dynamic>.from(settings['workflow_modes'] as Map);
     final parsedModes = <String, ClinicalFlowMode>{};
     for (final entry in modes.entries) {
@@ -255,7 +258,7 @@ class ClinicExperience {
     }
     return ClinicExperience(
       preset: preset,
-      hiddenPages: rawPages.cast<String>().toSet(),
+      hiddenPages: normalizedHiddenPages,
       flowModes: parsedModes,
       defaultAiProvider: ai as String?,
       hospitalNoticeDelivery: delivery,
