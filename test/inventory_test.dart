@@ -265,7 +265,13 @@ void main() {
     // ListView builds children lazily; reveal the product before locating its button.
     await tester.ensureVisible(find.text('Producto ficticio'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add).first);
+    final productTile = find.ancestor(
+      of: find.text('Producto ficticio'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(
+      find.descendant(of: productTile, matching: find.byIcon(Icons.add)),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
@@ -324,15 +330,39 @@ void main() {
       // Reveal each lazy ListTile before finding its trailing add button.
       await tester.ensureVisible(find.text('Aplicación 0,5 ml · receta única'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      final firstCharge = find.ancestor(
+        of: find.text('Aplicación 0,5 ml · receta única'),
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(
+        find.descendant(
+          of: firstCharge,
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+      );
       await tester.pump();
       await tester.ensureVisible(find.text('Siguiente aplicación 0,5 ml · receta única'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.add_circle_outline).last);
+      final secondCharge = find.ancestor(
+        of: find.text('Siguiente aplicación 0,5 ml · receta única'),
+        matching: find.byType(ListTile),
+      );
+      await tester.tap(
+        find.descendant(
+          of: secondCharge,
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+      );
       await tester.pump();
+      // Adding an already-added charge must not create a duplicate line.
       await tester.ensureVisible(find.text('Aplicación 0,5 ml · receta única'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      await tester.tap(
+        find.descendant(
+          of: firstCharge,
+          matching: find.byIcon(Icons.add_circle_outline),
+        ),
+      );
       await tester.pump();
       expect(find.text('\$30,00 MXN'), findsOneWidget);
       await tester.ensureVisible(find.byType(CheckboxListTile));
