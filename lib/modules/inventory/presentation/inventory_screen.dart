@@ -448,6 +448,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
         MaterialPageRoute(
           builder: (_) => SaleScreen(
             repository: widget.repository,
+            member: widget.member,
+            canReturn: model.canReverse,
             clinicName: widget.member.clinicName,
             creditSupported: model.dashboard?['credit_supported'] == true,
             actor: widget.member.userId,
