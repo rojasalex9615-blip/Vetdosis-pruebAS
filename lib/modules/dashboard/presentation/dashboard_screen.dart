@@ -451,7 +451,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                   ),
-                if (m.canSummarize('hospital') && routeVisible('Hospitalización') &&
+                if (m.canSummarize('hospital') && routeAuthorized('Hospitalización') &&
                     (widget.alerts?.leadMinutes ?? 0) > 0)
                   for (final t
                       in m.nextDoses
@@ -706,7 +706,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ]),
             ],
-            if (m.canSummarize('hospital') && routeVisible('Hospitalización'))
+            if (m.canSummarize('hospital') && routeAuthorized('Hospitalización'))
               panel('Próximas dosis', 'Hospitalización', [
                 unavailable(
                   'Hospitalización',
