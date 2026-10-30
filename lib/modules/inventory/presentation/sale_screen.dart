@@ -194,6 +194,9 @@ class _SaleScreenState extends State<SaleScreen> {
   final initialAmount = TextEditingController(text: '0');
   final debtor = TextEditingController();
   String? creditRetryKey, creditOperation;
+  List<Map<String, dynamic>>? creditRetryLines;
+  String? creditRetryMethod, creditRetryInitialAmount, creditRetryDebtor;
+  bool allowPopAfterVerifiedSale = false;
   @override
   void dispose() {
     initialAmount.dispose();
@@ -562,6 +565,12 @@ class _SaleScreenState extends State<SaleScreen> {
         if (key != creditRetryKey) {
           creditRetryKey = key;
           creditOperation = newOperationId();
+          creditRetryLines = lines
+              .map((line) => Map<String, dynamic>.from(line))
+              .toList();
+          creditRetryMethod = method;
+          creditRetryInitialAmount = initialAmount.text;
+          creditRetryDebtor = debtor.text;
         }
       }
       args['p_operation'] = credit ? creditOperation : operation;
@@ -580,6 +589,10 @@ class _SaleScreenState extends State<SaleScreen> {
           creditOutcomeUncertain = false;
           creditRetryKey = null;
           creditOperation = null;
+          creditRetryLines = null;
+          creditRetryMethod = null;
+          creditRetryInitialAmount = null;
+          creditRetryDebtor = null;
           error = null;
           scanFeedback = null;
         });
@@ -598,6 +611,10 @@ class _SaleScreenState extends State<SaleScreen> {
             creditOutcomeUncertain = false;
             creditRetryKey = null;
             creditOperation = null;
+            creditRetryLines = null;
+            creditRetryMethod = null;
+            creditRetryInitialAmount = null;
+            creditRetryDebtor = null;
           } else if (credit && writeAttempted && !writeSucceeded) {
             creditOutcomeUncertain = true;
           }
@@ -772,7 +789,7 @@ class _SaleScreenState extends State<SaleScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, 'not_found'),
-            child: const Text('No aparece; permitir otro intento'),
+            child: const Text('No aparece; reintentar mismos datos'),
           ),
         ],
       ),
@@ -780,24 +797,48 @@ class _SaleScreenState extends State<SaleScreen> {
     if (!mounted || result == null || result == 'blocked') return;
     if (result == 'exists') {
       // Close and refresh the caller instead of posting a possible duplicate.
-      Navigator.pop(context, true);
+      setState(() {
+        creditOutcomeUncertain = false;
+        allowPopAfterVerifiedSale = true;
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) Navigator.pop(context, true);
       return;
     }
     if (result == 'not_found') {
+      final snapshot = creditRetryLines;
+      if (snapshot == null || creditRetryKey == null || creditOperation == null) {
+        setState(() {
+          error = 'No se pudo restaurar la operación original. Mantén el bloqueo y consulta el historial antes de continuar.';
+        });
+        return;
+      }
       setState(() {
-        creditOutcomeUncertain = false;
-        creditRetryKey = null;
-        creditOperation = null;
-        error = null;
-        scanFeedback = null;
+        lines
+          ..clear()
+          ..addAll(snapshot.map((line) => Map<String, dynamic>.from(line)));
+        method = creditRetryMethod ?? method;
+        initialAmount.text = creditRetryInitialAmount ?? initialAmount.text;
+        debtor.text = creditRetryDebtor ?? debtor.text;
+        credit = true;
         reviewed = false;
-        operation = newOperationId();
+        scanFeedback = null;
+        // Keep the original operation key and payload. A retry must be
+        // idempotent even if the first result is not visible yet.
+        error = 'El resultado sigue sin confirmarse. Se restauraron los datos originales; revisa y reintenta exactamente esta operación.';
       });
     }
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => PopScope<bool>(
+    canPop: !creditOutcomeUncertain || allowPopAfterVerifiedSale,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop && creditOutcomeUncertain) {
+        resolveUncertainCreditSale();
+      }
+    },
+    child: Scaffold(
     appBar: AppBar(title: const Text('Punto de venta')),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -1027,6 +1068,7 @@ class _SaleScreenState extends State<SaleScreen> {
           ),
         ],
       ),
+    ),
     ),
   );
 }
