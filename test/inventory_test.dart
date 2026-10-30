@@ -668,6 +668,13 @@ void main() {
     final originalOperation = repo.writes.single['p_operation'];
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
 
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Verifica el resultado de la venta'), findsOneWidget);
+    await tester.tap(find.text('Seguir bloqueada'));
+    await tester.pumpAndSettle();
+    expect(find.text('Punto de venta'), findsOneWidget);
+
     await tapVisible(tester, find.text('Verificar resultado de la venta'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abrir cuentas y abonos'));
