@@ -110,7 +110,9 @@ Future<void> addScannedProductToSale(WidgetTester tester) async {
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
+  // A focused TextField can keep scheduling caret frames, so don't wait for
+  // full settling before tapping the next control.
+  await tester.pump();
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
