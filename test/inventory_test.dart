@@ -288,7 +288,7 @@ void main() {
     expect(repo.writes, isEmpty);
   });
 
-  testWidgets('Barcode lookup reports unknown and duplicate codes without writing', (tester) async {
+  testWidgets('Barcode lookup reports unknown code without writing', (tester) async {
     final repo = Repo();
     final products = (data()['products'] as List).cast<Map<String, dynamic>>();
     await tester.pumpWidget(
@@ -309,8 +309,11 @@ void main() {
     expect(find.textContaining('No encontré un producto activo'), findsOneWidget);
     expect(find.textContaining('No encontré un producto activo').hitTestable(), findsOneWidget);
     expect(repo.writes, isEmpty);
+  });
 
-    final duplicateRepo = Repo();
+  testWidgets('Barcode lookup reports duplicate codes without writing', (tester) async {
+    final repo = Repo();
+    final products = (data()['products'] as List).cast<Map<String, dynamic>>();
     final duplicateProducts = [
       ...products,
       {...products.single, 'id': 'product-duplicate'},
@@ -318,7 +321,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: SaleScreen(
-          repository: duplicateRepo,
+          repository: repo,
           shift: 'test',
           products: duplicateProducts,
           prescriptions: [],
@@ -331,7 +334,7 @@ void main() {
     await tester.tap(find.byTooltip('Escanear código de barras'));
     await tester.pumpAndSettle();
     expect(find.textContaining('asignado a más de un producto'), findsOneWidget);
-    expect(duplicateRepo.writes, isEmpty);
+    expect(repo.writes, isEmpty);
   });
 
   testWidgets('Reviewed cart submits exact quantity, lot, payment and total', (
