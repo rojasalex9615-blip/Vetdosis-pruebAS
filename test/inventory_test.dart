@@ -239,7 +239,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Total: \$0,00 MXN'), findsOneWidget);
+    expect(find.text('\$0,00 MXN'), findsOneWidget);
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
     expect(repo.writes, isEmpty);
@@ -262,7 +262,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add_shopping_cart));
+    await tester.tap(find.byIcon(Icons.add_circle_outline).first);
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
@@ -272,7 +272,7 @@ void main() {
     await tester.ensureVisible(find.text('Guardar'));
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('Total: \$0,20 MXN'), findsOneWidget);
+    expect(find.text('\$0,20 MXN'), findsNWidgets(2));
     await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
@@ -318,9 +318,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.add).last);
+      await tester.tap(find.byIcon(Icons.add_circle_outline).last);
       await tester.pump();
       await tester.tap(find.byIcon(Icons.add).first);
       await tester.pump();
