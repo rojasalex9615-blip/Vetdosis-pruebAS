@@ -186,7 +186,7 @@ void main() {
     await authRepository.controller.close();
   });
 
-  testWidgets('hidden AI module removes the header assistant shortcut', (
+  testWidgets('legacy hidden AI preference cannot remove the header assistant shortcut', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -204,7 +204,7 @@ void main() {
       experience: hidden,
     )));
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Asistente IA'), findsNothing);
+    expect(find.byTooltip('Asistente IA'), findsOneWidget);
     await tester.pumpWidget(MaterialApp(home: CoreShell(
       model: model, auth: auth, ai: AiFake(), moduleAccess: access,
       experience: ClinicExperience.defaults(),
