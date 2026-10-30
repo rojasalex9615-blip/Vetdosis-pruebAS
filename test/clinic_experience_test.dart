@@ -225,7 +225,7 @@ void main() {
     expect(restored.hospitalNoticeDelivery, HospitalNoticeDelivery.both);
     expect(restored.revision, 4); // Optimistic-lock revision stays intact.
     expect(restored.preset, ClinicPreset.custom);
-    expect(original.visible('Hospitalización'), isFalse); // Immutable original.
+    expect(original.visible('Hospitalización'), isTrue); // Protected routes remain visible.
     expect(
       restored.restoreModuleVisibility('Grupo desconocido').toJson(),
       restored.toJson(),
@@ -287,7 +287,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('failed post-save reload keeps hidden pages and reports failure', (tester) async {
+  testWidgets('protected hospital destination stays visible when reload fails', (tester) async {
     final repo = FakeExperienceRepository();
     repo.stored = repo.stored.withPage('Hospitalización', false);
     late Future<void> Function() refresh;
@@ -299,7 +299,7 @@ void main() {
       },
     )));
     await tester.pumpAndSettle();
-    expect(find.text('ready:false'), findsOneWidget);
+    expect(find.text('ready:true'), findsOneWidget);
     repo.failReads = true;
     await expectLater(refresh(), throwsStateError);
     await tester.pump();
@@ -333,7 +333,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('ready:false'), findsOneWidget);
 
-    // A background refresh failure must not reveal previously hidden pages.
+    // A background refresh failure must not affect protected clinical destinations.
     repo.failReads = true;
     await tester.pumpWidget(show(administrator, 1));
     await tester.pumpAndSettle();
