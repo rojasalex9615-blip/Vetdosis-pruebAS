@@ -113,7 +113,7 @@ class _SaleScreenState extends State<SaleScreen> {
       (p) =>
           p['active'] == true &&
           p['m8_enabled'] == true &&
-          (p['codigo_barras'] as String?)?.trim() == normalized,
+          p['codigo_barras']?.toString().trim() == normalized,
     ).toList();
 
     if (matches.length != 1) {
