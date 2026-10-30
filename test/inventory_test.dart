@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/doses/domain/quantity.dart';
 import 'package:vetdosis_pro/modules/inventory/domain/inventory_models.dart';
@@ -628,6 +629,52 @@ void main() {
     await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tapVisible(tester, find.text('Registrar venta con saldo'));
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(2));
+  });
+
+
+  testWidgets('confirmed insufficient stock rejection does not lock credit checkout', (tester) async {
+    final repo = Repo()
+      ..writeFailure = PostgrestException(
+        message: 'insufficient_stock',
+        code: 'P0001',
+      );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          creditSupported: true,
+          actor: 'mvz-test',
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await addScannedProductToSale(tester);
+    await tester.tap(find.text('Registrar abono y dejar saldo pendiente'));
+    await tester.pumpAndSettle();
+    final debtorField = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == 'Titular o referencia de la cuenta',
+    );
+    await tester.enterText(debtorField, 'Cuenta ficticia');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+
+    expect(find.textContaining('El stock cambió o no alcanza'), findsOneWidget);
+    expect(find.text('Verificar resultado de la venta'), findsNothing);
+    expect(repo.writes, hasLength(1));
+
+    await tester.enterText(debtorField, 'Cuenta corregida');
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+
+    expect(find.textContaining('El stock cambió o no alcanza'), findsOneWidget);
+    expect(find.text('Verificar resultado de la venta'), findsNothing);
     expect(repo.writes, hasLength(2));
   });
 
