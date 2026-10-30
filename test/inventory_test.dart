@@ -58,6 +58,7 @@ Map<String, dynamic> data() => {
 
 class Repo implements InventoryRepository {
   bool fail = false;
+  Object? writeFailure;
   Completer<dynamic>? pending;
   final List<Map<String, dynamic>> writes = [];
   @override
@@ -73,6 +74,8 @@ class Repo implements InventoryRepository {
   @override
   Future<dynamic> write(String command, Map<String, dynamic> args) async {
     writes.add({'command': command, ...args});
+    final failure = writeFailure;
+    if (failure != null) throw failure;
     return 'id';
   }
 
@@ -86,6 +89,19 @@ class Repo implements InventoryRepository {
   ) async {}
   @override
   Future<String> photoUrl(String path) async => 'https://example.test';
+}
+
+
+Future<void> addScannedProductToSale(WidgetTester tester) async {
+  await tester.tap(find.text('Escanear producto para la nota de venta'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.textContaining('Lote ficticio').last);
+  await tester.pumpAndSettle();
+  await tester.enterText(find.byType(TextFormField).first, '1');
+  await tester.tap(find.text('Guardar'));
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -487,6 +503,101 @@ void main() {
     );
     expect(find.textContaining('No encontré un producto activo'), findsNothing);
     expect(repo.writes, isEmpty);
+  });
+
+
+  testWidgets('valid scan cancellation preserves an existing checkout warning', (tester) async {
+    final repo = Repo()..writeFailure = StateError('Synthetic checkout failure');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          charges: [
+            {
+              'id': 'charge',
+              'name': 'Cargo ficticio',
+              'price': '1.00',
+              'paid': false,
+            },
+          ],
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    final chargeTile = find.ancestor(
+      of: find.textContaining('Cargo ficticio'),
+      matching: find.byType(ListTile),
+    ).first;
+    await tester.tap(find.descendant(
+      of: chargeTile,
+      matching: find.byIcon(Icons.add),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Registrar venta y pago'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+
+    await tester.tap(find.text('Escanear producto para la nota de venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agregar Producto ficticio'), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('No se pudo completar la operación'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+  });
+
+  testWidgets('uncertain credit sale cannot be reposted with changed data', (tester) async {
+    final repo = Repo()..writeFailure = StateError('Synthetic network timeout');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SaleScreen(
+          repository: repo,
+          shift: 'test',
+          products: (data()['products'] as List).cast<Map<String, dynamic>>(),
+          prescriptions: [],
+          staff: [],
+          admin: false,
+          creditSupported: true,
+          actor: 'mvz-test',
+          scanBarcode: (_) async => 'FICTICIO',
+        ),
+      ),
+    );
+    await addScannedProductToSale(tester);
+    await tester.tap(find.text('Registrar abono y dejar saldo pendiente'));
+    await tester.pumpAndSettle();
+    final debtorField = find.byWidgetPredicate(
+      (widget) => widget is TextField &&
+          widget.decoration?.labelText == 'Titular o referencia de la cuenta',
+    );
+    await tester.enterText(debtorField, 'Cuenta ficticia');
+    await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Registrar venta con saldo'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(1));
+
+    await tester.enterText(debtorField, 'Otra cuenta ficticia');
+    await tester.tap(find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Registrar venta con saldo'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('No cambies los datos; reintenta exactamente la misma operación'),
+      findsOneWidget,
+    );
+    expect(repo.writes, hasLength(1));
   });
 
 }
