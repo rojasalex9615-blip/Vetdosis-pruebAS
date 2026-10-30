@@ -145,8 +145,9 @@ class SaleScreen extends StatefulWidget {
 class _SaleScreenState extends State<SaleScreen> {
   final lines = <Map<String, dynamic>>[];
   String method = 'efectivo', operation = newOperationId();
-  String? error;
+  String? error, scanFeedback;
   bool busy = false, reviewed = false, credit = false;
+  bool creditOutcomeUncertain = false;
   final initialAmount = TextEditingController(text: '0');
   final debtor = TextEditingController();
   String? creditRetryKey, creditOperation;
@@ -179,7 +180,10 @@ class _SaleScreenState extends State<SaleScreen> {
   void changed() {
     reviewed = false;
     operation = newOperationId();
-    error = null;
+    scanFeedback = null;
+    // An uncertain credit-sale result survives edits until the same operation
+    // is retried or the account is verified; never silently clear the warning.
+    if (!creditOutcomeUncertain) error = null;
   }
 
   Future<void> scanProduct() async {
@@ -243,7 +247,7 @@ class _SaleScreenState extends State<SaleScreen> {
       final message = matches.isEmpty
           ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
           : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
-      setState(() => error = message);
+      setState(() => scanFeedback = message);
       // Mostrar solo el resultado más reciente del escáner.
       messenger.clearSnackBars();
       messenger.showSnackBar(SnackBar(content: Text(message)));
@@ -251,7 +255,7 @@ class _SaleScreenState extends State<SaleScreen> {
     }
     // Un escaneo válido sustituye cualquier aviso de un escaneo anterior.
     messenger.clearSnackBars();
-    setState(() => error = null);
+    setState(() => scanFeedback = null);
     // La venta sigue el flujo existente: lote, cantidad, revisión y cobro.
     // Escanear por sí solo no modifica el inventario.
     await addProduct(matches.single);
@@ -467,7 +471,7 @@ class _SaleScreenState extends State<SaleScreen> {
   Future<void> post() async {
     setState(() {
       busy = true;
-      error = null;
+      if (!creditOutcomeUncertain) error = null;
     });
     try {
       final args = <String, dynamic>{
@@ -482,6 +486,11 @@ class _SaleScreenState extends State<SaleScreen> {
         ],
         'p_expected_total': total.decimal,
       };
+      if (creditOutcomeUncertain && !credit) {
+        throw const FormatException(
+          'El resultado de la venta con saldo anterior sigue sin confirmarse. Reactiva la venta con saldo y reintenta exactamente los mismos datos, o verifica la cuenta antes de continuar.',
+        );
+      }
       if (credit) {
         if (!creditEligible) {
           throw const FormatException(
@@ -500,6 +509,11 @@ class _SaleScreenState extends State<SaleScreen> {
           'p_actor': widget.actor,
         });
         final key = jsonEncode(args);
+        if (creditOutcomeUncertain && key != creditRetryKey) {
+          throw const FormatException(
+            'El resultado de la venta con saldo anterior sigue sin confirmarse. No cambies los datos; reintenta exactamente la misma operación o verifica la cuenta antes de continuar.',
+          );
+        }
         if (key != creditRetryKey) {
           creditRetryKey = key;
           creditOperation = newOperationId();
@@ -515,18 +529,28 @@ class _SaleScreenState extends State<SaleScreen> {
         args,
       );
       if (mounted) {
+        setState(() {
+          creditOutcomeUncertain = false;
+          creditRetryKey = null;
+          creditOperation = null;
+          error = null;
+          scanFeedback = null;
+        });
         await receiptActions('$saleId');
         if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        setState(
-          () => error = e is FormatException
+        setState(() {
+          if (credit && e is! FormatException) {
+            creditOutcomeUncertain = true;
+          }
+          error = e is FormatException
               ? e.message
               : credit
               ? 'No se confirmó el registro. Revisa las cuentas antes de iniciar otra venta; reintentar los mismos datos conserva la operación.'
-              : inventoryError(e),
-        );
+              : inventoryError(e);
+        });
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -870,8 +894,18 @@ class _SaleScreenState extends State<SaleScreen> {
               error!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
+          if (scanFeedback != null)
+            Text(
+              scanFeedback!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           FilledButton(
-            onPressed: busy || !reviewed || lines.isEmpty ? null : post,
+            onPressed: busy ||
+                    !reviewed ||
+                    lines.isEmpty ||
+                    (creditOutcomeUncertain && !credit)
+                ? null
+                : post,
             child: Text(
               busy
                   ? 'Registrando…'
