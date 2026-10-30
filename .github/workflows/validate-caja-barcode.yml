@@ -1,0 +1,31 @@
+name: Validar escáner de Caja y navegación visual
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'lib/modules/inventory/presentation/sale_screen.dart'
+      - 'test/inventory_test.dart'
+      - 'lib/modules/core/domain/section_catalog.dart'
+      - '.github/workflows/validate-caja-barcode.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: validate-caja-barcode-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-caja-navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test --no-pub --timeout 5m test/inventory_test.dart test/module_navigation_dashboard_test.dart
