@@ -619,6 +619,16 @@ void main() {
       findsOneWidget,
     );
     expect(repo.writes, hasLength(1));
+
+    await tapVisible(tester, find.text('Verificar resultado de la venta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Verifica el resultado de la venta'), findsOneWidget);
+    await tester.tap(find.text('No aparece; permitir otro intento'));
+    await tester.pumpAndSettle();
+    await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
+    await tapVisible(tester, find.text('Registrar venta con saldo'));
+    expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
+    expect(repo.writes, hasLength(2));
   });
 
 }
