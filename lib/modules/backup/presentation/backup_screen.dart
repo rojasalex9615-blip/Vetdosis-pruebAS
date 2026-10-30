@@ -1,6 +1,8 @@
 import 'package:http/http.dart' as http;
 import '../data/drive_backup_client.dart';
 import '../data/drive_backup_authorization.dart';
+import '../data/google_drive_backup_client.dart';
+import '../domain/drive_backup_client.dart' as drive_auth;
 import '../../identity/domain/identity_repository.dart';
 import '../../exports/domain/branded_export.dart';
 import '../../exports/presentation/branded_export_action.dart';
@@ -144,11 +146,13 @@ class BackupScreen extends StatefulWidget {
     required this.repository,
     required this.member,
     this.identity,
+    this.googleDrive,
     this.backupOnly = false,
   });
   final BackupRepository repository;
   final ClinicMembership member;
   final IdentityRepository? identity;
+  final drive_auth.DriveBackupClient? googleDrive;
   final bool backupOnly;
   @override
   State<BackupScreen> createState() => _BackupScreenState();
@@ -170,10 +174,123 @@ class _BackupScreenState extends State<BackupScreen> {
   Map<String, dynamic>? restoreOwnerApply;
   Map<String, dynamic>? restorePatientApply;
   String? result;
+  drive_auth.DriveConnection? googleDriveConnection;
+  List<drive_auth.DriveBackupReceipt> googleDriveHistory = const [];
   @override
   void initState() {
     super.initState();
     loadAccess();
+    loadGoogleDriveConnection();
+  }
+
+  Future<void> loadGoogleDriveConnection() async {
+    final drive = widget.googleDrive;
+    if (drive == null || !drive.configured) return;
+    try {
+      final connection = await drive.connection(
+        widget.member.userId,
+        widget.member.clinicId,
+      );
+      if (mounted) setState(() => googleDriveConnection = connection);
+    } catch (_) {
+      if (mounted) {
+        setState(() => result = 'No se pudo leer el vínculo local de Google Drive.');
+      }
+    }
+  }
+
+  Future<void> connectGoogleDrive() async {
+    final drive = widget.googleDrive;
+    if (drive == null || !drive.configured) return;
+    final connection = await drive.connect(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    final history = await drive.history(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (!mounted) return;
+    setState(() {
+      googleDriveConnection = connection;
+      googleDriveHistory = history;
+      result = 'Cuenta Google vinculada en este dispositivo. Solo se subirán respaldos cifrados.';
+    });
+  }
+
+  Future<void> disconnectGoogleDrive() async {
+    final drive = widget.googleDrive;
+    if (drive == null) return;
+    final revoked = await drive.disconnect(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (!mounted) return;
+    setState(() {
+      googleDriveConnection = null;
+      googleDriveHistory = const [];
+      result = revoked
+          ? 'Se revocó el acceso de Google y se quitó el vínculo local. Los archivos existentes permanecen en Drive.'
+          : 'Se quitó el vínculo local, pero Google no confirmó la revocación. Revisa los accesos de tu cuenta Google.';
+    });
+  }
+
+  Future<void> refreshGoogleDriveHistory() async {
+    final drive = widget.googleDrive;
+    if (drive == null) return;
+    final history = await drive.history(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (mounted) setState(() => googleDriveHistory = history);
+  }
+
+  Future<void> uploadGoogleDrive() async {
+    final drive = widget.googleDrive;
+    if (drive == null || googleDriveConnection == null) return;
+    final password = await requestBackupPassword(context, creating: true);
+    if (password == null || !mounted) return;
+    final freshAccess = BackupAccess.read(
+      await widget.repository.workspace(widget.member.clinicId),
+    );
+    if (!(scope == BackupScope.clinic ? freshAccess.clinic : freshAccess.personal)) {
+      throw const FormatException('El permiso de respaldo cambió. No se envió la copia.');
+    }
+    final bytes = await BackupArchive.create(
+      widget.repository,
+      widget.member.clinicId,
+      scope: scope,
+      clinicalAssets: {
+        for (final name in scope == BackupScope.clinic
+            ? [
+                'catalog.v1.json',
+                'calculations.v1.json',
+                'regulatory.catalog.v1.json',
+                'forms.reference.v1.json',
+                'forms.clinical.v1.json',
+              ]
+            : <String>[])
+          name: await rootBundle.loadString('assets/clinical/$name'),
+      },
+    );
+    BackupArchive.verify(bytes);
+    final encrypted = await compute(_encryptBackup, (bytes, password));
+    final name = 'vetdosis-${scope.name}-${DateTime.now().toUtc().microsecondsSinceEpoch}.vetbackup';
+    final receipt = await drive.uploadVerified(
+      widget.member.userId,
+      widget.member.clinicId,
+      name,
+      encrypted,
+    );
+    final history = await drive.history(
+      widget.member.userId,
+      widget.member.clinicId,
+    );
+    if (!mounted) return;
+    setState(() {
+      googleDriveHistory = history;
+      result = 'Respaldo cifrado guardado y verificado mediante descarga (SHA-256: ${receipt.sha256.substring(0, 12)}…). Conserva la contraseña para recuperarlo.';
+    });
   }
 
   Future<void> loadAccess() async {
@@ -940,7 +1057,8 @@ class _BackupScreenState extends State<BackupScreen> {
                       ),
                     ),
                     if (!kIsWeb &&
-                        defaultTargetPlatform == TargetPlatform.android)
+                        defaultTargetPlatform == TargetPlatform.android &&
+                        widget.googleDrive?.configured != true)
                       FilledButton.tonal(
                         onPressed:
                             ack &&
@@ -987,6 +1105,57 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
                   ],
                 ),
+                if (!kIsWeb &&
+                    defaultTargetPlatform == TargetPlatform.android &&
+                    widget.googleDrive?.configured == true) ...[
+                  const Divider(),
+                  const Text('Google Drive autenticado'),
+                  Text(
+                    googleDriveConnection == null
+                        ? 'Vincula una cuenta Google para esta clínica en este dispositivo.'
+                        : 'Cuenta vinculada: ${googleDriveConnection!.email}',
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      if (googleDriveConnection == null)
+                        OutlinedButton(
+                          onPressed: working ? null : () => run(connectGoogleDrive),
+                          child: const Text('Vincular cuenta Google'),
+                        )
+                      else ...[
+                        FilledButton.tonal(
+                          onPressed: ack &&
+                                  protect &&
+                                  !working &&
+                                  (scope == BackupScope.clinic
+                                      ? access!.clinic
+                                      : access!.personal)
+                              ? () => run(uploadGoogleDrive)
+                              : null,
+                          child: const Text('Subir respaldo cifrado verificado'),
+                        ),
+                        TextButton(
+                          onPressed: working ? null : () => run(refreshGoogleDriveHistory),
+                          child: const Text('Actualizar respaldos'),
+                        ),
+                        TextButton(
+                          onPressed: working ? null : () => run(disconnectGoogleDrive),
+                          child: const Text('Desconectar cuenta'),
+                        ),
+                      ],
+                    ],
+                  ),
+                  for (final receipt in googleDriveHistory.take(5))
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.cloud_done_outlined),
+                      title: Text(receipt.name),
+                      subtitle: Text(
+                        '${receipt.bytes} bytes · ${receipt.createdAt.toLocal()} · SHA-256 ${receipt.sha256.isEmpty ? "sin manifiesto" : receipt.sha256.substring(0, receipt.sha256.length < 12 ? receipt.sha256.length : 12)}',
+                      ),
+                    ),
+                ],
                 if (result != null) Text(result!),
                 if (restoreStage != null &&
                     access!.restorePreview &&
