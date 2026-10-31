@@ -91,13 +91,17 @@ begin
  if jsonb_array_length(r->'appointments')<>1 then raise exception 'other_clinic_appointment';end if;
  if r->'appointments'->0->'billing'->>'state'<>'unpaid'
     or (r->'appointments'->0->'billing'->>'paid')::numeric<>0 then raise exception 'uncollected_credit_marked_paid';end if;
+ reset role;
  insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
  values('60000000-0000-0000-0000-000000000001',c,100);
+ set role authenticated;
  r=public.appointment_patient_links(c,array['40000000-0000-0000-0000-000000000001'::uuid]);
  if r->'appointments'->0->'billing'->>'state'<>'partial'
     or (r->'appointments'->0->'billing'->>'paid')::numeric<>100 then raise exception 'collection_not_counted';end if;
+ reset role;
  insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
  values('60000000-0000-0000-0000-000000000001',c,'70000000-0000-0000-0000-000000000001',25,25);
+ set role authenticated;
  r=public.appointment_patient_links(c,array['40000000-0000-0000-0000-000000000001'::uuid]);
  if (r->'appointments'->0->'billing'->>'total')::numeric<>125
     or (r->'appointments'->0->'billing'->>'paid')::numeric<>75
