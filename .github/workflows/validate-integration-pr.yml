@@ -10,7 +10,6 @@ on:
       - 'android/**'
       - 'pubspec.yaml'
       - 'pubspec.lock'
-      - '.github/workflows/validate-integration-pr.yml'
   workflow_dispatch:
 permissions:
   contents: read
