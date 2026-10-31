@@ -1,7 +1,9 @@
 -- Additive corrective patch for appointment billing.
 -- Apply only after patient_contacts_appointment_links_v1.sql and the inventory credit/return contracts.
--- Collections are stored per sale, so mixed-sale collections are allocated proportionally to linked service lines.
--- This file changes only the endpoint function; it does not rewrite the historical contact patch.
+-- Payment is first reconciled at sale level, then allocated to all net sale lines in integer-cent
+-- increments using a deterministic cumulative allocation. Product returns therefore change the
+-- allocation denominator, and line-level rounding cannot lose cents.
+-- This file changes only the endpoint function; it does not rewrite historical ledger records.
 begin;
 create or replace function public.appointment_patient_links(p_clinic uuid,p_appointments uuid[])
 returns jsonb language plpgsql stable security definer set search_path='' as $$
@@ -27,26 +29,69 @@ declare contacts boolean;finance boolean;begin
         least(greatest(act.price-coalesce(b.returned_amount,0),0),coalesce(b.paid,0)) as paid
       from public.clinic_service_acts act
       left join lateral (
-        select coalesce(sum(ret.amount),0) as returned_amount,
-          coalesce(sum(least(greatest(l.total-coalesce(ret.amount,0),0),
-            greatest(least(l.total,case
-              when s.total>0 then round(l.total*(case when exists(
-                select 1 from public.inventory_credit_accounts ca
-                where ca.clinic_id=s.clinic_id and ca.sale_id=s.id)
-                then coalesce((select sum(sc.amount) from public.inventory_sale_collections sc
-                  where sc.clinic_id=s.clinic_id and sc.sale_id=s.id),0)
-                else s.total end)/s.total,2)
-              else 0 end)-coalesce(ret.refund_amount,0),0))),0) as paid
-        from public.inventory_sale_lines l
-        join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
-        left join lateral (
-          select coalesce(sum(r.amount),0) as amount,coalesce(sum(r.refund_amount),0) as refund_amount
+        with line_returns as (
+          select r.clinic_id,r.sale_id,r.line_id,
+            coalesce(sum(r.amount),0)::numeric as returned_amount,
+            coalesce(sum(r.refund_amount),0)::numeric as refunded_amount
           from public.inventory_sale_returns r
-          where r.clinic_id=l.clinic_id and r.sale_id=l.sale_id and r.line_id=l.id
-        ) ret on true
-        where l.clinic_id=p_clinic and l.kind='servicio' and l.service_act_id=act.id
-          and not exists(select 1 from public.inventory_sale_reversals rev
-            where rev.clinic_id=p_clinic and rev.sale_id=s.id)
+          where r.clinic_id=p_clinic
+          group by r.clinic_id,r.sale_id,r.line_id
+        ), sale_returns as (
+          select r.clinic_id,r.sale_id,
+            coalesce(sum(r.amount),0)::numeric as returned_amount,
+            coalesce(sum(r.refund_amount),0)::numeric as refunded_amount
+          from public.inventory_sale_returns r
+          where r.clinic_id=p_clinic
+          group by r.clinic_id,r.sale_id
+        ), raw_lines as (
+          select l.id,l.sale_id,l.clinic_id,l.service_act_id,l.kind,l.total,
+            coalesce(lr.returned_amount,0)::numeric as returned_amount,
+            coalesce(lr.refunded_amount,0)::numeric as line_refunded_amount,
+            greatest(l.total-coalesce(lr.returned_amount,0),0)::numeric as net_line,
+            s.total::numeric as sale_total,
+            coalesce(sr.returned_amount,0)::numeric as sale_returned_amount,
+            coalesce(sr.refunded_amount,0)::numeric as sale_refunded_amount,
+            exists(select 1 from public.inventory_credit_accounts ca
+              where ca.clinic_id=s.clinic_id and ca.sale_id=s.id) as is_credit,
+            coalesce((select sum(sc.amount)::numeric from public.inventory_sale_collections sc
+              where sc.clinic_id=s.clinic_id and sc.sale_id=s.id),0)::numeric as collected_amount
+          from public.inventory_sale_lines l
+          join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
+          left join line_returns lr on lr.clinic_id=l.clinic_id and lr.sale_id=l.sale_id and lr.line_id=l.id
+          left join sale_returns sr on sr.clinic_id=s.clinic_id and sr.sale_id=s.id
+          where l.clinic_id=p_clinic
+            and not exists(select 1 from public.inventory_sale_reversals rev
+              where rev.clinic_id=p_clinic and rev.sale_id=s.id)
+        ), sale_line_totals as (
+          select rl.*,
+            greatest(rl.sale_total-rl.sale_returned_amount,0)::numeric as sale_net_total,
+            case when rl.is_credit then rl.collected_amount else rl.sale_total end::numeric as raw_paid,
+            sum(rl.net_line) over(partition by rl.clinic_id,rl.sale_id)::numeric as net_lines_total
+          from raw_lines rl
+        ), effective_lines as (
+          select slt.*,
+            least(slt.net_lines_total,
+              greatest(slt.sale_net_total -
+                greatest(slt.sale_net_total-slt.raw_paid+slt.sale_refunded_amount,0),0)
+            )::numeric as effective_paid
+          from sale_line_totals slt
+        ), cumulative_lines as (
+          select el.*,
+            coalesce(sum(el.net_line) over(partition by el.clinic_id,el.sale_id
+              order by el.id rows between unbounded preceding and 1 preceding),0)::numeric as prior_net_line,
+            sum(el.net_line) over(partition by el.clinic_id,el.sale_id
+              order by el.id rows between unbounded preceding and current row)::numeric as cumulative_net_line
+          from effective_lines el
+        ), allocated_lines as (
+          select cl.*,
+            (round(cl.effective_paid*cl.cumulative_net_line/nullif(cl.net_lines_total,0),2)
+             - round(cl.effective_paid*cl.prior_net_line/nullif(cl.net_lines_total,0),2))::numeric as allocated_paid
+          from cumulative_lines cl
+        )
+        select
+          coalesce(sum(al.returned_amount) filter(where al.kind='servicio' and al.service_act_id=act.id),0)::numeric as returned_amount,
+          coalesce(sum(al.allocated_paid) filter(where al.kind='servicio' and al.service_act_id=act.id),0)::numeric as paid
+        from allocated_lines al
       ) b on true
       where act.clinic_id=p_clinic and act.appointment_id=a.id
     ) c
