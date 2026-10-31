@@ -147,11 +147,34 @@ declare contacts boolean;finance boolean;begin
       'charge_count',count(*),'state',case when count(*)=0 then 'no_charge'
         when bool_or(c.paid>c.price or c.paid<0) then 'review'
         when sum(c.paid)=sum(c.price) then 'paid' when sum(c.paid)=0 then 'unpaid' else 'partial' end)
-    from (select act.price,coalesce((select sum(l.total) from public.inventory_sale_lines l
-      join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
-      where l.clinic_id=p_clinic and l.kind='servicio' and l.service_act_id=act.id
-      and not exists(select 1 from public.inventory_sale_reversals r where r.clinic_id=p_clinic and r.sale_id=s.id)),0) paid
-      from public.clinic_service_acts act where act.clinic_id=p_clinic and act.appointment_id=a.id) c
+    from (
+      select greatest(act.price-coalesce(b.returned_amount,0),0) as price,
+        least(greatest(act.price-coalesce(b.returned_amount,0),0),coalesce(b.paid,0)) as paid
+      from public.clinic_service_acts act
+      left join lateral (
+        select coalesce(sum(ret.amount),0) as returned_amount,
+          coalesce(sum(least(greatest(l.total-coalesce(ret.amount,0),0),
+            greatest(least(l.total,case
+              when s.total>0 then round(l.total*(case when exists(
+                select 1 from public.inventory_credit_accounts ca
+                where ca.clinic_id=s.clinic_id and ca.sale_id=s.id)
+                then coalesce((select sum(sc.amount) from public.inventory_sale_collections sc
+                  where sc.clinic_id=s.clinic_id and sc.sale_id=s.id),0)
+                else s.total end)/s.total,2)
+              else 0 end)-coalesce(ret.refund_amount,0),0))),0) as paid
+        from public.inventory_sale_lines l
+        join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
+        left join lateral (
+          select coalesce(sum(r.amount),0) as amount,coalesce(sum(r.refund_amount),0) as refund_amount
+          from public.inventory_sale_returns r
+          where r.clinic_id=l.clinic_id and r.sale_id=l.sale_id and r.line_id=l.id
+        ) ret on true
+        where l.clinic_id=p_clinic and l.kind='servicio' and l.service_act_id=act.id
+          and not exists(select 1 from public.inventory_sale_reversals rev
+            where rev.clinic_id=p_clinic and rev.sale_id=s.id)
+      ) b on true
+      where act.clinic_id=p_clinic and act.appointment_id=a.id
+    ) c
   ) end)) from public.clinic_appointments a
   left join public.vet_patients p on p.clinic_id=a.clinic_id and p.id=a.patient_id
   left join public.vet_owners o on o.clinic_id=p.clinic_id and o.id=p.owner_id
