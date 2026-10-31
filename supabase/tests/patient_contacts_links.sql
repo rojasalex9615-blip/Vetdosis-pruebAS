@@ -142,3 +142,32 @@ do $$begin
   update public.patient_contact_attempts set notes='Mutated';raise exception 'expected_immutable';
  exception when raise_exception then if sqlerrm<>'immutable_history' then raise;end if;end;
 end$$;
+
+-- Regression: a product return without a cash refund must not make a fully
+-- retained service collection look partial just because the original sale
+-- also contained a product.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000004',60);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000002','60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000003',60,'servicio'),
+ ('70000000-0000-0000-0000-000000000003','60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001',null,40,'producto');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+values('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001',60);
+insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
+values('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000003',40,0);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000004'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>60 or (b->>'paid')::numeric<>60 or b->>'state'<>'paid' then
+   raise exception 'mixed_sale_product_return_misallocates_service_collection: %',b;
+ end if;
+end$$;
+reset role;
