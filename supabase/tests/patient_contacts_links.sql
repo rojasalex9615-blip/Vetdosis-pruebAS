@@ -166,7 +166,7 @@ insert into private.member_permission_grants(clinic_id,user_id,code,valid_until)
  select '10000000-0000-0000-0000-000000000001',auth.uid(),x,now()+interval '1 day'
  from unnest(array['patient.read','sales.read']) x;
 set role authenticated;
-do $declare r jsonb;b jsonb;begin
+do $$declare r jsonb;b jsonb;begin
  r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000004'::uuid]);
  b=r->'appointments'->0->'billing';
  if (b->>'total')::numeric<>60 or (b->>'paid')::numeric<>60 or b->>'state'<>'paid' then
