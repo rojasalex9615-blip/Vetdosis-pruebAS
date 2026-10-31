@@ -43,7 +43,8 @@ The isolated SQL draft now:
 Regression coverage added to `supabase/tests/patient_contacts_links.sql`:
 - Mixed service/product sale with product returned and no cash refund.
 - Three $33.33 service lines with a $1.00 collection, asserting the appointment reports the full $1.00 allocation.
-- Corrected a malformed DO-block opener in the newly added mixed-sale test.
+- Added a POS regression for a fully paid sale without a credit account or collection row.
+- Corrected a malformed DO-block opener and the POS fixture's clinic ID.
 
 Validation status:
 - Changes are committed only to the isolated branch.
