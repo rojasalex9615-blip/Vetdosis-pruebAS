@@ -31,9 +31,12 @@ create function private.vet_receipt(c uuid,op text,fp jsonb) returns uuid langua
 create function private.inv_history_guard() returns trigger language plpgsql as $$begin raise exception 'immutable_history';end$$;
 create table public.clinic_appointments(id uuid primary key,clinic_id uuid,patient_id uuid);
 create table public.clinic_service_acts(id uuid primary key,clinic_id uuid,appointment_id uuid,price numeric(18,2));
-create table public.inventory_sales(id uuid primary key,clinic_id uuid);
-create table public.inventory_sale_lines(sale_id uuid,clinic_id uuid,service_act_id uuid,total numeric(18,2),kind text default 'servicio');
+create table public.inventory_sales(id uuid primary key,clinic_id uuid,total numeric(18,2) not null);
+create table public.inventory_sale_lines(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,service_act_id uuid,total numeric(18,2),kind text default 'servicio');
 create table public.inventory_sale_reversals(sale_id uuid,clinic_id uuid);
+create table public.inventory_credit_accounts(sale_id uuid,clinic_id uuid,primary key(sale_id,clinic_id));
+create table public.inventory_sale_collections(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,amount numeric(18,2) not null);
+create table public.inventory_sale_returns(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,line_id uuid,amount numeric(18,2) not null,refund_amount numeric(18,2) not null default 0);
 \ir ../adaptations/patient_contacts_appointment_links_v1.sql
 insert into auth.users values('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
@@ -55,8 +58,10 @@ insert into public.clinic_appointments values
 insert into public.clinic_service_acts values
  ('50000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001',100),
  ('50000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000001',50);
-insert into public.inventory_sales values ('60000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001');
-insert into public.inventory_sale_lines(sale_id,clinic_id,service_act_id,total) values ('60000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_sales values ('60000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_credit_accounts values ('60000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total) values
+ ('70000000-0000-0000-0000-000000000001','60000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000001',100);
 set role authenticated;
 do $$declare c uuid='10000000-0000-0000-0000-000000000001';p uuid='30000000-0000-0000-0000-000000000001';
  o uuid='20000000-0000-0000-0000-000000000001';r jsonb;x uuid;y uuid;d jsonb;
@@ -83,7 +88,19 @@ begin
  if jsonb_array_length(r->'attempts')<>1 then raise exception 'missing_attempt';end if;
  r=public.appointment_patient_links(c,array['40000000-0000-0000-0000-000000000001'::uuid,'40000000-0000-0000-0000-000000000003'::uuid]);
  if jsonb_array_length(r->'appointments')<>1 then raise exception 'other_clinic_appointment';end if;
- if r->'appointments'->0->'billing'->>'state'<>'partial' or r->'appointments'->0->'billing'->>'paid'<>'100.00' then raise exception 'wrong_partial';end if;
+ if r->'appointments'->0->'billing'->>'state'<>'unpaid'
+    or (r->'appointments'->0->'billing'->>'paid')::numeric<>0 then raise exception 'uncollected_credit_marked_paid';end if;
+ insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+ values('60000000-0000-0000-0000-000000000001',c,100);
+ r=public.appointment_patient_links(c,array['40000000-0000-0000-0000-000000000001'::uuid]);
+ if r->'appointments'->0->'billing'->>'state'<>'partial'
+    or (r->'appointments'->0->'billing'->>'paid')::numeric<>100 then raise exception 'collection_not_counted';end if;
+ insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
+ values('60000000-0000-0000-0000-000000000001',c,'70000000-0000-0000-0000-000000000001',25,25);
+ r=public.appointment_patient_links(c,array['40000000-0000-0000-0000-000000000001'::uuid]);
+ if (r->'appointments'->0->'billing'->>'total')::numeric<>125
+    or (r->'appointments'->0->'billing'->>'paid')::numeric<>75
+    or r->'appointments'->0->'billing'->>'state'<>'partial' then raise exception 'service_return_not_reflected';end if;
  if r->'appointments'->0->'contact'->>'phone'<>'+520000000003' then raise exception 'stale_agenda_contact';end if;
  r=public.appointment_patient_links(c,array['40000000-0000-0000-0000-000000000002'::uuid]);
  if r->'appointments'->0->'billing'->>'state'<>'no_charge' then raise exception 'invented_debt';end if;
