@@ -3,7 +3,7 @@
 -- Collections are stored per sale, so mixed-sale collections are allocated proportionally to linked service lines.
 -- This file changes only the endpoint function; it does not rewrite the historical contact patch.
 begin;
-create function public.appointment_patient_links(p_clinic uuid,p_appointments uuid[])
+create or replace function public.appointment_patient_links(p_clinic uuid,p_appointments uuid[])
 returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare contacts boolean;finance boolean;begin
  perform private.permission_require(p_clinic,'appointment.read');
