@@ -71,3 +71,6 @@ supabase/config.*.local.json
 *.dump
 *.dump.gpg
 *.backup.gpg
+
+# Supabase CLI local runtime metadata
+supabase/.temp/

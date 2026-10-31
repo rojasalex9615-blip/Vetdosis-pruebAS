@@ -1,11 +1,6 @@
 name: Compilar APK de depuración
 on:
   workflow_dispatch:
-    inputs:
-      publishable_key:
-        description: Clave publicable del proyecto Supabase de pruebas
-        required: true
-        type: string
 permissions:
   contents: read
 jobs:
@@ -25,14 +20,20 @@ jobs:
           cache: true
       - name: Preparar configuración del proyecto de pruebas
         env:
-          SUPABASE_TEST_PUBLISHABLE_KEY: ${{ inputs.publishable_key }}
+          SUPABASE_TEST_PUBLISHABLE_KEY_VARIABLE: ${{ vars.SUPABASE_TEST_PUBLISHABLE_KEY }}
+          SUPABASE_TEST_PUBLISHABLE_KEY_SECRET: ${{ secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
         run: |
           python3 - <<'PY'
           import json, os
           from pathlib import Path
-          key = os.environ['SUPABASE_TEST_PUBLISHABLE_KEY'].strip()
+          key = (
+              os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY_VARIABLE', '').strip()
+              or os.environ.get('SUPABASE_TEST_PUBLISHABLE_KEY_SECRET', '').strip()
+          )
+          if not key:
+              raise SystemExit('Falta SUPABASE_TEST_PUBLISHABLE_KEY en Actions Variables o Secrets; se configura una sola vez, no se introduce al ejecutar el workflow.')
           if not key.startswith('sb_publishable_'):
-              raise SystemExit('Se requiere una clave publicable de Supabase.')
+              raise SystemExit('SUPABASE_TEST_PUBLISHABLE_KEY debe ser una clave publicable de Supabase, nunca service_role.')
           Path('supabase/config.test.local.json').write_text(json.dumps({
               'SUPABASE_URL': 'https://wtrelwtztkddfktrfdpb.supabase.co',
               'SUPABASE_PUBLISHABLE_KEY': key,

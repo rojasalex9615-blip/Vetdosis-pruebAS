@@ -1,0 +1,37 @@
+name: Auditar contrato P0 y aislamiento por clínica
+on:
+  pull_request:
+    paths:
+      - 'scripts/supabase/module_contract_readonly.py'
+      - 'scripts/supabase/test_module_contract*.py'
+      - 'supabase/tests/module_navigation_two_clinics.sql'
+      - 'supabase/tests/run_module_navigation_dashboard.sh'
+      - '.github/workflows/audit-p0-module-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+# Remote management-API audit is quarantined: this workflow never receives a
+# Supabase token, on PRs OR manual runs. Reintroducing it requires a separate,
+# reviewed trusted-default-branch workflow and protected environment.
+jobs:
+  contract-unit:
+    name: P0 — comprobar comparador sin acceso remoto
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Probar comparación y cuarentena de credenciales
+        run: python3 -m unittest discover -s scripts/supabase -p 'test_module_contract*.py'
+
+  simulated-isolation:
+    name: P0 — dos clínicas sintéticas en PostgreSQL aislado
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Comprobar prohibición de permisos implícitos
+        run: bash supabase/tests/run_module_navigation_dashboard.sh

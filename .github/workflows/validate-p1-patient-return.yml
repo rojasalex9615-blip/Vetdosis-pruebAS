@@ -1,0 +1,33 @@
+name: Validar P1 de paciente y devolución
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: p1-patient-return-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flutter-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test --no-pub test/hospital_calculation_refresh_test.dart test/hospital_dose_patient_test.dart test/hospital_weight_test.dart test/recorded_weight_calculation_test.dart test/commercial_recorded_weight_test.dart test/partial_return_supabase_test.dart test/partial_product_return_test.dart test/installments_service_returns_test.dart
+  financial-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_financial_return_freshness.sh
