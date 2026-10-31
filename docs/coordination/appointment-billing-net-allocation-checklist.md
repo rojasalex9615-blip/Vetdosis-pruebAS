@@ -31,3 +31,21 @@ Reference contract observed in the Supabase test project:
 - Run the focused Supabase SQL tests, then the full SQL suite and Flutter tests for the integration commit.
 - Keep the fix isolated on `fix/appointment-billing-net-allocation-20261031`; do not merge PR #77 while conflicts remain or until required checks pass.
 - No production migration, merge, or APK release is authorized by this checklist.
+
+## Current implementation draft (2026-10-30)
+
+The isolated SQL draft now:
+- Reconciles each sale's net total, collections (or POS-paid status), and recorded refunds before allocating payment.
+- Allocates payment over all remaining sale lines, including product lines, so a product return changes the denominator correctly.
+- Uses cumulative rounded allocations in stable line-ID order so per-line cent rounding sums to the sale-level allocation.
+- Keeps reversed sales excluded and does not mutate historical ledger rows.
+
+Regression coverage added to `supabase/tests/patient_contacts_links.sql`:
+- Mixed service/product sale with product returned and no cash refund.
+- Three $33.33 service lines with a $1.00 collection, asserting the appointment reports the full $1.00 allocation.
+- Corrected a malformed DO-block opener in the newly added mixed-sale test.
+
+Validation status:
+- Changes are committed only to the isolated branch.
+- SQL execution has **not** yet been run against PostgreSQL 17 or the Supabase test project; these are regression expectations, not passing test results.
+- Before remote application, still verify schema compatibility, POS sale behavior, return/refund sequences, multiple sales, unlinked service acts, and the full SQL/Flutter suites.
