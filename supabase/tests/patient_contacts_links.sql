@@ -241,12 +241,63 @@ insert into public.inventory_sale_collections(sale_id,clinic_id,amount) values
  ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',50);
 insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
 values('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000008',20,20);
+-- The final collection deliberately occurs after the return/refund.
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+values('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',20);
 set role authenticated;
 do $$declare r jsonb;b jsonb;begin
  r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000007'::uuid]);
  b=r->'appointments'->0->'billing';
  if (b->>'total')::numeric<>80 or (b->>'paid')::numeric<>80 or b->>'state'<>'paid' then
    raise exception 'collection_return_collection_not_reconciled: %',b;
+ end if;
+end$$;
+reset role;
+
+
+-- Regression: two distinct sales linked to service acts on one appointment are
+-- reconciled independently and then summed (30 paid + 10 paid against 50 total).
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000009','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000008',30),
+ ('50000000-0000-0000-0000-00000000000a','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000008',20);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001',30),
+ ('60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001',20);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001'),
+ ('60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000009','60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000009',30,'servicio'),
+ ('70000000-0000-0000-0000-00000000000a','60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-00000000000a',20,'servicio');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount) values
+ ('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001',30),
+ ('60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001',10);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000008'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>50 or (b->>'paid')::numeric<>40 or b->>'state'<>'partial' then
+   raise exception 'multiple_sales_for_one_appointment_not_reconciled: %',b;
+ end if;
+end$$;
+reset role;
+
+-- Regression: a service act with no linked sale line remains visible as an
+-- unpaid service charge instead of disappearing from appointment billing.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000009','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-00000000000b','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000009',70);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000009'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>70 or (b->>'paid')::numeric<>0 or b->>'state'<>'unpaid' then
+   raise exception 'unlinked_service_act_not_preserved: %',b;
  end if;
 end$$;
 reset role;
