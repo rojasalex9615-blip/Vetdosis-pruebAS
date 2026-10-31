@@ -31,12 +31,12 @@ create function private.vet_receipt(c uuid,op text,fp jsonb) returns uuid langua
 create function private.inv_history_guard() returns trigger language plpgsql as $$begin raise exception 'immutable_history';end$$;
 create table public.clinic_appointments(id uuid primary key,clinic_id uuid,patient_id uuid);
 create table public.clinic_service_acts(id uuid primary key,clinic_id uuid,appointment_id uuid,price numeric(18,2));
-create table public.inventory_sales(id uuid primary key,clinic_id uuid,total numeric(18,2) not null);
-create table public.inventory_sale_lines(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,service_act_id uuid,total numeric(18,2),kind text default 'servicio');
-create table public.inventory_sale_reversals(sale_id uuid,clinic_id uuid);
-create table public.inventory_credit_accounts(sale_id uuid,clinic_id uuid,primary key(sale_id,clinic_id));
-create table public.inventory_sale_collections(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,amount numeric(18,2) not null);
-create table public.inventory_sale_returns(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,line_id uuid,amount numeric(18,2) not null,refund_amount numeric(18,2) not null default 0);
+create table public.inventory_sales(id uuid primary key,clinic_id uuid,total numeric(18,2) not null,unique(clinic_id,id));
+create table public.inventory_sale_lines(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,service_act_id uuid,total numeric(18,2),kind text default 'servicio',unique(clinic_id,sale_id,id),foreign key(clinic_id,sale_id) references public.inventory_sales(clinic_id,id));
+create table public.inventory_sale_reversals(sale_id uuid,clinic_id uuid,foreign key(clinic_id,sale_id) references public.inventory_sales(clinic_id,id));
+create table public.inventory_credit_accounts(sale_id uuid,clinic_id uuid,primary key(sale_id,clinic_id),unique(clinic_id,sale_id),foreign key(clinic_id,sale_id) references public.inventory_sales(clinic_id,id));
+create table public.inventory_sale_collections(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,amount numeric(18,2) not null,foreign key(clinic_id,sale_id) references public.inventory_credit_accounts(clinic_id,sale_id));
+create table public.inventory_sale_returns(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,line_id uuid,amount numeric(18,2) not null,refund_amount numeric(18,2),foreign key(clinic_id,sale_id,line_id) references public.inventory_sale_lines(clinic_id,sale_id,id));
 \ir ../adaptations/patient_contacts_appointment_links_v1.sql
 \ir ../adaptations/appointment_patient_billing_collections_v2.sql
 insert into auth.users values('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');
@@ -141,4 +141,199 @@ do $$begin
  begin
   update public.patient_contact_attempts set notes='Mutated';raise exception 'expected_immutable';
  exception when raise_exception then if sqlerrm<>'immutable_history' then raise;end if;end;
+end$$;
+
+-- Regression: a product return without a cash refund must not make a fully
+-- retained service collection look partial just because the original sale
+-- also contained a product.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000004',60);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000002','60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000003',60,'servicio'),
+ ('70000000-0000-0000-0000-000000000003','60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001',null,40,'producto');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+values('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001',60);
+insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
+values('60000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000003',40,0);
+insert into private.member_permission_grants(clinic_id,user_id,code,valid_until)
+ select '10000000-0000-0000-0000-000000000001',auth.uid(),x,now()+interval '1 day'
+ from unnest(array['patient.read','sales.read']) x;
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000004'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>60 or (b->>'paid')::numeric<>60 or b->>'state'<>'paid' then
+   raise exception 'mixed_sale_product_return_misallocates_service_collection: %',b;
+ end if;
+end$$;
+reset role;
+
+-- Regression: independent per-line rounding must not lose a cent.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005',33.33),
+ ('50000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005',33.33),
+ ('50000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000005',33.33);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001',99.99);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000004','60000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000004',33.33,'servicio'),
+ ('70000000-0000-0000-0000-000000000005','60000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000005',33.33,'servicio'),
+ ('70000000-0000-0000-0000-000000000006','60000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000006',33.33,'servicio');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+values('60000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001',1.00);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000005'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'paid')::numeric<>1.00 then
+   raise exception 'service_line_rounding_lost_cent: %',b;
+ end if;
+end$$;
+reset role;
+
+-- Regression: POS sales without a credit account are paid at sale time.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000006',45);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001',45);
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000007','60000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000007',45,'servicio');
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000006'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>45 or (b->>'paid')::numeric<>45 or b->>'state'<>'paid' then
+   raise exception 'pos_sale_without_credit_account_not_paid: %',b;
+ end if;
+end$$;
+reset role;
+
+-- Regression: collection -> return/refund -> later collection must reconcile
+-- against the current sale ledger, without counting refunded money as retained.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000007',100);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000008','60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000008',100,'servicio');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount) values
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',50),
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',50);
+insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
+values('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000008',20,20);
+-- The final collection deliberately occurs after the return/refund.
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+values('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',20);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000007'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>80 or (b->>'paid')::numeric<>80 or b->>'state'<>'paid' then
+   raise exception 'collection_return_collection_not_reconciled: %',b;
+ end if;
+end$$;
+reset role;
+
+
+-- Regression: two distinct sales linked to service acts on one appointment are
+-- reconciled independently and then summed (30 paid + 10 paid against 50 total).
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000009','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000008',30),
+ ('50000000-0000-0000-0000-00000000000a','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000008',20);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001',30),
+ ('60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001',20);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001'),
+ ('60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000009','60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000009',30,'servicio'),
+ ('70000000-0000-0000-0000-00000000000a','60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-00000000000a',20,'servicio');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount) values
+ ('60000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001',30),
+ ('60000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001',10);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000008'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>50 or (b->>'paid')::numeric<>40 or b->>'state'<>'partial' then
+   raise exception 'multiple_sales_for_one_appointment_not_reconciled: %',b;
+ end if;
+end$$;
+reset role;
+
+-- Regression: a service act with no linked sale line remains visible as an
+-- unpaid service charge instead of disappearing from appointment billing.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000009','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-00000000000b','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000009',70);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000009'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>70 or (b->>'paid')::numeric<>0 or b->>'state'<>'unpaid' then
+   raise exception 'unlinked_service_act_not_preserved: %',b;
+ end if;
+end$$;
+reset role;
+
+-- Schema-compatibility regression: refund_amount is nullable in the real ledger.
+-- A NULL refund is treated as zero refunded cash, while the returned amount still
+-- reduces the service charge. Collections must remain attached to a credit account.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-00000000000a','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-00000000000c','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-00000000000a',100);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-00000000000b','60000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-00000000000c',100,'servicio');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+values('60000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001',50);
+insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
+values('60000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-00000000000b',10,null);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-00000000000a'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>90 or (b->>'paid')::numeric<>50 or b->>'state'<>'partial' then
+   raise exception 'nullable_refund_amount_not_treated_as_zero: %',b;
+ end if;
+end$$;
+reset role;
+do $$begin
+ begin
+   insert into public.inventory_sale_collections(sale_id,clinic_id,amount)
+   values('60000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001',1);
+   raise exception 'expected_collection_without_credit_account_rejected';
+ exception when foreign_key_violation then null;
+ end;
 end$$;
