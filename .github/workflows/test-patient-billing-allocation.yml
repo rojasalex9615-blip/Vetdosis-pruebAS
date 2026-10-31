@@ -1,0 +1,21 @@
+name: Validate appointment billing allocation (isolated)
+on:
+  pull_request:
+    paths:
+      - 'supabase/adaptations/patient_contacts_appointment_links_v1.sql'
+      - 'supabase/adaptations/appointment_patient_billing_collections_v2.sql'
+      - 'supabase/tests/patient_contacts_links.sql'
+      - 'supabase/tests/run_patient_billing_fixture.sh'
+      - '.github/workflows/test-patient-billing-allocation.yml'
+permissions:
+  contents: read
+jobs:
+  postgres-17-billing-fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Run isolated PostgreSQL 17 billing fixture
+        run: bash supabase/tests/run_patient_billing_fixture.sh
