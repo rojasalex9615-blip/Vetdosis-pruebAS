@@ -60,6 +60,19 @@ declare contacts boolean;finance boolean;begin
           left join line_returns lr on lr.clinic_id=l.clinic_id and lr.sale_id=l.sale_id and lr.line_id=l.id
           left join sale_returns sr on sr.clinic_id=s.clinic_id and sr.sale_id=s.id
           where l.clinic_id=p_clinic
+            -- Keep unrelated clinic history out of this appointment's billing calculation,
+            -- but retain every line of each relevant sale for correct proportional allocation.
+            and exists(
+              select 1
+              from public.inventory_sale_lines linked_line
+              join public.clinic_service_acts linked_act
+                on linked_act.clinic_id=linked_line.clinic_id
+               and linked_act.id=linked_line.service_act_id
+              where linked_line.clinic_id=p_clinic
+                and linked_line.sale_id=s.id
+                and linked_line.kind='servicio'
+                and linked_act.appointment_id=a.id
+            )
             and not exists(select 1 from public.inventory_sale_reversals rev
               where rev.clinic_id=p_clinic and rev.sale_id=s.id)
         ), sale_line_totals as (
