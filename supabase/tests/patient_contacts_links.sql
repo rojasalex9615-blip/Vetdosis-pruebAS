@@ -202,3 +202,23 @@ do $$declare r jsonb;b jsonb;begin
  end if;
 end$$;
 reset role;
+
+-- Regression: POS sales without a credit account are paid at sale time.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000006','40000000-0000-0000-0000-000000000006',45);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001',45);
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000007','60000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000007',45,'servicio');
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000006'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>45 or (b->>'paid')::numeric<>45 or b->>'state'<>'paid' then
+   raise exception 'pos_sale_without_credit_account_not_paid: %',b;
+ end if;
+end$$;
+reset role;
