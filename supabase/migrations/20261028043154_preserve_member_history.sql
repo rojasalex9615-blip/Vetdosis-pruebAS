@@ -113,7 +113,9 @@ declare cfg public.clinic_commission_schedule;is_admin boolean;begin
     from private.commission_historical_subjects(p_clinic) m
     left join public.staff_display_names n on n.clinic_id=m.clinic_id and n.user_id=m.user_id
     left join lateral (
-      select sum(l.commission) amount from public.inventory_sale_lines l
+      select sum(greatest(l.commission-coalesce((select sum(ret.commission_reduction)
+        from public.inventory_sale_returns ret where ret.clinic_id=l.clinic_id and ret.line_id=l.id),0),0)) amount
+      from public.inventory_sale_lines l
       join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
       where l.clinic_id=p_clinic and l.professional_id=m.user_id and l.commission>0
         and not exists(select 1 from public.inventory_sale_reversals r where r.sale_id=s.id)
@@ -143,7 +145,9 @@ declare cfg public.clinic_commission_schedule;v_batch uuid=gen_random_uuid();v_e
         greatest(0,coalesce(e.amount,0)-coalesce(p.amount,0)),auth.uid()
  from private.commission_historical_subjects(p_clinic) m
  left join lateral (
-   select sum(l.commission) amount from public.inventory_sale_lines l
+   select sum(greatest(l.commission-coalesce((select sum(ret.commission_reduction)
+     from public.inventory_sale_returns ret where ret.clinic_id=l.clinic_id and ret.line_id=l.id),0),0)) amount
+   from public.inventory_sale_lines l
    join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
    where l.clinic_id=p_clinic and l.professional_id=m.user_id and l.commission>0
      and s.created_at<v_end
