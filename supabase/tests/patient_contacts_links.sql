@@ -38,6 +38,7 @@ create table public.inventory_credit_accounts(sale_id uuid,clinic_id uuid,primar
 create table public.inventory_sale_collections(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,amount numeric(18,2) not null);
 create table public.inventory_sale_returns(id uuid primary key default gen_random_uuid(),sale_id uuid,clinic_id uuid,line_id uuid,amount numeric(18,2) not null,refund_amount numeric(18,2) not null default 0);
 \ir ../adaptations/patient_contacts_appointment_links_v1.sql
+\ir ../adaptations/appointment_patient_billing_collections_v2.sql
 insert into auth.users values('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
 insert into public.clinics values('10000000-0000-0000-0000-000000000001'),('10000000-0000-0000-0000-000000000002');
