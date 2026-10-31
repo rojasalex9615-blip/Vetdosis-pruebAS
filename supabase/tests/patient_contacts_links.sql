@@ -222,3 +222,31 @@ do $$declare r jsonb;b jsonb;begin
  end if;
 end$$;
 reset role;
+
+-- Regression: collection -> return/refund -> later collection must reconcile
+-- against the current sale ledger, without counting refunded money as retained.
+reset role;
+insert into public.clinic_appointments values
+ ('40000000-0000-0000-0000-000000000007','10000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001');
+insert into public.clinic_service_acts values
+ ('50000000-0000-0000-0000-000000000008','10000000-0000-0000-0000-000000000001','40000000-0000-0000-0000-000000000007',100);
+insert into public.inventory_sales values
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',100);
+insert into public.inventory_credit_accounts values
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001');
+insert into public.inventory_sale_lines(id,sale_id,clinic_id,service_act_id,total,kind) values
+ ('70000000-0000-0000-0000-000000000008','60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','50000000-0000-0000-0000-000000000008',100,'servicio');
+insert into public.inventory_sale_collections(sale_id,clinic_id,amount) values
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',50),
+ ('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001',50);
+insert into public.inventory_sale_returns(sale_id,clinic_id,line_id,amount,refund_amount)
+values('60000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000008',20,20);
+set role authenticated;
+do $$declare r jsonb;b jsonb;begin
+ r=public.appointment_patient_links('10000000-0000-0000-0000-000000000001',array['40000000-0000-0000-0000-000000000007'::uuid]);
+ b=r->'appointments'->0->'billing';
+ if (b->>'total')::numeric<>80 or (b->>'paid')::numeric<>80 or b->>'state'<>'paid' then
+   raise exception 'collection_return_collection_not_reconciled: %',b;
+ end if;
+end$$;
+reset role;
