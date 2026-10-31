@@ -29,12 +29,22 @@ declare contacts boolean;finance boolean;begin
         least(greatest(act.price-coalesce(b.returned_amount,0),0),coalesce(b.paid,0)) as paid
       from public.clinic_service_acts act
       left join lateral (
-        with line_returns as (
+        with relevant_sales as (
+          select distinct linked_line.clinic_id,linked_line.sale_id
+          from public.inventory_sale_lines linked_line
+          join public.clinic_service_acts linked_act
+            on linked_act.clinic_id=linked_line.clinic_id
+           and linked_act.id=linked_line.service_act_id
+          where linked_line.clinic_id=p_clinic
+            and linked_line.kind='servicio'
+            and linked_act.appointment_id=a.id
+        ), line_returns as (
           select r.clinic_id,r.sale_id,r.line_id,
             coalesce(sum(r.amount),0)::numeric as returned_amount,
             coalesce(sum(r.refund_amount),0)::numeric as refunded_amount
           from public.inventory_sale_returns r
           where r.clinic_id=p_clinic
+            and exists(select 1 from relevant_sales rs where rs.clinic_id=r.clinic_id and rs.sale_id=r.sale_id)
           group by r.clinic_id,r.sale_id,r.line_id
         ), sale_returns as (
           select r.clinic_id,r.sale_id,
@@ -42,6 +52,7 @@ declare contacts boolean;finance boolean;begin
             coalesce(sum(r.refund_amount),0)::numeric as refunded_amount
           from public.inventory_sale_returns r
           where r.clinic_id=p_clinic
+            and exists(select 1 from relevant_sales rs where rs.clinic_id=r.clinic_id and rs.sale_id=r.sale_id)
           group by r.clinic_id,r.sale_id
         ), raw_lines as (
           select l.id,l.sale_id,l.clinic_id,l.service_act_id,l.kind,l.total,
@@ -57,22 +68,10 @@ declare contacts boolean;finance boolean;begin
               where sc.clinic_id=s.clinic_id and sc.sale_id=s.id),0)::numeric as collected_amount
           from public.inventory_sale_lines l
           join public.inventory_sales s on s.id=l.sale_id and s.clinic_id=l.clinic_id
+          join relevant_sales rs on rs.clinic_id=l.clinic_id and rs.sale_id=l.sale_id
           left join line_returns lr on lr.clinic_id=l.clinic_id and lr.sale_id=l.sale_id and lr.line_id=l.id
           left join sale_returns sr on sr.clinic_id=s.clinic_id and sr.sale_id=s.id
           where l.clinic_id=p_clinic
-            -- Keep unrelated clinic history out of this appointment's billing calculation,
-            -- but retain every line of each relevant sale for correct proportional allocation.
-            and exists(
-              select 1
-              from public.inventory_sale_lines linked_line
-              join public.clinic_service_acts linked_act
-                on linked_act.clinic_id=linked_line.clinic_id
-               and linked_act.id=linked_line.service_act_id
-              where linked_line.clinic_id=p_clinic
-                and linked_line.sale_id=s.id
-                and linked_line.kind='servicio'
-                and linked_act.appointment_id=a.id
-            )
             and not exists(select 1 from public.inventory_sale_reversals rev
               where rev.clinic_id=p_clinic and rev.sale_id=s.id)
         ), sale_line_totals as (
