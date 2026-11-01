@@ -1,7 +1,7 @@
 name: Validación segura de integración VetDosis
 on:
   pull_request:
-    branches: [main]
+    branches: [main, integration/vetdosis-unificada-20261030]
     paths:
       - 'lib/**'
       - 'assets/**'
@@ -89,6 +89,8 @@ jobs:
           persist-credentials: false
       - name: Run isolated two-clinic SQL suite
         run: bash supabase/tests/run_module_navigation_dashboard.sh
+      - name: Run workspace management cutover SQL regression
+        run: bash supabase/tests/run_workspace_management_cutover.sh
 
   patient-appointment-sql:
     name: Patient/contact/appointment billing contracts in isolated PostgreSQL
