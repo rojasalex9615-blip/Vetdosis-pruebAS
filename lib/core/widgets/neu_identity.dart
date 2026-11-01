@@ -99,7 +99,7 @@ class VetDosisBrand extends StatelessWidget {
     final logo = ClipRRect(
       borderRadius: BorderRadius.circular(large ? 24 : 10),
       child: Image.asset(
-        'assets/brand/vetdosis-logo.png',
+        large ? 'assets/brand/logo.png' : 'assets/brand/vetdosis-logo.png',
         width: large ? 136 : 38,
         height: large ? 136 : 38,
         semanticLabel: 'Logo VetDosis Pro',
