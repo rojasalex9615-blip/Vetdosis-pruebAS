@@ -148,16 +148,21 @@ declare notice jsonb;profile public.staff_medical_profiles;access_id uuid;begin
  return jsonb_build_object('schema_version',1,'clinic_id',p_clinic,'actor_id',auth.uid(),'subject_id',p_subject,'details',profile.details,'access_id',access_id,'consent_at',profile.consent_at);
 end$$;
 
--- Close the legacy implicit-admin read and unversioned-save paths.
+-- Keep the legacy signature as a short transition path. It remains owner-scoped;
+-- administrative reads must use the audited directory/view endpoints below.
 create or replace function public.ops_medical(p_clinic uuid,p_details jsonb default null,p_consent boolean default false) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare since timestamptz;rev bigint;begin
+declare since timestamptz;rev bigint;notice jsonb;begin
  since=private.staff_medical_gate(p_clinic,auth.uid(),p_details is not null);
  if p_details is not null then
-  if p_details<>'{}'::jsonb then raise exception 'staff_medical_client_upgrade_required';end if;
-  if exists(select 1 from public.staff_medical_profiles where clinic_id=p_clinic and user_id=auth.uid()) then
-   select coalesce((select revision from private.staff_medical_state where clinic_id=p_clinic and user_id=auth.uid()),0) into rev;
-   perform public.ops_staff_medical_write(p_clinic,'withdraw',null,false,null,null,rev,since,auth.uid(),replace(gen_random_uuid()::text,'-','')||substr(replace(gen_random_uuid()::text,'-',''),1,16));
+  select coalesce((select revision from private.staff_medical_state where clinic_id=p_clinic and user_id=auth.uid()),0) into rev;
+  notice=private.staff_medical_notice();
+  if p_details='{}'::jsonb then
+   if exists(select 1 from public.staff_medical_profiles where clinic_id=p_clinic and user_id=auth.uid()) then
+    perform public.ops_staff_medical_write(p_clinic,'withdraw',null,false,null,null,rev,since,auth.uid(),replace(gen_random_uuid()::text,'-','')||substr(replace(gen_random_uuid()::text,'-',''),1,16));
+   end if;
+  else
+   perform public.ops_staff_medical_write(p_clinic,'save',p_details,p_consent,(notice->>'version')::integer,notice->>'hash',rev,since,auth.uid(),replace(gen_random_uuid()::text,'-','')||substr(replace(gen_random_uuid()::text,'-',''),1,16));
   end if;
  end if;
  return (select coalesce(jsonb_agg(to_jsonb(p)),'[]') from public.staff_medical_profiles p where clinic_id=p_clinic and user_id=auth.uid());
