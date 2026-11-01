@@ -1295,7 +1295,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                     subtitle: Text('${s['created_at']} · ${s['id']}'),
                     trailing: model.canReverse && model.ownShift != null
-                        ? (model.cut!['partial_returns_supported'] == true)
+                        ? (model.cut!['partial_returns_supported'] == true ||
+                            s['use_line_returns'] == true)
                               ? PopupMenuButton<String>(
                                   tooltip: 'Acciones de venta',
                                   onSelected: (action) {
@@ -1318,7 +1319,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ],
                                 )
                               : TextButton(
-                                  onPressed: () => reverse(s['id']),
+                                  onPressed: _allowFullReverse(model.cut!, s)
+                                      ? () => reverse(s['id'])
+                                      : null,
                                   child: const Text('Reverso completo'),
                                 )
                         : null,
