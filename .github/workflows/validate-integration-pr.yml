@@ -40,6 +40,8 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Generate Android launcher icons from brand asset
+        run: dart run flutter_launcher_icons
       - name: Static analysis
         run: flutter analyze
       - name: Full Flutter test suite
