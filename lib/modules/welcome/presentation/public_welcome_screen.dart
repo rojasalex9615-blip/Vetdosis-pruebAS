@@ -33,7 +33,18 @@ class PublicWelcomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               children: [
                 const SizedBox(height: 20),
-                Icon(Icons.pets_rounded, size: 56, color: color.primary),
+                Image.asset(
+                  'assets/brand/logo.png',
+                  width: 176,
+                  height: 124,
+                  fit: BoxFit.contain,
+                  semanticLabel: 'Logo VetDosis Pro',
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.pets_rounded,
+                    size: 56,
+                    color: color.primary,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Bienvenido a VetDosis',
