@@ -1,0 +1,384 @@
+{
+  "project_ref": "wtrelwtztkddfktrfdpb",
+  "authorization_received": true,
+  "code_sha": "aa5d369b8627f88e2bdc7cdcac6965d2a83046da",
+  "remote_rehearsal": {
+    "initial": true,
+    "corrected": true,
+    "migration_external_transaction": true
+  },
+  "installed": true,
+  "installation_status": "installed_and_verified",
+  "migration_payload_sha256": "b7ee0f7c73e3ff0c59ba6e0d8f2b28df4ffe420d37b8298f61b3979af9a5b2cd",
+  "review": {
+    "pr": 65,
+    "runtime_identity_resolved_by": "coderabbitai[bot]",
+    "complete_fingerprint_resolved_by": "Codex/Sol via repository account",
+    "coderabbit_final_rereview_pending": false,
+    "corrective_review_completed": true,
+    "new_blocking_findings": 0,
+    "trivial_preservation_test_added": true
+  },
+  "clinical_data_changed": false,
+  "permissions_granted": false,
+  "restore_targets_added": false,
+  "main_changed": false,
+  "android_qa": false,
+  "installed_at": "2026-10-28T11:44:06.759628+00:00",
+  "plan_sha256": "312dfe64c46b5668fa22a74ecc828b95d9b0b6fbb1068fb5144374927a931366",
+  "migration_version": "20261028114405",
+  "migration_name": "complete_pending_contracts_test_20261028",
+  "new_rpc_count": 29,
+  "new_table_count": 14,
+  "new_receipt_table_count": 1,
+  "indexes": [
+    {
+      "name": "vial_movement_chronology",
+      "valid": true,
+      "ready": true
+    },
+    {
+      "name": "vial_record_incidents",
+      "valid": true,
+      "ready": true
+    }
+  ],
+  "new_tables_rls": true,
+  "new_tables_client_access": false,
+  "new_rpcs_anon_execute": false,
+  "new_rpcs_authenticated_execute": true,
+  "restore_targets": 0,
+  "new_operation_counts": {
+    "returns": 0,
+    "collections": 0,
+    "commission_recoveries": 0,
+    "staff_events": 0
+  },
+  "remaining_membership_foreign_keys": 0,
+  "beta_closed": true,
+  "permission_enforcement_enabled": false,
+  "migration_reviewed_flag": false,
+  "security_advisor_summary": [
+    {
+      "name": "rls_enabled_no_policy",
+      "level": "INFO",
+      "before": 137,
+      "after": 152,
+      "new_findings": [
+        {
+          "name": "backup_restore_staging",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "backup_restore_test_targets",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "missing_contract_upgrade_receipts",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "owner_contact_revisions",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "staff_medical_accesses",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "staff_medical_events",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "staff_medical_purge_permits",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "staff_medical_retention_decisions",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "staff_medical_state",
+          "type": "table",
+          "schema": "private"
+        },
+        {
+          "name": "appointment_care_records",
+          "type": "table",
+          "schema": "public"
+        },
+        {
+          "name": "clinic_service_commission_recoveries",
+          "type": "table",
+          "schema": "public"
+        },
+        {
+          "name": "inventory_credit_accounts",
+          "type": "table",
+          "schema": "public"
+        },
+        {
+          "name": "inventory_sale_collections",
+          "type": "table",
+          "schema": "public"
+        },
+        {
+          "name": "inventory_sale_returns",
+          "type": "table",
+          "schema": "public"
+        },
+        {
+          "name": "patient_contact_attempts",
+          "type": "table",
+          "schema": "public"
+        }
+      ],
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+    },
+    {
+      "name": "function_search_path_mutable",
+      "level": "WARN",
+      "before": 1,
+      "after": 1,
+      "new_findings": [],
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable"
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "level": "WARN",
+      "before": 4,
+      "after": 4,
+      "new_findings": [],
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "level": "WARN",
+      "before": 263,
+      "after": 292,
+      "new_findings": [
+        {
+          "name": "appointment_care_snapshot",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_appointments uuid[]",
+          "security_definer": true
+        },
+        {
+          "name": "appointment_care_write",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_appointment uuid, p_version integer, p_action text, p_data jsonb, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "appointment_patient_links",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_appointments uuid[]",
+          "security_definer": true
+        },
+        {
+          "name": "inv_credit_accounts",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_offset integer",
+          "security_definer": true
+        },
+        {
+          "name": "inv_sale_collect",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_sale uuid, p_shift uuid, p_amount text, p_method text, p_reference text, p_actor uuid, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "inv_sale_credit_post",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_shift uuid, p_method text, p_lines jsonb, p_expected_total text, p_initial_amount text, p_debtor text, p_actor uuid, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "inv_sale_return",
+          "schema": "public",
+          "language": "sql",
+          "arguments": "p_sale uuid, p_shift uuid, p_line uuid, p_quantity text, p_method text, p_restock boolean, p_reason text, p_expected_amount text, p_actor uuid, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "inv_sale_return_v2",
+          "schema": "public",
+          "language": "sql",
+          "arguments": "p_sale uuid, p_shift uuid, p_line uuid, p_quantity text, p_method text, p_restock boolean, p_reason text, p_expected_amount text, p_expected_refund text, p_expected_commission text, p_actor uuid, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "inv_sale_return_v3",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_sale uuid, p_shift uuid, p_line uuid, p_quantity text, p_method text, p_restock boolean, p_reason text, p_expected_amount text, p_expected_refund text, p_expected_commission text, p_actor uuid, p_operation text, p_expected_returned_quantity text",
+          "security_definer": true
+        },
+        {
+          "name": "inv_sale_return_workspace",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_sale uuid, p_shift uuid",
+          "security_definer": true
+        },
+        {
+          "name": "ops_commission_recovery",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_settlement uuid, p_amount text, p_method text, p_reference text, p_reason text, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "ops_staff_medical_directory",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_actor uuid, p_offset integer",
+          "security_definer": true
+        },
+        {
+          "name": "ops_staff_medical_view",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_subject uuid, p_purpose text, p_actor uuid",
+          "security_definer": true
+        },
+        {
+          "name": "ops_staff_medical_workspace",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_actor uuid",
+          "security_definer": true
+        },
+        {
+          "name": "ops_staff_medical_write",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_action text, p_details jsonb, p_consent boolean, p_notice_version integer, p_notice_hash text, p_expected_revision bigint, p_member_since timestamp with time zone, p_actor uuid, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "patient_activity_snapshot",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid",
+          "security_definer": true
+        },
+        {
+          "name": "patient_contact_log",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_patient uuid, p_owner uuid, p_data jsonb, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "patient_contact_save",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_patient uuid, p_owner uuid, p_version integer, p_data jsonb, p_operation text",
+          "security_definer": true
+        },
+        {
+          "name": "patient_contact_snapshot",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_patient uuid",
+          "security_definer": true
+        },
+        {
+          "name": "restore_apply_owners",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_preflight uuid, p_owner_payload_sha256 text",
+          "security_definer": true
+        },
+        {
+          "name": "restore_apply_patients",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_preflight uuid, p_patient_payload_sha256 text",
+          "security_definer": true
+        },
+        {
+          "name": "restore_prepare_owners",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_archive_sha256 text, p_owners jsonb",
+          "security_definer": true
+        },
+        {
+          "name": "restore_prepare_patients",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_archive_sha256 text, p_patients jsonb",
+          "security_definer": true
+        },
+        {
+          "name": "restore_preview_conflicts",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_archive_sha256 text, p_manifest_sha256 text, p_manifest jsonb",
+          "security_definer": true
+        },
+        {
+          "name": "restore_preview_discard",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid",
+          "security_definer": true
+        },
+        {
+          "name": "restore_preview_get",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid",
+          "security_definer": true
+        },
+        {
+          "name": "restore_preview_plan",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_archive_sha256 text, p_conflict_manifest_sha256 text, p_dependency_manifest_sha256 text, p_dependencies jsonb",
+          "security_definer": true
+        },
+        {
+          "name": "restore_preview_preflight",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_stage uuid, p_archive_sha256 text, p_conflict_manifest_sha256 text, p_dependency_manifest_sha256 text",
+          "security_definer": true
+        },
+        {
+          "name": "restore_preview_stage",
+          "schema": "public",
+          "language": "plpgsql",
+          "arguments": "p_clinic uuid, p_format text, p_version integer, p_archive_sha256 text, p_source_server_at timestamp with time zone, p_table_counts jsonb",
+          "security_definer": true
+        }
+      ],
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "before": 1,
+      "after": 1,
+      "new_findings": [],
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+    }
+  ],
+  "installed_client_named_arguments_verified": 27
+}

@@ -1,0 +1,13 @@
+{
+  "file": "vetdosis_padron_grupo_I_preparacion.csv",
+  "sha256": "3676ff8efde5043312b98d0580302043eb879ba96a00fcc4dea2283420f43850",
+  "rows": 471,
+  "author_attribution": "Recap preparado por 5.6 para Grok, según Ale",
+  "received_on": "2026-10-27",
+  "original_fields_preserved": true,
+  "all_matches_pending": true,
+  "publisher_date_claimed": "2025-08-22",
+  "download_date_claimed": "2026-10-26",
+  "dates_independently_verified": false,
+  "grok_delivery_received": false
+}

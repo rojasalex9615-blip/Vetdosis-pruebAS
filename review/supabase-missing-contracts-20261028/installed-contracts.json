@@ -1,0 +1,617 @@
+{
+  "receipt": {
+    "singleton": true,
+    "plan_sha256": "312dfe64c46b5668fa22a74ecc828b95d9b0b6fbb1068fb5144374927a931366",
+    "installed_at": "2026-10-28T11:44:06.759628+00:00"
+  },
+  "rpcs": [
+    {
+      "args": [
+        "p_clinic",
+        "p_appointments"
+      ],
+      "name": "appointment_care_snapshot",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 2,
+      "signature": "appointment_care_snapshot(uuid,uuid[])",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_appointment",
+        "p_version",
+        "p_action",
+        "p_data",
+        "p_operation"
+      ],
+      "name": "appointment_care_write",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 6,
+      "signature": "appointment_care_write(uuid,uuid,integer,text,jsonb,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_appointments"
+      ],
+      "name": "appointment_patient_links",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 2,
+      "signature": "appointment_patient_links(uuid,uuid[])",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_offset"
+      ],
+      "name": "inv_credit_accounts",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 1,
+      "signature": "inv_credit_accounts(uuid,integer)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_sale",
+        "p_shift",
+        "p_amount",
+        "p_method",
+        "p_reference",
+        "p_actor",
+        "p_operation"
+      ],
+      "name": "inv_sale_collect",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 7,
+      "signature": "inv_sale_collect(uuid,uuid,text,text,text,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_shift",
+        "p_method",
+        "p_lines",
+        "p_expected_total",
+        "p_initial_amount",
+        "p_debtor",
+        "p_actor",
+        "p_operation"
+      ],
+      "name": "inv_sale_credit_post",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 8,
+      "signature": "inv_sale_credit_post(uuid,text,jsonb,text,text,text,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_sale",
+        "p_shift",
+        "p_line",
+        "p_quantity",
+        "p_method",
+        "p_restock",
+        "p_reason",
+        "p_expected_amount",
+        "p_actor",
+        "p_operation"
+      ],
+      "name": "inv_sale_return",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 10,
+      "signature": "inv_sale_return(uuid,uuid,uuid,text,text,boolean,text,text,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_sale",
+        "p_shift",
+        "p_line",
+        "p_quantity",
+        "p_method",
+        "p_restock",
+        "p_reason",
+        "p_expected_amount",
+        "p_expected_refund",
+        "p_expected_commission",
+        "p_actor",
+        "p_operation"
+      ],
+      "name": "inv_sale_return_v2",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 12,
+      "signature": "inv_sale_return_v2(uuid,uuid,uuid,text,text,boolean,text,text,text,text,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_sale",
+        "p_shift",
+        "p_line",
+        "p_quantity",
+        "p_method",
+        "p_restock",
+        "p_reason",
+        "p_expected_amount",
+        "p_expected_refund",
+        "p_expected_commission",
+        "p_actor",
+        "p_operation",
+        "p_expected_returned_quantity"
+      ],
+      "name": "inv_sale_return_v3",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 13,
+      "signature": "inv_sale_return_v3(uuid,uuid,uuid,text,text,boolean,text,text,text,text,uuid,text,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_sale",
+        "p_shift"
+      ],
+      "name": "inv_sale_return_workspace",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 2,
+      "signature": "inv_sale_return_workspace(uuid,uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_settlement",
+        "p_amount",
+        "p_method",
+        "p_reference",
+        "p_reason",
+        "p_operation"
+      ],
+      "name": "ops_commission_recovery",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 7,
+      "signature": "ops_commission_recovery(uuid,uuid,text,text,text,text,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_actor",
+        "p_offset"
+      ],
+      "name": "ops_staff_medical_directory",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 2,
+      "signature": "ops_staff_medical_directory(uuid,uuid,integer)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_subject",
+        "p_purpose",
+        "p_actor"
+      ],
+      "name": "ops_staff_medical_view",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 4,
+      "signature": "ops_staff_medical_view(uuid,uuid,text,uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_actor"
+      ],
+      "name": "ops_staff_medical_workspace",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 2,
+      "signature": "ops_staff_medical_workspace(uuid,uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_action",
+        "p_details",
+        "p_consent",
+        "p_notice_version",
+        "p_notice_hash",
+        "p_expected_revision",
+        "p_member_since",
+        "p_actor",
+        "p_operation"
+      ],
+      "name": "ops_staff_medical_write",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 10,
+      "signature": "ops_staff_medical_write(uuid,text,jsonb,boolean,integer,text,bigint,timestamp with time zone,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic"
+      ],
+      "name": "patient_activity_snapshot",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 1,
+      "signature": "patient_activity_snapshot(uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_patient",
+        "p_owner",
+        "p_data",
+        "p_operation"
+      ],
+      "name": "patient_contact_log",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 5,
+      "signature": "patient_contact_log(uuid,uuid,uuid,jsonb,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_patient",
+        "p_owner",
+        "p_version",
+        "p_data",
+        "p_operation"
+      ],
+      "name": "patient_contact_save",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "uuid",
+      "required": 6,
+      "signature": "patient_contact_save(uuid,uuid,uuid,integer,jsonb,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_patient"
+      ],
+      "name": "patient_contact_snapshot",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 2,
+      "signature": "patient_contact_snapshot(uuid,uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_preflight",
+        "p_owner_payload_sha256"
+      ],
+      "name": "restore_apply_owners",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 4,
+      "signature": "restore_apply_owners(uuid,uuid,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_preflight",
+        "p_patient_payload_sha256"
+      ],
+      "name": "restore_apply_patients",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 4,
+      "signature": "restore_apply_patients(uuid,uuid,uuid,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_archive_sha256",
+        "p_owners"
+      ],
+      "name": "restore_prepare_owners",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 4,
+      "signature": "restore_prepare_owners(uuid,uuid,text,jsonb)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_archive_sha256",
+        "p_patients"
+      ],
+      "name": "restore_prepare_patients",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 4,
+      "signature": "restore_prepare_patients(uuid,uuid,text,jsonb)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_archive_sha256",
+        "p_manifest_sha256",
+        "p_manifest"
+      ],
+      "name": "restore_preview_conflicts",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 5,
+      "signature": "restore_preview_conflicts(uuid,uuid,text,text,jsonb)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage"
+      ],
+      "name": "restore_preview_discard",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "void",
+      "required": 2,
+      "signature": "restore_preview_discard(uuid,uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic"
+      ],
+      "name": "restore_preview_get",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 1,
+      "signature": "restore_preview_get(uuid)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_archive_sha256",
+        "p_conflict_manifest_sha256",
+        "p_dependency_manifest_sha256",
+        "p_dependencies"
+      ],
+      "name": "restore_preview_plan",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 6,
+      "signature": "restore_preview_plan(uuid,uuid,text,text,text,jsonb)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_stage",
+        "p_archive_sha256",
+        "p_conflict_manifest_sha256",
+        "p_dependency_manifest_sha256"
+      ],
+      "name": "restore_preview_preflight",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 5,
+      "signature": "restore_preview_preflight(uuid,uuid,text,text,text)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "args": [
+        "p_clinic",
+        "p_format",
+        "p_version",
+        "p_archive_sha256",
+        "p_source_server_at",
+        "p_table_counts"
+      ],
+      "name": "restore_preview_stage",
+      "config": [
+        "search_path=\"\""
+      ],
+      "returns": "jsonb",
+      "required": 6,
+      "signature": "restore_preview_stage(uuid,text,integer,text,timestamp with time zone,jsonb)",
+      "anon_execute": false,
+      "authenticated_execute": true
+    }
+  ],
+  "tables": [
+    {
+      "rls": true,
+      "name": "private.backup_restore_staging",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.backup_restore_test_targets",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.owner_contact_revisions",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.staff_medical_accesses",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.staff_medical_events",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.staff_medical_purge_permits",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.staff_medical_retention_decisions",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "private.staff_medical_state",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "public.appointment_care_records",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "public.clinic_service_commission_recoveries",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "public.inventory_credit_accounts",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "public.inventory_sale_collections",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "public.inventory_sale_returns",
+      "anon_access": false,
+      "authenticated_access": false
+    },
+    {
+      "rls": true,
+      "name": "public.patient_contact_attempts",
+      "anon_access": false,
+      "authenticated_access": false
+    }
+  ]
+}

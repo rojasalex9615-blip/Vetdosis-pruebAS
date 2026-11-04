@@ -1,0 +1,182 @@
+[
+  {
+    "name": "integrated_schema",
+    "command": [
+      "bash",
+      "supabase/tests/run_small_animal_integration.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 51.4
+  },
+  {
+    "name": "modules_two_clinics",
+    "command": [
+      "bash",
+      "supabase/tests/run_module_navigation_dashboard.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 29.2
+  },
+  {
+    "name": "hospital_channels_history_duty",
+    "command": [
+      "env",
+      "HOSPITAL_TEST_CHANNELS=1",
+      "HOSPITAL_TEST_HISTORY=1",
+      "HOSPITAL_TEST_DUTY=1",
+      "bash",
+      "supabase/tests/run_hospital_automation.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 59.7
+  },
+  {
+    "name": "finance_and_staff_combined",
+    "command": [
+      "env",
+      "STAFF_MEDICAL_PRIVACY=1",
+      "bash",
+      "supabase/tests/run_installments_service_returns.sh",
+      "supabase/migrations/20261027144905_financial_return_freshness.sql",
+      "supabase/tests/financial_return_freshness.sql",
+      "supabase/migrations/20261027142748_staff_medical_consent_access.sql",
+      "supabase/tests/staff_medical_privacy.sql"
+    ],
+    "exit_code": 0,
+    "seconds": 48.3
+  },
+  {
+    "name": "vial_concurrency",
+    "command": [
+      "bash",
+      "supabase/tests/run_vial_incident_overview.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 32.9
+  },
+  {
+    "name": "backups_export_permissions",
+    "command": [
+      "bash",
+      "supabase/tests/run_permission_backups_exports.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 42.2
+  },
+  {
+    "name": "storage_permissions",
+    "command": [
+      "bash",
+      "supabase/tests/run_storage_media.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 25.5
+  },
+  {
+    "name": "restore_staging",
+    "command": [
+      "bash",
+      "supabase/tests/run_restore_preview_staging.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 52.7
+  },
+  {
+    "name": "agenda_permissions",
+    "command": [
+      "bash",
+      "supabase/tests/run_permission_agenda.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 25.7
+  },
+  {
+    "name": "clinical_vitals",
+    "command": [
+      "bash",
+      "supabase/tests/run_clinical_vitals.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 39.7
+  },
+  {
+    "name": "terms_privacy",
+    "command": [
+      "bash",
+      "supabase/tests/run_terms_acceptances.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 22.0
+  },
+  {
+    "name": "atomic_rollout",
+    "command": [
+      "bash",
+      "supabase/tests/run_integration_bundle.sh"
+    ],
+    "exit_code": 0,
+    "seconds": 20.1
+  },
+  {
+    "name": "python_supabase",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts/supabase",
+      "-p",
+      "test_*.py"
+    ],
+    "exit_code": 0,
+    "seconds": 6.5
+  },
+  {
+    "name": "python_android",
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts/android",
+      "-p",
+      "test_*.py"
+    ],
+    "exit_code": 0,
+    "seconds": 7.8
+  },
+  {
+    "name": "node_hospital",
+    "command": [
+      "node",
+      "--test",
+      "supabase/tests/hospital_delivery.test.mjs",
+      "supabase/tests/hospital_dispatch_auth.test.mjs",
+      "supabase/tests/hospital_fcm_token.test.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 1.2
+  },
+  {
+    "name": "patient_appointment_links",
+    "command": [
+      "bash",
+      "supabase/tests/run_patient_appointment_integration.sh"
+    ],
+    "exit_code": 0,
+    "fixtures": 5
+  },
+  {
+    "name": "pdf_renderer",
+    "command": [
+      "node",
+      "--test",
+      "supabase/tests/forms_renderer.test.mjs"
+    ],
+    "exit_code": 0,
+    "tests": 15,
+    "preparation": "npm ci --prefix supabase --ignore-scripts using existing lockfile"
+  }
+]

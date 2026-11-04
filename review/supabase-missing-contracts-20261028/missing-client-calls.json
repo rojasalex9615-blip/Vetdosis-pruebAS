@@ -1,0 +1,93 @@
+{
+  "appointment_care_snapshot": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:289"
+  ],
+  "appointment_care_write": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:325"
+  ],
+  "appointment_patient_links": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:348"
+  ],
+  "inv_credit_accounts": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:17",
+    "lib/modules/inventory/presentation/credit_accounts_screen.dart:80"
+  ],
+  "inv_sale_collect": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:52",
+    "lib/modules/inventory/presentation/credit_accounts_screen.dart:135"
+  ],
+  "inv_sale_credit_post": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:51"
+  ],
+  "inv_sale_return": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:48"
+  ],
+  "inv_sale_return_v2": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:49"
+  ],
+  "inv_sale_return_v3": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:50",
+    "lib/modules/inventory/presentation/partial_return_screen.dart:159"
+  ],
+  "inv_sale_return_workspace": [
+    "lib/modules/inventory/data/supabase_inventory_repository.dart:16",
+    "lib/modules/inventory/presentation/partial_return_screen.dart:92"
+  ],
+  "ops_commission_recovery": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:226"
+  ],
+  "ops_staff_medical_directory": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:413"
+  ],
+  "ops_staff_medical_view": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:415"
+  ],
+  "ops_staff_medical_workspace": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:409"
+  ],
+  "ops_staff_medical_write": [
+    "lib/modules/operations/data/supabase_operations_repository.dart:411"
+  ],
+  "patient_activity_snapshot": [
+    "lib/modules/patients/data/supabase_patient_repository.dart:217"
+  ],
+  "patient_contact_log": [
+    "lib/modules/patients/data/supabase_patient_repository.dart:201"
+  ],
+  "patient_contact_save": [
+    "lib/modules/patients/data/supabase_patient_repository.dart:180"
+  ],
+  "patient_contact_snapshot": [
+    "lib/modules/patients/data/supabase_patient_repository.dart:165"
+  ],
+  "restore_apply_owners": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:147"
+  ],
+  "restore_apply_patients": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:183"
+  ],
+  "restore_prepare_owners": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:129"
+  ],
+  "restore_prepare_patients": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:165"
+  ],
+  "restore_preview_conflicts": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:68"
+  ],
+  "restore_preview_discard": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:196"
+  ],
+  "restore_preview_get": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:56"
+  ],
+  "restore_preview_plan": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:89"
+  ],
+  "restore_preview_preflight": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:110"
+  ],
+  "restore_preview_stage": [
+    "lib/modules/backup/data/supabase_backup_repository.dart:40"
+  ]
+}

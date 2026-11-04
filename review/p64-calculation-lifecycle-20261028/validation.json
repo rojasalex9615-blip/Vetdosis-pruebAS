@@ -1,0 +1,41 @@
+{
+  "branch": "fix/p64-calculation-lifecycle-20261028",
+  "base_pr": 65,
+  "base_sha": "d6152af653d87ff1c1bf68bae7822a1b39aca1e7",
+  "functional_sha": "ea602a7bbb4dc5722da23431ab651c30fd728b5e",
+  "postgres_readiness_sha": "a574d543b8cb93e84e9d6d46a45b77238b7c50a0",
+  "targeted_passed": 15,
+  "new_regressions": 6,
+  "baseline_failed_expected": 3,
+  "analyze": "clean",
+  "financial_sql": "passed",
+  "contract_upgrade_isolated": "passed",
+  "readiness_race_reproduced": true,
+  "flutter_full": {
+    "passed": 691,
+    "skipped": 1,
+    "failed": 0
+  },
+  "remote_sql_executed": false,
+  "main_changed": false,
+  "apk_built": false,
+  "android_qa": false,
+  "coderabbit": "requested; approval not assumed",
+  "ci_contract_upgrade_fixed": {
+    "run": 40685168731,
+    "sha": "a574d543b8cb93e84e9d6d46a45b77238b7c50a0",
+    "conclusion": "success"
+  },
+  "ci_code": {
+    "sha": "a574d543b8cb93e84e9d6d46a45b77238b7c50a0",
+    "p1": "success",
+    "incremental_contracts": "success",
+    "hospitalization": "success",
+    "review_mode": "success",
+    "history_and_booklet": "in_progress",
+    "history_sql_job": "success",
+    "history_full_flutter_job": "in_progress",
+    "history_android_debug_compile_job": "in_progress"
+  },
+  "beta_apk_delivered": false
+}

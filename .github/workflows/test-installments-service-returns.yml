@@ -1,0 +1,24 @@
+name: Validar abonos y devoluciones de servicios
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/*installments_service_returns.sql'
+      - 'supabase/tests/*installments_service*'
+      - 'supabase/tests/run_partial_product_returns.sh'
+      - 'supabase/tests/run_permission_clinic_operations.sh'
+      - 'lib/modules/inventory/**'
+      - 'lib/modules/operations/presentation/service_commission_panel.dart'
+      - 'test/installments_service_returns_test.dart'
+      - 'test/service_commission_recovery_test.dart'
+      - '.github/workflows/test-installments-service-returns.yml'
+permissions:
+  contents: read
+jobs:
+  installments-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_installments_service_returns.sh

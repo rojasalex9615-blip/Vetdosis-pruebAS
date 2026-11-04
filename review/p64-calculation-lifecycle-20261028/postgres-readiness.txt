@@ -1,0 +1,1 @@
+PASS: Unix socket responds during temporary init; TCP stays unavailable until the final usable server.

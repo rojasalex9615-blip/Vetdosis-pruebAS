@@ -1,0 +1,20 @@
+name: Validar reintegros de comisiones
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/*service_commission_recoveries.sql'
+      - 'supabase/tests/*commission*'
+      - 'lib/modules/operations/**'
+      - 'test/service_commission_recovery_test.dart'
+      - '.github/workflows/test-service-commission-recoveries.yml'
+permissions:
+  contents: read
+jobs:
+  financial-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_service_commission_recoveries.sh

@@ -1,0 +1,26 @@
+name: Validar devoluciones con estado vigente
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/*financial_return_freshness.sql'
+      - 'supabase/migrations/*installments_service_returns.sql'
+      - 'supabase/migrations/*partial_product_returns.sql'
+      - 'supabase/migrations/*commission_recoveries.sql'
+      - 'supabase/tests/**'
+      - 'supabase/proposed/**'
+      - 'supabase/adaptations/**'
+      - '.github/workflows/test-financial-return-freshness.yml'
+permissions:
+  contents: read
+concurrency:
+  group: financial-freshness-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  financial-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: bash supabase/tests/run_financial_return_freshness.sh

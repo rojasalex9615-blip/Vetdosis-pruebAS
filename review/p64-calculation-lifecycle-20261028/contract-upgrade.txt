@@ -1,0 +1,27 @@
+PASS baseline and populated retained-member history
+PASS wrong cluster identity rejected before any source
+PASS complete upgrade with ROLLBACK preserves original catalog
+PASS late failure atomically rolls back the entire upgrade
+PASS postflight detects changed OLD profile value and rollback restores it
+PASS search_path drift rejected before installation
+PASS 27 current client named-argument contracts (legacy v1/v2 replay-only)
+PASS fixture-only install and replay rejection
+PASS populated member history and former-member commissions
+PASS integrated commission settlement and recovery
+PASS latest financial v3, stale quotes, fractional refunds and frozen cash close
+PASS integrated staff_medical_privacy
+PASS integrated vial_reconciliation_retries
+PASS integrated vial_incident_overview
+PASS integrated restore_preview_staging
+PASS integrated restore_conflict_preview
+PASS integrated restore_decision_preview
+PASS integrated restore_application_preflight
+PASS integrated restore_owners_apply
+PASS integrated restore_patients_apply
+PASS member_history_concurrency
+PASS staff_medical_privacy_concurrency
+PASS vial_index_write_compatibility
+PASS isolated endpoint patient_contacts_links
+PASS isolated endpoint appointment_care
+PASS isolated endpoint patient_activity_snapshot
+ALL missing-contract upgrade checks passed; no remote SQL executed.

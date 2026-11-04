@@ -1,0 +1,59 @@
+{
+  "date_utc": "2026-10-28",
+  "repository": "rojasalex9615-blip/Vetdosis-pruebAS",
+  "branch": "fix/p1-patient-context-partial-returns-20261028",
+  "base_pr": 63,
+  "base_sha": "e246f230051f46f8cfda40debfcdc743c6fbfc1e",
+  "tested_code_sha": "bc48f644cddb2596d57e9d015123d8b4506f3400",
+  "flutter": {
+    "passed": 685,
+    "skipped": 1,
+    "failed": 0,
+    "targeted_passed": 52,
+    "analyze": "No issues found"
+  },
+  "sql": {
+    "command": "bash supabase/tests/run_financial_return_freshness.sh",
+    "result": "passed",
+    "scope": "Disposable PostgreSQL 17, synthetic data, no network; recovery/return/installment concurrency"
+  },
+  "supabase_repository_test": {
+    "actual_repository_and_postgrest": true,
+    "screen_to_v3_rpc": true,
+    "transport": "MockClient; no authenticated live request",
+    "checks": [
+      "actor",
+      "sale",
+      "shift",
+      "quantity",
+      "expected_prior_quantity",
+      "refund",
+      "commission",
+      "operation",
+      "no_default_restock",
+      "server_403_404",
+      "unlisted_write_blocked"
+    ]
+  },
+  "auth_test": {
+    "actual_30_second_timer": true,
+    "query_preserved": true,
+    "opens_recorded_weight_calculator": true,
+    "revocation_and_stale_results_deny": true
+  },
+  "remote_catalog": "remote-contracts.json; read-only metadata confirmed workspace/v3/collection absent",
+  "p0_review_followup": "clinic-first lock order, whole secrets context and CI paths corrected in base; no claim of approval",
+  "remote_sql_applied": false,
+  "main_changed": false,
+  "credentials_added": false,
+  "apk_built": false,
+  "qa_android_real": false,
+  "coderabbit_review": "requested after publication; not approval",
+  "remaining": [
+    "Other #26/#61 findings",
+    "Review of #63 and this PR",
+    "Versioned backend rollout requires authorization",
+    "Legal registration PR20",
+    "Two-clinic HTTP and Android QA"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "date_utc": "2026-10-28",
+  "repository": "rojasalex9615-blip/Vetdosis-pruebAS",
+  "branch": "integration/pequenas-beta-validation-20261028",
+  "runtime_source_sha": "d2c7228eab0f0a2960636316d9661411e7ce7191",
+  "source_with_ci_sha": "2d31d4f453469d7b6b9ccfc7e99fb9f99b24da09",
+  "main_untouched_sha": "46abfe196497cf4a168b60831b9aad835c29a898",
+  "base_pr59_sha": "2d7c3af97763019c63ee81657eea88eea086da10",
+  "flutter": {
+    "passed": 668,
+    "skipped": 1,
+    "failures": 0,
+    "final_repeat_passed": true,
+    "analyze": "No issues found",
+    "contrast_regressions_passed": 9,
+    "render_checks_passed": 4
+  },
+  "local_check_groups": 17,
+  "sql_group_count": 13,
+  "python_supabase_tests": 85,
+  "python_android_tests": 10,
+  "python_android_skipped": 1,
+  "node_hospital_tests": 9,
+  "node_pdf_tests": 15,
+  "remote_scope": "Read-only pg_catalog metadata in Pruebas; no data rows or writes",
+  "apk_built": false,
+  "qa_android_real": false,
+  "ready_for_distribution": false,
+  "blocking": [
+    "Missing financial/staff backend contracts",
+    "Excluded malformed legal registration PR20",
+    "Integrated CodeRabbit review pending",
+    "Real Android and two-clinic HTTP acceptance pending"
+  ],
+  "ci_added": "validate-small-animal-integration.yml; no remote credentials/deploy"
+}
