@@ -527,6 +527,9 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> post() async {
+    // Once an earlier request has an uncertain result, even a later server
+    // rejection cannot prove that the original transaction did not commit.
+    final retryingUncertainCredit = credit && creditOutcomeUncertain;
     setState(() {
       busy = true;
       if (!creditOutcomeUncertain) error = null;
@@ -619,7 +622,9 @@ class _SaleScreenState extends State<SaleScreen> {
           isConfirmedCreditRejection(e);
       if (mounted) {
         setState(() {
-          if (confirmedRejection) {
+          if (confirmedRejection && !retryingUncertainCredit) {
+            // A deterministic rejection on a first attempt permits a fresh
+            // operation. It cannot clear an operation already known uncertain.
             creditOutcomeUncertain = false;
             creditRetryKey = null;
             creditOperation = null;
@@ -630,13 +635,13 @@ class _SaleScreenState extends State<SaleScreen> {
           } else if (credit && writeAttempted && !writeSucceeded) {
             creditOutcomeUncertain = true;
           }
-          error = e is FormatException
-              ? e.message
-              : credit &&
-                    writeAttempted &&
-                    !writeSucceeded &&
-                    !confirmedRejection
+          error = credit &&
+                  writeAttempted &&
+                  !writeSucceeded &&
+                  (retryingUncertainCredit || !confirmedRejection)
               ? 'No se confirmó el registro. Revisa las cuentas antes de iniciar otra venta; reintentar los mismos datos conserva la operación.'
+              : e is FormatException
+              ? e.message
               : inventoryError(e);
         });
       }
