@@ -640,25 +640,7 @@ class CoreShell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (model.screen == 'Inicio')
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Image.asset(
-                    'assets/brand/vetdosis-logo.png',
-                    width: 140,
-                    height: 44,
-                    fit: BoxFit.cover,
-                    alignment: const Alignment(0, .3),
-                    semanticLabel: 'VetDosis Pro',
-                  ),
-                ),
-              )
+              const VetDosisBrand()
             else
               Text(model.screen, maxLines: 1, overflow: TextOverflow.ellipsis),
             if (auth?.active != null)

@@ -1,4 +1,5 @@
 import 'accent_glow.dart';
+import 'brand_mark.dart';
 import 'package:flutter/material.dart';
 
 const neuBackground = Color(0xFFEBECF2);
@@ -96,49 +97,58 @@ class VetDosisBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final logo = ClipRRect(
-      borderRadius: BorderRadius.circular(large ? 24 : 10),
-      child: Image.asset(
-        large ? 'assets/brand/logo.png' : 'assets/brand/vetdosis-logo.png',
-        width: large ? 136 : 38,
-        height: large ? 136 : 38,
-        semanticLabel: 'Logo VetDosis Pro',
-      ),
-    );
+    final mark = VetDosisMark(size: large ? 132 : 34);
     final name = Text.rich(
       TextSpan(
         children: [
-          const TextSpan(text: 'VetDosis '),
+          TextSpan(
+            text: 'VetDosis ',
+            style: TextStyle(
+              color: dark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+            ),
+          ),
           TextSpan(
             text: 'Pro',
-            style: TextStyle(color: dark ? neuLilac : neuLavender),
+            style: TextStyle(
+              color: dark ? const Color(0xFFC5A8EF) : const Color(0xFF7C3AED),
+            ),
           ),
         ],
       ),
       textAlign: TextAlign.center,
+      style: TextStyle(fontSize: large ? 30 : 20, fontWeight: FontWeight.w700),
+    );
+    final slogan = Text(
+      'Tu espacio veterinario',
+      textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: large ? 30 : 20,
-        fontWeight: FontWeight.w700,
-        color: dark ? const Color(0xFFE5EAF6) : neuInk,
+        fontSize: large ? 14 : 11,
+        color: dark ? const Color(0xFF93C5FD) : const Color(0xFF60A5FA),
       ),
     );
     if (large) {
       return Column(
         children: [
-          logo,
+          mark,
           const SizedBox(height: 20),
           name,
-          const SizedBox(height: 8),
-          const Text('Tu espacio veterinario'),
+          const SizedBox(height: 6),
+          slogan,
         ],
       );
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        logo,
+        mark,
         const SizedBox(width: 10),
-        Flexible(child: name),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [name, slogan],
+          ),
+        ),
       ],
     );
   }

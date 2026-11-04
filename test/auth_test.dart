@@ -105,7 +105,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Bienvenida muestra precios y abre registro directamente', (tester) async {
+  testWidgets('Bienvenida muestra planes y abre registro directamente', (tester) async {
     repo.userId = null;
     await model.start();
     SharedPreferences.setMockInitialValues({});
@@ -116,11 +116,16 @@ void main() {
         requireAuth: true,
       ),
     );
-    await tester.scrollUntilVisible(find.textContaining('Individual ·'), 350);
-    expect(find.textContaining('Individual ·'), findsOneWidget);
-    await tester.scrollUntilVisible(find.textContaining('Clínica ·'), 350);
-    expect(find.textContaining('Clínica ·'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Crear cuenta'), -350);
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Individual'), findsOneWidget);
+    expect(find.text('Clínica'), findsOneWidget);
+    await tester.tap(find.text('Anterior'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Anterior'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Crear cuenta'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
