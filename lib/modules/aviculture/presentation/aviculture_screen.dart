@@ -1,3 +1,4 @@
+import '../../../core/widgets/calculator_surface.dart';
 import 'package:flutter/material.dart';
 import '../../doses/domain/quantity.dart';
 import '../data/aviculture_repository.dart';
@@ -130,178 +131,187 @@ class _AvicultureScreenState extends State<AvicultureScreen> {
         final space = parameters
             .where((p) => ['densidad', 'espacio_por_ave'].contains(p.label))
             .single;
-        return ListView(
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          children: [
-            const Text(
-              'Gallinas · Referencias v1 sin verificar. Estimación geométrica; no certifica bienestar, ventilación ni capacidad operativa. No se elige un valor de diseño automáticamente.',
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: stage,
-              decoration: const InputDecoration(labelText: 'Etapa'),
-              items: const [
-                DropdownMenuItem(
-                  value: 'crianza',
-                  child: Text('Crianza · 0–6 semanas'),
+          child: CalculatorSurface(
+            id: 'aviculture',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Gallinas · Referencias v1 sin verificar. Estimación geométrica; no certifica bienestar, ventilación ni capacidad operativa. No se elige un valor de diseño automáticamente.',
                 ),
-                DropdownMenuItem(
-                  value: 'desarrollo',
-                  child: Text('Desarrollo · 7–12 semanas'),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: stage,
+                  decoration: const InputDecoration(labelText: 'Etapa'),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'crianza',
+                      child: Text('Crianza · 0–6 semanas'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'desarrollo',
+                      child: Text('Desarrollo · 7–12 semanas'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'postura',
+                      child: Text('Postura · 13+ semanas'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) selection(() => stage = v);
+                  },
                 ),
-                DropdownMenuItem(
-                  value: 'postura',
-                  child: Text('Postura · 13+ semanas'),
+                DropdownButtonFormField<String>(
+                  initialValue: system,
+                  decoration: const InputDecoration(labelText: 'Sistema'),
+                  items: const [
+                    DropdownMenuItem(value: 'piso', child: Text('Piso')),
+                    DropdownMenuItem(
+                      value: 'jaula_bateria',
+                      child: Text('Jaula / batería'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) selection(() => system = v);
+                  },
                 ),
-              ],
-              onChanged: (v) {
-                if (v != null) selection(() => stage = v);
-              },
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: system,
-              decoration: const InputDecoration(labelText: 'Sistema'),
-              items: const [
-                DropdownMenuItem(value: 'piso', child: Text('Piso')),
-                DropdownMenuItem(
-                  value: 'jaula_bateria',
-                  child: Text('Jaula / batería'),
+                DropdownButtonFormField<String>(
+                  initialValue: mode,
+                  decoration: const InputDecoration(
+                    labelText: 'Dirección del cálculo',
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'capacidad',
+                      child: Text('Dimensiones → aves'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'equipo',
+                      child: Text('Aves → área y equipos'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) selection(() => mode = v);
+                  },
                 ),
-              ],
-              onChanged: (v) {
-                if (v != null) selection(() => system = v);
-              },
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: mode,
-              decoration: const InputDecoration(
-                labelText: 'Dirección del cálculo',
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'capacidad',
-                  child: Text('Dimensiones → aves'),
-                ),
-                DropdownMenuItem(
-                  value: 'equipo',
-                  child: Text('Aves → área y equipos'),
-                ),
-              ],
-              onChanged: (v) {
-                if (v != null) selection(() => mode = v);
-              },
-            ),
-            parameter(space),
-            if (mode == 'capacidad') ...[
-              DropdownButtonFormField<String>(
-                initialValue: dimensions,
-                decoration: const InputDecoration(
-                  labelText: 'Unidad de las dimensiones',
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'm', child: Text('Metros')),
-                  DropdownMenuItem(value: 'cm', child: Text('Centímetros')),
+                parameter(space),
+                if (mode == 'capacidad') ...[
+                  DropdownButtonFormField<String>(
+                    initialValue: dimensions,
+                    decoration: const InputDecoration(
+                      labelText: 'Unidad de las dimensiones',
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'm', child: Text('Metros')),
+                      DropdownMenuItem(value: 'cm', child: Text('Centímetros')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) selection(() => dimensions = v);
+                    },
+                  ),
+                  input('length', 'Largo útil de una superficie'),
+                  input('width', 'Ancho útil de una superficie'),
+                  input(
+                    'floors',
+                    'Pisos útiles por módulo',
+                    help: system == 'piso'
+                        ? 'En piso: 1. No contar techos o zonas no utilizables.'
+                        : 'Superficies independientes con iguales dimensiones.',
+                  ),
+                  input('modules', 'Módulos iguales por caseta'),
+                  input('houses', 'Casetas iguales'),
+                ] else ...[
+                  input('birds', 'Número de aves'),
+                  input(
+                    'area_step',
+                    'Incremento para redondear área (m²)',
+                    help: 'Precisión elegida por ti; siempre hacia arriba.',
+                  ),
+                  input(
+                    'step',
+                    'Incremento para redondear longitudes (m)',
+                    help: 'Precisión elegida por ti; siempre hacia arriba.',
+                  ),
+                  for (final p in parameters.where(
+                    (p) => p.label.endsWith('_lineal'),
+                  ))
+                    parameter(p),
                 ],
-                onChanged: (v) {
-                  if (v != null) selection(() => dimensions = v);
-                },
-              ),
-              input('length', 'Largo útil de una superficie'),
-              input('width', 'Ancho útil de una superficie'),
-              input(
-                'floors',
-                'Pisos útiles por módulo',
-                help: system == 'piso'
-                    ? 'En piso: 1. No contar techos o zonas no utilizables.'
-                    : 'Superficies independientes con iguales dimensiones.',
-              ),
-              input('modules', 'Módulos iguales por caseta'),
-              input('houses', 'Casetas iguales'),
-            ] else ...[
-              input('birds', 'Número de aves'),
-              input(
-                'area_step',
-                'Incremento para redondear área (m²)',
-                help: 'Precisión elegida por ti; siempre hacia arriba.',
-              ),
-              input(
-                'step',
-                'Incremento para redondear longitudes (m)',
-                help: 'Precisión elegida por ti; siempre hacia arriba.',
-              ),
-              for (final p in parameters.where(
-                (p) => p.label.endsWith('_lineal'),
-              ))
-                parameter(p),
-            ],
-            FilledButton(
-              onPressed: () {
-                model.calculate(
-                  parameters,
-                  values: captured,
-                  mode: mode,
-                  system: system,
-                  dimensions: dimensions,
-                );
-                setState(() {});
-              },
-              child: Text(
-                mode == 'capacidad'
-                    ? 'Calcular capacidad'
-                    : 'Calcular área y longitudes',
-              ),
-            ),
-            if (mode == 'equipo') ...[
-              const SizedBox(height: 12),
-              const Text(
-                'Equipos: elige el aplicable al lote. Las etapas de estos apuntes son distintas de las bandas por semanas; se conservan tal como llegaron.',
-              ),
-              for (final p in catalog.equipment) ...[
-                parameter(p),
-                OutlinedButton(
+                CalculatorActionButton(
+                  id: 'aviculture',
                   onPressed: () {
-                    model.equipment(p, captured);
+                    model.calculate(
+                      parameters,
+                      values: captured,
+                      mode: mode,
+                      system: system,
+                      dimensions: dimensions,
+                    );
                     setState(() {});
                   },
-                  child: Text('Calcular ${p.label.replaceAll('_', ' ')}'),
+                  child: Text(
+                    mode == 'capacidad'
+                        ? 'Calcular capacidad'
+                        : 'Calcular área y longitudes',
+                  ),
                 ),
-              ],
-            ],
-            if (error.isNotEmpty)
-              Text(
-                error,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            if (output.isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SelectableText(output),
-                ),
-              ),
-            ExpansionTile(
-              title: const Text('Datos pendientes e incubación'),
-              children: [
-                for (final p in catalog.additional['parametros'] as List)
-                  ListTile(
-                    title: Text('${p['parametro']}'),
-                    subtitle: const Text(
-                      'Sin valor, unidad o fuente disponibles · pendiente',
+                if (mode == 'equipo') ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Equipos: elige el aplicable al lote. Las etapas de estos apuntes son distintas de las bandas por semanas; se conservan tal como llegaron.',
+                  ),
+                  for (final p in catalog.equipment) ...[
+                    parameter(p),
+                    OutlinedButton(
+                      onPressed: () {
+                        model.equipment(p, captured);
+                        setState(() {});
+                      },
+                      child: Text('Calcular ${p.label.replaceAll('_', ' ')}'),
+                    ),
+                  ],
+                ],
+                if (error.isNotEmpty)
+                  Text(
+                    error,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                for (final p in catalog.additional['incubacion'] as List)
-                  ListTile(
-                    title: Text(
-                      '${p['parametro']}: ${p['valor']} ${p['unidad']}',
+                if (output.isNotEmpty)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: SelectableText(output),
                     ),
-                    subtitle: Text('${p['fuente']} · ${p['estado']}'),
                   ),
+                ExpansionTile(
+                  title: const Text('Datos pendientes e incubación'),
+                  children: [
+                    for (final p in catalog.additional['parametros'] as List)
+                      ListTile(
+                        title: Text('${p['parametro']}'),
+                        subtitle: const Text(
+                          'Sin valor, unidad o fuente disponibles · pendiente',
+                        ),
+                      ),
+                    for (final p in catalog.additional['incubacion'] as List)
+                      ListTile(
+                        title: Text(
+                          '${p['parametro']}: ${p['valor']} ${p['unidad']}',
+                        ),
+                        subtitle: Text('${p['fuente']} · ${p['estado']}'),
+                      ),
+                  ],
+                ),
+                const Text(
+                  'Fase 2 pendiente: redistribución, vínculo con medicación en agua/alimento y retiro del huevo. Estos cálculos no crean tratamientos.',
+                ),
               ],
             ),
-            const Text(
-              'Fase 2 pendiente: redistribución, vínculo con medicación en agua/alimento y retiro del huevo. Estos cálculos no crean tratamientos.',
-            ),
-          ],
+          ),
         );
       },
     ),

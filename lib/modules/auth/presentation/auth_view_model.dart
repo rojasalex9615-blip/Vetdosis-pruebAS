@@ -12,12 +12,14 @@ class AuthViewModel extends ChangeNotifier {
     this.syncStore,
     this.refreshInterval,
     this.onVerifiedAccess,
+    this.onBeforeSignOut,
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
   final AccessCache? cache;
   final SyncStore? syncStore;
   final Duration? refreshInterval;
   final Future<void> Function(List<ClinicMembership>)? onVerifiedAccess;
+  final Future<void> Function(String userId)? onBeforeSignOut;
   final DateTime Function() now;
   Timer? _refreshTimer;
   String? _lastUserId;
@@ -34,6 +36,7 @@ class AuthViewModel extends ChangeNotifier {
   String? invitation;
   bool _disposed = false;
   int _revision = 0;
+  int _clinicSelectionRevision = 0;
   final Map<String, bool> _workspaceManagers = {};
   int get accessRevision => _revision;
   bool get signedIn => repository.userId != null;
@@ -60,6 +63,7 @@ class AuthViewModel extends ChangeNotifier {
     final previousUser = _lastUserId;
     _lastUserId = userId;
     final previousClinic = active?.clinicId;
+    final selectionRevision = _clinicSelectionRevision;
     if (!background || userId != previousUser) {
       active = null;
       memberships = [];
@@ -110,8 +114,11 @@ class AuthViewModel extends ChangeNotifier {
           }
         }
       }
+      final selectedClinic = selectionRevision == _clinicSelectionRevision
+          ? previousClinic
+          : active?.clinicId;
       active =
-          result.where((m) => m.clinicId == previousClinic).firstOrNull ??
+          result.where((m) => m.clinicId == selectedClinic).firstOrNull ??
           result.firstOrNull;
       try {
         await onVerifiedAccess?.call(result);
@@ -170,6 +177,7 @@ class AuthViewModel extends ChangeNotifier {
   void selectClinic(ClinicMembership membership) {
     if (!memberships.contains(membership)) return;
     active = membership;
+    _clinicSelectionRevision++;
     invitation = null;
     _notify();
   }
@@ -268,6 +276,9 @@ class AuthViewModel extends ChangeNotifier {
     final userId = repository.userId;
     if (userId != null && (await syncStore?.pendingForUser(userId) ?? 0) > 0) {
       throw const PendingChanges();
+    }
+    if (userId != null) {
+      await onBeforeSignOut?.call(userId);
     }
     try {
       await repository.signOut();
