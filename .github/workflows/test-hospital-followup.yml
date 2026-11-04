@@ -5,7 +5,7 @@ on:
     paths:
       - 'lib/modules/hospital/**'
       - 'lib/modules/team/**'
-      - 'supabase/proposed/14[DFGHI]*'
+      - 'supabase/proposed/14[DFGHIJKL]*'
       - 'supabase/tests/*hospital*'
       - 'supabase/tests/*team_duty*'
       - 'test/hospital*'
@@ -17,7 +17,7 @@ on:
     paths:
       - 'lib/modules/hospital/**'
       - 'lib/modules/team/**'
-      - 'supabase/proposed/14[DFGHI]*'
+      - 'supabase/proposed/14[DFGHIJKL]*'
       - 'supabase/tests/*hospital*'
       - 'supabase/tests/*team_duty*'
       - 'test/hospital*'
@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Probar permisos, altas, órdenes y concurrencia en PostgreSQL aislado
-        run: HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
+        run: HOSPITAL_TEST_CHANNELS=1 HOSPITAL_TEST_DUTY=1 HOSPITAL_TEST_HISTORY=1 bash supabase/tests/run_hospital_automation.sh
   hospital-flutter:
     runs-on: ubuntu-latest
     timeout-minutes: 20
