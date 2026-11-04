@@ -1,7 +1,11 @@
+import '../../../core/widgets/workspace_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../data/personal_dose_repository.dart';
 import '../domain/catalog.dart';
 import '../domain/dose_engine.dart';
+import 'dose_math_tools.dart';
 
 class PersonalDoseScreen extends StatefulWidget {
   const PersonalDoseScreen({
@@ -10,16 +14,21 @@ class PersonalDoseScreen extends StatefulWidget {
     required this.clinicId,
     required this.admin,
     required this.general,
+    this.labelReader,
   });
   final PersonalDoseRepository repository;
   final String clinicId;
   final bool admin;
   final List<DrugDose> general;
+
+  /// Optional local capture adapter; OCR text never populates clinical fields.
+  final Future<String?> Function()? labelReader;
   @override
   State<PersonalDoseScreen> createState() => _PersonalDoseScreenState();
 }
 
 class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
+  final labelDraft = TextEditingController();
   final fields = {
     for (final k in [
       'farmaco',
@@ -50,6 +59,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
 
   @override
   void dispose() {
+    labelDraft.dispose();
     for (final c in fields.values) {
       c.dispose();
     }
@@ -82,6 +92,60 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
     final result = await widget.repository.list(widget.clinicId);
     if (mounted) setState(() => entries = result);
   });
+  Future<void> scanLabel() => run(() async {
+    String? recognized;
+    if (widget.labelReader != null) {
+      recognized = await widget.labelReader!();
+    } else {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2200,
+        imageQuality: 90,
+      );
+      if (image == null) return;
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      try {
+        recognized = (await recognizer.processImage(
+          InputImage.fromFilePath(image.path),
+        )).text;
+      } finally {
+        await recognizer.close();
+      }
+    }
+    if (recognized == null) return;
+    if (!mounted) return;
+    if (recognized.trim().isEmpty) {
+      throw const FormatException(
+        'No se leyó texto en la etiqueta. Captura los datos manualmente.',
+      );
+    }
+    final apply = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Revisar texto de la etiqueta'),
+        content: SingleChildScrollView(child: SelectableText(recognized!)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Descartar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Conservar solo el texto'),
+          ),
+        ],
+      ),
+    );
+    if (apply != true || !mounted) return;
+    // A numeric token can be a range endpoint, withdrawal time, or a different
+    // formulation. Reviewing OCR text does not authorize a clinical value.
+    // Preserve all manually entered fields, units, and provenance unchanged.
+    setState(() {
+      labelDraft.text = recognized!;
+      verified = false;
+    });
+  });
+
   Future<void> save() => run(() async {
     String value(String k) => fields[k]!.text.trim();
     final payload = <String, dynamic>{
@@ -138,6 +202,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
     if (mounted) {
       setState(() {
         entries = result;
+        labelDraft.clear();
         for (final c in fields.values) {
           c.clear();
         }
@@ -156,6 +221,52 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
           'Cada entrada conserva la etiqueta personal. Compartirla exige revisión del administrador y no modifica la base general.',
         ),
         const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: busy ? null : scanLabel,
+          icon: const Icon(Icons.document_scanner_outlined),
+          label: const Text('Escanear etiqueta y crear borrador'),
+        ),
+        const Text(
+          'El OCR conserva solo texto sin verificar. No completa ni reemplaza dosis, intervalos, concentración o fuentes. Transcribe y valida cada dato contra la etiqueta original; la foto no se sube automáticamente.',
+        ),
+        TextField(
+          controller: labelDraft,
+          enabled: !busy,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            labelText:
+                'Texto de etiqueta (español o inglés; borrador local editable)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Puedes capturar todos los datos manualmente. Conserva las indicaciones originales en inglés y comprueba su interpretación antes de usarlas.',
+        ),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => Scaffold(
+                appBar: AppBar(
+                  title: const Text('Fórmula general y cálculos manuales'),
+                ),
+                body: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: DoseMathTools(
+                    visualReference:
+                        Theme.of(
+                          context,
+                        ).extension<WorkspaceStyle>()?.neumorphic ==
+                        true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          icon: const Icon(Icons.calculate_outlined),
+          label: const Text('Abrir fórmula general y cálculos manuales'),
+        ),
         for (final pair in <(String, String)>[
           ('farmaco', 'Fármaco'),
           ('especie', 'Especie (igual que en el catálogo)'),
@@ -182,6 +293,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
             padding: const EdgeInsets.only(bottom: 12),
             child: TextField(
               enabled: !busy,
+              key: ValueKey('personal-dose-${pair.$1}'),
               controller: fields[pair.$1],
               decoration: InputDecoration(
                 labelText: pair.$2,

@@ -1,6 +1,23 @@
 import 'dart:convert';
 import 'quantity.dart';
 
+String normalizeDoseSearch(String value) {
+  const accented = <String, String>{
+    'á': 'a',
+    'é': 'e',
+    'í': 'i',
+    'ó': 'o',
+    'ú': 'u',
+    'ü': 'u',
+    'ñ': 'n',
+  };
+  var text = value.toLowerCase();
+  for (final item in accented.entries) {
+    text = text.replaceAll(item.key, item.value);
+  }
+  return text.replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
+}
+
 String requiredText(Map<String, dynamic> map, String key) {
   final value = map[key];
   if (value is! String || value.trim().isEmpty) {
@@ -101,6 +118,8 @@ class DrugDose {
   final List<Presentation> presentations;
   final List<Contraindication> contraindications;
   final bool personal;
+  Quantity? get prescribedDose =>
+      min != null && max != null && min!.compareTo(max!) == 0 ? min : null;
   factory DrugDose.read(Map<String, dynamic> map, {bool personal = false}) {
     if (map['unidad_dosis'] != 'mg/kg') {
       throw const FormatException(
@@ -174,14 +193,14 @@ class DoseCatalog {
     );
   }
   List<DrugDose> search(String text, {String? species}) {
-    final query = text.toLowerCase().trim();
+    final query = normalizeDoseSearch(text);
     return drugs
         .where(
           (d) =>
               (species == null || d.species == species) &&
-              ('${d.name} ${d.presentations.map((p) => p.brand).join(' ')}')
-                  .toLowerCase()
-                  .contains(query),
+              normalizeDoseSearch(
+                '${d.name} ${d.presentations.map((p) => p.brand).join(' ')}',
+              ).contains(query),
         )
         .toList();
   }
