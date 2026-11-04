@@ -3,6 +3,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/hospital_automation.dart';
 import '../domain/hospital_repository.dart';
+import '../application/hospital_push_service.dart';
 
 class HospitalAutomationScreen extends StatefulWidget {
   const HospitalAutomationScreen({
@@ -10,10 +11,12 @@ class HospitalAutomationScreen extends StatefulWidget {
     required this.repository,
     required this.member,
     this.stayId,
+    this.pushService,
   });
   final HospitalAutomationRepository repository;
   final ClinicMembership member;
   final String? stayId;
+  final HospitalPushService? pushService;
   @override
   State<HospitalAutomationScreen> createState() =>
       _HospitalAutomationScreenState();
@@ -23,11 +26,15 @@ class _HospitalAutomationScreenState extends State<HospitalAutomationScreen> {
   HospitalAutomationWorkspace? workspace;
   String? error;
   bool busy = false, opening = false;
+  bool pushBusy = false;
+  String? pushError;
+  List<Map<String, dynamic>> pushTargets = [];
   int generation = 0;
   @override
   void initState() {
     super.initState();
     load();
+    loadPushTargets();
   }
 
   @override
@@ -69,6 +76,85 @@ class _HospitalAutomationScreenState extends State<HospitalAutomationScreen> {
       if (mounted && current == generation) {
         setState(() => busy = false);
       }
+    }
+  }
+
+  Future<void> loadPushTargets() async {
+    final service = widget.pushService;
+    if (service == null) return;
+    try {
+      final targets = await service.targets(widget.member);
+      if (mounted) setState(() { pushTargets = targets; pushError = null; });
+    } catch (_) {
+      if (mounted) {
+        setState(() => pushError =
+            'No se pudieron consultar los destinos de aviso. Revisa la conexión y la versión del servidor.');
+      }
+    }
+  }
+
+  Future<bool> confirmPush(String title, String details) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(details),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(context, true),
+                child: const Text('Confirmar')),
+          ],
+        ),
+      ) ?? false;
+
+  Future<void> enablePush() async {
+    final service = widget.pushService;
+    if (service == null || pushBusy) return;
+    final confirmed = await confirmPush(
+      'Avisos en este teléfono',
+      'Acepto recibir avisos hospitalarios genéricos de esta clínica en este teléfono. '
+      'No incluyen datos del paciente ni confirman que se haya realizado el cuidado. '
+      'Puedo revocar este permiso aquí.',
+    );
+    if (!mounted || !confirmed) return;
+    setState(() { pushBusy = true; pushError = null; });
+    try {
+      await service.enable(widget.member);
+      await loadPushTargets();
+    } catch (_) {
+      if (mounted) {
+        setState(() => pushError =
+            'No se pudo activar este teléfono. Revisa permisos de notificación, conexión y acceso hospitalario.');
+      }
+    } finally {
+      if (mounted) setState(() => pushBusy = false);
+    }
+  }
+
+  Future<void> revokePush(String targetId, {bool thisDevice = false}) async {
+    final service = widget.pushService;
+    if (service == null || pushBusy) return;
+    final confirmed = await confirmPush(
+      'Revocar avisos',
+      'Este destino dejará de recibir nuevos avisos hospitalarios de la clínica.',
+    );
+    if (!mounted || !confirmed) return;
+    setState(() { pushBusy = true; pushError = null; });
+    try {
+      if (thisDevice) {
+        await service.disableThisDevice(widget.member);
+      } else {
+        await service.revoke(widget.member, targetId);
+      }
+      await loadPushTargets();
+    } catch (_) {
+      if (mounted) {
+        setState(() => pushError =
+            'No se pudo revocar el destino. Revisa conexión y sesión antes de salir.');
+      }
+    } finally {
+      if (mounted) setState(() => pushBusy = false);
     }
   }
 
@@ -277,6 +363,35 @@ class _HospitalAutomationScreenState extends State<HospitalAutomationScreen> {
                 onPressed: opening ? null : route,
                 child: const Text('Configurar responsables de avisos'),
               ),
+            if (widget.pushService != null) ...[
+              const SizedBox(height: 12),
+              const Text('Avisos al teléfono'),
+              Text(w.raw['runtime']?['external_delivery_enabled'] == true
+                  ? 'La entrega externa está habilitada en servidor.'
+                  : 'La entrega externa aún está apagada; registrar este teléfono prepara su destino.'),
+              if (pushError != null) Text(pushError!),
+              if (pushBusy) const LinearProgressIndicator(),
+              if (!widget.pushService!.enrolled(widget.member))
+                OutlinedButton(
+                  onPressed: pushBusy ? null : enablePush,
+                  child: const Text('Aceptar avisos en este teléfono'),
+                ),
+              for (final target in pushTargets)
+                ListTile(
+                  title: Text(target['label']?.toString() ?? 'Destino de aviso'),
+                  subtitle: Text(target['channel'] == 'whatsapp'
+                      ? 'WhatsApp · consentimiento ${target['consent_at']}'
+                      : 'Notificación al teléfono · consentimiento ${target['consent_at']}'),
+                  trailing: TextButton(
+                    onPressed: pushBusy ? null : () => revokePush(
+                      target['id'] as String,
+                      thisDevice: widget.pushService!.enrolled(widget.member) &&
+                          target['id'] == widget.pushService!.currentTargetId(widget.member),
+                    ),
+                    child: const Text('Revocar'),
+                  ),
+                ),
+            ],
             if (w.canCreate)
               FilledButton(
                 onPressed: opening ? null : order,
