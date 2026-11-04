@@ -2,13 +2,122 @@
   "version": 1,
   "especie": "gallina",
   "parametros": [
-    {"parametro": "comedero_tolva", "min": null, "max": null, "unidad": null, "fuente": null, "estado": "pendiente"},
-    {"parametro": "temperatura_por_edad", "min": null, "max": null, "unidad": null, "fuente": null, "estado": "pendiente"},
-    {"parametro": "presion_agua", "min": null, "max": null, "unidad": null, "fuente": null, "estado": "pendiente"}
+    {
+      "parametro": "comedero_tolva",
+      "min": null,
+      "max": null,
+      "unidad": null,
+      "fuente": null,
+      "estado": "pendiente"
+    },
+    {
+      "parametro": "temperatura_por_edad",
+      "min": null,
+      "max": null,
+      "unidad": null,
+      "fuente": null,
+      "estado": "pendiente"
+    },
+    {
+      "parametro": "presion_agua",
+      "min": null,
+      "max": null,
+      "unidad": null,
+      "fuente": null,
+      "estado": "pendiente"
+    }
   ],
   "incubacion": [
-    {"parametro": "volteo_angulo", "valor": "45", "unidad": "grados", "fuente": "Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)", "estado": "sin_verificar"},
-    {"parametro": "volteo_minimo", "valor": "8", "unidad": "veces_por_dia", "fuente": "Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)", "estado": "sin_verificar"},
-    {"parametro": "volteo_recomendado", "valor": "24", "unidad": "veces_por_dia", "fuente": "Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)", "estado": "sin_verificar"}
-  ]
+    {
+      "parametro": "volteo_angulo",
+      "valor": "45",
+      "unidad": "grados",
+      "fuente": "Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)",
+      "estado": "sin_verificar"
+    },
+    {
+      "parametro": "volteo_minimo",
+      "valor": "8",
+      "unidad": "veces_por_dia",
+      "fuente": "Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)",
+      "estado": "sin_verificar"
+    },
+    {
+      "parametro": "volteo_recomendado",
+      "valor": "24",
+      "unidad": "veces_por_dia",
+      "fuente": "Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)",
+      "estado": "sin_verificar"
+    }
+  ],
+  "revision_externa_20261104": {
+    "fecha": "2026-11-04",
+    "alcance": "Verificación externa contra literatura veterinaria y guías de manejo. No sustituye la validación del docente ni del proveedor; los estados originales se conservan.",
+    "hallazgos": [
+      {
+        "tema": "comedero_lineal_por_ave",
+        "valor_actual_csv": "3 cm (crianza) / 5 cm (desarrollo) / 7 cm (postura)",
+        "hallazgo": "Por debajo del mínimo del Manual MSD: >=5 cm (0-6 sem), >=6,5 cm (7-17 sem), >=8 cm (>=18 sem) de comedero recto por ave.",
+        "fuente": "Manual Veterinario MSD/Merck — Manejo de gallinas ponedoras",
+        "url": "https://www.merckvetmanual.com/es-us/aves-de-corral/nutrici%C3%B3n-y-manejo-ave-de-corral/manejo-de-gallinas-ponedoras",
+        "accion": "pendiente: confirmar con el docente si los apuntes usan otra métrica (p. ej. comedero circular) o corregir el CSV antes de subir a Supabase"
+      },
+      {
+        "tema": "vitrolero_aves_por_unidad",
+        "valor_actual_csv": "100 aves por unidad (nota: 4 L por cada 100 aves)",
+        "hallazgo": "Proveedor mexicano (JAT) indica que un vitrolero de 4 L sirve para ~60 aves del día 1 al 12; con 100 aves por vitrolero el agua quedaría corta.",
+        "fuente": "JAT Sistemas Agropecuarios — Bebedero vitrolero 4 L",
+        "url": "https://www.jat.com.mx/product/bebedero-vitrolero-4-l/",
+        "accion": "pendiente: revisar con proveedor; considerar 2 vitroleros por 100 pollitos"
+      },
+      {
+        "tema": "minitolva_capacidad",
+        "valor_actual_csv": "3,5–4 kg de alimento por cada 100 aves",
+        "hallazgo": "Sin confirmación independiente; el mercado ofrece tolvas de pre-inicio de ~2 kg.",
+        "fuente": null,
+        "url": null,
+        "accion": "pendiente: solicitar ficha técnica del proveedor"
+      },
+      {
+        "tema": "criadora_gas",
+        "valor_actual_csv": "1500–2500 pollitos por criadora, 40000 BTU",
+        "hallazgo": "Valores plausibles para criadoras comerciales estándar, pero sin ficha técnica citada.",
+        "fuente": null,
+        "url": null,
+        "accion": "pendiente: solicitar ficha técnica del proveedor"
+      },
+      {
+        "tema": "espacio_jaula_postura",
+        "valor_actual_csv": "450–550 cm2 por ave",
+        "hallazgo": "Correcto: coincide con la práctica comercial de jaulas convencionales y queda por encima del mínimo MSD (400 cm2 en >=18 semanas).",
+        "fuente": "Manual Veterinario MSD/Merck — Manejo de gallinas ponedoras",
+        "url": "https://www.merckvetmanual.com/es-us/aves-de-corral/nutrici%C3%B3n-y-manejo-ave-de-corral/manejo-de-gallinas-ponedoras",
+        "accion": "sin acción; conservar valor"
+      },
+      {
+        "tema": "volteo_recomendado_24_veces_dia",
+        "valor_actual": "24 veces por día",
+        "hallazgo": "Coincide con el estándar comercial: girar cada hora (24 veces/día) hasta el día 18.",
+        "fuente": "ScienceInsights — How often should eggs be turned in an incubator; Poultry Science (ScienceDirect, 2020)",
+        "url": "https://www.sciencedirect.com/science/article/pii/S0032579120303576",
+        "accion": "pendiente: validación del docente para pasar de sin_verificar a verificado"
+      },
+      {
+        "tema": "volteo_minimo_8_veces_dia",
+        "valor_actual": "8 veces por día",
+        "hallazgo": "Conservador y aceptable: las fuentes de extensión sugieren mínimos de 3 a 8 veces/día.",
+        "fuente": "ScienceInsights — How often should eggs be turned in an incubator",
+        "url": "https://scienceinsights.org/how-often-should-eggs-be-turned-in-an-incubator/",
+        "accion": "pendiente: validación del docente"
+      },
+      {
+        "tema": "volteo_angulo_45_grados",
+        "valor_actual": "45 grados",
+        "hallazgo": "Aclarar ambigüedad: el estándar es 45 grados por lado (arco total de 90 grados); si el apunte significara 45 grados de arco total, sería insuficiente.",
+        "fuente": "ScienceInsights — How often should eggs be turned in an incubator",
+        "url": "https://scienceinsights.org/how-often-should-eggs-be-turned-in-an-incubator/",
+        "accion": "pendiente: confirmar con el docente si 45 grados es por lado"
+      }
+    ]
+  }
 }
