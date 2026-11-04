@@ -92,7 +92,7 @@ void main() {
       repo.userId = null;
       repo.signInFailure = AuthApiException(
         'Invalid API key',
-        statusCode: 401,
+        statusCode: '401',
       );
       await model.start();
       await model.signIn('user@example.test', 'password');

@@ -185,7 +185,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   String _diagnosticCategory(Object exception) {
-    if (exception is AuthApiException && exception.statusCode == 401) {
+    if (exception is AuthApiException && exception.statusCode == '401') {
       return 'auth_invalid_api_key';
     }
     if (exception is AuthException) {
