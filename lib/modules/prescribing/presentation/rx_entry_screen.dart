@@ -43,6 +43,7 @@ class RxEntryScreen extends StatefulWidget {
 }
 
 class _RxEntryScreenState extends State<RxEntryScreen> {
+  final Map<String, String> optionQueries = {};
   late final Map<String, dynamic> data = Map<String, dynamic>.from(
     jsonDecode(jsonEncode(widget.initial)),
   );
@@ -148,6 +149,65 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
   }
 
   Widget field(RxField f) {
+    if (f.type == 'multi_select') {
+      final selected = (data[f.key] as List? ?? []).cast<String>();
+      final query = optionQueries[f.key]?.toLowerCase() ?? '';
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            decoration: InputDecoration(
+              labelText: f.label,
+              prefixIcon: const Icon(Icons.search),
+            ),
+            onChanged: (value) => setState(() => optionQueries[f.key] = value),
+          ),
+          for (final option in f.options.entries.where(
+            (e) => e.value.toLowerCase().contains(query),
+          ))
+            CheckboxListTile(
+              title: Text(option.value),
+              value: selected.contains(option.key),
+              onChanged: busy
+                  ? null
+                  : (checked) => setState(() {
+                      final next = [...selected];
+                      if (checked == true && !next.contains(option.key)) {
+                        next.add(option.key);
+                      }
+                      if (checked == false) next.remove(option.key);
+                      data[f.key] = next;
+                    }),
+            ),
+        ],
+      );
+    }
+    if (f.type == 'search_select') {
+      return Autocomplete<String>(
+        initialValue: TextEditingValue(text: f.options[data[f.key]] ?? ''),
+        optionsBuilder: (value) => value.text.trim().isEmpty
+            ? f.options.keys
+            : f.options.entries
+                  .where(
+                    (e) => e.value.toLowerCase().contains(
+                      value.text.toLowerCase(),
+                    ),
+                  )
+                  .map((e) => e.key),
+        displayStringForOption: (id) => f.options[id] ?? id,
+        onSelected: (id) => setState(() => data[f.key] = id),
+        fieldViewBuilder: (context, controller, focus, submit) => TextField(
+          controller: controller,
+          focusNode: focus,
+          enabled: !busy,
+          decoration: InputDecoration(
+            labelText: f.label,
+            prefixIcon: const Icon(Icons.search),
+          ),
+          onChanged: (_) => data.remove(f.key),
+        ),
+      );
+    }
     if (f.type == 'checkbox') {
       return CheckboxListTile(
         title: Text(f.label),
@@ -491,6 +551,8 @@ String rxError(Object error) {
         'La clasificación del producto no está verificada o cambió. Actualiza la receta.',
     'delegation_revoked_or_expired':
         'El permiso fue revocado o venció. No se emitió el documento.',
+    'vial_already_closed':
+        'El frasco ya está cerrado. Actualiza para consultar su conciliación; no se creó otro cierre.',
     'discrepancy_mvZ_note_required':
         'Hay discrepancia. El cierre requiere una nota del MVZ y conserva la diferencia.',
     'unresolved_incidence_requires_correction':
