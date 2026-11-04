@@ -569,7 +569,7 @@ void main() {
     expect(repo.writes, hasLength(1));
   });
 
-  testWidgets('uncertain credit sale cannot be reposted with changed data', (tester) async {
+  testWidgets('uncertain credit sale preserves operation after rejection on retry', (tester) async {
     final repo = Repo()..writeFailure = StateError('Synthetic network timeout');
     await tester.pumpWidget(
       MaterialApp(
@@ -627,6 +627,12 @@ void main() {
     expect(find.text('Verifica el resultado de la venta'), findsOneWidget);
     await tester.tap(find.text('No aparece; reintentar mismos datos'));
     await tester.pumpAndSettle();
+    // The original request may have committed despite its lost response. A
+    // deterministic rejection on this retry must not discard the same key.
+    repo.writeFailure = PostgrestException(
+      message: 'insufficient_stock',
+      code: 'P0001',
+    );
     await tapVisible(tester, find.text('Revisé cantidades de venta, lotes, receta y total a cobrar.'));
     await tapVisible(tester, find.text('Registrar venta con saldo'));
     expect(find.textContaining('No se confirmó el registro'), findsOneWidget);
