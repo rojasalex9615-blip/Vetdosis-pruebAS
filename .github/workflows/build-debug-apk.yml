@@ -28,13 +28,24 @@ jobs:
           SUPABASE_TEST_PUBLISHABLE_KEY: ${{ inputs.publishable_key }}
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, urllib.error, urllib.request
           from pathlib import Path
+          url = 'https://wtrelwtztkddfktrfdpb.supabase.co'
           key = os.environ['SUPABASE_TEST_PUBLISHABLE_KEY'].strip()
           if not key.startswith('sb_publishable_'):
               raise SystemExit('Se requiere una clave publicable de Supabase.')
+          request = urllib.request.Request(url + '/auth/v1/settings', headers={'apikey': key})
+          try:
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  json.load(response)
+          except urllib.error.HTTPError as error:
+              raise SystemExit(
+                  'El servidor rechazo la clave publicable (HTTP %d). '
+                  'Copia la clave sb_publishable_ vigente del proyecto de pruebas '
+                  'en Supabase: Settings > API Keys.' % error.code
+              )
           Path('supabase/config.test.local.json').write_text(json.dumps({
-              'SUPABASE_URL': 'https://wtrelwtztkddfktrfdpb.supabase.co',
+              'SUPABASE_URL': url,
               'SUPABASE_PUBLISHABLE_KEY': key,
               'SUPABASE_EXISTING_SCHEMA': True,
               'SUPABASE_GOOGLE_ENABLED': False,
