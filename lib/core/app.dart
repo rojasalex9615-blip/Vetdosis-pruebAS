@@ -640,7 +640,11 @@ class CoreShell extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (model.screen == 'Inicio')
-              const VetDosisBrand()
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: const VetDosisBrand(),
+              )
             else
               Text(model.screen, maxLines: 1, overflow: TextOverflow.ellipsis),
             if (auth?.active != null)

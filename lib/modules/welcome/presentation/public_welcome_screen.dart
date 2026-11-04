@@ -45,7 +45,7 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
 
   void _turn(int delta) {
     _controller.animateToPage(
-      (_page + delta).clamp(0, _pageCount - 1),
+      (_page + delta).clamp(0, _pageCount - 1).toInt(),
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOut,
     );
