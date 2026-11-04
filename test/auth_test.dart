@@ -103,6 +103,20 @@ void main() {
       expect(model.signedIn, isFalse);
     },
   );
+  test(
+    'Errores de red durante el acceso muestran el mensaje de conexión',
+    () async {
+      repo.userId = null;
+      repo.signInFailure = AuthRetryableFetchException('network unreachable');
+      await model.start();
+      await model.signIn('user@example.test', 'password');
+      expect(
+        model.error,
+        'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.',
+      );
+      expect(model.signedIn, isFalse);
+    },
+  );
   testWidgets(
     'Sin conexión configurada no aparece la clínica ni roles elegibles',
     (tester) async {

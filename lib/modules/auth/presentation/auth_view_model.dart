@@ -185,6 +185,9 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   String _diagnosticCategory(Object exception) {
+    if (exception is AuthRetryableFetchException) {
+      return 'network_error';
+    }
     if (exception is AuthApiException && exception.statusCode == '401') {
       return 'auth_invalid_api_key';
     }
