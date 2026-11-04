@@ -16,3 +16,7 @@ verify_jwt = false
 
 [functions.starter-ai]
 verify_jwt = false
+
+# The handler validates HOSPITAL_DISPATCH_SECRET before creating a service client.
+[functions.hospital-delivery]
+verify_jwt = false

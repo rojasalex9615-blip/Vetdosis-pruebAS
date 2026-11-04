@@ -48,7 +48,8 @@ def missing_managed_role(text):
     return None
 
 
-def run_restore(directory, passphrase, output, trial=False, client_extras=False):
+def run_restore(directory, passphrase, output, trial=False, client_extras=False,
+                storage_object_keys=None):
     validate_passphrase(passphrase)
     manifest=json.loads((directory/'manifest.json').read_text())
     archive=archive_path(directory,manifest)
@@ -142,6 +143,21 @@ def run_restore(directory, passphrase, output, trial=False, client_extras=False)
             if result.returncode: report['verification_queries_passed']=False;return report
             report['restored_counts']=json.loads(result.stdout)
             report['verification_queries_passed']=True
+            if storage_object_keys is not None:
+                metadata_sql="""select coalesce(json_agg(json_build_array(bucket_id,name)
+                  order by bucket_id,name),'[]'::json) from storage.objects"""
+                result=subprocess.run(['docker','exec','-i',name,'psql','-w','-h','127.0.0.1',
+                                       '-U',admin,'-d','restored_backup','-At','-v','ON_ERROR_STOP=1'],
+                                      input=metadata_sql.encode(),stdout=subprocess.PIPE,stderr=errors)
+                if result.returncode:
+                    report['storage_metadata_query_passed']=False
+                    return report
+                database_keys={tuple(item) for item in json.loads(result.stdout)}
+                archive_keys=set(storage_object_keys)
+                report['storage_metadata_query_passed']=True
+                report['storage_binary_objects_verified']=len(archive_keys)
+                report['storage_metadata_objects_restored']=len(database_keys)
+                report['storage_objects_match_database']=archive_keys==database_keys
             if trial:
                 from integration_bundle import bundle_sql
                 sql = bundle_sql()
