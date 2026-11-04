@@ -65,6 +65,41 @@ HospitalTask task(
   snoozedUntil: snooze == null ? null : DateTime.parse(snooze),
 );
 void main() {
+  test('team panels respect server sections and old dashboard contracts', () {
+    final adminModel = DashboardViewModel(member: member(ClinicRole.admin));
+    adminModel.agenda = {
+      'appointments': [],
+      'tasks': [],
+      'messages': [],
+    };
+    expect(adminModel.canShowTeamPanel('tasks'), isTrue);
+    expect(adminModel.canShowTeamPanel('messages'), isTrue);
+    adminModel.agenda = {
+      'tasks': [],
+      'messages': [],
+      'sections': {'tasks': false, 'messages': true},
+    };
+    expect(adminModel.canShowTeamPanel('tasks'), isFalse);
+    expect(adminModel.canShowTeamPanel('messages'), isTrue);
+    adminModel.agenda = null;
+    adminModel.errors['Agenda'] = 'No se pudo cargar';
+    expect(adminModel.canShowTeamPanel('tasks'), isTrue);
+    adminModel.dispose();
+
+    final personal = DashboardViewModel(
+      member: const ClinicMembership(
+        clinicId: 'personal-space',
+        clinicName: 'Espacio personal',
+        userId: 'person',
+        role: ClinicRole.estilista,
+        workspaceKind: 'personal',
+      ),
+    );
+    personal.agenda = {'tasks': [], 'messages': []};
+    expect(personal.canShowTeamPanel('tasks'), isFalse);
+    personal.dispose();
+  });
+
   test(
     'Partial failure preserves agenda and never invents zero stock',
     () async {
@@ -165,10 +200,12 @@ void main() {
     },
   );
   testWidgets(
-    'Mobile dashboard, grouped calculations, settings and floating navigation',
+    'Mobile dashboard, grouped calculations, settings and screen navigation',
     (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
+      tester.view.physicalSize = const Size(390, 1000);
       tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       SharedPreferences.setMockInitialValues({});
@@ -181,22 +218,37 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
-      expect(find.text('Cálculos').last, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Drawer),
+          matching: find.text('Cálculos'),
+        ),
+        findsNothing,
+      );
       expect(find.text('Planes'), findsNothing);
       expect(find.text('Estadísticas y respaldo'), findsNothing);
-      await tester.tap(find.text('Cálculos').last);
+      tester.state<ScaffoldState>(find.byType(Scaffold).first).closeDrawer();
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(NavigationDestination, 'Cálculos'));
       await tester.pumpAndSettle();
       expect(find.text('Cálculos clínicos').last, findsOneWidget);
+      await tester.ensureVisible(find.text('Cálculos clínicos').last);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Cálculos clínicos').last);
       await tester.pumpAndSettle();
       expect(model.screen, 'Cálculos clínicos');
-      await tester.tap(find.byTooltip('Asistente IA'));
+      // With no signed-in account, IA is not exposed in the AppBar.
+      expect(find.byTooltip('Asistente IA'), findsNothing);
+      model.navigate('Asistente IA');
       await tester.pumpAndSettle();
       expect(model.screen, 'Asistente IA');
-      await tester.tap(find.byTooltip('Ayuda y soporte'));
+      // Support and Settings are sections, not floating/AppBar actions.
+      expect(find.byTooltip('Ayuda y soporte'), findsNothing);
+      model.navigate('Ayuda y soporte');
       await tester.pumpAndSettle();
       expect(model.screen, 'Ayuda y soporte');
-      await tester.tap(find.byTooltip('Ajustes'));
+      expect(find.byTooltip('Ajustes'), findsNothing);
+      model.navigate('Ajustes');
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Plan y pagos de VetDosis'),
