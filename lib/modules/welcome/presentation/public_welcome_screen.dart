@@ -77,36 +77,50 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                   child: Row(
                     children: [
-                      if (_page > 0)
-                        TextButton(
-                          onPressed: () => _turn(-1),
-                          child: const Text('Anterior'),
-                        )
-                      else
-                        const SizedBox(width: 88),
-                      const Spacer(),
-                      for (var i = 0; i < _pageCount; i++)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 3),
-                          child: Icon(
-                            Icons.circle,
-                            size: i == _page ? 10 : 8,
-                            color: i == _page
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.outlineVariant,
-                          ),
+                      Flexible(
+                        child: _page > 0
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: TextButton(
+                                  onPressed: () => _turn(-1),
+                                  child: const Text('Anterior'),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (var i = 0; i < _pageCount; i++)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 3),
+                                child: Icon(
+                                  Icons.circle,
+                                  size: i == _page ? 10 : 8,
+                                  color: i == _page
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.outlineVariant,
+                                ),
+                              ),
+                          ],
                         ),
-                      const Spacer(),
-                      if (_page < _pageCount - 1)
-                        FilledButton.tonal(
-                          onPressed: () => _turn(1),
-                          child: const Text('Siguiente'),
-                        )
-                      else
-                        const SizedBox(width: 88),
+                      ),
+                      Flexible(
+                        child: _page < _pageCount - 1
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: FilledButton.tonal(
+                                  onPressed: () => _turn(1),
+                                  child: const Text('Siguiente'),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ],
                   ),
                 ),
@@ -127,9 +141,9 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
   }
 
   List<Widget> _welcomeChildren(ThemeData theme) => [
-    const SizedBox(height: 20),
+    const SizedBox(height: 8),
     const VetDosisBrand(large: true),
-    const SizedBox(height: 20),
+    const SizedBox(height: 14),
     Text(
       'Bienvenido a VetDosis',
       textAlign: TextAlign.center,
@@ -141,7 +155,7 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       textAlign: TextAlign.center,
       style: theme.textTheme.titleMedium,
     ),
-    const SizedBox(height: 24),
+    const SizedBox(height: 20),
     FilledButton.icon(
       onPressed: () => _openAccess(context),
       icon: const Icon(Icons.login),
@@ -154,7 +168,7 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
           : () => _openAccess(context, register: true),
       child: const Text('Crear cuenta'),
     ),
-    const SizedBox(height: 24),
+    const SizedBox(height: 16),
   ];
 
   List<Widget> _descriptionChildren(ThemeData theme) => [

@@ -50,10 +50,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 const VetDosisBrand(large: true),
                 const SizedBox(height: 18),
                 Text(
-                  model?.signedIn == true
-                      ? 'Tu clínica'
-                      : model != null && model.recoveringPassword
+                  _reset || model?.recoveringPassword == true
                       ? 'Recuperar acceso'
+                      : model?.signedIn == true
+                      ? 'Tu clínica'
                       : _register
                       ? 'Registro de usuario'
                       : 'Inicio de sesión',

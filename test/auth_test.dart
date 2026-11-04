@@ -126,6 +126,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Anterior'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Crear cuenta'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Crear cuenta'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
