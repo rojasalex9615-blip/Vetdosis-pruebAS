@@ -1,11 +1,9 @@
 import 'team_duty_screen.dart';
 import '../../../core/widgets/neu_identity.dart';
-import '../../../core/widgets/workspace_panel.dart';
 import '../../permissions/domain/permission_repository.dart';
 import '../../permissions/presentation/permission_screen.dart';
 import '../domain/auth_repository.dart';
 import 'team_screen.dart';
-import '../../welcome/presentation/product_screen.dart';
 import 'package:flutter/material.dart';
 import '../domain/clinic_membership.dart';
 import 'auth_view_model.dart';
@@ -48,31 +46,18 @@ class _AuthScreenState extends State<AuthScreen> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                if (Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true) ...[
-                  const SizedBox(height: 12),
-                  const VetDosisBrand(large: true),
-                  const SizedBox(height: 20),
-                ],
+                const SizedBox(height: 8),
+                const VetDosisBrand(large: true),
+                const SizedBox(height: 18),
                 Text(
-                  model?.signedIn == true ? 'Tu clínica' : 'Bienvenido',
+                  _reset || model?.recoveringPassword == true
+                      ? 'Recuperar acceso'
+                      : model?.signedIn == true
+                      ? 'Tu clínica'
+                      : _register
+                      ? 'Registro de usuario'
+                      : 'Inicio de sesión',
                   style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Conoce VetDosis Pro'),
-                        ),
-                        body: const SingleChildScrollView(
-                          padding: EdgeInsets.all(20),
-                          child: ProductScreen(),
-                        ),
-                      ),
-                    ),
-                  ),
-                  child: const Text('Herramientas, planes y costos'),
                 ),
                 const SizedBox(height: 12),
                 if (!widget.configured) ...[
@@ -131,10 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ] else if (model.loadingMemberships) ...[
                   const Center(child: CircularProgressIndicator()),
                 ] else if (!model.signedIn) ...[
-                  const Text(
-                    'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
                   Form(
                     key: _form,
                     child: Column(
