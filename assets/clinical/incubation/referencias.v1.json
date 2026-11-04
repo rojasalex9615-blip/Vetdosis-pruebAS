@@ -390,8 +390,28 @@
     "perfil completo de temperatura y humedad de la nacedora por máquina",
     "base de cada concentración ppm/% y prospecto comercial vigente en México",
     "fecha/referencia completa de diapositivas y revisión MVZ/docente",
-    "resolver discrepancia 35 °C vs 99.5–100 °F en diapositiva",
+    "resolver discrepancia 35 °C vs 99.5–100 °F en diapositiva (verificación externa 2026-11-04: valor correcto 37,5–37,8 °C = 99,5–100 °F; 35 °C es errata de la diapositiva; fuentes: PAS_TEMPERATURE_2012 ya citada y https://scienceinsights.org/what-temperature-should-you-incubate-chicken-eggs/)",
     "completar comedero tolva, temperatura de crianza por edad y presión de agua según proveedor; no corresponden a temperatura de incubación"
   ],
-  "uso_en_app": "Referencias de consulta sin verificar; no parámetros operativos ni diluciones preseleccionadas."
+  "uso_en_app": "Referencias de consulta sin verificar; no parámetros operativos ni diluciones preseleccionadas.",
+  "revision_externa_20261104": {
+    "fecha": "2026-11-04",
+    "alcance": "Verificación externa de las referencias de incubación contra literatura; los estados sin_verificar se conservan.",
+    "hallazgos": [
+      {
+        "tema": "curva_perdida_peso",
+        "hallazgo": "El punto final de la curva (12,8% al día 18) cae dentro del rango 11–13% documentado por Pas Reform para los primeros 18 días. Curva coherente.",
+        "fuente": "Pas Reform — Perfil óptimo de pérdida de peso durante la incubación (Dr. Marleen Boerjan)",
+        "url": "https://www.pasreform.com/es/knowledge/86/optimal-weight-loss-profiling-during-incubation",
+        "estado": "coincide; la curva sigue sin_verificar hasta validación del docente"
+      },
+      {
+        "tema": "temperatura_incubacion",
+        "hallazgo": "Confirmado: 99,5–100 °F equivale a 37,5–37,8 °C en incubadoras de aire forzado. El valor de 35 °C de la diapositiva es errata.",
+        "fuente": "Pas Reform — Finding optimum incubation temperature (ya citada como PAS_TEMPERATURE_2012)",
+        "url": "https://www.pasreform.com/us/knowledge/62/finding-optimum-incubation-temperature-1",
+        "estado": "discrepancia resuelta en la verificación; pendiente corregir la diapositiva original"
+      }
+    ]
+  }
 }
