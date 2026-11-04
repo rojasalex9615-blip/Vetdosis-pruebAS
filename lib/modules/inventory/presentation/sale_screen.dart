@@ -1,16 +1,159 @@
+import 'dart:convert';
+import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/plan_errors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../doses/domain/quantity.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/inventory_models.dart';
 import '../domain/inventory_repository.dart';
+import 'barcode_screen.dart';
+import 'credit_accounts_screen.dart';
 
 String inventoryError(Object error) {
   final planMessage = planActionError(error);
   if (planMessage != null) return planMessage;
+  if (error is PostgrestException &&
+      (error.code == 'PGRST202' || error.code == '42883')) {
+    return 'Falta una función de base de datos para esta versión. Comprueba las migraciones SQL.';
+  }
+  if (error is ArgumentError) {
+    return 'La app aún no permite esta operación. Actualiza a la beta más reciente.';
+  }
+  final text = error.toString();
+  const messages = {
+    'explicit_permission_required':
+        'Falta un permiso vigente para esta acción. Actualiza o consulta con la administración.',
+    'inventory_read_permission_required':
+        'Tu acceso de consulta a inventario no está vigente.',
+    'cash_collection_permission_required':
+        'Cobrar requiere un permiso vigente de caja.',
+    'verified_dispensing_permission_required':
+        'Dispensar requiere MVZ habilitado y permiso vigente; cobrar una entrega ya registrada es un acto separado.',
+    'dispensing_limit_reauthorization_required':
+        'El MVZ responsable debe revisar y autorizar nuevamente la cantidad; el límite histórico no concede autoridad.',
+    'dispensing_limit_authority_changed':
+        'La autorización de cantidad perdió vigencia. Actualiza y solicita revisión del MVZ responsable.',
+    'legacy_delivery_delegation_disabled':
+        'Las delegaciones antiguas no habilitan dispensación. Se requiere habilitación profesional y permiso por persona.',
+    'controlled_or_unverified_stock_adjustment_denied':
+        'Este producto controlado o sin clasificación verificada no admite ajustes libres.',
+    'dispensing_quantity_authorization_required':
+        'El MVZ responsable debe autorizar la cantidad total de stock a dispensar para esta receta.',
+    'dispensing_authorized_quantity_exceeded':
+        'La cantidad supera el total autorizado para esta receta, incluyendo ventas anteriores.',
+    'application_already_paid':
+        'Esta aplicación ya tiene un cobro activo. Actualiza antes de cobrar.',
+    'delivery_already_paid': 'Esta entrega ya tiene un cobro activo.',
+    'application_tariff_required':
+        'El administrador debe configurar el precio por aplicación.',
+    'use_current_application_record':
+        'Usa la corrección vigente del registro clínico.',
+    'expired_lot_blocked':
+        'Lote caducado o sin caducidad exigida; dispensación bloqueada.',
+    'insufficient_stock':
+        'El stock cambió o no alcanza. Actualiza el inventario.',
+    'enabled_product_lot_required':
+        'Selecciona un lote activo para cada producto antes de registrar el saldo.',
+    'sale_lines_required':
+        'Agrega al menos un producto o servicio a la venta.',
+    'sale_price_changed': 'El precio cambió. Actualiza antes de cobrar.',
+    'sale_total_changed':
+        'El total no coincide. Revisa el carrito antes de cobrar.',
+    'service_version_changed':
+        'El servicio cambió. Vuelve a abrir Caja y revisa su precio.',
+    'price_below_service_commission':
+        'El nuevo precio del catálogo no puede ser menor que la comisión fija configurada.',
+    'catalog_service_line_invalid':
+        'Un servicio del catálogo aparece repetido o tiene datos inválidos.',
+    'closed_shift': 'El turno está cerrado. Abre un turno nuevo.',
+    'verified_medication_reference_required':
+        'Falta clasificación verificada de la presentación comercial. No se dispensa.',
+    'quantified_dispensing_professional_only':
+        'Solo un MVZ habilitado puede dispensar este producto.',
+    'issued_matching_prescription_required':
+        'Selecciona una receta emitida de esta presentación exacta.',
+    'ordinary_dispensing_delegation_required':
+        'Se requiere permiso vigente del MVZ responsable para este caso.',
+    'whole_package_required':
+        'La venta por envase requiere una cantidad entera.',
+    'cash_discrepancy_reason_required':
+        'Explica la diferencia entre efectivo esperado y contado.',
+    'product_revision_conflict_or_legacy':
+        'El producto cambió o necesita revisión de sus saldos anteriores.',
+    'legacy_stock_reconciliation_required':
+        'El stock anterior no coincide con los lotes; requiere conciliación antes de habilitarlo.',
+    'inventory_admin_required':
+        'Esta operación requiere administrador de la clínica.',
+    'controlled_reversal_professional_only':
+        'Este reverso requiere un administrador con habilitación profesional.',
+    'vial_inventory_identity_mismatch':
+        'El frasco, producto, lote o unidad no coinciden.',
+    'reorder_below_minimum':
+        'El punto de reorden debe ser igual o mayor al stock mínimo.',
+    'operation_content_changed':
+        'La operación anterior tenía otros datos. Actualiza y vuelve a revisar.',
+    'invoice_reversed_sale':
+        'No se puede solicitar factura de una venta revertida.',
+    'invoice_fiscal_data_invalid':
+        'Revisa RFC, régimen, código postal, uso de CFDI y correo.',
+    'invoice_request_already_processed':
+        'Esta solicitud de factura ya fue procesada.',
+  };
+  for (final e in messages.entries) {
+    if (text.contains(e.key)) return e.value;
+  }
   return 'No se pudo completar la operación. Comprueba conexión y permisos antes de reintentar.';
+}
+
+bool isConfirmedCreditRejection(Object error) {
+  if (error is FormatException || error is ArgumentError) return true;
+  if (planActionError(error) != null) return true;
+  final text = error is PostgrestException
+      ? error.message.toLowerCase()
+      : error.toString().toLowerCase();
+  const confirmedCodes = [
+    'explicit_permission_required',
+    'inventory_read_permission_required',
+    'cash_collection_permission_required',
+    'verified_dispensing_permission_required',
+    'dispensing_limit_reauthorization_required',
+    'dispensing_limit_authority_changed',
+    'legacy_delivery_delegation_disabled',
+    'dispensing_quantity_authorization_required',
+    'dispensing_authorized_quantity_exceeded',
+    'application_already_paid',
+    'delivery_already_paid',
+    'application_tariff_required',
+    'use_current_application_record',
+    'expired_lot_blocked',
+    'insufficient_stock',
+    'enabled_product_lot_required',
+    'sale_lines_required',
+    'sale_price_changed',
+    'sale_total_changed',
+    'service_version_changed',
+    'price_below_service_commission',
+    'catalog_service_line_invalid',
+    'closed_shift',
+    'verified_medication_reference_required',
+    'quantified_dispensing_professional_only',
+    'issued_matching_prescription_required',
+    'ordinary_dispensing_delegation_required',
+    'whole_package_required',
+    'product_revision_conflict_or_legacy',
+    'legacy_stock_reconciliation_required',
+    'inventory_admin_required',
+    'controlled_reversal_professional_only',
+    'vial_inventory_identity_mismatch',
+    'reorder_below_minimum',
+  ];
+  return confirmedCodes.any(text.contains);
 }
 
 class SaleScreen extends StatefulWidget {
@@ -22,15 +165,34 @@ class SaleScreen extends StatefulWidget {
     required this.prescriptions,
     required this.staff,
     required this.admin,
+    this.canUpdateCatalog = false,
+    this.creditSupported = false,
+    this.actor,
+    this.services = const [],
+    this.catalogUnavailable = false,
+    this.clinicName = 'Clínica veterinaria',
     this.charges = const [],
     this.deliveries = const [],
     this.acts = const [],
+    this.scanBarcode,
+    this.member,
+    this.canReturn = false,
   });
   final InventoryRepository repository;
   final String shift;
   final List<Map<String, dynamic>> products, prescriptions, staff;
   final bool admin;
+  final bool canUpdateCatalog;
+  final bool creditSupported;
+  final String? actor;
+  final List<Map<String, dynamic>> services;
+  final bool catalogUnavailable;
+  final String clinicName;
   final List<Map<String, dynamic>> charges, deliveries, acts;
+  @visibleForTesting
+  final Future<String?> Function(BuildContext context)? scanBarcode;
+  final ClinicMembership? member;
+  final bool canReturn;
   @override
   State<SaleScreen> createState() => _SaleScreenState();
 }
@@ -38,61 +200,133 @@ class SaleScreen extends StatefulWidget {
 class _SaleScreenState extends State<SaleScreen> {
   final lines = <Map<String, dynamic>>[];
   String method = 'efectivo', operation = newOperationId();
-  String cashInput = '';
-  String? error;
-  bool busy = false, reviewed = false;
+  String? error, scanFeedback;
+  bool busy = false, reviewed = false, credit = false;
+  bool creditOutcomeUncertain = false;
+  final initialAmount = TextEditingController(text: '0');
+  final debtor = TextEditingController();
+  String? creditRetryKey, creditOperation;
+  List<Map<String, dynamic>>? creditRetryLines;
+  String? creditRetryMethod, creditRetryInitialAmount, creditRetryDebtor;
+  bool allowPopAfterVerifiedSale = false;
+  @override
+  void dispose() {
+    initialAmount.dispose();
+    debtor.dispose();
+    super.dispose();
+  }
 
+  bool get creditEligible => lines.every(
+    (line) =>
+        line['charge_id'] == null &&
+        line['delivery_id'] == null &&
+        (line['kind'] == 'servicio' ||
+            widget.products.any(
+              (product) =>
+                  product['id'] == line['item_id'] &&
+                  product['m8_kind'] == 'producto',
+            )),
+  );
   Money get total => lines.fold(
     Money(BigInt.zero),
-    (a, l) => a + Money.parse(l['price'] as String).times(Quantity.parse(l['quantity'] as String)),
+    (a, l) =>
+        a +
+        Money.parse(
+          l['price'] as String,
+        ).times(Quantity.parse(l['quantity'] as String)),
   );
-
-  Money? get cashReceived {
-    if (cashInput.isEmpty) return null;
-    try {
-      return Money.parse(cashInput.replaceAll(',', '.'));
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Money? get change {
-    final received = cashReceived;
-    if (received == null) return null;
-    return Money(received.cents - total.cents);
-  }
-
   void changed() {
     reviewed = false;
     operation = newOperationId();
-    error = null;
+    scanFeedback = null;
+    // An uncertain credit-sale result survives edits until the same operation
+    // is retried or the account is verified; never silently clear the warning.
+    if (!creditOutcomeUncertain) error = null;
   }
 
-  void onKey(String key) {
-    setState(() {
-      if (key == 'C') {
-        cashInput = '';
-      } else if (key == '⌫') {
-        if (cashInput.isNotEmpty) {
-          cashInput = cashInput.substring(0, cashInput.length - 1);
-        }
-      } else if (key == '.') {
-        if (!cashInput.contains('.')) {
-          cashInput = cashInput.isEmpty ? '0.' : '$cashInput.';
-        }
-      } else {
-        final parts = cashInput.split('.');
-        if (parts.length == 2 && parts[1].length >= 2) return;
-        cashInput = (cashInput == '0') ? key : '$cashInput$key';
-      }
-      error = null;
-    });
+  Future<void> scanProduct() async {
+    final scanFn = widget.scanBarcode;
+    final String? code;
+    if (scanFn != null) {
+      code = await scanFn(context);
+    } else {
+      code = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (_) => const BarcodeScreen()),
+      );
+    }
+    if (!mounted || code == null) return;
+    await addByCode(code);
+  }
+
+  Future<void> enterBarcode() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Ingresar código de barras'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Código del producto'),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Buscar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (!mounted || code == null || code.trim().isEmpty) return;
+    await addByCode(code);
+  }
+
+  Future<void> addByCode(String code) async {
+    final normalized = code.trim();
+    final matches = widget.products
+        .where(
+          (p) =>
+              p['m8_enabled'] == true &&
+              p['active'] == true &&
+              (p['codigo_barras']?.toString().trim() == normalized ||
+                  p['barcode']?.toString().trim() == normalized),
+        )
+        .toList();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (matches.length != 1) {
+      final message = matches.isEmpty
+          ? 'No encontré un producto activo con el código escaneado. Revisa el código de barras en inventario.'
+          : 'El código de barras está asignado a más de un producto. Corrige el inventario antes de vender.';
+      setState(() => scanFeedback = message);
+      // Mostrar solo el resultado más reciente del escáner.
+      messenger.clearSnackBars();
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
+    // Un escaneo válido sustituye cualquier aviso de un escaneo anterior.
+    messenger.clearSnackBars();
+    setState(() => scanFeedback = null);
+    // La venta sigue el flujo existente: lote, cantidad, revisión y cobro.
+    // Escanear por sí solo no modifica el inventario.
+    await addProduct(matches.single);
   }
 
   Future<void> addProduct(Map<String, dynamic> p) async {
     final lots = (p['lots'] as List)
         .map((e) => Map<String, dynamic>.from(e))
-        .where((l) => l['expired'] != true && Quantity.parse(l['cantidad'] as String).positive)
+        .where(
+          (l) =>
+              l['expired'] != true &&
+              Quantity.parse(l['cantidad'] as String).positive,
+        )
         .toList();
     final rx = widget.prescriptions
         .where((r) => r['product_version_id'] == p['medication_version_id'])
@@ -140,6 +374,25 @@ class _SaleScreenState extends State<SaleScreen> {
               throw const FormatException('Cantidad entera por envase.');
             }
             final lot = lots.firstWhere((l) => l['id'] == d['lot']);
+            final already = lines
+                .where((l) => l['lot_id'] == lot['id'])
+                .fold(
+                  Quantity.parse('0'),
+                  (a, l) => Quantity(
+                    a.n * Quantity.parse(l['quantity']).d +
+                        Quantity.parse(l['quantity']).n * a.d,
+                    a.d * Quantity.parse(l['quantity']).d,
+                  ),
+                );
+            if (Quantity(
+                  already.n * q.d + q.n * already.d,
+                  already.d * q.d,
+                ).compareTo(Quantity.parse(lot['cantidad'])) >
+                0) {
+              throw const FormatException(
+                'El lote no alcanza para el carrito.',
+              );
+            }
             setState(() {
               lines.add({
                 'kind': 'producto',
@@ -168,26 +421,103 @@ class _SaleScreenState extends State<SaleScreen> {
           title: 'Servicio manual',
           fields: [
             const RxField('name', 'Servicio', required: true),
-            const RxField('quantity', 'Cantidad', type: 'quantity', required: true),
-            const RxField('price', 'Precio unitario MXN', required: true),
-            const RxField('cost', 'Costo total capturado MXN', required: true),
-            const RxField('commission', 'Comisión total capturada MXN', required: true),
-            RxField(
-              'professional_id',
-              'Profesional de la clínica',
-              type: 'select',
-              options: {
-                for (final s in widget.staff)
-                  s['id'] as String: '${s['label'] ?? s['id']} · ${s['role']}',
-              },
+            const RxField(
+              'quantity',
+              'Cantidad',
+              type: 'quantity',
+              required: true,
             ),
+            const RxField('price', 'Precio unitario MXN', required: true),
+            const RxField('cost', 'Costo TOTAL capturado MXN', required: true),
           ],
           submit: (d, _) async {
-            for (final key in ['price', 'cost', 'commission']) {
+            for (final key in ['price', 'cost']) {
               d[key] = Money.parse(d[key] as String).decimal;
             }
             setState(() {
-              lines.add({...d, 'kind': 'servicio', 'display': d['name']});
+              lines.add({
+                ...d,
+                'commission': '0.00',
+                'kind': 'servicio',
+                'display': d['name'],
+              });
+              changed();
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> addCatalogService(Map<String, dynamic> service) async {
+    if (lines.any((line) => line['catalog_service_id'] == service['id'])) {
+      setState(
+        () => error =
+            'Ese servicio ya está en la nota. Elimínalo para cambiar su precio.',
+      );
+      return;
+    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => RxEntryScreen(
+          title: '${service['name']} · precio para esta venta',
+          initial: {
+            'price': '${service['price']}',
+            'quantity': '1',
+            'cost': '0',
+          },
+          fields: [
+            const RxField(
+              'quantity',
+              'Cantidad',
+              type: 'quantity',
+              required: true,
+            ),
+            const RxField(
+              'price',
+              'Precio unitario de esta venta MXN',
+              required: true,
+            ),
+            const RxField('cost', 'Costo TOTAL interno MXN', required: true),
+            RxField(
+              'price_mode',
+              'Qué hacer con el precio del catálogo',
+              type: 'select',
+              required: true,
+              options: {
+                'solo_venta': 'Usar solo en esta venta',
+                if (widget.canUpdateCatalog)
+                  'actualizar_catalogo':
+                      'Actualizar precio para ventas futuras',
+              },
+            ),
+          ],
+          submit: (data, _) async {
+            final price = Money.parse(data['price'] as String);
+            if (price.cents <= BigInt.zero) {
+              throw const FormatException('El precio debe ser mayor que cero.');
+            }
+            final cost = Money.parse(data['cost'] as String);
+            final quantity = Quantity.parse(data['quantity'] as String);
+            if (!quantity.positive) {
+              throw const FormatException(
+                'La cantidad debe ser mayor que cero.',
+              );
+            }
+            setState(() {
+              lines.add({
+                'kind': 'servicio',
+                'catalog_service_id': service['id'],
+                'catalog_service_version': service['version'],
+                'catalog_price_mode': data['price_mode'],
+                'name': service['name'],
+                'display': service['name'],
+                'quantity': data['quantity'],
+                'price': price.decimal,
+                'cost': cost.decimal,
+                'commission': '0.00',
+              });
               changed();
             });
           },
@@ -197,12 +527,17 @@ class _SaleScreenState extends State<SaleScreen> {
   }
 
   Future<void> post() async {
+    // Once an earlier request has an uncertain result, even a later server
+    // rejection cannot prove that the original transaction did not commit.
+    final retryingUncertainCredit = credit && creditOutcomeUncertain;
     setState(() {
       busy = true;
-      error = null;
+      if (!creditOutcomeUncertain) error = null;
     });
+    var writeAttempted = false;
+    var writeSucceeded = false;
     try {
-      await widget.repository.write('inv_sale_post', {
+      final args = <String, dynamic>{
         'p_shift': widget.shift,
         'p_method': method,
         'p_lines': [
@@ -213,526 +548,568 @@ class _SaleScreenState extends State<SaleScreen> {
               ..remove('unit'),
         ],
         'p_expected_total': total.decimal,
-        'p_operation': operation,
-      });
-      if (mounted) Navigator.pop(context, true);
+      };
+      if (creditOutcomeUncertain && !credit) {
+        throw const FormatException(
+          'El resultado de la venta con saldo anterior sigue sin confirmarse. Reactiva la venta con saldo y reintenta exactamente los mismos datos, o verifica la cuenta antes de continuar.',
+        );
+      }
+      if (credit) {
+        if (!creditEligible) {
+          throw const FormatException(
+            'Los abonos de esta versión admiten productos no farmacológicos y servicios; excluyen medicamentos, aplicaciones y entregas clínicas.',
+          );
+        }
+        final initial = Money.parse(initialAmount.text);
+        if (initial.cents >= total.cents || debtor.text.trim().isEmpty) {
+          throw const FormatException(
+            'El abono debe ser menor al total. Indica a quién corresponde el saldo.',
+          );
+        }
+        args.addAll({
+          'p_initial_amount': initial.decimal,
+          'p_debtor': debtor.text.trim(),
+          'p_actor': widget.actor,
+        });
+        final key = jsonEncode(args);
+        if (creditOutcomeUncertain && key != creditRetryKey) {
+          throw const FormatException(
+            'El resultado de la venta con saldo anterior sigue sin confirmarse. No cambies los datos; reintenta exactamente la misma operación o verifica la cuenta antes de continuar.',
+          );
+        }
+        if (key != creditRetryKey) {
+          creditRetryKey = key;
+          creditOperation = newOperationId();
+          creditRetryLines = lines
+              .map((line) => Map<String, dynamic>.from(line))
+              .toList();
+          creditRetryMethod = method;
+          creditRetryInitialAmount = initialAmount.text;
+          creditRetryDebtor = debtor.text;
+        }
+      }
+      args['p_operation'] = credit ? creditOperation : operation;
+      writeAttempted = true;
+      final saleId = await widget.repository.write(
+        credit
+            ? 'inv_sale_credit_post'
+            : lines.any((line) => line['catalog_service_id'] != null)
+            ? 'inv_catalog_service_sale_post'
+            : 'inv_sale_post',
+        args,
+      );
+      writeSucceeded = true;
+      if (mounted) {
+        setState(() {
+          creditOutcomeUncertain = false;
+          creditRetryKey = null;
+          creditOperation = null;
+          creditRetryLines = null;
+          creditRetryMethod = null;
+          creditRetryInitialAmount = null;
+          creditRetryDebtor = null;
+          error = null;
+          scanFeedback = null;
+        });
+        await receiptActions('$saleId');
+        if (mounted) Navigator.pop(context, true);
+      }
     } catch (e) {
-      if (mounted) setState(() => error = inventoryError(e));
+      final confirmedRejection =
+          credit &&
+          writeAttempted &&
+          !writeSucceeded &&
+          isConfirmedCreditRejection(e);
+      if (mounted) {
+        setState(() {
+          if (confirmedRejection && !retryingUncertainCredit) {
+            // A deterministic rejection on a first attempt permits a fresh
+            // operation. It cannot clear an operation already known uncertain.
+            creditOutcomeUncertain = false;
+            creditRetryKey = null;
+            creditOperation = null;
+            creditRetryLines = null;
+            creditRetryMethod = null;
+            creditRetryInitialAmount = null;
+            creditRetryDebtor = null;
+          } else if (credit && writeAttempted && !writeSucceeded) {
+            creditOutcomeUncertain = true;
+          }
+          error = credit &&
+                  writeAttempted &&
+                  !writeSucceeded &&
+                  (retryingUncertainCredit || !confirmedRejection)
+              ? 'No se confirmó el registro. Revisa las cuentas antes de iniciar otra venta; reintentar los mismos datos conserva la operación.'
+              : e is FormatException
+              ? e.message
+              : inventoryError(e);
+        });
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
   }
 
-  String get methodLabel => switch (method) {
-        'efectivo' => 'Efectivo',
-        'tarjeta' => 'Tarjeta',
-        'transferencia' => 'Transferencia',
-        _ => method,
-      };
-
-  Widget _methodChip(String value, String label, IconData icon) {
-    final selected = method == value;
-    final theme = Theme.of(context);
-    const accent = Color(0xFF2BBBAD);
-    return Expanded(
-      child: Material(
-        color: selected
-            ? accent.withValues(alpha: 0.18)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: busy
-              ? null
-              : () => setState(() {
-                    method = value;
-                    changed();
-                  }),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: selected ? accent : theme.colorScheme.onSurfaceVariant,
+  Future<void> receiptActions(String saleId) async {
+    try {
+      final bytes = await buildReceipt(saleId);
+      if (!mounted) return;
+      final action = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Venta registrada'),
+          content: Text(
+            'Folio: $saleId\nPuedes imprimir o compartir la nota en PDF por WhatsApp.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'close'),
+              child: const Text('Terminar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'print'),
+              child: const Text('Imprimir nota'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, 'share'),
+              child: const Text('Compartir · WhatsApp'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'invoice'),
+              child: const Text('Solicitar factura'),
+            ),
+          ],
+        ),
+      );
+      if (action == 'print') {
+        await Printing.layoutPdf(onLayout: (_) async => bytes);
+      } else if (action == 'share') {
+        await Printing.sharePdf(
+          bytes: bytes,
+          filename: 'nota-venta-$saleId.pdf',
+        );
+      } else if (action == 'invoice' && mounted) {
+        await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RxEntryScreen(
+              title: 'Solicitud de factura · $saleId',
+              fields: const [
+                RxField(
+                  'fiscal_name',
+                  'Nombre o razón social fiscal',
+                  required: true,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? accent : null,
-                  ),
+                RxField('rfc', 'RFC', required: true),
+                RxField(
+                  'fiscal_regime',
+                  'Régimen fiscal (3 dígitos)',
+                  required: true,
                 ),
+                RxField('postal_code', 'Código postal fiscal', required: true),
+                RxField(
+                  'cfdi_use',
+                  'Uso de CFDI (clave de 3 caracteres)',
+                  required: true,
+                ),
+                RxField('email', 'Correo para enviar CFDI', required: true),
               ],
+              submit: (data, _) async {
+                try {
+                  await widget.repository.write('inv_invoice_request', {
+                    'p_sale': saleId,
+                    'p_data': data,
+                  });
+                } catch (e) {
+                  throw FormatException(inventoryError(e));
+                }
+              },
             ),
           ),
+        );
+      }
+    } catch (_) {
+      // La venta ya fue registrada; un fallo al crear o compartir el PDF no la revierte.
+    }
+  }
+
+  Future<Uint8List> buildReceipt(String saleId) async {
+    final font = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/DejaVuSans.ttf'),
+    );
+    final pdf = pw.Document(
+      theme: pw.ThemeData.withFont(base: font, bold: font),
+    );
+    pdf.addPage(
+      pw.Page(
+        build: (_) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              widget.clinicName,
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              'Nota de venta',
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text('Folio: $saleId'),
+            pw.Text('Fecha: ${DateTime.now().toLocal()}'),
+            pw.SizedBox(height: 16),
+            for (final line in lines)
+              pw.Text(
+                '${line['display']} · ${line['quantity']} × ${Money.parse(line['price'] as String).display} = ${Money.parse(line['price'] as String).times(Quantity.parse(line['quantity'] as String)).display}',
+              ),
+            pw.Divider(),
+            pw.Text(
+              'Total a pagar: ${total.display}',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            if (credit) ...[
+              pw.Text(
+                'Cobrado ahora: ${Money.parse(initialAmount.text).display}',
+              ),
+              pw.Text(
+                'Saldo pendiente: ${(total - Money.parse(initialAmount.text)).display}',
+              ),
+              pw.Text('Cuenta: ${debtor.text.trim()}'),
+            ],
+            pw.Text('Método de pago: $method'),
+            pw.Text('Nota interna de venta. No es factura fiscal.'),
+          ],
         ),
       ),
     );
+    return pdf.save();
   }
 
-  Widget _cartLine(int index) {
-    final line = lines[index];
-    final lineTotal = Money.parse(line['price'] as String)
-        .times(Quantity.parse(line['quantity'] as String));
-    final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+  Future<void> resolveUncertainCreditSale() async {
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Verifica el resultado de la venta'),
+        content: const Text(
+          'La respuesta del servidor no confirmó si la venta con saldo quedó registrada. '
+          'Revisa manualmente el historial de ventas y la cuenta. Puedes abrir Cuentas y abonos '
+          'sin cerrar esta venta; esta pantalla no comprueba el resultado automáticamente.',
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFF9B6DFF).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              line['kind'] == 'producto'
-                  ? Icons.medication_outlined
-                  : Icons.medical_services_outlined,
-              color: const Color(0xFF9B6DFF),
-              size: 22,
-            ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'blocked'),
+            child: const Text('Seguir bloqueada'),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${line['display']}',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  '${line['quantity']} ${line['unit'] ?? 'servicio'}'
-                  '${line['lot_display'] != null ? ' · Lote ${line['lot_display']}' : ''}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+          if (widget.member != null)
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'accounts'),
+              child: const Text('Abrir cuentas y abonos'),
             ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'exists'),
+            child: const Text('La venta sí existe'),
           ),
-          Text(
-            lineTotal.display,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Quitar del carrito',
-            onPressed: busy
-                ? null
-                : () => setState(() {
-                      lines.removeAt(index);
-                      changed();
-                    }),
-            icon: const Icon(Icons.close, size: 18),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, 'not_found'),
+            child: const Text('No aparece; reintentar mismos datos'),
           ),
         ],
       ),
     );
+    if (!mounted || result == null || result == 'blocked') return;
+    if (result == 'accounts' && widget.member != null) {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CreditAccountsScreen(
+            repository: widget.repository,
+            member: widget.member!,
+            shift: widget.shift,
+            canReturn: widget.canReturn,
+          ),
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          error = 'El resultado de la venta sigue sin confirmarse. Revisa Cuentas y abonos; cualquier reintento conservará la operación original.';
+        });
+      }
+      return;
+    }
+    if (result == 'exists') {
+      // Close and refresh the caller instead of posting a possible duplicate.
+      setState(() {
+        creditOutcomeUncertain = false;
+        allowPopAfterVerifiedSale = true;
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted) Navigator.pop(context, true);
+      return;
+    }
+    if (result == 'not_found') {
+      final snapshot = creditRetryLines;
+      if (snapshot == null || creditRetryKey == null || creditOperation == null) {
+        setState(() {
+          error = 'No se pudo restaurar la operación original. Mantén el bloqueo y consulta el historial antes de continuar.';
+        });
+        return;
+      }
+      setState(() {
+        lines
+          ..clear()
+          ..addAll(snapshot.map((line) => Map<String, dynamic>.from(line)));
+        method = creditRetryMethod ?? method;
+        initialAmount.text = creditRetryInitialAmount ?? initialAmount.text;
+        debtor.text = creditRetryDebtor ?? debtor.text;
+        credit = true;
+        reviewed = false;
+        scanFeedback = null;
+        // Keep the original operation key and payload. A retry must be
+        // idempotent even if the first result is not visible yet.
+        error = 'El resultado sigue sin confirmarse. Se restauraron los datos originales; revisa y reintenta exactamente esta operación.';
+      });
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    const accent = Color(0xFF2BBBAD);
-    const indigo = Color(0xFF5B8DEF);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Caja registradora'),
-        actions: [
-          if (widget.admin)
-            IconButton(
-              tooltip: 'Agregar servicio manual',
-              onPressed: busy ? null : addService,
-              icon: const Icon(Icons.add_business_outlined),
-            ),
-        ],
-      ),
-      body: Column(
+  Widget build(BuildContext context) => PopScope<bool>(
+    canPop: !creditOutcomeUncertain || allowPopAfterVerifiedSale,
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop && creditOutcomeUncertain) {
+        resolveUncertainCreditSale();
+      }
+    },
+    child: Scaffold(
+    appBar: AppBar(title: const Text('Punto de venta')),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              children: [
-                Text(
-                  'Carrito actual',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (lines.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 40,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Aún no hay artículos. Agrega productos o servicios abajo.',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  for (var i = 0; i < lines.length; i++) _cartLine(i),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        accent.withValues(alpha: 0.22),
-                        indigo.withValues(alpha: 0.18),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total a pagar',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        total.display,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: indigo,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Método de pago',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _methodChip('efectivo', 'Efectivo', Icons.payments_outlined),
-                    const SizedBox(width: 8),
-                    _methodChip('tarjeta', 'Tarjeta', Icons.credit_card),
-                    const SizedBox(width: 8),
-                    _methodChip(
-                      'transferencia',
-                      'Transferencia',
-                      Icons.swap_horiz,
-                    ),
-                  ],
-                ),
-                if (method == 'efectivo') ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Recibido', style: theme.textTheme.labelMedium),
-                              Text(
-                                cashReceived?.display ??
-                                    (cashInput.isEmpty ? r'$0.00' : '\$$cashInput'),
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: (change != null &&
-                                    change!.cents >= BigInt.zero)
-                                ? accent.withValues(alpha: 0.15)
-                                : theme.colorScheme.errorContainer
-                                    .withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Cambio', style: theme.textTheme.labelMedium),
-                              Text(
-                                change == null ? '—' : change!.display,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: change != null &&
-                                          change!.cents < BigInt.zero
-                                      ? theme.colorScheme.error
-                                      : accent,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _NumericKeypad(onKey: busy ? null : onKey),
-                ],
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 8),
-                Text(
-                  'Agregar al carrito',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Venta en MXN. El servidor confirma lote, stock, precio y permisos al cobrar.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                for (final p in widget.products.where(
-                  (p) => p['m8_enabled'] == true && p['active'] == true,
-                ))
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: CircleAvatar(
-                      backgroundColor: accent.withValues(alpha: 0.15),
-                      child: const Icon(
-                        Icons.medication_liquid_outlined,
-                        color: accent,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text('${p['nombre']}'),
-                    subtitle: Text(
-                      '${Money.parse(p['precio_venta']).display} · ${p['stock_unit']} · stock ${p['stock']}',
-                    ),
-                    trailing: IconButton.filledTonal(
-                      onPressed: busy ? null : () => addProduct(p),
-                      icon: const Icon(Icons.add),
-                    ),
-                  ),
-                if (widget.charges.isNotEmpty ||
-                    widget.acts.isNotEmpty ||
-                    widget.deliveries.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Cobrar aplicaciones y entregas ya registradas',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  for (final entry in [
-                    ...widget.charges
-                        .where((c) => c['paid'] != true)
-                        .map((c) => (c, 'charge_id')),
-                    ...widget.acts
-                        .where((c) => c['paid'] != true)
-                        .map((c) => (c, 'service_act_id')),
-                    ...widget.deliveries
-                        .where((c) => c['paid'] != true)
-                        .map((c) => (c, 'delivery_id')),
-                  ])
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('${entry.$1['name']}'),
-                      subtitle: Text(displayMoney(entry.$1['price'])),
-                      trailing: IconButton(
-                        onPressed: busy
-                            ? null
-                            : () {
-                                if (lines.any(
-                                  (l) => l[entry.$2] == entry.$1['id'],
-                                )) {
-                                  return;
-                                }
-                                setState(() {
-                                  lines.add({
-                                    'kind': 'servicio',
-                                    entry.$2: entry.$1['id'],
-                                    'quantity': '1',
-                                    'price': entry.$1['price'],
-                                    'display': entry.$1['name'],
-                                  });
-                                  changed();
-                                });
-                              },
-                        icon: const Icon(Icons.add_circle_outline),
-                      ),
-                    ),
-                ],
-                const SizedBox(height: 8),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: reviewed,
-                  title: const Text(
-                    'Revisé cantidades, lotes, receta y total a cobrar.',
-                  ),
-                  onChanged: busy
-                      ? null
-                      : (v) => setState(() => reviewed = v ?? false),
-                ),
-                if (error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      error!,
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                  ),
-              ],
-            ),
+          const Text(
+            'Venta interna en MXN. Los precios capturados son finales; no se genera factura fiscal. El servidor confirma lote, caducidad, stock, precio y permisos al registrar.',
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: indigo,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: busy ||
-                          !reviewed ||
-                          lines.isEmpty ||
-                          (method == 'efectivo' &&
-                              cashInput.isNotEmpty &&
-                              (change == null || change!.cents < BigInt.zero))
-                      ? null
-                      : post,
-                  child: Text(
-                    busy
-                        ? 'Registrando…'
-                        : 'Cobrar · ${total.display} · $methodLabel',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
+          if (widget.catalogUnavailable)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'El catálogo de servicios no está disponible en esta base de datos. Puedes registrar una venta manual; para elegir un servicio guardado, comprueba la función inv_catalog_services del SQL 14F.',
               ),
             ),
+          OutlinedButton.icon(
+            onPressed: busy ? null : scanProduct,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: const Text('Escanear producto para la nota de venta'),
+          ),
+          TextButton.icon(
+            onPressed: busy ? null : enterBarcode,
+            icon: const Icon(Icons.keyboard),
+            label: const Text('Ingresar código de barras'),
+          ),
+          for (final p in widget.products.where(
+            (p) => p['m8_enabled'] == true && p['active'] == true,
+          ))
+            ListTile(
+              title: Text(
+                '${p['nombre']} · ${Money.parse(p['precio_venta']).display}',
+              ),
+              subtitle: Text('${p['stock_unit']} · stock ${p['stock']}'),
+              trailing: IconButton(
+                onPressed: busy ? null : () => addProduct(p),
+                icon: const Icon(Icons.add_shopping_cart),
+              ),
+            ),
+          if (widget.admin)
+            for (final service in widget.services.where(
+              (s) => s['active'] == true,
+            ))
+              ListTile(
+                title: Text(
+                  '${service['name']} · ${Money.parse('${service['price']}').display}',
+                ),
+                subtitle: const Text(
+                  'Puedes usar otro precio solo en esta venta.',
+                ),
+                trailing: IconButton(
+                  tooltip: 'Agregar servicio del catálogo',
+                  onPressed: busy ? null : () => addCatalogService(service),
+                  icon: const Icon(Icons.add_shopping_cart),
+                ),
+              ),
+          if (widget.admin)
+            TextButton(
+              onPressed: busy ? null : addService,
+              child: const Text('Agregar servicio manual sin comisión'),
+            ),
+          const Divider(),
+          const Text(
+            'Cobrar aplicaciones y entregas ya registradas (sin descontar stock de nuevo)',
+          ),
+          for (final entry in [
+            ...widget.charges
+                .where((c) => c['paid'] != true)
+                .map((c) => (c, 'charge_id')),
+            ...widget.acts
+                .where((c) => c['paid'] != true)
+                .map((c) => (c, 'service_act_id')),
+            ...widget.deliveries
+                .where((c) => c['paid'] != true)
+                .map((c) => (c, 'delivery_id')),
+          ])
+            ListTile(
+              title: Text(
+                '${entry.$1['name']} · ${displayMoney(entry.$1['price'])}',
+              ),
+              trailing: IconButton(
+                onPressed: busy
+                    ? null
+                    : () {
+                        if (lines.any((l) => l[entry.$2] == entry.$1['id'])) {
+                          return;
+                        }
+                        setState(() {
+                          lines.add({
+                            'kind': 'servicio',
+                            entry.$2: entry.$1['id'],
+                            'quantity': '1',
+                            'price': entry.$1['price'],
+                            'display': entry.$1['name'],
+                          });
+                          changed();
+                        });
+                      },
+                icon: const Icon(Icons.add),
+              ),
+            ),
+
+          for (var index = 0; index < lines.length; index++)
+            ListTile(
+              title: Text(
+                '${lines[index]['display']} · ${lines[index]['quantity']} ${lines[index]['unit'] ?? 'servicio'}',
+              ),
+              subtitle: Text(
+                '${lines[index]['lot_display'] ?? ''} · ${Money.parse(lines[index]['price']).times(Quantity.parse(lines[index]['quantity'])).display}',
+              ),
+              trailing: IconButton(
+                onPressed: busy
+                    ? null
+                    : () {
+                        setState(() {
+                          lines.removeAt(index);
+                          changed();
+                        });
+                      },
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ),
+          Text(
+            'Total a pagar: ${total.display}',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const Text(
+            'Las comisiones son internas; no se suman al total del cliente.',
+          ),
+          if (widget.creditSupported && widget.actor != null) ...[
+            SwitchListTile(
+              value: credit,
+              title: const Text('Registrar abono y dejar saldo pendiente'),
+              subtitle: const Text(
+                'Productos no farmacológicos y servicios. No repite movimientos de inventario.',
+              ),
+              onChanged: busy || (!credit && !creditEligible)
+                  ? null
+                  : (value) => setState(() {
+                      credit = value;
+                      changed();
+                    }),
+            ),
+            if (credit) ...[
+              TextField(
+                controller: debtor,
+                enabled: !busy,
+                maxLength: 200,
+                decoration: const InputDecoration(
+                  labelText: 'Titular o referencia de la cuenta',
+                ),
+                onChanged: (_) => setState(changed),
+              ),
+              TextField(
+                controller: initialAmount,
+                enabled: !busy,
+                decoration: const InputDecoration(
+                  labelText: 'Abono recibido ahora MXN (0 si no hay pago)',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (_) => setState(changed),
+              ),
+              const Text(
+                'La comisión de servicios queda pendiente hasta cobrar el total neto de la venta.',
+              ),
+            ],
+          ],
+          DropdownButtonFormField<String>(
+            initialValue: method,
+            decoration: const InputDecoration(labelText: 'Método de pago'),
+            items: [
+              for (final m in ['efectivo', 'tarjeta', 'transferencia'])
+                DropdownMenuItem(value: m, child: Text(m)),
+            ],
+            onChanged: busy
+                ? null
+                : (m) {
+                    if (m != null) {
+                      setState(() {
+                        method = m;
+                        changed();
+                      });
+                    }
+                  },
+          ),
+          CheckboxListTile(
+            value: reviewed,
+            title: const Text(
+              'Revisé cantidades de venta, lotes, receta y total a cobrar.',
+            ),
+            onChanged: busy
+                ? null
+                : (v) => setState(() => reviewed = v ?? false),
+          ),
+          if (error != null)
+            Text(
+              error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (scanFeedback != null)
+            Text(
+              scanFeedback!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (creditOutcomeUncertain)
+            OutlinedButton.icon(
+              onPressed: busy ? null : resolveUncertainCreditSale,
+              icon: const Icon(Icons.fact_check_outlined),
+              label: const Text('Verificar resultado de la venta'),
+            ),
+          FilledButton(
+            onPressed: busy ||
+                    !reviewed ||
+                    lines.isEmpty ||
+                    (creditOutcomeUncertain && !credit)
+                ? null
+                : post,
+            child: Text(
+              busy
+                  ? 'Registrando…'
+                  : credit
+                  ? 'Registrar venta con saldo'
+                  : 'Registrar venta y pago',
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _NumericKeypad extends StatelessWidget {
-  const _NumericKeypad({this.onKey});
-  final void Function(String key)? onKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final keys = [
-      ['1', '2', '3'],
-      ['4', '5', '6'],
-      ['7', '8', '9'],
-      ['.', '0', '⌫'],
-    ];
-    return Column(
-      children: [
-        for (final row in keys)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                for (var i = 0; i < row.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 8),
-                  Expanded(
-                    child: Material(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(14),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: onKey == null ? null : () => onKey!(row[i]),
-                        onLongPress: onKey == null || row[i] != '⌫'
-                            ? null
-                            : () => onKey!('C'),
-                        child: SizedBox(
-                          height: 48,
-                          child: Center(
-                            child: Text(
-                              row[i],
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: onKey == null ? null : () => onKey!('C'),
-            child: const Text('Limpiar'),
-          ),
-        ),
-      ],
-    );
-  }
+    ),
+    ),
+  );
 }
