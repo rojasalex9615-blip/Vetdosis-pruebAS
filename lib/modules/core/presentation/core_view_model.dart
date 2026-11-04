@@ -5,7 +5,7 @@ import '../../offline/application/sync_engine.dart';
 enum ClinicalBranch {
   small('Pequeñas especies', Icons.pets_outlined),
   exotic('Exóticos / Silvestres', Icons.forest_outlined),
-  production('Grandes especies / Producción', Icons.agriculture_outlined),
+  production('Producción y grandes especies', Icons.agriculture_outlined),
   management('Gestión clínica', Icons.business_outlined);
 
   const ClinicalBranch(this.label, this.icon);
@@ -20,6 +20,8 @@ class CoreViewModel extends ChangeNotifier {
   AppSettings settings;
   ClinicalBranch branch = ClinicalBranch.small;
   String screen = 'Inicio';
+  String? activityPatientId;
+  String? activityInstructions;
   String? saveError;
   ThemeMode get themeMode => switch (settings.brightness) {
     'light' => ThemeMode.light,
@@ -27,12 +29,20 @@ class CoreViewModel extends ChangeNotifier {
     _ => ThemeMode.system,
   };
   void selectBranch(ClinicalBranch value) {
+    activityPatientId = null;
+    activityInstructions = null;
     branch = value;
-    screen = 'Inicio';
+    screen = switch (value) {
+      ClinicalBranch.production => 'Producción y grandes especies',
+      ClinicalBranch.management => 'Más',
+      _ => 'Inicio',
+    };
     notifyListeners();
   }
 
-  void navigate(String value) {
+  void navigate(String value, {String? patientId, String? instructions}) {
+    activityPatientId = patientId;
+    activityInstructions = instructions;
     screen = value;
     notifyListeners();
   }

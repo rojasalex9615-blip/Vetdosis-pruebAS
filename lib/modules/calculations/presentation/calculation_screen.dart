@@ -1,9 +1,16 @@
+import '../../../core/widgets/neu_header_card.dart';
+import '../../../core/widgets/neu_identity.dart';
+import '../../../core/widgets/calculator_surface.dart';
+import '../../patients/domain/patient_repository.dart';
+import 'fluid_therapy_panel.dart';
 import '../../incubation/presentation/incubation_screen.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
 import 'package:flutter/material.dart';
 import '../../doses/data/catalog_repository.dart';
 import '../../doses/domain/quantity.dart';
 import '../data/calculation_repository.dart';
+import '../data/reference_library_repository.dart';
+import 'reference_library_screen.dart';
 import '../domain/calculation_catalog.dart';
 import '../domain/calculation_engine.dart';
 import 'calculation_view_model.dart';
@@ -15,11 +22,19 @@ class CalculationScreen extends StatefulWidget {
     this.doses,
     this.initialTool = 'fluids',
     this.showAviculture = false,
+    this.referenceLibrary,
+    this.clinicId,
+    this.patients,
+    this.onFluidReminder,
   });
   final CalculationRepository? repository;
   final CatalogRepository? doses;
   final String initialTool;
   final bool showAviculture;
+  final ReferenceLibraryRepository? referenceLibrary;
+  final String? clinicId;
+  final PatientRepository? patients;
+  final void Function(String patientId, String summary)? onFluidReminder;
   @override
   State<CalculationScreen> createState() => _CalculationScreenState();
 }
@@ -142,13 +157,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
       final refs = catalog.references.where((r) => r.type == type).toList();
       final chosen = refs.where((r) => r.id == referenceId).toList();
       final reference = chosen.isEmpty ? null : chosen.single;
-      return Column(
+      final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Cálculos clínicos',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          CalculatorHeading(id: selected, title: 'Cálculos clínicos'),
           if (widget.showAviculture)
             OutlinedButton.icon(
               onPressed: () => Navigator.push(
@@ -172,42 +184,99 @@ class _CalculationScreenState extends State<CalculationScreen> {
               label: const Text('Aves · Incubación'),
             ),
           const SizedBox(height: 12),
+          if (widget.referenceLibrary != null && widget.clinicId != null) ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReferenceLibraryScreen(
+                        repository: widget.referenceLibrary!,
+                        clinicId: widget.clinicId!,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.monitor_heart_outlined),
+                  label: const Text('Referencias fisiológicas'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReferenceLibraryScreen(
+                        repository: widget.referenceLibrary!,
+                        clinicId: widget.clinicId!,
+                        initialSection: 'laboratorio',
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.science_outlined),
+                  label: const Text('Referencias de laboratorio'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           const Text(
             'Los parámetros son indicados por el MVZ. La app no selecciona tratamientos. Los resultados no se guardan en el expediente ni emiten recetas automáticamente.',
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: selected,
-            isExpanded: true,
-            decoration: const InputDecoration(labelText: 'Herramienta'),
-            items: [
-              for (final d in catalog.calculations)
-                DropdownMenuItem(
-                  value: d.id,
-                  child: Text(
-                    d.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          CalculatorSelectorCard(
+            id: selected,
+            title: 'Herramienta',
+            child: DropdownButtonFormField<String>(
+              key: ValueKey('tool:$selected'),
+              initialValue: selected,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+              isDense: false,
+              itemHeight: null,
+              isExpanded: true,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
                 ),
-              for (final entry in {
-                'protocols': 'Protocolos por etapas',
-                'vitals': 'Constantes fisiológicas',
-                'metabolic': 'Peso metabólico en exóticos',
-                'withdrawals': 'Tiempos de retiro',
-              }.entries)
-                DropdownMenuItem(
-                  value: entry.key,
-                  child: Text(
-                    entry.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                border: OutlineInputBorder(),
+                enabledBorder: NeuInputBorder(
+                  dark: Theme.of(context).brightness == Brightness.dark,
+                  depth: 1.8,
                 ),
-            ],
-            onChanged: (v) {
-              if (v != null) reset(v);
-            },
+                filled: true,
+              ),
+              items: [
+                for (final d in catalog.calculations)
+                  DropdownMenuItem(
+                    value: d.id,
+                    child: Text(
+                      d.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                for (final entry in {
+                  'protocols': 'Protocolos por etapas',
+                  'vitals': 'Constantes fisiológicas',
+                  'metabolic': 'Peso metabólico en exóticos',
+                  'withdrawals': 'Tiempos de retiro',
+                }.entries)
+                  DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(
+                      entry.value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+              onChanged: (v) {
+                if (v != null) reset(v);
+              },
+            ),
           ),
           const SizedBox(height: 16),
           if (type.isNotEmpty) ...[
@@ -324,7 +393,8 @@ class _CalculationScreenState extends State<CalculationScreen> {
                     'No se verifica automáticamente compatibilidad entre fármacos. Revisa todas las etapas antes de confirmar.',
                   ),
                 ],
-                FilledButton(
+                CalculatorActionButton(
+                  id: selected,
                   onPressed: reference.evidence.verified
                       ? () => referenceCalculate(reference)
                       : null,
@@ -333,38 +403,68 @@ class _CalculationScreenState extends State<CalculationScreen> {
               ],
             ],
           ],
+          if (selected == 'fluids')
+            FluidTherapyPanel(
+              patients: widget.patients,
+              clinicId: widget.clinicId,
+              references: widget.referenceLibrary,
+              onReminder: widget.onFluidReminder,
+            ),
           if (def != null &&
+              selected != 'fluids' &&
               (selected != 'adjustment' || reference != null)) ...[
-            for (final f in def.inputs)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: TextFormField(
-                  key: ValueKey('$selected:$generation:${f.id}:$referenceId'),
-                  initialValue: f.id == 'factor'
-                      ? reference?.data['factor'] as String?
-                      : null,
-                  readOnly: f.id == 'factor',
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: f.label,
-                    helperText: f.zero
-                        ? 'Permite 0 si el MVZ así lo indica.'
-                        : null,
-                  ),
-                  onChanged: (v) {
-                    values[f.id] = v;
-                    model.clear();
-                    setState(() {
-                      reviewed = false;
-                      confirmed = false;
-                    });
-                  },
+            NeuHeaderCard(
+              title: 'Datos del cálculo',
+              icon: calculatorIdentity(selected).icon,
+              color: calculatorIdentity(selected).color,
+              soft: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final f in def.inputs)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: CalculatorFieldLabel(
+                          label: f.label,
+                          child: TextFormField(
+                            key: ValueKey(
+                              '$selected:$generation:${f.id}:$referenceId',
+                            ),
+                            initialValue: f.id == 'factor'
+                                ? reference?.data['factor'] as String?
+                                : null,
+                            readOnly: f.id == 'factor',
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              helperMaxLines: 4,
+                              helperText: [
+                                ?calculatorUnitHint(f.label),
+                                if (f.zero)
+                                  'Permite 0 si el MVZ así lo indica.',
+                              ].join('\n'),
+                            ),
+                            onChanged: (v) {
+                              values[f.id] = v;
+                              model.clear();
+                              setState(() {
+                                reviewed = false;
+                                confirmed = false;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
+            ),
             const SizedBox(height: 16),
-            FilledButton(
+            CalculatorActionButton(
+              id: selected,
               onPressed: () {
                 if (reference?.data['factor'] != null) {
                   values['factor'] = reference!.data['factor'] as String;
@@ -448,6 +548,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
           ],
         ],
       );
+      // Fluidotherapy already owns a surface for standalone use.
+      return selected == 'fluids'
+          ? content
+          : CalculatorSurface(id: selected, child: content);
     },
   );
 }

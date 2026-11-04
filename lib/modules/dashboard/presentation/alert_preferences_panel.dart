@@ -1,3 +1,4 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
 import '../../hospital/application/hospital_alerts.dart';
 
@@ -81,13 +82,13 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
             spacing: 8,
             children: [
               for (final minutes in [0, 5, 10, 15, 30])
-                ChoiceChip(
+                glowChip(ChoiceChip(
                   label: Text(
                     minutes == 0 ? 'Sin anticipación' : '$minutes min',
                   ),
                   selected: alerts.leadMinutes == minutes,
                   onSelected: busy ? null : (_) => update(lead: minutes),
-                ),
+                )),
             ],
           ),
           Text(alerts.status),
