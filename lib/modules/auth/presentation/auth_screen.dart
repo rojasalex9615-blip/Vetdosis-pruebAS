@@ -1,5 +1,6 @@
 import 'team_duty_screen.dart';
 import '../../../core/widgets/neu_identity.dart';
+import '../../../core/widgets/google_mark.dart';
 import '../../permissions/domain/permission_repository.dart';
 import '../../permissions/presentation/permission_screen.dart';
 import '../domain/auth_repository.dart';
@@ -116,7 +117,13 @@ class _AuthScreenState extends State<AuthScreen> {
                 ] else if (model.loadingMemberships) ...[
                   const Center(child: CircularProgressIndicator()),
                 ] else if (!model.signedIn) ...[
-                  const SizedBox(height: 8),
+                  Text(
+                    'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Form(
                     key: _form,
                     child: Column(
@@ -188,11 +195,32 @@ class _AuthScreenState extends State<AuthScreen> {
                           : 'Ingresar',
                     ),
                   ),
-                  if (!_reset && model.googleEnabled)
+                  if (!_reset && model.googleEnabled) ...[
+                    const SizedBox(height: 14),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Text('O ingresa con'),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
                     OutlinedButton(
                       onPressed: model.busy ? null : model.googleSignIn,
-                      child: const Text('Continuar con Google'),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GoogleMark(size: 18),
+                          SizedBox(width: 10),
+                          Text('Continuar con Google'),
+                        ],
+                      ),
                     ),
+                  ],
                   TextButton(
                     onPressed: model.busy
                         ? null
