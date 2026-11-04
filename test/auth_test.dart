@@ -1,4 +1,4 @@
-import 'dart:async';
+successfully downloaded text file (SHA: 99688b082e785b83d1adb322c9641cae0f4b08bc)import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -107,7 +107,8 @@ void main() {
     'Errores de red durante el acceso muestran el mensaje de conexión',
     () async {
       repo.userId = null;
-      repo.signInFailure = AuthRetryableFetchException('network unreachable');
+      repo.signInFailure =
+          AuthRetryableFetchException(message: 'network unreachable');
       await model.start();
       await model.signIn('user@example.test', 'password');
       expect(
