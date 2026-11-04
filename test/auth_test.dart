@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vetdosis_pro/core/app.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
@@ -53,6 +54,70 @@ void main() {
   test('Rol desconocido falla sin sustituir por admin', () {
     expect(() => ClinicRole.parse('superuser'), throwsFormatException);
   });
+  test(
+    'Credenciales inválidas muestran un error específico y seguro',
+    () async {
+      repo.userId = null;
+      repo.signInFailure = AuthException(
+        'Invalid login credentials',
+        code: 'invalid_credentials',
+      );
+      await model.start();
+      await model.signIn('user@example.test', 'wrong-password');
+      expect(model.error, 'El correo o la contraseña no son correctos.');
+      expect(model.signedIn, isFalse);
+      expect(model.error, isNot(contains('Invalid login credentials')));
+    },
+  );
+  test(
+    'Errores de autenticación desconocidos no exponen el mensaje del servidor',
+    () async {
+      repo.userId = null;
+      repo.signInFailure = AuthException(
+        'internal detail must not reach the UI',
+        code: 'unexpected_server_error',
+      );
+      await model.start();
+      await model.signIn('user@example.test', 'password');
+      expect(
+        model.error,
+        'El servicio de acceso devolvió un error. Inténtalo más tarde.',
+      );
+      expect(model.error, isNot(contains('internal detail')));
+    },
+  );
+  test(
+    'Clave de acceso inválida (HTTP 401) muestra el mensaje de configuración',
+    () async {
+      repo.userId = null;
+      repo.signInFailure = AuthApiException(
+        'Invalid API key',
+        statusCode: '401',
+      );
+      await model.start();
+      await model.signIn('user@example.test', 'password');
+      expect(
+        model.error,
+        'La app no está bien conectada con el servidor (clave de acceso inválida). Vuelve a compilar la APK con la clave correcta.',
+      );
+      expect(model.signedIn, isFalse);
+    },
+  );
+  test(
+    'Errores de red durante el acceso muestran el mensaje de conexión',
+    () async {
+      repo.userId = null;
+      repo.signInFailure =
+          AuthRetryableFetchException(message: 'network unreachable');
+      await model.start();
+      await model.signIn('user@example.test', 'password');
+      expect(
+        model.error,
+        'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.',
+      );
+      expect(model.signedIn, isFalse);
+    },
+  );
   testWidgets(
     'Sin conexión configurada no aparece la clínica ni roles elegibles',
     (tester) async {
