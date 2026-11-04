@@ -1,3 +1,4 @@
+import 'package:vetdosis_pro/modules/patients/presentation/patient_form.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -357,7 +358,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Tutor reservado'), findsNothing);
     expect(find.text('Agregar consentimiento'), findsNothing);
-    expect(find.textContaining('Sustancia ficticia'), findsOneWidget);
+    // Brief alert and original chronological entry remain visible.
+    expect(find.textContaining('Sustancia ficticia'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
   testWidgets('Dictado crea borrador revisable y no guarda sin revisar', (
@@ -441,9 +443,16 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Nuevo paciente'));
     await tester.pumpAndSettle();
+    expect(find.byType(PatientForm), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Crear paciente'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Crear paciente'), findsOneWidget);
     await auth.signOut();
     await tester.pumpAndSettle();
+    expect(find.byType(PatientForm), findsNothing);
     expect(find.text('Crear paciente'), findsNothing);
     expect(find.text('Nombre del paciente'), findsNothing);
     expect(tester.takeException(), isNull);

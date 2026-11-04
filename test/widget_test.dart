@@ -22,7 +22,9 @@ void main() {
     await tester.tap(find.text('Gestión clínica').last);
     await tester.pumpAndSettle();
     expect(model.branch, ClinicalBranch.management);
-    await tester.tap(find.byTooltip('Ajustes'));
+    // Ajustes lives in the section menu, not an AppBar shortcut.
+    expect(find.byTooltip('Ajustes'), findsNothing);
+    model.navigate('Ajustes');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Océano'));
     await tester.tap(find.text('Océano'));
@@ -31,7 +33,7 @@ void main() {
     await model.updateSettings(brightness: 'dark');
     await tester.pumpAndSettle();
     expect(
-      Theme.of(tester.element(find.byTooltip('Ajustes'))).brightness,
+      Theme.of(tester.element(find.byType(Scaffold).first)).brightness,
       Brightness.dark,
     );
     expect(tester.takeException(), isNull);
