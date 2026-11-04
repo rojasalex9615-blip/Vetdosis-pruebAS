@@ -1,5 +1,6 @@
 import '../../prescribing/domain/prescribing_repository.dart';
 import '../../prescribing/presentation/prescribing_screen.dart';
+import '../../calculations/data/reference_library_repository.dart';
 import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart'
@@ -23,12 +24,14 @@ class ClinicalScreen extends StatefulWidget {
     required this.member,
     this.patientId,
     this.prescribing,
+    this.referenceLibrary,
   });
   final ClinicalRepository repository;
   final FormRepository forms;
   final ClinicMembership member;
   final String? patientId;
   final PrescribingRepository? prescribing;
+  final ReferenceLibraryRepository? referenceLibrary;
   @override
   State<ClinicalScreen> createState() => _ClinicalScreenState();
 }
@@ -420,6 +423,7 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
           member: widget.member,
           caseData: bundle.caseData,
           latestWeight: latestWeight(bundle),
+          referenceLibrary: widget.referenceLibrary,
         ),
       ),
     );
@@ -472,7 +476,7 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             const Text(
-              'Los documentos firmados conservan su versión original. Mediciones y actuaciones se registran por separado y se anexan al caso. ASA y EKG son capturas profesionales, sin interpretación automática.',
+              'Los documentos firmados conservan su versión original y aparecen aquí como evidencia del expediente. Mediciones y actuaciones se registran por separado y se anexan al caso. ASA y EKG son capturas profesionales, sin interpretación automática.',
             ),
             OutlinedButton.icon(
               onPressed: model.busy
