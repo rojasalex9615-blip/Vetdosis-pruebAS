@@ -131,6 +131,7 @@ jobs:
             --flavor beta \
             --target-platform android-arm64 \
             --dart-define=APP_CHANNEL=beta \
+            --dart-define=BUILD_SHA="${GITHUB_SHA:0:7}" \
             --dart-define-from-file=supabase/config.test.local.json
 
       # ─── Build Release ───
@@ -149,6 +150,7 @@ jobs:
             --target-platform android-arm,android-arm64 \
             --dart-define=APP_CHANNEL=beta \
             --dart-define=BETA_BUILD="$BETA_VERSION_CODE" \
+            --dart-define=BUILD_SHA="${GITHUB_SHA:0:7}" \
             --dart-define-from-file=supabase/config.test.local.json \
             --verbose
 
