@@ -3,12 +3,12 @@ on:
   workflow_dispatch:
     inputs:
       enable_google:
-        description: Activar Google solo después de configurarlo en Supabase
+        description: Mostrar el botón «Continuar con Google» (el flujo falla si Supabase no anuncia Google habilitado)
         type: boolean
-        default: false
+        default: true
         required: true
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: vetdosis-test-apk
   cancel-in-progress: false
@@ -98,6 +98,33 @@ jobs:
             build/app/outputs/flutter-apk/BUILD-INFO.json
           if-no-files-found: error
           retention-days: 14
+      - name: Publicar APK instalable con enlace directo para el teléfono
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="beta-apk"
+          title="APK beta instalable (última compilación)"
+          notes="$(printf 'APK beta firmado y verificado, listo para instalar sin ordenador.\n\n- Commit: %s\n- Ejecución: %s/%s/actions/runs/%s\n- versionCode: %s\n\nFirma propia de la beta: si había instalada una beta con otra firma, desinstálela antes de instalar esta. No se conservan datos locales del teléfono; los datos del servidor no cambian.' "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$BETA_VERSION_CODE")"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$title" --notes "$notes" --prerelease
+          else
+            gh release create "$tag" --target "$GITHUB_SHA" --title "$title" --notes "$notes" --prerelease
+          fi
+          gh release upload "$tag" build/app/outputs/flutter-apk/app-*-beta-release.apk build/app/outputs/flutter-apk/SHA256SUMS.txt build/app/outputs/flutter-apk/BUILD-INFO.json --clobber
+          {
+            echo "## APK listo para instalar"
+            echo ""
+            echo "Abra este enlace en el teléfono y toque el APK arm64 (los teléfonos actuales son arm64):"
+            echo ""
+            for apk in build/app/outputs/flutter-apk/app-*-beta-release.apk; do
+              name="$(basename "$apk")"
+              echo "- [$name]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$tag/$name)"
+            done
+            echo ""
+            echo "versionCode: \`$BETA_VERSION_CODE\` · commit: \`${GITHUB_SHA:0:7}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Registrar publicación beta verificada sin renovar versiones existentes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
