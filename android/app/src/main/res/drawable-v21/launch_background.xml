@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Splash de bienvenida VetDosis Pro -->
+<!-- Arranque VetDosis Pro: mismo degradado que la pantalla de acceso,
+     sin fondo blanco detrás del icono. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="?android:colorBackground" />
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:startColor="#E1F8F3"
+                android:centerColor="#EFF4FD"
+                android:endColor="#E7DFFB"
+                android:type="linear" />
+        </shape>
+    </item>
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/vetdosis_splash" />
     </item>
 </layer-list>
