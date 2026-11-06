@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "area": "exoticos-silvestres",
+  "fecha": "2026-11-06",
+  "autor_sesion": "Solar Pro 4 (identidad Buffy, plataforma Freebuff)",
+  "nota_general": "Fuentes consultadas para el memo docs/product/exoticos-datos-y-procedimientos-20261106.md. Ninguna equivale a revisión MVZ. Los valores citados no se han cargado en assets ni en Supabase.",
+  "fuentes": [
+    {
+      "id": "EXO-MERCK-REPTILES-PROC-20261106",
+      "archivo_aportado": null,
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/reptiles/clinical-procedures-for-reptiles",
+      "institucion": "Merck Veterinary Manual",
+      "alcance": "Alometría en reptiles (MEC = K(W^0.75), K = 10), fluidos 5-15/30-40 mL/kg/24 h y 3-5 mL/kg/h, vía de inyección en cuerpo craneal, dosis en quelonios por peso total",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "editorial de la fuente",
+        "contenido": "Texto de referencia veterinaria con autoría identificada (Colorado State University) y fecha de actualización",
+        "alcance": "Procedencia editorial; no equivale a validación para la práctica en México"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de extractos indexados",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo; no cargado en assets ni Supabase"
+    },
+    {
+      "id": "EXO-MERCK-REPTILES-HUSBANDRY-20261106",
+      "archivo_aportado": null,
+      "url": "https://www.merckvetmanual.com/exotic-and-laboratory-animals/reptiles/management-and-husbandry-of-reptiles",
+      "institucion": "Merck Veterinary Manual",
+      "alcance": "Gradiente térmico, asoleamiento +5 C, descenso nocturno -5 C, fotoperiodo 12 h, UVB 290-300 nm, humedad mayor en ecdisis",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "editorial de la fuente",
+        "contenido": "Tabla de requerimientos de manejo por especie",
+        "alcance": "Procedencia editorial"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de extractos indexados",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo; define campos de ficha, no valores"
+    },
+    {
+      "id": "EXO-MSD-AVES-20261106",
+      "archivo_aportado": null,
+      "url": "https://www.msdvetmanual.com/exotic-and-laboratory-animals/pet-birds/management-of-pet-birds",
+      "institucion": "MSD Veterinary Manual",
+      "alcance": "Fluidos 50-100 mL/kg/24 h en aves, temperatura 102-106 F, catéter intraóseo, buche 30 mL/kg 3-4 veces al día en adulto y 100 mL/kg en neonato",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "editorial de la fuente",
+        "contenido": "Texto de referencia veterinaria",
+        "alcance": "Procedencia editorial"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de extractos indexados",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo; no cargado"
+    },
+    {
+      "id": "EXO-ARAV-ALOMETRIA-1994",
+      "archivo_aportado": null,
+      "url": "https://cdn.ymaws.com/members.arav.org/resource/resmgr/Files/Proceedings_1994/1994_15.pdf",
+      "institucion": "Association of Reptilian and Amphibian Veterinarians",
+      "alcance": "Constantes de energía K por grupo (paseriforme 129, no paseriforme 78, mamífero placentario 70, marsupial 49, reptil 10) y fórmula de Meeh para superficie corporal K(W^0.66)/102",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "proceedings de congreso",
+        "contenido": "Material de congreso de 1994, no revisado por pares en formato actual",
+        "alcance": "Origen identificable; antigüedad alta, requiere fuente actual"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de extracto",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo; pendiente contrastar con fuente actual antes de cargar"
+    },
+    {
+      "id": "EXO-VISSER-OSTER-2018",
+      "archivo_aportado": null,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/29655466",
+      "institucion": "Veterinary Clinics of North America: Exotic Animal Practice",
+      "alcance": "Límites de la extrapolación alométrica: falla con fármacos de metabolismo hepático y no puede extrapolarse a aves ni reptiles",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "revisión por pares",
+        "contenido": "Artículo revisado por pares, 2018, DOI 10.1016/j.cvex.2018.01.002",
+        "alcance": "Sustenta la decisión de no automatizar dosis por alometría"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de resumen indexado",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo; base de la postura sobre dosis"
+    },
+    {
+      "id": "EXO-FELIDS-ALOMETRIA-2016",
+      "archivo_aportado": null,
+      "url": "https://www.vaajournal.org/article/S1467-2987(16)30079-4/abstract",
+      "institucion": "Veterinary Anaesthesia and Analgesia",
+      "alcance": "Estudio en félidos silvestres: dosis anestésicas por alometría desde el gato doméstico no se pueden aplicar",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "revisión por pares",
+        "contenido": "Artículo revisado por pares",
+        "alcance": "Evidencia de fracaso de la alometría en un caso concreto"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de resumen",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo"
+    },
+    {
+      "id": "EXO-WSAVA-REPTIL-2004",
+      "archivo_aportado": null,
+      "url": "https://www.vin.com/apputil/content/defaultadv1.aspx?id=3852208&pid=11181&print=1",
+      "institucion": "WSAVA 2004 (VIN)",
+      "alcance": "Volemia 5-8 % del peso (70 mL/kg), 10 % extraíble, zona de temperatura óptima preferida, registro de alimentación, peso y ecdisis",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "proceedings de congreso",
+        "contenido": "Material de congreso",
+        "alcance": "Origen identificable; antigüedad"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de extracto",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo; sustenta el cálculo de volumen sanguíneo máximo"
+    },
+    {
+      "id": "EXO-FLUIDOS-FAUNA-2024-2025",
+      "archivo_aportado": null,
+      "url": "https://fwra.org/wp-content/uploads/2025/02/fwra-2025-fluid-therapy-lab-final.pdf",
+      "institucion": "FWRA / NC Wildlife Rehab",
+      "alcance": "Tasas de fluidos por taxón y reparto del déficit en 48 h (aves) y 72 h (reptiles); tasas de shock",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "material de formación",
+        "contenido": "Apuntes de laboratorio y presentaciones de rehabilitación de fauna",
+        "alcance": "Material docente, no revisión por pares; valores discrepantes con Merck y MSD"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de extractos",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Cita en el memo como ejemplo de discrepancia entre fuentes; no cargado"
+    },
+    {
+      "id": "EXO-EXOCALC-20261106",
+      "archivo_aportado": null,
+      "url": "https://calc.avianexotics.vet/",
+      "institucion": "avianexotics.vet",
+      "alcance": "Calculadora comercial de exóticos: extrapolación alométrica de dosis, plan de fluidos, CRI e interpretación de laboratorio con rangos de Girling",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "proveedor",
+        "contenido": "Declara basarse en Carpenter, BSAVA Part B y Mader",
+        "alcance": "Referencia de funcionalidad esperada; no es fuente clínica validada"
+      },
+      "revision_realizada": {
+        "tipo": "inspección de la descripción pública",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Referencia de paridad de funciones para la revisión académica"
+    },
+    {
+      "id": "EXO-NORMATIVA-MX-20261106",
+      "archivo_aportado": null,
+      "url": "https://www.profepa.gob.mx/innovaportal/file/3552/1/nom-059-semarnat-2010__30-dic-2010.pdf",
+      "institucion": "SEMARNAT / DOF",
+      "alcance": "NOM-059-SEMARNAT-2010 (especies en riesgo); referencia a NOM-033-SAG/ZOO-2014, NOM-062-ZOO-1999 y NOM-064-ZOO-2000",
+      "fecha_consulta": "2026-11-06",
+      "verificacion_declarada": {
+        "por": "autoridad",
+        "contenido": "Norma oficial publicada en el DOF",
+        "alcance": "Texto vigente al momento de la consulta; no es asesoría jurídica"
+      },
+      "revision_realizada": {
+        "tipo": "lectura de encabezados y alcance",
+        "revisor": "Solar Pro 4",
+        "fecha": "2026-11-06",
+        "verificacion_externa_independiente": false
+      },
+      "uso_actual": "Encuadre legal en el memo; no se implementa ninguna regla regulatoria"
+    }
+  ]
+}
