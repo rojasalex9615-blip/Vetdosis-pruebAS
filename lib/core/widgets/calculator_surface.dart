@@ -82,6 +82,10 @@ Color calculatorPastel(String id) => switch (id) {
 Color calculatorAccent(Color identity, Color background) =>
     readableOn(identity, background);
 
+/// Insignia de una calculadora: su icono sobre una placa de su propio color.
+///
+/// El color identifica a la calculadora y es el mismo en claro y en oscuro;
+/// solo se retoca si no se distinguiria sobre la placa.
 class CalculatorIcon extends StatelessWidget {
   const CalculatorIcon(this.id, {super.key});
   final String id;
@@ -113,6 +117,11 @@ class CalculatorIcon extends StatelessWidget {
   }
 }
 
+/// Envoltura de una calculadora, con el color que la identifica aplicado al
+/// fondo, al borde y al boton principal.
+///
+/// Sustituye el tema para su contenido, de modo que los campos y botones de
+/// dentro salen ya con el tono de esa calculadora sin configurarlos uno a uno.
 class CalculatorSurface extends StatelessWidget {
   const CalculatorSurface({
     super.key,
