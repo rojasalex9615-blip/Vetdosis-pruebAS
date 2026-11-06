@@ -1,3 +1,8 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'modules/beta/domain/beta_repository.dart';
 import 'modules/beta/data/supabase_beta_repository.dart';
 import 'modules/identity/domain/identity_repository.dart';
@@ -32,6 +37,7 @@ import 'modules/forms/data/supabase_form_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'modules/hospital/application/hospital_alerts.dart';
 import 'modules/hospital/application/native_alarm_backend.dart';
+import 'modules/hospital/application/hospital_push_service.dart';
 import 'modules/hospital/data/supabase_hospital_repository.dart';
 import 'modules/hospital/domain/hospital_repository.dart';
 import 'modules/hospital/domain/hospital_models.dart';
@@ -64,6 +70,15 @@ Future<void> main() async {
     defaultValue: true,
   );
   const googleEnabled = bool.fromEnvironment('SUPABASE_GOOGLE_ENABLED');
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android &&
+      channel == 'beta') {
+    try {
+      await Firebase.initializeApp();
+    } catch (_) {
+      // Never block patient care or local alarms when FCM is unavailable.
+    }
+  }
+  HospitalPushService? pushService;
   AuthViewModel? auth;
   BetaRepository? beta;
   SyncEngine? sync;
@@ -135,6 +150,8 @@ Future<void> main() async {
           await sync!.synchronize(SyncScope(member.userId, member.clinicId));
         }
       },
+      onBeforeSignOut: (userId) async =>
+          await pushService?.beforeSignOut(userId),
     );
     await auth.start();
   }
@@ -144,6 +161,22 @@ Future<void> main() async {
   );
   final alerts = HospitalAlerts(backend, await SharedPreferences.getInstance());
   await alerts.initialize();
+  if (auth != null && Firebase.apps.isNotEmpty && channel == 'beta' &&
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    final service = HospitalPushService(
+      Supabase.instance.client,
+      FirebaseMessaging.instance,
+      await SharedPreferences.getInstance(),
+      backend.plugin,
+      () => core.navigate('Hospitalización'),
+    );
+    try {
+      await service.initialize();
+      pushService = service;
+    } catch (_) {
+      await service.dispose();
+    }
+  }
   Future<void> bindAlerts() async {
     final member = auth?.active;
     final scope = member != null && HospitalAccess(member.role).clinical
@@ -160,6 +193,10 @@ Future<void> main() async {
 
   await bindAlerts();
   auth?.addListener(bindAlerts);
+  if (pushService != null) {
+    await pushService.bind(auth?.active);
+    auth?.addListener(() => unawaited(pushService!.bind(auth?.active)));
+  }
   runApp(
     VetDosisApp(
       model: core,
@@ -168,6 +205,7 @@ Future<void> main() async {
       personalDoses: personalDoses,
       patients: patients,
       hospital: hospital,
+      hospitalPushService: pushService,
       forms: forms,
       identity: identity,
       clinical: clinical,

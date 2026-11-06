@@ -57,6 +57,7 @@ import '../modules/forms/domain/form_repository.dart';
 import '../modules/forms/presentation/forms_screen.dart';
 import '../modules/hospital/domain/hospital_repository.dart';
 import '../modules/hospital/application/hospital_alerts.dart';
+import '../modules/hospital/application/hospital_push_service.dart';
 import '../modules/hospital/presentation/hospital_screen.dart';
 import '../modules/patients/domain/patient_repository.dart';
 import '../modules/patients/domain/recorded_weight.dart';
@@ -94,6 +95,7 @@ class VetDosisApp extends StatelessWidget {
     this.patients,
     this.hospital,
     this.hospitalAlerts,
+    this.hospitalPushService,
     this.forms,
     this.identity,
     this.clinical,
@@ -118,6 +120,7 @@ class VetDosisApp extends StatelessWidget {
   final PatientRepository? patients;
   final HospitalRepository? hospital;
   final HospitalAlerts? hospitalAlerts;
+  final HospitalPushService? hospitalPushService;
   final FormRepository? forms;
   final IdentityRepository? identity;
   final ClinicalRepository? clinical;
@@ -291,6 +294,7 @@ class VetDosisApp extends StatelessWidget {
             patients: patients,
             hospital: hospital,
             hospitalAlerts: hospitalAlerts,
+            hospitalPushService: hospitalPushService,
             forms: forms,
             identity: identity,
             clinical: clinical,
@@ -321,6 +325,7 @@ class CoreShell extends StatelessWidget {
     this.patients,
     this.hospital,
     this.hospitalAlerts,
+    this.hospitalPushService,
     this.forms,
     this.identity,
     this.clinical,
@@ -346,6 +351,7 @@ class CoreShell extends StatelessWidget {
   final PatientRepository? patients;
   final HospitalRepository? hospital;
   final HospitalAlerts? hospitalAlerts;
+  final HospitalPushService? hospitalPushService;
   final FormRepository? forms;
   final IdentityRepository? identity;
   final ClinicalRepository? clinical;
@@ -936,6 +942,7 @@ class CoreShell extends StatelessWidget {
                                 patients: patients!,
                                 member: auth!.active!,
                                 alerts: hospitalAlerts!,
+                                pushService: hospitalPushService,
                                 clinical: clinical,
                                 contextIsCurrent: hospitalWeightContext,
                                 sessionChanges: auth,
