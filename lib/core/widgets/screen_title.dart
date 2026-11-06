@@ -13,16 +13,24 @@ const screenTitleMinScale = .62;
 ///
 /// Lo usan el titulo y el calculo de alto de la barra, para que los dos
 /// decidan lo mismo en vez de suponerlo cada uno por su lado.
+///
+/// [scaler] es el factor de texto del sistema. Hay que pasarlo: `Text` lo
+/// aplica al pintar, asi que medir sin el daba de largo. Lo encontro Greptile
+/// y al comprobarlo salio peor de lo que decia: con el texto al 160% hasta
+/// «Agenda», de seis letras, se recortaba, porque la medida decia una linea y
+/// lo pintado no cabia en ella.
 ({int lines, double scale}) screenTitleFit(
   String screen,
   double available,
-  TextStyle style,
-) {
+  TextStyle style, {
+  TextScaler scaler = TextScaler.noScaling,
+}) {
   if (available <= 0) return (lines: 1, scale: 1);
   final medidor = TextPainter(
     text: TextSpan(text: screen, style: style),
     maxLines: 1,
     textDirection: TextDirection.ltr,
+    textScaler: scaler,
   )..layout();
   final natural = medidor.width;
   medidor.dispose();
@@ -71,6 +79,7 @@ class ScreenTitle extends StatelessWidget {
               screen,
               restricciones.maxWidth,
               base,
+              scaler: MediaQuery.textScalerOf(context),
             );
             return Text(
               screen,
