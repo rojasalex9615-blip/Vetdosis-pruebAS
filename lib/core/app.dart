@@ -3,6 +3,8 @@ import 'widgets/accent_glow.dart';
 import 'widgets/brand_gradient.dart';
 import 'widgets/contrast.dart';
 import 'widgets/screen_title.dart';
+import '../modules/notifications/domain/notification_repository.dart';
+import '../modules/notifications/presentation/notifications_entry.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
@@ -127,6 +129,7 @@ class VetDosisApp extends StatelessWidget {
     this.moduleAccess,
     this.experienceRepository,
     this.reviewCatalog,
+    this.notifications,
   });
   final CoreViewModel model;
   final AuthViewModel? auth;
@@ -153,6 +156,7 @@ class VetDosisApp extends StatelessWidget {
   final ModuleAccessRepository? moduleAccess;
   final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
+  final NotificationRepository? notifications;
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
@@ -332,6 +336,7 @@ class VetDosisApp extends StatelessWidget {
               moduleAccess: access,
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
+              notifications: notifications,
               personalDoses: personalDoses,
               patients: patients,
               hospital: hospital,
@@ -391,6 +396,7 @@ class CoreShell extends StatelessWidget {
     this.experienceReady = false,
     this.onExperienceSaved,
     this.reviewCatalog,
+    this.notifications,
   });
   final CoreViewModel model;
   final AuthViewModel? auth;
@@ -419,6 +425,7 @@ class CoreShell extends StatelessWidget {
   final bool experienceReady;
   final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
+  final NotificationRepository? notifications;
 
   /// Whether [member] still matches an online session allowed hospital access.
   bool hospitalWeightContext(ClinicMembership member) =>
@@ -715,6 +722,16 @@ class CoreShell extends StatelessWidget {
               tooltip: 'Asistente IA',
               onPressed: () => model.navigate('Asistente IA'),
               icon: BrandGradientIcon(Icons.auto_awesome),
+            ),
+          if (notifications != null && auth?.active != null)
+            NotificationBellButton(
+              repository: notifications!,
+              userId: auth!.active!.userId,
+              clinicId: auth!.active!.clinicId,
+              // Al salir de la bandeja vuelve a contar, para que el numero no
+              // se quede en lo que habia antes de leerlas.
+              refreshKey: model.screen,
+              onOpen: () => model.navigate('Notificaciones'),
             ),
         ],
       ),
@@ -1397,6 +1414,21 @@ class CoreShell extends StatelessWidget {
                       : const Text(
                           'Las estadísticas y el respaldo requieren conexión y permiso vigente.',
                         )
+                else if (model.screen == 'Notificaciones')
+                  notifications != null && auth?.active != null
+                      ? NotificationsPage(
+                          key: ValueKey((
+                            auth!.active!.userId,
+                            auth!.active!.clinicId,
+                          )),
+                          repository: notifications!,
+                          userId: auth!.active!.userId,
+                          clinicId: auth!.active!.clinicId,
+                          onOpenRoute: model.navigate,
+                        )
+                      : const Text(
+                          'Las notificaciones requieren una cuenta activa.',
+                        )
                 else if (model.screen == 'Asistente IA')
                   ai != null && auth?.active != null && auth?.offline != true
                       ? AiScreen(
@@ -1894,6 +1926,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
     'Pendientes del equipo',
     'Asistente IA',
     'Ayuda y soporte',
+    'Notificaciones',
     'Ajustes',
     'Respaldo',
   ];
