@@ -634,6 +634,12 @@ class CoreShell extends StatelessWidget {
     },
     child: Scaffold(
       appBar: AppBar(
+        // El alto se calcula con la misma regla que usa ScreenTitle para
+        // decidir si el nombre cabe en una linea o necesita dos. Si no, un
+        // titulo de dos lineas se recorta contra una barra pensada para una.
+        //
+        // El ancho disponible descuenta la hamburguesa y los dos botones de
+        // la derecha, que es lo que de verdad deja libre la barra.
         toolbarHeight: auth?.active == null
             ? 56
             : math.max(
@@ -646,7 +652,13 @@ class CoreShell extends StatelessWidget {
                                     ).textTheme.titleLarge?.fontSize ??
                                     22,
                               ) *
-                              1.4) +
+                              1.4 *
+                              screenTitleFit(
+                                model.screen,
+                                MediaQuery.sizeOf(context).width - 152,
+                                Theme.of(context).textTheme.titleLarge ??
+                                    const TextStyle(fontSize: 22),
+                              ).lines) +
                     MediaQuery.textScalerOf(context).scale(
                           Theme.of(context).textTheme.labelSmall?.fontSize ??
                               11,

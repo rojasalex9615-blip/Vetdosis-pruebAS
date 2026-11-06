@@ -4,16 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/core/widgets/screen_title.dart';
 
 /// Los titulos llegaban cortados al telefono: «Produccion y g...», «Calculos
-/// clinic...». Estas pruebas miden el widget que se pinta de verdad, dentro
-/// de una barra real y a ancho de telefono, no una copia escrita aqui.
+/// clinic...».
+///
+/// La primera version de estas pruebas valia poco, y lo senalaron Qodo y
+/// Greptile: comprobaba `didExceedMaxLines` y `toPlainText()` sobre un Text
+/// dentro de un FittedBox, que recibe ancho sin limite y por tanto nunca
+/// desborda ni recorta. Ademas montaba la barra con iconos pelados y sin
+/// cajon, asi que le daba al titulo 280 dp de sitio que el telefono no tiene.
+/// Con la barra real son unos 176 dp, y alli el nombre largo acababa pintado
+/// a 7.7 px de alto.
+///
+/// Ahora se monta la barra como es —cajon, dos IconButton— y se mide la
+/// geometria de lo pintado.
 void main() {
-  // Los nombres de pantalla mas largos que el menu puede mostrar.
   const largos = [
     'Producción y grandes especies',
     'Escanear etiqueta para dosis',
     'Administración y finanzas',
     'Estadísticas y respaldo',
     'Cálculos clínicos',
+    'Inicio',
   ];
 
   Future<void> montar(WidgetTester tester, String titulo, double ancho) async {
@@ -24,12 +34,20 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
+          // El cajon pone la hamburguesa a la izquierda: ocupa ancho real.
+          drawer: const Drawer(),
           appBar: AppBar(
+            toolbarHeight: 96,
             title: ScreenTitle(screen: titulo, clinic: 'vet prueba1'),
-            // Los dos iconos reales de la barra: comen ancho del titulo.
-            actions: const [
-              Icon(Icons.person_outline),
-              Icon(Icons.auto_awesome),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person_outline),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.auto_awesome),
+                onPressed: () {},
+              ),
             ],
           ),
         ),
@@ -39,53 +57,97 @@ void main() {
   }
 
   for (final ancho in [360.0, 320.0]) {
-    testWidgets('A $ancho dp ningun nombre de pantalla se corta', (
+    testWidgets('A $ancho dp el titulo se lee y no invade los botones', (
       tester,
     ) async {
       for (final titulo in largos) {
         await montar(tester, titulo, ancho);
-        final parrafo = tester.renderObject<RenderParagraph>(find.text(titulo));
-        expect(
-          parrafo.didExceedMaxLines,
-          isFalse,
-          reason: '«$titulo» se corta a $ancho dp',
+        final texto = tester.getRect(find.text(titulo));
+        final primerBoton = tester.getRect(
+          find.byIcon(Icons.person_outline),
         );
+
+        // No se mete debajo de los botones de la derecha.
         expect(
-          parrafo.text.toPlainText(),
+          texto.right,
+          lessThanOrEqualTo(primerBoton.left),
+          reason: '«$titulo» se solapa con los botones a $ancho dp',
+        );
+
+        // Y se lee: el alto de una linea pintada no baja del suelo. Con dos
+        // lineas el rectangulo mide el doble, asi que se divide.
+        final lineas = screenTitleFit(
           titulo,
-          reason: '«$titulo» no se pinta entero',
+          primerBoton.left - texto.left,
+          const TextStyle(fontSize: 22),
+        ).lines;
+        expect(
+          texto.height / lineas,
+          greaterThanOrEqualTo(13),
+          reason: '«$titulo» queda demasiado pequeno para leerse a $ancho dp',
         );
       }
     });
   }
 
-  testWidgets('El nombre largo encoge en vez de recortarse', (tester) async {
-    // Ojo con como se mide: FittedBox escala con una transformacion y no
-    // cambia el tamano de distribucion del hijo, asi que `getSize` del Text
-    // devuelve el natural en los dos casos. Lo pintado se ve en `getRect`.
+  testWidgets('Un nombre largo usa dos lineas en vez de encogerse a nada', (
+    tester,
+  ) async {
     await montar(tester, 'Inicio', 360);
-    final corto = tester.getRect(find.text('Inicio')).height;
+    final corto = tester.getRect(find.text('Inicio'));
 
     const largo = 'Producción y grandes especies';
     await montar(tester, largo, 360);
-    final largoAlto = tester.getRect(find.text(largo)).height;
+    final alto = tester.getRect(find.text(largo));
 
     expect(
-      largoAlto,
-      lessThan(corto),
-      reason: 'el nombre largo no se esta encogiendo para caber',
+      alto.height,
+      greaterThan(corto.height),
+      reason: 'el nombre largo deberia ocupar dos lineas',
     );
+  });
 
-    // Suelo de legibilidad. Hoy el peor caso cae en 12.3 px de alto a 360 dp,
-    // que se lee pero es pequeno; queda anotado como el limite que toleramos.
-    // Si un nombre nuevo baja de ahi, hay que partir el titulo en dos lineas
-    // en vez de seguir encogiendo.
+  test('La regla de ajuste parte en dos antes que encoger sin limite', () {
+    const estilo = TextStyle(fontSize: 22);
+    // Cabe de sobra: una linea, sin tocar.
+    final corto = screenTitleFit('Inicio', 300, estilo);
+    expect(corto.lines, 1);
+    expect(corto.scale, 1);
+
+    // No cabe: dos lineas, y nunca por debajo del suelo medido.
+    final largo = screenTitleFit('Producción y grandes especies', 176, estilo);
+    expect(largo.lines, 2);
+    expect(largo.scale, greaterThanOrEqualTo(screenTitleMinScale));
+    expect(largo.scale, lessThan(1));
+  });
+
+  testWidgets('Queda anotado que nombres siguen sin caber enteros', (
+    tester,
+  ) async {
+    // Limite conocido y aceptado, no un descuido. Con la hamburguesa y los
+    // dos botones, la barra deja unos 176 dp. A la escala minima legible
+    // (0.62) caben unos 22 caracteres en dos lineas; por encima de eso el
+    // nombre se recorta aunque ya no se encoja mas.
+    //
+    // Para que entraran enteros habria que darle sitio al titulo: quitar uno
+    // de los dos botones de la derecha, o acortar los nombres. Las dos cosas
+    // son decision de Ale, no mia. Mientras tanto esta lista deja constancia
+    // de cuales son, y salta si alguien anade otro sin darse cuenta.
+    const seCortan = {
+      'Producción y grandes especies',
+      'Escanear etiqueta para dosis',
+      'Administración y finanzas',
+      'Estadísticas y respaldo',
+    };
     for (final titulo in largos) {
       await montar(tester, titulo, 360);
+      final parrafo = tester.renderObject<RenderParagraph>(find.text(titulo));
       expect(
-        tester.getRect(find.text(titulo)).height,
-        greaterThanOrEqualTo(12),
-        reason: '«$titulo» queda demasiado pequeno para leerse',
+        parrafo.didExceedMaxLines,
+        seCortan.contains(titulo),
+        reason: seCortan.contains(titulo)
+            ? '«$titulo» ya cabe entero: quitalo de la lista'
+            : '«$titulo» empezo a cortarse y no estaba previsto',
       );
     }
   });
