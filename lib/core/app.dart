@@ -1,5 +1,6 @@
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import 'widgets/accent_glow.dart';
+import 'widgets/brand_gradient.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
@@ -670,7 +671,7 @@ class CoreShell extends StatelessWidget {
             IconButton(
               tooltip: 'Asistente IA',
               onPressed: () => model.navigate('Asistente IA'),
-              icon: const Icon(Icons.auto_awesome_outlined),
+              icon: const BrandGradientIcon(Icons.auto_awesome),
             ),
         ],
       ),
@@ -736,13 +737,28 @@ class CoreShell extends StatelessWidget {
               allowed('Cálculo rápido') &&
               model.screen != 'Escanear etiqueta para dosis'
           ? AccentGlow(
-              color: Theme.of(context).colorScheme.primary,
+              color: VetColors.violet,
               radius: 16,
-              child: FloatingActionButton(
-                heroTag: 'dose-label-scanner',
-                tooltip: 'Escanear etiqueta para dosis',
-                onPressed: () => model.navigate('Escanear etiqueta para dosis'),
-                child: const Icon(Icons.document_scanner_outlined),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: brandGradient(),
+                ),
+                child: FloatingActionButton(
+                  heroTag: 'dose-label-scanner',
+                  tooltip: 'Escanear etiqueta para dosis',
+                  // El degradado lo pinta el contenedor; el botón aporta la
+                  // pulsación y el foco, sin tapar ese fondo.
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  focusElevation: 0,
+                  hoverElevation: 0,
+                  highlightElevation: 0,
+                  onPressed: () =>
+                      model.navigate('Escanear etiqueta para dosis'),
+                  child: const Icon(Icons.document_scanner_outlined),
+                ),
               ),
             )
           : null,
