@@ -7,6 +7,12 @@ abstract final class VetColors {
   // el tema y las pruebas usen el mismo valor y no se separen.
   static const darkCanvas = Color(0xFF201F25);
   static const darkSurface = Color(0xFF25242A);
+  static const darkRaised = Color(0xFF2A2932);
+  static const darkHighlight = Color(0xFF2E2D35);
+  static const darkBorder = Color(0xFF34333B);
+  static const darkOutline = Color(0xFF39383F);
+  /// Casi negro de la familia; el negro puro desentona con el tema.
+  static const darkInk = Color(0xFF1A1920);
   static const surface = Color(0xFFF7F9FC);
   static const raised = Color(0xFFFFFFFF);
   static const recessed = Color(0xFFEDF2F7);
