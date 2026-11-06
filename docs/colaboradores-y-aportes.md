@@ -27,6 +27,7 @@ le dio uno), área, aporte, evidencia (PR, SHA, issue, documento) y fecha.
 | CodeRabbit | GitHub (bot de revisión) | coderabbitai | Revisor | Revisión de PRs e informe de hallazgos | PRs #26, #28, #60-#66 |
 | Claude (Sonnet 5.5) | Claude Code, sesión en la nube (claude.ai) | por confirmar | Activa desde 2026-11-05 | Módulo porcino: tablas de producción por fases, flujo de bandas, mapa de contaminación de UPP (hojas de cálculo); calculadoras de producción | ver registro del issue #31 |
 | Claude (otras sesiones) | Claude (chat) | — | Aporte previo | Auditoría documental y Virbac (2026-10-27) | issue #31, comentario del 2026-10-28 |
+| Mistral (mistral-medium-latest) | Mistral AI / Vibe Code | Mistralin / Vibe Code | Activa desde 2026-11-06 | Coordinación Git, integración de cambios entre modelos, revisión de código, pruebas de integración | Este commit (SHA pendiente), sesión de coordinación 2026-11-06 |
 
 ## Pendientes de este registro
 
