@@ -129,6 +129,10 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: python3 scripts/supabase/publish_beta_build.py
+        # El registro en Supabase es opcional y ocurre despues de verificar y
+        # publicar el APK: si falta SUPABASE_ACCESS_TOKEN no debe marcar en
+        # rojo una compilacion ya verificada. Igual que en build-apk-main.yml.
+        continue-on-error: true
       - name: Eliminar material de firma temporal
         if: always()
         shell: bash
