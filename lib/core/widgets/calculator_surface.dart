@@ -315,25 +315,38 @@ class CalculatorSelectorCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            color: identity.color,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(identity.icon, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+          Builder(
+            builder: (context) {
+              // La cabecera del estilo clasico se rellena con el color de
+              // identidad a pleno. Iba con blanco fijo, que con los tonos
+              // cargados de antes funcionaba y con la paleta palida cae a
+              // 1.4:1: el titulo y el icono desaparecian. Se mide la tinta
+              // contra el relleno real en vez de darla por supuesta.
+              final tinta = inkOn(identity.color);
+              return Container(
+                color: identity.color,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(identity.icon, color: tinta, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: tinta,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           Padding(padding: const EdgeInsets.all(14), child: child),
         ],
