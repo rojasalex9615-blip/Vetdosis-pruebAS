@@ -27,11 +27,16 @@ le dio uno), área, aporte, evidencia (PR, SHA, issue, documento) y fecha.
 | CodeRabbit | GitHub (bot de revisión) | coderabbitai | Revisor | Revisión de PRs e informe de hallazgos | PRs #26, #28, #60-#66 |
 | Claude (Sonnet 5.5) | Claude Code, sesión en la nube (claude.ai) | por confirmar | Activa desde 2026-11-05 | Módulo porcino: tablas de producción por fases, flujo de bandas, mapa de contaminación de UPP (hojas de cálculo); calculadoras de producción | ver registro del issue #31 |
 | Claude (otras sesiones) | Claude (chat) | — | Aporte previo | Auditoría documental y Virbac (2026-10-27) | issue #31, comentario del 2026-10-28 |
+| Buffy (Codebuff) | Freebuff (esta plataforma, escritorio y nube) | Buffy | Activa desde 2026-11-05 | CI y APK: verificación de marca/icono y SHA de origen, firma beta nueva, publicación del APK instalable y botón de Google, Inicio clásico, diseño de acceso y registro en vidrio con icono y splash | issue #31 (comentarios del 2026-11-05: `6647382158`, `6652984272`, `6653765166`, `6656237847`), PR #92 `1e7bccc`, PR #93 `4ff35dd`, PR #94 `95be5ee`, PR #95 |
+| Solar Pro 4 | Freebuff (esta plataforma) | por confirmar (la plataforma no asigna nombre propio) | Activa desde 2026-11-05, por indicación de Ale | por confirmar: Ale indica que colaboró en las sesiones de Freebuff de esta ronda; el repositorio no permite separar su aporte del de otras sesiones | por confirmar |
 
 ## Pendientes de este registro
 
 - Confirmar con Ale la plataforma exacta, el nombre del bot y las áreas de Gemini,
   Sol 5.6, Astra y Grok.
+- Precisar áreas, evidencia y nombre de bot de Solar Pro 4: Ale confirmó la
+  plataforma (Freebuff), pero no hay evidencia en el repositorio que permita
+  atribuirle aportes concretos.
 - Cada modelo que vuelva a participar, o Ale en su nombre, completa su fila con
   evidencia.
 - Cuando se construya la pantalla "Información de la app", generar la lista desde
