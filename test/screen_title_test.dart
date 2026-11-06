@@ -204,6 +204,58 @@ void main() {
     }
   });
 
+  testWidgets('El ancho que calcula la barra es el que recibe el titulo', (
+    tester,
+  ) async {
+    // Lo vio Qodo: el alto de la barra usaba un «width - 152» escrito a mano
+    // mientras el titulo se distribuia con el ancho real de su LayoutBuilder.
+    // Con los dos botones el real es 32 dp menor, asi que la barra podia
+    // reservar una linea mientras el titulo se iba a dos, y se recortaba.
+    //
+    // Esta prueba ata la formula al ancho medido de verdad. Si alguien cambia
+    // el relleno de la barra o el tamano de los botones, salta aqui.
+    for (final ancho in [320.0, 360.0, 412.0]) {
+      for (final acciones in [1, 2]) {
+        tester.view.physicalSize = Size(ancho * 2, 1560);
+        tester.view.devicePixelRatio = 2;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        double? real;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              drawer: const Drawer(),
+              appBar: AppBar(
+                toolbarHeight: 120,
+                title: LayoutBuilder(
+                  builder: (context, restricciones) {
+                    real = restricciones.maxWidth;
+                    return const Text('x');
+                  },
+                ),
+                actions: [
+                  for (var i = 0; i < acciones; i++)
+                    IconButton(
+                      icon: const Icon(Icons.person_outline),
+                      onPressed: () {},
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(
+          screenTitleAvailableWidth(ancho, acciones),
+          closeTo(real!, 0.5),
+          reason:
+              'la formula no coincide con el hueco real a $ancho dp con '
+              '$acciones botones',
+        );
+      }
+    }
+  });
+
   testWidgets('Sin sesion no se pinta una segunda linea vacia', (tester) async {
     tester.view.physicalSize = const Size(720, 1560);
     tester.view.devicePixelRatio = 2;

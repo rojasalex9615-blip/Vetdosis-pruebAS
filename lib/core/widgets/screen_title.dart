@@ -9,6 +9,19 @@ import 'package:flutter/material.dart';
 /// dos botones de la barra dejan unos 176 dp para el titulo. Eso no se lee.
 const screenTitleMinScale = .62;
 
+/// El ancho que la barra deja al titulo, con [actions] botones a la derecha.
+///
+/// Los numeros estan medidos sobre un AppBar real con cajon, no deducidos:
+/// la hamburguesa se lleva 56, cada boton 48, y el espaciado de la barra
+/// otros 32. Comprobado a 320, 360 y 412 dp con uno y con dos botones.
+///
+/// Existe para que el alto de la barra y el pintado del titulo partan del
+/// mismo ancho. Antes la barra usaba un `width - 152` a mano que, con los
+/// dos botones, sobrestimaba el hueco en 32 dp: podia reservar una linea
+/// mientras el titulo se iba a dos, y entonces se recortaba.
+double screenTitleAvailableWidth(double barWidth, int actions) =>
+    barWidth - 88 - 48 * actions;
+
 /// Cuantas lineas necesita [screen] y a que escala, con [available] de ancho.
 ///
 /// Lo usan el titulo y el calculo de alto de la barra, para que los dos
