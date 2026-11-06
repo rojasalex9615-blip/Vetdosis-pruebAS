@@ -1,6 +1,7 @@
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import 'widgets/accent_glow.dart';
 import 'widgets/brand_gradient.dart';
+import 'widgets/contrast.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
@@ -680,7 +681,7 @@ class CoreShell extends StatelessWidget {
             IconButton(
               tooltip: 'Asistente IA',
               onPressed: () => model.navigate('Asistente IA'),
-              icon: const BrandGradientIcon(Icons.auto_awesome),
+              icon: BrandGradientIcon(Icons.auto_awesome),
             ),
         ],
       ),
@@ -759,7 +760,9 @@ class CoreShell extends StatelessWidget {
                   // El degradado lo pinta el contenedor; el botón aporta la
                   // pulsación y el foco, sin tapar ese fondo.
                   backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
+                  // El glifo se mide contra el degradado completo: en blanco
+                  // se perdia sobre el extremo turquesa (1.79:1).
+                  foregroundColor: inkOnGradient(brandGradientColors),
                   elevation: 0,
                   focusElevation: 0,
                   hoverElevation: 0,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../vet_ui/vet_theme.dart';
+import 'contrast.dart';
 
 /// Degradado de marca: el mismo recorrido turquesa → violeta del icono y del
 /// botón principal de acceso. Se define una sola vez para que cabecera, botón
@@ -9,6 +10,17 @@ const brandGradientColors = <Color>[
   VetColors.turquoise,
   VetColors.violet,
   VetColors.purple,
+];
+
+/// El recorrido de marca retocado lo mínimo para verse sobre [fondo].
+///
+/// Los tonos de marca son claros: sobre una barra casi blanca el extremo
+/// turquesa se queda en 1.52:1, muy por debajo del 3:1 que piden los iconos.
+/// Cada tramo pasa por [readableOn], que solo lo oscurece lo justo, así que el
+/// recorrido turquesa → violeta → púrpura se mantiene en vez de sustituirse
+/// por colores fijos distintos para cada tema.
+List<Color> brandPaletteOn(Color fondo, {double objetivo = 3}) => [
+  for (final tono in brandGradientColors) readableOn(tono, fondo, objetivo: objetivo),
 ];
 
 /// El degradado de marca listo para usar, con la direccion que se le pida.
@@ -26,15 +38,42 @@ LinearGradient brandGradient({
 /// cual: no sustituye la forma, solo cómo se rellena. Los lectores de pantalla
 /// siguen leyendo el tooltip de quien lo envuelve.
 class BrandGradientIcon extends StatelessWidget {
-  const BrandGradientIcon(this.icon, {super.key, this.size, this.colors});
+  const BrandGradientIcon(
+    this.icon, {
+    super.key,
+    this.size,
+    this.colors,
+    this.background,
+  });
 
   final IconData icon;
   final double? size;
   final List<Color>? colors;
 
+  /// Sobre qué se apoya el icono, para medir el contraste.
+  ///
+  /// Si no se pasa se deduce del tema: primero el fondo de la barra, que es
+  /// donde vive el icono de IA, y si no el del lienzo.
+  final Color? background;
+
+  /// El fondo contra el que se mide, resuelto desde [context].
+  ///
+  /// Se expone para que las pruebas puedan preguntar por el mismo camino que
+  /// usa [build], en vez de repetir la expresión por su cuenta: medir contra
+  /// un fondo copiado a mano en la prueba es justo el error que dejó pasar
+  /// los glifos del resumen y el icono de IA.
+  @visibleForTesting
+  static Color backgroundOf(BuildContext context, {Color? override}) {
+    final tema = Theme.of(context);
+    return override ??
+        tema.appBarTheme.backgroundColor ??
+        tema.scaffoldBackgroundColor;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final palette = colors ?? brandGradientColors;
+    final fondo = backgroundOf(context, override: background);
+    final palette = colors ?? brandPaletteOn(fondo);
     return ShaderMask(
       blendMode: BlendMode.srcIn,
       shaderCallback: (bounds) => LinearGradient(
