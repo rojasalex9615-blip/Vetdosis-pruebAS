@@ -11,6 +11,10 @@ const brandGradientColors = <Color>[
   VetColors.purple,
 ];
 
+/// El degradado de marca listo para usar, con la direccion que se le pida.
+///
+/// Se expone como funcion y no como constante porque cada sitio lo orienta
+/// distinto: en diagonal en un boton redondo, de lado a lado en una barra.
 LinearGradient brandGradient({
   AlignmentGeometry begin = Alignment.topLeft,
   AlignmentGeometry end = Alignment.bottomRight,
