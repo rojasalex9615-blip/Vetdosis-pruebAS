@@ -278,6 +278,10 @@ Color _placa(BuildContext context, Color color) => composite(
 /// que el icono se distinga sobre su propia tarjeta tenida.
 class HomeSummary extends StatelessWidget {
   const HomeSummary({super.key, required this.metrics, this.activity});
+  /// Cada tarjeta del resumen: etiqueta, valor, icono y color de identidad.
+  ///
+  /// El color tine la tarjeta y pinta el glifo; el tono que acaba en pantalla
+  /// se mide contra esa tarjeta ya tenida, no contra el lienzo.
   final List<(String, String, IconData, Color)> metrics;
   final List<(String, int)>? activity;
   @override

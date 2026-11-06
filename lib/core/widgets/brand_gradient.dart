@@ -46,8 +46,17 @@ class BrandGradientIcon extends StatelessWidget {
     this.background,
   });
 
+  /// El glifo de Material que se rellena con el degradado.
   final IconData icon;
+
+  /// Tamano del glifo; si es nulo manda el del tema.
   final double? size;
+
+  /// Recorrido a la fuerza, saltandose la medida de contraste.
+  ///
+  /// Solo para cuando quien llama ya sabe contra que se apoya el icono. Sin
+  /// esto se mide contra el fondo del tema, que es lo que se quiere casi
+  /// siempre.
   final List<Color>? colors;
 
   /// Sobre qué se apoya el icono, para medir el contraste.
