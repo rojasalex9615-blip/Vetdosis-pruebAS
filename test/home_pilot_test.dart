@@ -8,6 +8,7 @@ import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/domain/module_access.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/dashboard_screen.dart';
+import 'package:vetdosis_pro/vet_ui/vet_theme.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/dashboard_view_model.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/home_pilot.dart';
 import 'dashboard_test.dart' show Agenda, member;
@@ -151,7 +152,14 @@ void main() {
                         onNavigate: (_) {},
                       ),
                       const HomeSummary(
-                        metrics: [('Hospitalizados', '—', Icons.pets)],
+                        metrics: [
+                          (
+                            'Hospitalizados',
+                            '—',
+                            Icons.pets,
+                            VetColors.turquoise,
+                          ),
+                        ],
                         activity: [('Lun', 2), ('Mar', 0)],
                       ),
                     ],

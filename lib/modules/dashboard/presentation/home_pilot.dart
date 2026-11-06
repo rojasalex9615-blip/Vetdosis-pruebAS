@@ -262,7 +262,7 @@ class HomeModuleGrid extends StatelessWidget {
 
 class HomeSummary extends StatelessWidget {
   const HomeSummary({super.key, required this.metrics, this.activity});
-  final List<(String, String, IconData)> metrics;
+  final List<(String, String, IconData, Color)> metrics;
   final List<(String, int)>? activity;
   @override
   Widget build(BuildContext context) => HomeSurface(
@@ -299,9 +299,14 @@ class HomeSummary extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: .05),
+                        // Cada modulo lleva su color de la paleta de marca en
+                        // lugar de un unico primary, para distinguirlos de un
+                        // vistazo igual que en el prototipo.
+                        color: metric.$4.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? .14
+                              : .10,
+                        ),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Column(
@@ -309,7 +314,7 @@ class HomeSummary extends StatelessWidget {
                         children: [
                           Icon(
                             metric.$3,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: metric.$4,
                             size: 22,
                           ),
                           const SizedBox(height: 8),

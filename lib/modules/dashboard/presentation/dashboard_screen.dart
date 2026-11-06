@@ -1,6 +1,7 @@
 import '../../../core/widgets/neu_header_card.dart';
 import 'home_pilot.dart';
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_theme.dart';
 import '../../doses/domain/quantity.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -158,20 +159,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  List<(String, String, IconData)> get summaryMetrics => [
+  List<(String, String, IconData, Color)> get summaryMetrics => [
     if (model.member != null && model.canSeePatients && routeVisible('Pacientes'))
-      ('Pacientes', model.patientCount?.toString() ?? '—', Icons.pets_outlined),
+      (
+        'Pacientes',
+        model.patientCount?.toString() ?? '—',
+        Icons.pets_outlined,
+        VetColors.turquoise,
+      ),
     if (model.member != null && model.canSummarize('agenda') && routeVisible('Agenda'))
       (
         'Citas por venir',
         model.agenda == null ? '—' : '${model.upcoming.length}',
         Icons.calendar_month_outlined,
+        VetColors.violet,
       ),
     if (model.member != null && model.canSummarize('hospital') && routeVisible('Hospitalización'))
       (
         'En hospital',
         model.ward == null ? '—' : '${model.ward!.stays.length}',
         Icons.local_hospital_outlined,
+        VetColors.cyan,
       ),
     if (model.member != null &&
         !model.member!.isPersonal &&
@@ -180,6 +188,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'Tareas visibles',
         model.agenda == null ? '—' : '${model.pendingTasks.length}',
         Icons.task_alt,
+        VetColors.lilac,
       ),
   ];
 
