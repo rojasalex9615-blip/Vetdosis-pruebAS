@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'accent_glow.dart';
 
 import 'package:flutter/material.dart';
@@ -70,16 +72,39 @@ Color calculatorPastel(String id) => switch (id) {
   _ => const Color(0xFFE7E8EF),
 };
 
+double _contrast(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+}
+
+/// Color de la calculadora tal como se eligio, igual en claro y en oscuro.
+///
+/// El tono identifica a cada calculadora y va a juego con su icono, asi que no
+/// se cambia por tema. Lo unico que se corrige es la legibilidad: sobre el
+/// fondo grafito unos pocos tonos quedan por debajo del minimo de 3:1 que pide
+/// WCAG para iconos y componentes, y se aclaran lo justo para alcanzarlo, que
+/// resulta ser entre un 2% y un 6%. Antes se aclaraban todos un 50%, que si
+/// alteraba la identidad y era innecesario: la mayoria ya pasaba de sobra.
+Color calculatorAccent(Color identity, Color background) {
+  if (_contrast(identity, background) >= 3) return identity;
+  for (var step = 1; step <= 25; step++) {
+    final nudged = Color.lerp(identity, Colors.white, step * 0.02)!;
+    if (_contrast(nudged, background) >= 3) return nudged;
+  }
+  return Color.lerp(identity, Colors.white, 0.5)!;
+}
+
 class CalculatorIcon extends StatelessWidget {
   const CalculatorIcon(this.id, {super.key});
   final String id;
   @override
   Widget build(BuildContext context) {
     final identity = calculatorIdentity(id);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final color = dark
-        ? Color.lerp(identity.color, Colors.white, .5)!
-        : identity.color;
+    final color = calculatorAccent(
+      identity.color,
+      Theme.of(context).scaffoldBackgroundColor,
+    );
     return AccentGlow(
       color: color,
       radius: 12,
@@ -113,14 +138,12 @@ class CalculatorSurface extends StatelessWidget {
     final neu = base.extension<WorkspaceStyle>()?.neumorphic == true;
     final referenceStyle = this.referenceStyle && neu;
     final identity = calculatorIdentity(id);
-    final accent = dark
-        ? Color.lerp(identity.color, Colors.white, .5)!
-        : identity.color;
     final surface = Color.lerp(
       base.scaffoldBackgroundColor,
       dark ? identity.color : calculatorPastel(id),
       dark ? .16 : .88,
     )!;
+    final accent = calculatorAccent(identity.color, surface);
     return Theme(
       data: base.copyWith(
         scaffoldBackgroundColor: surface,
@@ -176,7 +199,7 @@ class CalculatorSurface extends StatelessWidget {
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             backgroundColor: accent,
-            foregroundColor: dark ? const Color(0xFF101A28) : Colors.white,
+            foregroundColor: Colors.white,
             minimumSize: Size(0, referenceStyle ? 58 : 52),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             shape: RoundedRectangleBorder(
