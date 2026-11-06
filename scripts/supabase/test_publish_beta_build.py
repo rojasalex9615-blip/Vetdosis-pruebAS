@@ -2,6 +2,7 @@ import contextlib
 import io
 import os
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 import publish_beta_build as publish
 
@@ -47,6 +48,13 @@ class PublishBetaBuild(unittest.TestCase):
         status, calls, _, _ = self.run_script({'BETA_VERSION_CODE': '42', 'SUPABASE_ACCESS_TOKEN': 'secreto'}, [])
         self.assertNotEqual(status, 0)
         self.assertEqual(len(calls), 2)
+
+    def test_workflow_registers_before_publishing_and_requires_the_token(self):
+        workflow = (Path(__file__).resolve().parents[2] / '.github/workflows/build-test-apk.yml').read_text()
+        register = workflow.index('Registrar publicación beta verificada')
+        publish = workflow.index('Publicar APK instalable')
+        self.assertLess(register, publish)
+        self.assertIn('SUPABASE_ACCESS_TOKEN:-', workflow[register:publish])
 
     def test_out_of_range_never_registers(self):
         status, calls, _, _ = self.run_script({'BETA_VERSION_CODE': '0', 'SUPABASE_ACCESS_TOKEN': 'secreto'}, [ROW])

@@ -4,7 +4,7 @@ import sys
 from identity_schema import query
 
 RANGE_ERROR = 'Versión fuera del rango aprobado.'
-MISSING_SECRET = (
+NO_TOKEN_NOTICE = (
     'OMITIDO: falta SUPABASE_ACCESS_TOKEN, no se registró la publicación '
     'beta de la versión {code}. El APK queda sin registrar y, con la '
     'puerta beta activa, solo permitiría lectura y exportación.'
@@ -30,7 +30,7 @@ def main():
     # registro que sí se intenta y falla sí debe fallar, porque un build sin
     # registrar queda en modo read_export y no puede escribir (09B_beta_gate.sql).
     if not os.environ.get('SUPABASE_ACCESS_TOKEN', '').strip():
-        print(MISSING_SECRET.format(code=code), file=sys.stderr)
+        print(NO_TOKEN_NOTICE.format(code=code), file=sys.stderr)
         return 0
 
     query(f'select private.beta_publish_build({code})')
