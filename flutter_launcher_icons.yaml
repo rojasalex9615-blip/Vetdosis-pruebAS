@@ -1,7 +1,12 @@
+# El icono que se publica es @mipmap/vetdosis_launcher, definido a mano en
+# android/app/src/main/res/mipmap-anydpi-v26/vetdosis_launcher.xml y generado
+# desde assets/brand/app-icon-transparent.png. Esta configuracion solo existe
+# por si alguien regenera ic_launcher: nunca debe estampar un fondo ni quitar
+# la transparencia del arte.
 flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/brand/app-icon-transparent.png"
   adaptive_icon_foreground: "assets/brand/app-icon-transparent.png"
-  adaptive_icon_background: "#FFFFFF"
-  remove_alpha_android: true
+  adaptive_icon_background: "tools/icon-background-transparent.png"
+  remove_alpha_android: false
