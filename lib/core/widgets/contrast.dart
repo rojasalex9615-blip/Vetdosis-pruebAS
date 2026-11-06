@@ -16,6 +16,19 @@ double contrastRatio(Color a, Color b) {
 Color composite(Color translucido, double alpha, Color fondo) =>
     Color.alphaBlend(translucido.withValues(alpha: alpha), fondo);
 
+/// Tinta legible encima de [fondo]: blanco o la tinta grafito, la que más
+/// contraste dé.
+///
+/// Se elige midiendo en vez de fijar blanco: el acento de cada calculadora se
+/// ajusta por contraste, así que no se sabe de antemano cuál de las dos gana.
+Color inkOn(Color fondo) =>
+    contrastRatio(Colors.white, fondo) >= contrastRatio(_tinta, fondo)
+    ? Colors.white
+    : _tinta;
+
+/// Casi negro, de la familia grafito; el negro puro desentona con el tema.
+const _tinta = Color(0xFF1A1920);
+
 /// [deseado], retocado lo mínimo para ser legible sobre [fondo].
 ///
 /// Si ya alcanza [objetivo] se devuelve intacto. Si no, se aleja del fondo en
