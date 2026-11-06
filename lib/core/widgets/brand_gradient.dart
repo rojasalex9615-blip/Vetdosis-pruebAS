@@ -7,9 +7,9 @@ import 'contrast.dart';
 /// botón principal de acceso. Se define una sola vez para que cabecera, botón
 /// flotante y acentos no se desincronicen.
 const brandGradientColors = <Color>[
-  VetColors.turquoise,
-  VetColors.violet,
-  VetColors.purple,
+  VetColors.brandAqua,
+  VetColors.brandSky,
+  VetColors.brandLilac,
 ];
 
 /// El recorrido de marca retocado lo mínimo para verse sobre [fondo].

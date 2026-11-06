@@ -41,13 +41,39 @@ double _distancia(Color a, Color b) => math.sqrt(
 );
 
 void main() {
-  test('En claro el color es exactamente el elegido, sin retoque', () {
+  test('Sobre el grafito se usa el tono palido tal cual, sin oscurecer', () {
+    // Ale pidio tonos mas palidos. Sobre el fondo oscuro el tono elegido ya
+    // contrasta de sobra, asi que debe salir intacto: es ahi donde su paleta
+    // se ve tal como la penso.
     for (final id in _ids) {
       final elegido = calculatorIdentity(id).color;
       expect(
-        calculatorAccent(elegido, _claro),
+        calculatorAccent(elegido, _grafito),
         elegido,
-        reason: '$id no debe cambiar de tono sobre el fondo claro',
+        reason: '$id no deberia necesitar retoque sobre el grafito',
+      );
+    }
+  });
+
+  test('En claro el retoque conserva el matiz y no vuelve al tono oscuro', () {
+    // Sobre un fondo casi blanco un tono palido no se ve, asi que el acento
+    // se oscurece lo justo. Lo que no puede pasar es que pierda el matiz que
+    // identifica la calculadora, ni que vuelva a los tonos cargados de antes
+    // (que estaban por debajo de 0.35 de luminosidad HSL).
+    for (final id in _ids) {
+      final elegido = calculatorIdentity(id).color;
+      final usado = calculatorAccent(elegido, _claro);
+      final matizElegido = HSLColor.fromColor(elegido).hue;
+      final matizUsado = HSLColor.fromColor(usado).hue;
+      expect(
+        (matizUsado - matizElegido).abs(),
+        lessThanOrEqualTo(2),
+        reason: '$id cambia de matiz y deja de identificar a su calculadora',
+      );
+      expect(
+        HSLColor.fromColor(usado).lightness,
+        greaterThanOrEqualTo(0.40),
+        reason: '$id vuelve a ser un tono cargado de los que Ale pidio quitar',
       );
     }
   });
@@ -108,7 +134,7 @@ void main() {
     for (final fondo in [_claro, _grafito]) {
       for (final id in _ids) {
         final elegido = calculatorIdentity(id).color;
-        final placa = composite(elegido, .1, fondo);
+        final placa = composite(elegido, .35, fondo);
         expect(
           contrastRatio(calculatorAccent(elegido, placa), placa),
           greaterThanOrEqualTo(3),

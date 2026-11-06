@@ -80,15 +80,27 @@ void main() {
     test('el recorrido sigue siendo el de marca, no colores nuevos', () {
       // Sobre el grafito ningún tono necesita retoque: debe salir intacto.
       expect(brandPaletteOn(VetColors.darkCanvas), brandGradientColors);
-      // Y donde sí hace falta, se conserva el orden claro → oscuro del
-      // recorrido en vez de aplanarse a un solo tono.
+      // Y donde sí hace falta retoque, los tres tramos siguen siendo tres
+      // tonos distintos en vez de aplanarse a uno solo.
+      //
+      // No se comprueba el orden de luminosidad: el recorrido que entregó Ale
+      // (aqua → azul → lila) es deliberadamente parejo de claridad, y exigir
+      // que fuera de claro a oscuro era una suposición de la paleta anterior,
+      // no un requisito del diseño.
       final clara = brandPaletteOn(neuBackground);
       expect(clara.length, brandGradientColors.length);
       expect(
-        clara.first.computeLuminance(),
-        greaterThan(clara.last.computeLuminance()),
-        reason: 'el degradado perdió su dirección turquesa → púrpura',
+        clara.toSet().length,
+        clara.length,
+        reason: 'el degradado se aplanó: dos tramos acabaron en el mismo tono',
       );
+      for (final (i, tono) in clara.indexed) {
+        expect(
+          HSLColor.fromColor(tono).hue,
+          closeTo(HSLColor.fromColor(brandGradientColors[i]).hue, 2),
+          reason: 'el tramo $i perdió el matiz de marca',
+        );
+      }
     });
   });
 

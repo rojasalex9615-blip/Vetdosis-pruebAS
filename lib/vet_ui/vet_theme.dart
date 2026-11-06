@@ -27,6 +27,14 @@ abstract final class VetColors {
   static const violet = Color(0xFF7D7AF2);
   static const purple = Color(0xFF7C4DFF);
   static const purpleDeep = Color(0xFF632CE5);
+
+  // Recorrido de marca tomado pixel a pixel del boton «Iniciar Sesion» que
+  // entrego Ale: mas palido que el anterior y con un paso por azul en medio
+  // que antes no existia. Se guarda aqui para que tema y pruebas midan lo
+  // mismo.
+  static const brandAqua = Color(0xFF60E5E2);
+  static const brandSky = Color(0xFF71AFE2);
+  static const brandLilac = Color(0xFFAF84F0);
   static const pink = Color(0xFFFF4FB3);
   // Semánticos: NO usar el rosa decorativo como alerta médica por defecto.
   static const danger = Color(0xFFB42318);

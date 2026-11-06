@@ -9,43 +9,43 @@ import 'workspace_panel.dart';
 
 /// Stable identities shared by the tool selector and its calculation surface.
 ({Color color, IconData icon}) calculatorIdentity(String id) => switch (id) {
-  'dose' => (color: const Color(0xFF087F70), icon: Icons.medication_outlined),
+  'dose' => (color: const Color(0xFF7BEADC), icon: Icons.medication_outlined),
   'concentration' => (
-    color: const Color(0xFF087B91),
+    color: const Color(0xFF7BD8EA),
     icon: Icons.medication_liquid_outlined,
   ),
-  'withdrawals' => (color: const Color(0xFF7D5EAB), icon: Icons.schedule),
+  'withdrawals' => (color: const Color(0xFFAE9ACB), icon: Icons.schedule),
   'manufacturer' => (
-    color: const Color(0xFF3968A7),
+    color: const Color(0xFF8DADD8),
     icon: Icons.medication_liquid_outlined,
   ),
   'aviculture' => (
-    color: const Color(0xFF137D9F),
+    color: const Color(0xFF7BCFEA),
     icon: Icons.agriculture_outlined,
   ),
-  'incubation' => (color: const Color(0xFF7855B5), icon: Icons.egg_outlined),
-  'fluids' => (color: const Color(0xFF087B91), icon: Icons.water_drop_outlined),
-  'cri' => (color: const Color(0xFF7550AE), icon: Icons.speed_outlined),
-  'herd' => (color: const Color(0xFF555CB0), icon: Icons.pets_outlined),
-  'water' => (color: const Color(0xFF087E82), icon: Icons.water_outlined),
-  'feed' => (color: const Color(0xFF94619B), icon: Icons.grass_outlined),
-  'adjustment' => (color: const Color(0xFF9A36AE), icon: Icons.tune),
+  'incubation' => (color: const Color(0xFFAA94D1), icon: Icons.egg_outlined),
+  'fluids' => (color: const Color(0xFF7BD8EA), icon: Icons.water_drop_outlined),
+  'cri' => (color: const Color(0xFFAC96CF), icon: Icons.speed_outlined),
+  'herd' => (color: const Color(0xFF979BCE), icon: Icons.pets_outlined),
+  'water' => (color: const Color(0xFF7BE6EA), icon: Icons.water_outlined),
+  'feed' => (color: const Color(0xFFC0A1C4), icon: Icons.grass_outlined),
+  'adjustment' => (color: const Color(0xFFCD8ADB), icon: Icons.tune),
   'vitals' => (
-    color: const Color(0xFF087B99),
+    color: const Color(0xFF7BD3EA),
     icon: Icons.monitor_heart_outlined,
   ),
   'metabolic' => (
-    color: const Color(0xFF6B5EB2),
+    color: const Color(0xFFA098CD),
     icon: Icons.monitor_weight_outlined,
   ),
-  'protocols' => (color: const Color(0xFF4F64AB), icon: Icons.checklist),
-  'ruleOfThree' => (color: const Color(0xFF555CB0), icon: Icons.balance),
+  'protocols' => (color: const Color(0xFF96A3CF), icon: Icons.checklist),
+  'ruleOfThree' => (color: const Color(0xFF979BCE), icon: Icons.balance),
   'internationalUnits' => (
-    color: const Color(0xFF94619B),
+    color: const Color(0xFFC0A1C4),
     icon: Icons.vaccines_outlined,
   ),
-  'conversion' => (color: const Color(0xFF087B91), icon: Icons.swap_horiz),
-  _ => (color: const Color(0xFF7550AE), icon: Icons.schedule),
+  'conversion' => (color: const Color(0xFF7BD8EA), icon: Icons.swap_horiz),
+  _ => (color: const Color(0xFFAC96CF), icon: Icons.schedule),
 };
 
 /// Persistent tool colors: independent of the user's global palette.
@@ -95,9 +95,12 @@ class CalculatorIcon extends StatelessWidget {
     // El glifo no se pinta sobre el lienzo sino sobre una placa tenida con su
     // propio color, que aclara el fondo. Se compone primero esa placa y el
     // contraste se mide contra ella.
+    // La placa se tine al 35%, no al 10%. Con los tonos cargados de antes un
+    // 10% ya se notaba; con la paleta palida que pidio Ale ese 10% dejaba la
+    // placa indistinguible del fondo y el icono parecia flotar suelto.
     final placa = composite(
       identity.color,
-      .1,
+      .35,
       Theme.of(context).scaffoldBackgroundColor,
     );
     final color = calculatorAccent(identity.color, placa);
@@ -174,22 +177,22 @@ class CalculatorSurface extends StatelessWidget {
               ? const EdgeInsets.symmetric(horizontal: 22, vertical: 20)
               : base.inputDecorationTheme.contentPadding,
           border: neu
-              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.8 : 1)
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.2 : 1)
               : null,
           enabledBorder: neu
-              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.8 : 1)
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.2 : 1)
               : null,
           focusedBorder: referenceStyle
               ? NeuInputBorder(
                   dark: dark,
-                  depth: 1.8,
+                  depth: 1.2,
                   borderSide: BorderSide(color: accent, width: 1.5),
                 )
               : base.inputDecorationTheme.focusedBorder,
           errorBorder: referenceStyle
               ? NeuInputBorder(
                   dark: dark,
-                  depth: 1.8,
+                  depth: 1.2,
                   borderSide: BorderSide(
                     color: base.colorScheme.error,
                     width: 1.5,
