@@ -1,4 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
+import '../../../core/widgets/contrast.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../../../core/widgets/neu_identity.dart';
@@ -260,6 +261,14 @@ class HomeModuleGrid extends StatelessWidget {
   );
 }
 
+/// Fondo real de la tarjeta de un modulo: su color de marca, translucido,
+/// compuesto sobre la superficie. El contraste del icono se mide contra esto.
+Color _placa(BuildContext context, Color color) => composite(
+  color,
+  Theme.of(context).brightness == Brightness.dark ? .14 : .10,
+  Theme.of(context).colorScheme.surface,
+);
+
 class HomeSummary extends StatelessWidget {
   const HomeSummary({super.key, required this.metrics, this.activity});
   final List<(String, String, IconData, Color)> metrics;
@@ -302,11 +311,7 @@ class HomeSummary extends StatelessWidget {
                         // Cada modulo lleva su color de la paleta de marca en
                         // lugar de un unico primary, para distinguirlos de un
                         // vistazo igual que en el prototipo.
-                        color: metric.$4.withValues(
-                          alpha: Theme.of(context).brightness == Brightness.dark
-                              ? .14
-                              : .10,
-                        ),
+                        color: _placa(context, metric.$4),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Column(
@@ -314,7 +319,13 @@ class HomeSummary extends StatelessWidget {
                         children: [
                           Icon(
                             metric.$3,
-                            color: metric.$4,
+                            // Los tonos de marca son claros: sobre la tarjeta
+                            // casi blanca del tema claro no se verian, asi que
+                            // el glifo se oscurece lo justo para ser legible.
+                            color: readableOn(
+                              metric.$4,
+                              _placa(context, metric.$4),
+                            ),
                             size: 22,
                           ),
                           const SizedBox(height: 8),

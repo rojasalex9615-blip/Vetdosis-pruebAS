@@ -1,6 +1,5 @@
-import 'dart:math' as math;
-
 import 'accent_glow.dart';
+import 'contrast.dart';
 
 import 'package:flutter/material.dart';
 
@@ -72,12 +71,6 @@ Color calculatorPastel(String id) => switch (id) {
   _ => const Color(0xFFE7E8EF),
 };
 
-double _contrast(Color a, Color b) {
-  final la = a.computeLuminance();
-  final lb = b.computeLuminance();
-  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
-}
-
 /// Color de la calculadora tal como se eligio, igual en claro y en oscuro.
 ///
 /// El tono identifica a cada calculadora y va a juego con su icono, asi que no
@@ -86,14 +79,8 @@ double _contrast(Color a, Color b) {
 /// WCAG para iconos y componentes, y se aclaran lo justo para alcanzarlo, que
 /// resulta ser entre un 2% y un 6%. Antes se aclaraban todos un 50%, que si
 /// alteraba la identidad y era innecesario: la mayoria ya pasaba de sobra.
-Color calculatorAccent(Color identity, Color background) {
-  if (_contrast(identity, background) >= 3) return identity;
-  for (var step = 1; step <= 25; step++) {
-    final nudged = Color.lerp(identity, Colors.white, step * 0.02)!;
-    if (_contrast(nudged, background) >= 3) return nudged;
-  }
-  return Color.lerp(identity, Colors.white, 0.5)!;
-}
+Color calculatorAccent(Color identity, Color background) =>
+    readableOn(identity, background);
 
 class CalculatorIcon extends StatelessWidget {
   const CalculatorIcon(this.id, {super.key});
@@ -101,10 +88,15 @@ class CalculatorIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final identity = calculatorIdentity(id);
-    final color = calculatorAccent(
+    // El glifo no se pinta sobre el lienzo sino sobre una placa tenida con su
+    // propio color, que aclara el fondo. Se compone primero esa placa y el
+    // contraste se mide contra ella.
+    final placa = composite(
       identity.color,
+      .1,
       Theme.of(context).scaffoldBackgroundColor,
     );
+    final color = calculatorAccent(identity.color, placa);
     return AccentGlow(
       color: color,
       radius: 12,
@@ -112,7 +104,7 @@ class CalculatorIcon extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
+          color: placa,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(identity.icon, color: color, size: 24),

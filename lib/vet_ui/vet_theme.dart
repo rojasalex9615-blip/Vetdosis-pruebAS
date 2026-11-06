@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 /// Identidad cromática consolidada de los HTML de Stitch. Sin dependencias web.
 abstract final class VetColors {
   static const canvas = Color(0xFFF1F4F8);
+  // Modo oscuro, medido de las maquetas que entrego Ale. Vive aqui para que
+  // el tema y las pruebas usen el mismo valor y no se separen.
+  static const darkCanvas = Color(0xFF201F25);
+  static const darkSurface = Color(0xFF25242A);
   static const surface = Color(0xFFF7F9FC);
   static const raised = Color(0xFFFFFFFF);
   static const recessed = Color(0xFFEDF2F7);
