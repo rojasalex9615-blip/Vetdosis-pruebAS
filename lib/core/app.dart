@@ -651,6 +651,7 @@ class CoreShell extends StatelessWidget {
                                 MediaQuery.sizeOf(context).width - 152,
                                 Theme.of(context).textTheme.titleLarge ??
                                     const TextStyle(fontSize: 22),
+                                scaler: MediaQuery.textScalerOf(context),
                               ).lines) +
                     MediaQuery.textScalerOf(context).scale(
                           Theme.of(context).textTheme.labelSmall?.fontSize ??

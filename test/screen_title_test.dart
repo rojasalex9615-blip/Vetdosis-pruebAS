@@ -152,6 +152,58 @@ void main() {
     }
   });
 
+  testWidgets('Con el texto del sistema agrandado los nombres siguen enteros', (
+    tester,
+  ) async {
+    // Lo encontro Greptile: la medida usaba TextPainter sin el factor de
+    // texto del sistema, pero Text si lo aplica al pintar, asi que un nombre
+    // medido como de una linea acababa recortado. Al comprobarlo salio peor
+    // de lo que decia: con el texto al 160% hasta «Agenda» se cortaba.
+    const cortos = ['Agenda', 'Pacientes', 'Cálculos clínicos'];
+    for (final escala in [1.0, 1.3, 1.6, 2.0]) {
+      for (final titulo in cortos) {
+        tester.view.physicalSize = const Size(720, 1560);
+        tester.view.devicePixelRatio = 2;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          MaterialApp(
+            builder: (context, hijo) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(escala)),
+              child: hijo!,
+            ),
+            home: Scaffold(
+              drawer: const Drawer(),
+              appBar: AppBar(
+                toolbarHeight: 160,
+                title: ScreenTitle(screen: titulo, clinic: 'vet prueba1'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.person_outline),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.auto_awesome),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(
+          tester.renderObject<RenderParagraph>(find.text(titulo))
+              .didExceedMaxLines,
+          isFalse,
+          reason: '«$titulo» se corta con el texto al ${escala}x',
+        );
+      }
+    }
+  });
+
   testWidgets('Sin sesion no se pinta una segunda linea vacia', (tester) async {
     tester.view.physicalSize = const Size(720, 1560);
     tester.view.devicePixelRatio = 2;
