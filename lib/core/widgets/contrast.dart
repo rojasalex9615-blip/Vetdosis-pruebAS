@@ -57,3 +57,22 @@ Color readableOn(Color deseado, Color fondo, {double objetivo = 3}) {
   }
   return extremo;
 }
+
+/// Tinta legible encima de un degradado, midiendo contra todos sus tramos.
+///
+/// Un degradado no tiene un solo fondo: el glifo que se apoya en él tiene que
+/// leerse igual en el extremo claro y en el oscuro. Se prueban las dos tintas
+/// y gana la que mejor aguanta su *peor* tramo, no el promedio.
+///
+/// Hacía falta porque el botón flotante del escáner llevaba el glifo en blanco
+/// fijo: sobre el violeta se leía (3.54:1) y sobre el turquesa no (1.79:1).
+Color inkOnGradient(List<Color> tramos, {double objetivo = 3}) {
+  double peor(Color tinta) => tramos
+      .map((tramo) => contrastRatio(tinta, tramo))
+      .reduce((a, b) => a < b ? a : b);
+  final claro = peor(Colors.white);
+  final oscuro = peor(VetColors.darkInk);
+  if (claro >= objetivo && claro >= oscuro) return Colors.white;
+  if (oscuro >= objetivo) return VetColors.darkInk;
+  return claro >= oscuro ? Colors.white : Colors.black;
+}
