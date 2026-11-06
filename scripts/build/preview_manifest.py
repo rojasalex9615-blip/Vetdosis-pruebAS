@@ -14,7 +14,7 @@ def main():
         'manufacturer_calculator': 'lib/modules/doses/presentation/commercial_package_dose_screen.dart',
         'settings': 'lib/modules/clinic_experience/presentation/clinic_experience_screen.dart',
         'navigation': 'lib/modules/core/domain/section_catalog.dart',
-        'launcher': 'android/app/src/main/res/mipmap-anydpi/vetdosis_launcher.xml',
+        'launcher': 'android/app/src/main/res/mipmap-anydpi-v26/vetdosis_launcher.xml',
         'hospital_push': 'lib/modules/hospital/application/hospital_push_service.dart',
         'service_commissions': 'lib/modules/operations/presentation/service_commission_panel.dart',
         'storage_backup': 'scripts/supabase/encrypted_storage_backup.py',
