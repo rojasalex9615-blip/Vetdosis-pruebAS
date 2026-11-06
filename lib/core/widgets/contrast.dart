@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../vet_ui/vet_theme.dart';
+
 /// Relación de contraste WCAG entre dos colores opacos.
 double contrastRatio(Color a, Color b) {
   final la = a.computeLuminance();
@@ -21,13 +23,21 @@ Color composite(Color translucido, double alpha, Color fondo) =>
 ///
 /// Se elige midiendo en vez de fijar blanco: el acento de cada calculadora se
 /// ajusta por contraste, así que no se sabe de antemano cuál de las dos gana.
-Color inkOn(Color fondo) =>
-    contrastRatio(Colors.white, fondo) >= contrastRatio(_tinta, fondo)
-    ? Colors.white
-    : _tinta;
-
-/// Casi negro, de la familia grafito; el negro puro desentona con el tema.
-const _tinta = Color(0xFF1A1920);
+///
+/// Garantiza [objetivo] siempre que alguna tinta pueda alcanzarlo: si ni el
+/// blanco ni la tinta grafito llegan, recurre al extremo puro. Pasa sobre un
+/// acento de tono medio, como el de un boton de calculadora dentro de otra
+/// superficie ya tenida.
+Color inkOn(Color fondo, {double objetivo = 4.5}) {
+  if (contrastRatio(Colors.white, fondo) >= objetivo) return Colors.white;
+  if (contrastRatio(VetColors.darkInk, fondo) >= objetivo) {
+    return VetColors.darkInk;
+  }
+  return contrastRatio(Colors.white, fondo) >=
+          contrastRatio(Colors.black, fondo)
+      ? Colors.white
+      : Colors.black;
+}
 
 /// [deseado], retocado lo mínimo para ser legible sobre [fondo].
 ///

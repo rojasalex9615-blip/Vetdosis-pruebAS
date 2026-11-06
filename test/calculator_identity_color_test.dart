@@ -139,10 +139,15 @@ void main() {
     }
   });
 
-  test('La etiqueta del boton se lee sobre el acento en los dos temas', () {
+  test('La etiqueta del boton se lee sobre cualquier superficie', () {
     // El acento se ajusta por contraste, asi que la tinta no puede fijarse:
     // se elige midiendo. El umbral de texto es 4.5:1, no 3:1.
-    for (final fondo in [_claro, _grafito]) {
+    //
+    // Se incluye darkSurface, no solo el lienzo: una calculadora puede
+    // quedar dentro de otra superficie ya tenida, y ahi el acento sale mas
+    // claro. Sobre ese fondo ninguna de las dos tintas habituales llegaba al
+    // umbral y hacia falta el extremo puro.
+    for (final fondo in [_claro, _grafito, VetColors.darkSurface]) {
       for (final id in _ids) {
         final acento = calculatorAccent(calculatorIdentity(id).color, fondo);
         expect(

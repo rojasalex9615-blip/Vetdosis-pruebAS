@@ -258,7 +258,7 @@ class VetDosisApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               side: BorderSide(
-                color: dark ? const Color(0xFF39383F) : const Color(0xFFDDE7EF),
+                color: dark ? VetColors.darkOutline : const Color(0xFFDDE7EF),
               ),
             )
           : null,
@@ -1794,19 +1794,19 @@ class SoftPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final surface = dark ? const Color(0xFF25242A) : VetColors.surface;
+    final surface = dark ? VetColors.darkSurface : VetColors.surface;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: dark
-              ? const [Color(0xFF2A2932), Color(0xFF201F25)]
+              ? const [VetColors.darkRaised, VetColors.darkCanvas]
               : const [Color(0xFFFFFFFF), Color(0xFFF1F6FA)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: dark ? const Color(0xFF34333B) : const Color(0xFFE4EDF3),
+          color: dark ? VetColors.darkBorder : const Color(0xFFE4EDF3),
         ),
         boxShadow: [
           BoxShadow(
