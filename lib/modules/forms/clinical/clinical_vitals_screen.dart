@@ -248,13 +248,13 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                 theme.colorScheme.secondary.withValues(alpha: dark ? 0.18 : 0.11),
               ]
             : dark
-            ? const [Color(0xFF182536), Color(0xFF101923)]
+            ? const [Color(0xFF2A2932), Color(0xFF201F25)]
             : const [Color(0xFFFFFFFF), Color(0xFFF1F6FA)],
       ),
       borderRadius: BorderRadius.circular(24),
       border: Border.all(
         color: dark
-            ? const Color(0xFF243547)
+            ? const Color(0xFF34333B)
             : const Color(0xFFE4EDF3),
       ),
       boxShadow: [

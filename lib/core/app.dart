@@ -153,8 +153,10 @@ class VetDosisApp extends StatelessWidget {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
     // Tonos tomados de las maquetas de modo oscuro que entrego Ale: grafito
-    // neutro con matiz violeta, no el azul marino anterior. Medidos sobre las
-    // capturas: fondo #201F25 y tarjetas #25242A.
+    // neutro con matiz violeta. Si se agrega un color oscuro nuevo, debe salir
+    // de esta familia (#201F25, #25242A, #2A2932, #2E2D35, #34333B, #39383F) y
+    // no del azul marino anterior, o la pantalla se vera de dos tonos.
+    // Medidos sobre las capturas: fondo #201F25 y tarjetas #25242A.
     final background = dark
         ? const Color(0xFF201F25)
         : (neumorphic ? neuBackground : VetColors.canvas);
@@ -252,7 +254,7 @@ class VetDosisApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               side: BorderSide(
-                color: dark ? const Color(0xFF2A3A4B) : const Color(0xFFDDE7EF),
+                color: dark ? const Color(0xFF39383F) : const Color(0xFFDDE7EF),
               ),
             )
           : null,
@@ -1760,19 +1762,19 @@ class SoftPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final surface = dark ? const Color(0xFF131E2A) : VetColors.surface;
+    final surface = dark ? const Color(0xFF25242A) : VetColors.surface;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: dark
-              ? const [Color(0xFF182536), Color(0xFF101923)]
+              ? const [Color(0xFF2A2932), Color(0xFF201F25)]
               : const [Color(0xFFFFFFFF), Color(0xFFF1F6FA)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: dark ? const Color(0xFF243547) : const Color(0xFFE4EDF3),
+          color: dark ? const Color(0xFF34333B) : const Color(0xFFE4EDF3),
         ),
         boxShadow: [
           BoxShadow(

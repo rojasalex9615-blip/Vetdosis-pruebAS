@@ -73,7 +73,7 @@ class HomeSurface extends StatelessWidget {
                     blurRadius: 14,
                   ),
                   BoxShadow(
-                    color: dark ? const Color(0xFF1C2935) : Colors.white,
+                    color: dark ? const Color(0xFF2E2D35) : Colors.white,
                     offset: const Offset(-4, -4),
                     blurRadius: 12,
                   ),

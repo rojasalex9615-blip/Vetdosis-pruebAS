@@ -15,7 +15,7 @@ List<BoxShadow> neuShadows(bool dark, {double depth = 1}) => [
     blurRadius: 16 * depth,
   ),
   BoxShadow(
-    color: dark ? const Color(0x402F4053) : const Color(0xF2FFFFFF),
+    color: dark ? const Color(0x403A3747) : const Color(0xF2FFFFFF),
     offset: Offset(-5 * depth, -5 * depth),
     blurRadius: 16 * depth,
   ),
