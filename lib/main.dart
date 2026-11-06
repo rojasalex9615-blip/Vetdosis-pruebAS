@@ -53,6 +53,8 @@ import 'modules/auth/presentation/auth_view_model.dart';
 import 'modules/core/data/settings_repository.dart';
 import 'modules/core/presentation/core_view_model.dart';
 import 'modules/offline/data/local_database.dart';
+import 'modules/notifications/data/local_notification_store.dart';
+import 'modules/notifications/domain/notification_repository.dart';
 import 'modules/offline/data/local_store.dart';
 import 'modules/offline/application/sync_engine.dart';
 import 'modules/offline/application/membership_sync_authority.dart';
@@ -101,6 +103,7 @@ Future<void> main() async {
   ModuleAccessRepository? moduleAccess;
   ClinicExperienceRepository? experienceRepository;
   ReviewCatalogRepository? reviewCatalog;
+  NotificationRepository? notifications;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
     await Supabase.initialize(
@@ -129,7 +132,11 @@ Future<void> main() async {
     moduleAccess = SupabaseModuleAccessRepository(Supabase.instance.client);
     experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
-    final localStore = LocalStore(await openOfflineDatabase());
+    final offlineDatabase = await openOfflineDatabase();
+    final localStore = LocalStore(offlineDatabase);
+    // Las notificaciones personales viven en la misma base local, para
+    // que notas y recordatorios funcionen tambien sin conexion.
+    notifications = LocalNotificationStore(offlineDatabase);
     final authRepository = SupabaseAuthRepository(
       Supabase.instance.client,
       existingSchema: existingSchema,
@@ -223,6 +230,7 @@ Future<void> main() async {
       moduleAccess: moduleAccess,
       experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
+      notifications: notifications,
       hospitalAlerts: alerts,
       requireAuth: true,
     ),
