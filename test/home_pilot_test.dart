@@ -3,6 +3,7 @@ import 'package:vetdosis_pro/core/widgets/workspace_panel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetdosis_pro/core/app.dart';
+import 'package:vetdosis_pro/core/widgets/contrast.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/domain/module_access.dart';
@@ -223,4 +224,60 @@ void main() {
       core.dispose();
     },
   );
+
+  testWidgets('El icono de cada cifra contrasta con su tarjeta ya pintada', (
+    tester,
+  ) async {
+    // CodeRabbit senalo, con razon, que medir el ayudante no prueba lo que se
+    // pinta: esta prueba lee el color real del glifo y el de su tarjeta del
+    // arbol ya construido, en los dos temas.
+    const metricas = [
+      ('Pacientes', '12', Icons.pets_outlined, VetColors.turquoise),
+      ('Citas por venir', '3', Icons.calendar_month_outlined, VetColors.violet),
+      ('En hospital', '2', Icons.local_hospital_outlined, VetColors.cyan),
+      ('Tareas visibles', '5', Icons.task_alt, VetColors.lilac),
+    ];
+    for (final brillo in [Brightness.light, Brightness.dark]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            brightness: brillo,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: VetColors.purple,
+              brightness: brillo,
+            ).copyWith(
+              surface: brillo == Brightness.dark
+                  ? VetColors.darkSurface
+                  : VetColors.surface,
+            ),
+          ),
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: HomeSummary(metrics: metricas),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      for (final metrica in metricas) {
+        final icono = tester.widget<Icon>(find.byIcon(metrica.$3).first);
+        final tarjeta = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byIcon(metrica.$3).first,
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final fondo = (tarjeta.decoration! as BoxDecoration).color!;
+        expect(
+          contrastRatio(icono.color!, fondo),
+          greaterThanOrEqualTo(3),
+          reason:
+              '${metrica.$1} no se distingue sobre su tarjeta en $brillo',
+        );
+      }
+      await tester.pumpWidget(const SizedBox());
+    }
+  });
 }

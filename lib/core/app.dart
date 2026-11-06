@@ -95,6 +95,8 @@ const paletteColors = [
   Color(0xFF52606D),
 ];
 
+/// Raiz de la aplicacion: arma el tema, decide si hay que autenticar y
+/// entrega los repositorios que cada modulo necesita.
 class VetDosisApp extends StatelessWidget {
   const VetDosisApp({
     super.key,
@@ -355,6 +357,8 @@ class VetDosisApp extends StatelessWidget {
         );
 }
 
+/// Armazon de la sesion iniciada: cabecera, navegacion, menu lateral y el
+/// despacho de pantallas por nombre.
 class CoreShell extends StatelessWidget {
   const CoreShell({
     super.key,
@@ -1754,6 +1758,8 @@ class CoreShell extends StatelessWidget {
   ];
 }
 
+/// Tarjeta con relieve suave, el envoltorio habitual de los bloques de
+/// contenido fuera de las calculadoras.
 class SoftPanel extends StatelessWidget {
   const SoftPanel({super.key, required this.child});
   final Widget child;

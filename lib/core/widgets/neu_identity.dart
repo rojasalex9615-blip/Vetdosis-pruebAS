@@ -8,6 +8,10 @@ const neuLavender = Color(0xFF7860B5);
 const neuMint = Color(0xFF98E7D9);
 const neuLilac = Color(0xFFC5A8EF);
 
+/// Par de sombras del estilo neumorfico: una oscura abajo y una luz arriba.
+///
+/// [depth] escala las dos a la vez, para hundir un control pulsado o
+/// levantar una tarjeta sin recalcular los desplazamientos.
 List<BoxShadow> neuShadows(bool dark, {double depth = 1}) => [
   BoxShadow(
     color: dark ? const Color(0x80000000) : const Color(0x80B8BDCE),
@@ -91,6 +95,9 @@ class NeuInputBorder extends OutlineInputBorder {
   }
 }
 
+/// Marca completa: el icono con el nombre y el lema debajo.
+///
+/// Con [large] se usa en las pantallas de acceso; en pequeno, en la cabecera.
 class VetDosisBrand extends StatelessWidget {
   const VetDosisBrand({super.key, this.large = false});
   final bool large;
@@ -154,6 +161,7 @@ class VetDosisBrand extends StatelessWidget {
   }
 }
 
+/// Boton principal del estilo neumorfico, que se hunde al pulsarlo.
 class NeuPrimaryButton extends StatefulWidget {
   const NeuPrimaryButton({
     super.key,

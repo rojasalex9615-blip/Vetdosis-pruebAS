@@ -35,6 +35,7 @@ ThemeData homePilotTheme(ThemeData base) {
   return base;
 }
 
+/// Tarjeta de fondo de los bloques del Inicio, con su relieve y su borde.
 class HomeSurface extends StatelessWidget {
   const HomeSurface({
     super.key,
@@ -91,6 +92,7 @@ class HomeSurface extends StatelessWidget {
   }
 }
 
+/// Selector del area clinica en la que se esta trabajando.
 class HomePracticeSelector extends StatelessWidget {
   const HomePracticeSelector({
     super.key,
@@ -185,6 +187,7 @@ class HomePracticeSelector extends StatelessWidget {
   );
 }
 
+/// Rejilla de accesos a los modulos disponibles en el Inicio.
 class HomeModuleGrid extends StatelessWidget {
   const HomeModuleGrid({
     super.key,
@@ -269,6 +272,10 @@ Color _placa(BuildContext context, Color color) => composite(
   Theme.of(context).colorScheme.surface,
 );
 
+/// Resumen del Inicio: las cifras del espacio y el grafico de la semana.
+///
+/// Cada cifra lleva el color de su modulo, retocado si hiciera falta para
+/// que el icono se distinga sobre su propia tarjeta tenida.
 class HomeSummary extends StatelessWidget {
   const HomeSummary({super.key, required this.metrics, this.activity});
   final List<(String, String, IconData, Color)> metrics;

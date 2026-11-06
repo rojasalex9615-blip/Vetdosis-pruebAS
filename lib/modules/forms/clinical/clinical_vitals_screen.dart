@@ -10,6 +10,7 @@ import 'clinical_repository.dart';
 import 'vital_reference_catalog.dart';
 import 'vitals_models.dart';
 
+/// Registro de constantes clinicas de un paciente hospitalizado.
 class ClinicalVitalsScreen extends StatefulWidget {
   const ClinicalVitalsScreen({
     super.key,
