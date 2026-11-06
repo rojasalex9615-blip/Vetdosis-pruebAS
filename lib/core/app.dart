@@ -2,6 +2,7 @@ import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import 'widgets/accent_glow.dart';
 import 'widgets/brand_gradient.dart';
 import 'widgets/contrast.dart';
+import 'widgets/screen_title.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
@@ -646,27 +647,29 @@ class CoreShell extends StatelessWidget {
                         1.4 +
                     16,
               ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (model.screen == 'Inicio')
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: const VetDosisBrand(),
+        title: model.screen == 'Inicio'
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: VetDosisBrand(),
+                  ),
+                  if (auth?.active != null)
+                    Text(
+                      auth!.active!.clinicName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                ],
               )
-            else
-              Text(model.screen, maxLines: 1, overflow: TextOverflow.ellipsis),
-            if (auth?.active != null)
-              Text(
-                auth!.active!.clinicName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall,
+            : ScreenTitle(
+                screen: model.screen,
+                clinic: auth?.active?.clinicName,
               ),
-          ],
-        ),
         actions: [
           if (auth != null)
             IconButton(
