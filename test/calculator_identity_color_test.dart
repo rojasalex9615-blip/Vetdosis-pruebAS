@@ -138,4 +138,19 @@ void main() {
       });
     }
   });
+
+  test('La etiqueta del boton se lee sobre el acento en los dos temas', () {
+    // El acento se ajusta por contraste, asi que la tinta no puede fijarse:
+    // se elige midiendo. El umbral de texto es 4.5:1, no 3:1.
+    for (final fondo in [_claro, _grafito]) {
+      for (final id in _ids) {
+        final acento = calculatorAccent(calculatorIdentity(id).color, fondo);
+        expect(
+          contrastRatio(inkOn(acento), acento),
+          greaterThanOrEqualTo(4.5),
+          reason: '$id tendria la etiqueta ilegible sobre su boton',
+        );
+      }
+    }
+  });
 }
