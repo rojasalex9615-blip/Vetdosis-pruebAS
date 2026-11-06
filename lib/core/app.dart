@@ -152,11 +152,14 @@ class VetDosisApp extends StatelessWidget {
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
+    // Tonos tomados de las maquetas de modo oscuro que entrego Ale: grafito
+    // neutro con matiz violeta, no el azul marino anterior. Medidos sobre las
+    // capturas: fondo #201F25 y tarjetas #25242A.
     final background = dark
-        ? const Color(0xFF0B121C)
+        ? const Color(0xFF201F25)
         : (neumorphic ? neuBackground : VetColors.canvas);
     final surface = dark
-        ? const Color(0xFF131E2A)
+        ? const Color(0xFF25242A)
         : (neumorphic ? neuBackground : VetColors.surface);
     final primary = dark
         ? const Color(0xFF55E2D3)
