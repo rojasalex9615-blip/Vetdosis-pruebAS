@@ -158,10 +158,10 @@ class VetDosisApp extends StatelessWidget {
     // no del azul marino anterior, o la pantalla se vera de dos tonos.
     // Medidos sobre las capturas: fondo #201F25 y tarjetas #25242A.
     final background = dark
-        ? const Color(0xFF201F25)
+        ? VetColors.darkCanvas
         : (neumorphic ? neuBackground : VetColors.canvas);
     final surface = dark
-        ? const Color(0xFF25242A)
+        ? VetColors.darkSurface
         : (neumorphic ? neuBackground : VetColors.surface);
     final primary = dark
         ? const Color(0xFF55E2D3)
