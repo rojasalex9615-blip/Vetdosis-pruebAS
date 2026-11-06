@@ -14,6 +14,10 @@ import '../../prescribing/presentation/rx_entry_screen.dart';
 import 'dashboard_view_model.dart';
 import 'alert_preferences_panel.dart';
 
+/// Inicio: resumen del espacio, accesos a los modulos y proximas citas.
+///
+/// Lo que muestra depende de los permisos de quien entra: cada bloque se
+/// omite si su area no esta visible para esa persona.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
     super.key,
