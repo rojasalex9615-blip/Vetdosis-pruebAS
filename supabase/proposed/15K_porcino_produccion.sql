@@ -16,7 +16,7 @@ do $prerequisites$
 begin
  if to_regclass('public.clinics') is null or to_regclass('public.clinic_members') is null
  or to_regclass('public.audit_log') is null
- or to_regprocedure('private.has_clinic_role(uuid,text[])') is null
+ or to_regprocedure('private.has_clinic_role(uuid,public.clinic_role[])') is null
  or to_regprocedure('private.vet_receipt(uuid,text,jsonb)') is null then
   raise exception 'porcino_prerequisite_missing';
  end if;
@@ -127,7 +127,7 @@ begin
  if auth.uid() is null then raise exception 'authentication_required';end if;
  perform 1 from public.clinic_members where clinic_id=p_clinic and user_id=auth.uid() for share;
  if not found then raise exception 'access_denied';end if;
- if not private.has_clinic_role(p_clinic,array['admin','mvz']) then raise exception 'role_required';end if;
+ if not private.has_clinic_role(p_clinic,array['admin','mvz']::public.clinic_role[]) then raise exception 'role_required';end if;
  if jsonb_typeof(p_data) is distinct from 'object' or octet_length(p_data::text)>5000 then raise exception 'invalid_data';end if;
  fp=jsonb_build_object('kind','porcino_lote','data',p_data);
  v_id=private.vet_receipt(p_clinic,p_operation,fp);if v_id is not null then return v_id;end if;
