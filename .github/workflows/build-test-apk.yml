@@ -89,6 +89,16 @@ jobs:
         env:
           ANDROID_BETA_CERT_SHA256: ${{ vars.ANDROID_BETA_CERT_SHA256 }}
         run: python3 scripts/android/verify_apk.py
+      # Se registra antes de reemplazar la descarga pública: si el registro falla
+      # con la puerta beta activa, el APK nuevo quedaría en read_export y el
+      # teléfono pediría actualizar justo después de instalar. Registrar primero
+      # deja el fallo del lado seguro (versión registrada sin APK descargable).
+      - name: Registrar publicación beta verificada sin renovar versiones existentes
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          python3 scripts/supabase/publish_beta_build.py | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: vetdosis-pruebas-apks
@@ -125,10 +135,6 @@ jobs:
             echo ""
             echo "versionCode: \`$BETA_VERSION_CODE\` · commit: \`${GITHUB_SHA:0:7}\`"
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Registrar publicación beta verificada sin renovar versiones existentes
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: python3 scripts/supabase/publish_beta_build.py
       - name: Eliminar material de firma temporal
         if: always()
         shell: bash
