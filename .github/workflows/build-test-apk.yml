@@ -117,12 +117,32 @@ jobs:
           tag="beta-apk"
           title="APK beta instalable (última compilación)"
           notes="$(printf 'APK beta firmado y verificado, listo para instalar sin ordenador.\n\n- Commit: %s\n- Ejecución: %s/%s/actions/runs/%s\n- versionCode: %s\n\nFirma propia de la beta: si había instalada una beta con otra firma, desinstálela antes de instalar esta. No se conservan datos locales del teléfono; los datos del servidor no cambian.' "$GITHUB_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$BETA_VERSION_CODE")"
+          # La etiqueta rodante debe apuntar al commit publicado. `gh release edit
+          # --target` no la mueve en un release ya publicado (solo en borradores),
+          # así que se mueve aquí. Si el repositorio protege la etiqueta, se avisa
+          # sin romper una publicación que sí quedó bien: las notas llevan el SHA.
+          remote_tag="$(git ls-remote --tags origin "refs/tags/$tag" | head -n 1 | cut -f1 || true)"
+          if [ "$remote_tag" != "$GITHUB_SHA" ]; then
+            git tag -f "$tag" "$GITHUB_SHA"
+            git push -f origin "refs/tags/$tag" ||
+              echo "::warning::No se pudo mover la etiqueta $tag; el release mantiene el commit en las notas."
+          fi
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release edit "$tag" --title "$title" --notes "$notes" --prerelease
           else
             gh release create "$tag" --target "$GITHUB_SHA" --title "$title" --notes "$notes" --prerelease
           fi
           gh release upload "$tag" build/app/outputs/flutter-apk/app-*-beta-release.apk build/app/outputs/flutter-apk/SHA256SUMS.txt build/app/outputs/flutter-apk/BUILD-INFO.json --clobber
+          # «Publicado» debe significar descargable: se comprueba que los archivos
+          # de este commit quedaron adjuntos antes de dar el paso por bueno.
+          assets="$(gh release view "$tag" --json assets --jq '.assets[].name')"
+          for file in build/app/outputs/flutter-apk/app-*-beta-release.apk build/app/outputs/flutter-apk/SHA256SUMS.txt build/app/outputs/flutter-apk/BUILD-INFO.json; do
+            name="$(basename "$file")"
+            if ! grep -qxF -- "$name" <<< "$assets"; then
+              echo "::error::Falta $name en el release $tag."
+              exit 1
+            fi
+          done
           {
             echo "## APK listo para instalar"
             echo ""
