@@ -10,7 +10,7 @@
 --  * Lotes y balance ahora llevan clinic_id, con FK compuesta para que no puedan
 --    apuntar a una UPP de otra clínica.
 --  * CHECKs alineados con lib/modules/production/domain/growth_calculation.dart.
--- Número 15K tomado tras 15J; anunciar en #31 antes de usarlo (puede solaparse).
+-- Número 15L: 15K quedó anunciado por Opus 5 para notificaciones (#31, 06-nov). Confirmar en #31 antes de usarlo.
 begin;
 do $prerequisites$
 begin
