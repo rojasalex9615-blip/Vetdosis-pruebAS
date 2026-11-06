@@ -620,6 +620,20 @@ class CoreShell extends StatelessWidget {
     child: Builder(builder: _buildShell),
   );
 
+  /// Si la barra lleva el boton de cuenta.
+  bool get showsAccountAction => auth != null;
+
+  /// Si la barra lleva el boton del asistente de IA.
+  bool get showsAiAction =>
+      ai != null && auth?.active != null && allowed('Asistente IA');
+
+  /// Cuantos botones lleva la barra a la derecha.
+  ///
+  /// De aqui salen tanto el `actions` como el ancho que le queda al titulo,
+  /// para que no se calculen por separado y acaben discrepando.
+  int get barActions =>
+      (showsAccountAction ? 1 : 0) + (showsAiAction ? 1 : 0);
+
   Widget _buildShell(BuildContext context) => PopScope(
     canPop: model.screen == 'Inicio',
     onPopInvokedWithResult: (didPop, result) {
@@ -648,7 +662,10 @@ class CoreShell extends StatelessWidget {
                               1.4 *
                               screenTitleFit(
                                 model.screen,
-                                MediaQuery.sizeOf(context).width - 152,
+                                screenTitleAvailableWidth(
+                                  MediaQuery.sizeOf(context).width,
+                                  barActions,
+                                ),
                                 Theme.of(context).textTheme.titleLarge ??
                                     const TextStyle(fontSize: 22),
                                 scaler: MediaQuery.textScalerOf(context),
@@ -684,7 +701,7 @@ class CoreShell extends StatelessWidget {
                 clinic: auth?.active?.clinicName,
               ),
         actions: [
-          if (auth != null)
+          if (showsAccountAction)
             IconButton(
               tooltip: 'Mi cuenta y clínicas',
               icon: AccountAvatar(
@@ -693,7 +710,7 @@ class CoreShell extends StatelessWidget {
               ),
               onPressed: () => openAccount(context),
             ),
-          if (ai != null && auth?.active != null && allowed('Asistente IA'))
+          if (showsAiAction)
             IconButton(
               tooltip: 'Asistente IA',
               onPressed: () => model.navigate('Asistente IA'),
