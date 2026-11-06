@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12 y posteriores en tema oscuro.
+
+         Hace falta este archivo aparte porque el cualificador de modo noche
+         tiene mas precedencia que el de version: sin el, un telefono con
+         Android 12+ en oscuro elige values-night/styles.xml, que no trae los
+         atributos de arranque, y no se ve el splash nuevo.
+
+         El fondo es el grafito #201F25 de las maquetas de modo oscuro. -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">#201F25</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/vetdosis_splash</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">?android:colorBackground</item>
+    </style>
+</resources>
