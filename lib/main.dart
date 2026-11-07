@@ -53,6 +53,8 @@ import 'modules/auth/presentation/auth_view_model.dart';
 import 'modules/core/data/settings_repository.dart';
 import 'modules/core/presentation/core_view_model.dart';
 import 'modules/offline/data/local_database.dart';
+import 'modules/production/data/local_production_unit_store.dart';
+import 'modules/production/domain/production_unit_repository.dart';
 import 'modules/offline/data/local_store.dart';
 import 'modules/offline/application/sync_engine.dart';
 import 'modules/offline/application/membership_sync_authority.dart';
@@ -101,6 +103,7 @@ Future<void> main() async {
   ModuleAccessRepository? moduleAccess;
   ClinicExperienceRepository? experienceRepository;
   ReviewCatalogRepository? reviewCatalog;
+  ProductionUnitRepository? productionUnits;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
     await Supabase.initialize(
@@ -130,6 +133,9 @@ Future<void> main() async {
     experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
+    // Las unidades de produccion viven en la misma base local que el resto
+    // del modo sin conexion: no hace falta otro archivo para ellas.
+    productionUnits = LocalProductionUnitStore(localStore.database);
     final authRepository = SupabaseAuthRepository(
       Supabase.instance.client,
       existingSchema: existingSchema,
@@ -223,6 +229,7 @@ Future<void> main() async {
       moduleAccess: moduleAccess,
       experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
+      productionUnits: productionUnits,
       hospitalAlerts: alerts,
       requireAuth: true,
     ),
