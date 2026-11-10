@@ -26,9 +26,10 @@
 #    al servidor antes de compilar, para no entregar un APK que no puede
 #    autenticar.
 #
-# NO EJECUTADO. No hay runner de GitLab ni Docker en el entorno donde se
-# escribio, asi que la primera ejecucion real es la primera prueba de verdad.
-# Lo comprobado sin runner queda anotado en el commit.
+# El runner de GitLab se ejecuto el 10-nov-2026. El job sql-lab-results
+# usa un servicio PostgreSQL 17 efimero para reproducir la migracion 15M y sus
+# aserciones; apk-depuracion analiza, prueba Flutter y compila APK debug beta.
+# Ninguno de estos jobs aplica SQL a Supabase Pruebas ni firma un APK de release.
 
 stages:
   - verify
