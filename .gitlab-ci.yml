@@ -103,6 +103,7 @@ apk-depuracion:
       flutter build apk --debug --flavor beta
       --target-platform android-arm64
       --dart-define=APP_CHANNEL=beta
+      --dart-define=GOOGLE_DRIVE_WEB_CLIENT_ID="${GOOGLE_DRIVE_WEB_CLIENT_ID:-}"
       --dart-define-from-file=supabase/config.test.local.json
   after_script:
     # El archivo lleva la clave: no debe sobrevivir al trabajo ni viajar en el
