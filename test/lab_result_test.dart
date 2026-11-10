@@ -8,6 +8,7 @@ LabReferenceRange range({
   double low = 37,
   double high = 55,
   String source = 'Fuente de prueba',
+  bool verified = false,
 }) => LabReferenceRange(
   analyteKey: analyte,
   species: species,
@@ -15,6 +16,7 @@ LabReferenceRange range({
   low: low,
   high: high,
   source: source,
+  verified: verified,
 );
 
 LabResult result(double v, {String unit = '%', String key = 'hematocrito'}) =>
@@ -77,6 +79,10 @@ void main() {
   });
 
   group('Validaciones', () {
+    test('la referencia no se considera verificada por defecto', () {
+      expect(range().verified, isFalse);
+      expect(range(verified: true).verified, isTrue);
+    });
     test('un rango sin fuente no existe', () {
       expect(() => range(source: '  '), throwsFormatException);
     });

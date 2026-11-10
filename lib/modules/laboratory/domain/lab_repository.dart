@@ -32,6 +32,7 @@ class LabRangeRef {
         low: low,
         high: high,
         source: source,
+        verified: verified,
       );
 }
 

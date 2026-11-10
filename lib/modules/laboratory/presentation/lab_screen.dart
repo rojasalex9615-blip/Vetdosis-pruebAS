@@ -194,6 +194,16 @@ class _ResultTile extends StatelessWidget {
     _ => VetBadgeKind.unverified,
   };
 
+  /// Una referencia sin revisión profesional nunca recibe color de éxito,
+  /// aunque el número caiga dentro de sus límites publicados.
+  static String readingLabel(LabReading reading) =>
+      '${label(reading.flag)}${reading.range?.verified == true ? '' : ' · sin verificar'}';
+
+  static VetBadgeKind readingKind(LabReading reading) =>
+      reading.range?.verified == true
+      ? kind(reading.flag)
+      : VetBadgeKind.unverified;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -247,8 +257,8 @@ class _ResultTile extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     VetStatusBadge(
-                      label: label(lectura.flag),
-                      kind: kind(lectura.flag),
+                      label: readingLabel(lectura),
+                      kind: readingKind(lectura),
                     ),
                   ],
                 ),

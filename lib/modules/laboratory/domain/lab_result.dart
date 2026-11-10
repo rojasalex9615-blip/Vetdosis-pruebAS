@@ -14,6 +14,7 @@ class LabReferenceRange {
     required this.low,
     required this.high,
     required this.source,
+    this.verified = false,
   }) {
     if (analyteKey.trim().isEmpty) throw _invalid('Analito vacío.');
     if (species.trim().isEmpty) throw _invalid('Especie vacía.');
@@ -27,6 +28,10 @@ class LabReferenceRange {
   }
   final String analyteKey, species, unit, source;
   final double low, high;
+
+  /// La comparación matemática no valida la referencia. Solo es true
+  /// después de una revisión profesional explícita.
+  final bool verified;
 }
 
 enum LabFlag {

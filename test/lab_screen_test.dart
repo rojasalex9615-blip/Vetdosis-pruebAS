@@ -135,7 +135,8 @@ void main() {
     // Los limites sin el .0 que trae el double.
     expect(find.textContaining('37 – 55 %'), findsOneWidget);
     expect(find.text('Bajo'), findsOneWidget);
-    expect(find.text('Dentro'), findsOneWidget);
+    expect(find.text('Dentro · sin verificar'), findsOneWidget);
+    expect(find.text('Dentro'), findsNothing);
     expect(find.textContaining('Las fuentes no coinciden'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
