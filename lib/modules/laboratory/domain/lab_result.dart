@@ -78,7 +78,11 @@ class LabResult {
     if (!RegExp(r'^\d+(?:\.\d+)?$').hasMatch(text)) {
       throw _invalid('Valor: usa números sin separadores de miles.');
     }
-    return double.parse(text);
+    final value = double.parse(text);
+    if (!value.isFinite || value > 1e9) {
+      throw _invalid('Valor fuera de rango: el máximo permitido es 1000000000.');
+    }
+    return value;
   }
 
   /// Una lectura del valor contra UN rango, con el rango que la produjo.
