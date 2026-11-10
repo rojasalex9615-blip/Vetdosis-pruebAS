@@ -31,7 +31,29 @@
 # Lo comprobado sin runner queda anotado en el commit.
 
 stages:
+  - verify
   - build
+
+# Reproduce 15M y sus contratos en PostgreSQL 17 efimero.
+# No toca Supabase Pruebas ni requiere secretos.
+sql-lab-results:
+  stage: verify
+  image: postgres:17
+  services:
+    - name: postgres:17-alpine
+      alias: db
+  variables:
+    POSTGRES_DB: vetdosis_lab
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ci-postgres-password
+    PGHOST: db
+    PGPORT: '5432'
+    PGUSER: postgres
+    PGPASSWORD: ci-postgres-password
+    PGDATABASE: vetdosis_lab
+  timeout: 20m
+  script:
+    - bash supabase/tests/run_lab_results.sh
 
 variables:
   FLUTTER_VERSION: '3.47.6'
