@@ -3,8 +3,9 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 work_dir=$(mktemp -d)
 container_name="vetdosis-lab-results-$$"
-if [ -n "${PGHOST:-}" ]; then
-  # GitLab CI: usa el servicio PostgreSQL, sin Docker-in-Docker.
+if [ "${GITLAB_CI:-}" = "true" ] && [ -n "${PGHOST:-}" ]; then
+  # Solo GitLab CI puede seleccionar el servicio PostgreSQL. Un PGHOST
+  # exportado en una terminal local nunca redirige los fixtures destructivos.
   PGUSER="${PGUSER:-postgres}"
   PGDATABASE="${PGDATABASE:-postgres}"
   export PGUSER PGDATABASE

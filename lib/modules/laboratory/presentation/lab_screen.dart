@@ -200,7 +200,7 @@ class _ResultTile extends StatelessWidget {
       '${label(reading.flag)}${reading.range?.verified == true ? '' : ' · sin verificar'}';
 
   static VetBadgeKind readingKind(LabReading reading) =>
-      reading.range?.verified == true
+      reading.range?.verified == true || reading.flag != LabFlag.withinRange
       ? kind(reading.flag)
       : VetBadgeKind.unverified;
 

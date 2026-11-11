@@ -116,6 +116,27 @@ Future<void> _montar(WidgetTester tester, _FakeLab repo) async {
 }
 
 void main() {
+  testWidgets('Los valores Bajo y Alto conservan alerta aunque el rango no este verificado', (
+    tester,
+  ) async {
+    final repo = _FakeLab(
+      _ws([
+        _resultado('hematocrito_bajo', '30', '%', [
+          _rango('37', '55', '%', 'Fuente sin revisar', verificado: false),
+        ]),
+        _resultado('hematocrito_alto', '60', '%', [
+          _rango('37', '55', '%', 'Otra fuente sin revisar', verificado: false),
+        ]),
+      ]),
+    );
+    await _montar(tester, repo);
+    expect(find.text('Bajo · sin verificar'), findsOneWidget);
+    expect(find.text('Alto · sin verificar'), findsOneWidget);
+    expect(find.text('Dentro · sin verificar'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+
   testWidgets('Dos fuentes que no coinciden: se muestran las dos y se avisa', (
     tester,
   ) async {
