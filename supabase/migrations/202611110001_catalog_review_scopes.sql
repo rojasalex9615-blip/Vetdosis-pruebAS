@@ -7,8 +7,12 @@ create table if not exists private.catalog_platform_owners (
   created_at timestamptz not null default now()
 );
 revoke all on private.catalog_platform_owners from public, anon, authenticated;
+-- A clean environment may not yet contain the platform owner's auth row.
+-- Skip the bootstrap rather than failing the entire migration; global writes
+-- remain fail-closed until the correct owner is provisioned for that project.
 insert into private.catalog_platform_owners(user_id)
-values ('d57f1634-9416-4757-8897-58965c10bba8'::uuid)
+select id from auth.users
+where id = 'd57f1634-9416-4757-8897-58965c10bba8'::uuid
 on conflict (user_id) do nothing;
 
 create or replace function private.is_catalog_platform_owner()
@@ -95,7 +99,7 @@ begin
   if auth.uid() is null or not private.has_clinic_role(p_clinic, array['admin']) then
     raise exception 'review_admin_required' using errcode = '42501';
   end if;
-  if p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
+  if p_new_status is null or p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
     raise exception 'invalid_review_status' using errcode = '22023';
   end if;
   if p_source_key is null or length(btrim(p_source_key)) not between 1 and 300 then
@@ -134,8 +138,11 @@ as $$
 declare v_previous text; v_version text;
 begin
   if auth.uid() is null then raise exception 'authentication_required' using errcode='42501'; end if;
-  if p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
+  if p_new_status is null or p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
     raise exception 'invalid_review_status' using errcode='22023';
+  end if;
+  if p_source_key is null or length(btrim(p_source_key)) not between 1 and 300 then
+    raise exception 'invalid_source_key' using errcode='22023';
   end if;
   select coalesce(r.documento_origen,'sin_version') into v_version
   from private.vetdosis_inventario_comercial_revision r
@@ -167,7 +174,7 @@ begin
   if auth.uid() is null or not private.is_catalog_platform_owner() then
     raise exception 'platform_catalog_owner_required' using errcode='42501';
   end if;
-  if p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
+  if p_new_status is null or p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
     raise exception 'invalid_review_status' using errcode='22023';
   end if;
   if p_source_key is null or length(btrim(p_source_key)) not between 1 and 300

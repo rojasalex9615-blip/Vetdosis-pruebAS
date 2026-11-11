@@ -29,4 +29,10 @@ STAFF_MEDICAL_PRIVACY=1 bash supabase/tests/run_installments_service_returns.sh 
  supabase/adaptations/patient_activity_snapshot_v1.sql \
  supabase/adaptations/preventive_booklet_v2.sql \
  supabase/adaptations/appointment_patient_search_v2.sql \
- supabase/tests/small_animal_integration.sql
+ supabase/tests/small_animal_integration.sql \
+ supabase/tests/catalog_review_scope_fixture.sql \
+ supabase/migrations/202611110001_catalog_review_scopes.sql \
+ supabase/migrations/202611110002_catalog_review_global_view_update.sql \
+ supabase/migrations/202611110003_catalog_review_history_read.sql \
+ supabase/migrations/202611110005_catalog_review_clinic_personal_status_validation.sql \
+ supabase/tests/catalog_review_scopes.sql

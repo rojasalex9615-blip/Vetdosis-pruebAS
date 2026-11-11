@@ -24,6 +24,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
   int generation = 0;
   List<ReviewCatalogItem> items = [];
   Map<String, dynamic>? progress;
+  final Map<String, int> pickerRevision = {};
   bool loading = false, more = true;
   String? error;
 
@@ -43,6 +44,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
         oldWidget.repository != widget.repository) {
       generation++;
       items = [];
+      pickerRevision.clear();
       progress = null;
       error = null;
       more = true;
@@ -128,7 +130,11 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
 
   Future<void> changeStatus(ReviewCatalogItem item, String status, {required bool clinicScope}) async {
     final clinic = widget.clinic, user = widget.user;
+    final pickerKey = '${item.key}-${clinicScope ? 'clinic' : 'personal'}';
     try {
+      if (widget.offline || widget.clinic != clinic || widget.user != user) {
+        throw StateError('review_session_changed');
+      }
       if (clinicScope) {
         if (!widget.canManageClinic) throw StateError('clinic_admin_required');
         await widget.repository.setClinicStatus(clinic, item.key, status);
@@ -138,13 +144,20 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
       if (!mounted || widget.clinic != clinic || widget.user != user) return;
       await reload();
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo cambiar el estado.')));
+      if (!mounted || widget.clinic != clinic || widget.user != user) return;
+      setState(() {
+        pickerRevision[pickerKey] = (pickerRevision[pickerKey] ?? 0) + 1;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('No se pudo cambiar el estado.'),
+      ));
+      await reload();
     }
   }
 
-  Widget statusPicker(String label, String value, ValueChanged<String> onChanged) =>
+  Widget statusPicker(String key, String label, String value, ValueChanged<String> onChanged) =>
       DropdownButtonFormField<String>(
-        key: ValueKey('$label-$value'),
+        key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
         initialValue: value,
         decoration: InputDecoration(labelText: label, isDense: true),
         items: const ['sin_verificar','en_revision','verificado','corregido','rechazado'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
@@ -209,9 +222,9 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
               Text(item.laboratory),
               Text('Global (solo lectura): ${item.globalStatus}'),
               if (widget.canManageClinic)
-                statusPicker('Estado de esta clínica', item.status, (value) => changeStatus(item, value, clinicScope: true))
+                statusPicker('${item.key}-clinic', 'Estado de esta clínica', item.status, (value) => changeStatus(item, value, clinicScope: true))
               else Text('Clínica: ${item.status}'),
-              statusPicker('Mi estado personal', item.personalStatus, (value) => changeStatus(item, value, clinicScope: false)),
+              statusPicker('${item.key}-personal', 'Mi estado personal', item.personalStatus, (value) => changeStatus(item, value, clinicScope: false)),
               if (item.ingredient?.isNotEmpty == true) Text('Ingrediente: ${item.ingredient}'),
               if (item.presentation?.isNotEmpty == true) Text('Presentación: ${item.presentation}'),
               Text('Fuente: ${item.source ?? 'No registrada'}'
