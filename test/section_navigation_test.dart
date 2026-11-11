@@ -45,9 +45,11 @@ void main() {
     final scheme = VetDosisApp(model: core).theme(Brightness.dark).colorScheme;
     expect(scheme.primary, const Color(0xFFB69BFF));
     expect(scheme.onPrimary, const Color(0xFF2A1055));
-    expect(contrastRatio(scheme.primary, scheme.onPrimary), greaterThanOrEqualTo(4.5));
+    expect(
+      contrastRatio(scheme.primary, scheme.onPrimary),
+      greaterThanOrEqualTo(4.5),
+    );
   });
-
 
   testWidgets('Drawer uses the shared palette and omits bottom shortcuts', (
     tester,
