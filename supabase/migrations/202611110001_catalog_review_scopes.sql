@@ -20,6 +20,14 @@ $$;
 revoke all on function private.is_catalog_platform_owner() from public, anon;
 grant execute on function private.is_catalog_platform_owner() to authenticated;
 
+create or replace function public.review_catalog_is_platform_owner()
+returns boolean language sql stable security definer set search_path = ''
+as $$
+  select private.is_catalog_platform_owner();
+$$;
+revoke all on function public.review_catalog_is_platform_owner() from public, anon;
+grant execute on function public.review_catalog_is_platform_owner() to authenticated;
+
 create table if not exists private.catalog_review_clinic_status (
   clinic_id uuid not null references public.clinics(id) on delete cascade,
   source_catalog text not null default 'inventario_comercial'
@@ -62,7 +70,8 @@ create table if not exists private.catalog_review_scoped_history (
     (scope = 'personal' and clinic_id is null and user_id is not null)
   ),
   constraint catalog_review_scoped_history_status check (
-    new_status in ('sin_verificar','en_revision','verificado','corregido','rechazado')
+    (scope = 'global' and new_status in ('sin_verificar','revisar_conflicto','validado','descartado')) or
+    (scope in ('clinic','personal') and new_status in ('sin_verificar','en_revision','verificado','corregido','rechazado'))
   )
 );
 create index if not exists catalog_review_scoped_history_clinic_idx
@@ -169,7 +178,7 @@ begin
   if auth.uid() is null or not private.is_catalog_platform_owner() then
     raise exception 'platform_catalog_owner_required' using errcode='42501';
   end if;
-  if p_new_status is null or p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
+  if p_new_status is null or p_new_status not in ('sin_verificar','revisar_conflicto','validado','descartado') then
     raise exception 'invalid_review_status' using errcode='22023';
   end if;
   if p_source_key is null or length(btrim(p_source_key)) not between 1 and 300
@@ -196,7 +205,8 @@ begin
       set estado_revision=p_new_status where id=v_id::bigint;
   elsif v_source = 'claude_virbac' then
     update private.vetdosis_virbac_productos
-      set estado=p_new_status where id=v_id;
+      set estado=case when p_new_status='sin_verificar' then 'sin verificar' else p_new_status end
+      where id=v_id;
   else
     raise exception 'unsupported_catalog_source' using errcode='22023';
   end if;
@@ -291,11 +301,9 @@ begin
   select jsonb_build_object(
     'total',count(*),
     'sin_verificar',count(*) filter(where coalesce(r.estado_revision,'sin_verificar')='sin_verificar'),
-    'en_revision',count(*) filter(where r.estado_revision='en_revision'),
-    'verificado',count(*) filter(where r.estado_revision='verificado'),
-    'corregido',count(*) filter(where r.estado_revision='corregido'),
-    'rechazado',count(*) filter(where r.estado_revision='rechazado'),
-    'revisar_conflicto',count(*) filter(where r.estado_revision='revisar_conflicto')
+    'revisar_conflicto',count(*) filter(where r.estado_revision='revisar_conflicto'),
+    'validado',count(*) filter(where r.estado_revision='validado'),
+    'descartado',count(*) filter(where r.estado_revision='descartado')
   ) into v_global from private.vetdosis_inventario_comercial_revision r;
   select jsonb_build_object(
     'total',count(*),

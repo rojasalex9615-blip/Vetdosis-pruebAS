@@ -22,7 +22,8 @@ on conflict (clinic_id, user_id) do nothing;
 
 create table if not exists private.vetdosis_catalogos_laboratorios_revision (
   id bigint primary key,
-  estado_revision text not null default 'sin_verificar',
+  estado_revision text not null default 'sin_verificar'
+    check (estado_revision in ('sin_verificar','revisar_conflicto','validado','descartado')),
   documento_origen text,
   nombre_comercial text not null,
   laboratorio text not null,
@@ -45,7 +46,8 @@ create table if not exists private.vetdosis_zoetis_holland_catalogo_revision
   (like private.vetdosis_catalogos_laboratorios_revision including all);
 create table if not exists private.vetdosis_virbac_productos (
   id text primary key,
-  estado text not null default 'sin_verificar',
+  estado text not null default 'sin verificar'
+    check (estado in ('sin verificar','revisar_conflicto','validado','descartado')),
   documento_origen text,
   nombre_comercial text not null,
   laboratorio text not null,
@@ -73,6 +75,15 @@ insert into private.vetdosis_catalogos_laboratorios_revision(
   'Laboratorio de prueba', 'Ingrediente de prueba', '10 mg/ml',
   'Frasco de prueba', 'Canino', 'Oral', 'No es una pauta clínica',
   'Solo fixture', 1, false, null, 'MX', null
+) on conflict (id) do nothing;
+
+insert into private.vetdosis_virbac_productos(
+  id, estado, documento_origen, nombre_comercial, laboratorio, especies,
+  presentacion, habilitado_en_app, registro, jurisdiccion_registro
+) values (
+  'virbac-test-1', 'sin verificar', 'catalog-review-test-v1',
+  'Producto Virbac ficticio', 'Laboratorio Virbac de prueba', 'Canino',
+  'Frasco de prueba', false, null, 'MX'
 ) on conflict (id) do nothing;
 
 create or replace view private.vetdosis_inventario_comercial_revision as

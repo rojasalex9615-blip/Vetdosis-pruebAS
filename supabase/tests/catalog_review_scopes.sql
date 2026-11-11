@@ -3,6 +3,8 @@ begin;
 do $$
 declare
   v_item text;
+  v_virbac_item text;
+  v_virbac_state text;
   v_before_global text;
   v_after_global text;
   v_clinic_status text;
@@ -20,9 +22,18 @@ begin
          coalesce(r.estado_revision, 'sin_verificar')
     into v_item, v_before_global
   from private.vetdosis_inventario_comercial_revision r
-  order by r.laboratorio, r.nombre_comercial, r.fuente_sistema, r.id_fuente
+  where r.fuente_sistema = 'grok_catalogos'
+  order by r.laboratorio, r.nombre_comercial, r.id_fuente
   limit 1;
   if v_item is null then raise exception 'fixture_catalog_empty'; end if;
+
+  select concat_ws(':', r.fuente_sistema, r.id_fuente)
+    into v_virbac_item
+  from private.vetdosis_inventario_comercial_revision r
+  where r.fuente_sistema = 'claude_virbac'
+  order by r.laboratorio, r.nombre_comercial, r.id_fuente
+  limit 1;
+  if v_virbac_item is null then raise exception 'virbac_fixture_catalog_empty'; end if;
 
   select o.user_id into v_owner
   from private.catalog_platform_owners o
@@ -31,6 +42,10 @@ begin
   order by o.created_at
   limit 1;
   if v_owner is null then raise exception 'platform_owner_fixture_missing'; end if;
+
+  if public.review_catalog_is_platform_owner() then
+    raise exception 'non_owner_reported_as_platform_owner';
+  end if;
 
   perform set_config('request.jwt.claim.sub', v_actor::text, true);
   perform set_config('request.jwt.claims',
@@ -118,6 +133,9 @@ begin
   perform set_config('request.jwt.claim.sub', v_owner::text, true);
   perform set_config('request.jwt.claims',
     json_build_object('sub', v_owner, 'role', 'authenticated')::text, true);
+  if not public.review_catalog_is_platform_owner() then
+    raise exception 'platform_owner_capability_missing';
+  end if;
 
   select clinic_review_status, personal_review_status
     into v_owner_clinic_status, v_owner_personal_status
@@ -157,10 +175,20 @@ begin
   if v_history_count <> 1 then raise exception 'owner_personal_history_missing'; end if;
 
   v_global_target := case
-    when v_before_global = 'corregido' then 'verificado'
-    else 'corregido'
+    when v_before_global = 'validado' then 'descartado'
+    else 'validado'
   end;
   perform public.review_catalog_set_global_status(v_item, v_global_target);
+
+  -- Virbac stores the default with a space; the RPC accepts the canonical key.
+  perform public.review_catalog_set_global_status(v_virbac_item, 'validado');
+  perform public.review_catalog_set_global_status(v_virbac_item, 'sin_verificar');
+  select estado into v_virbac_state
+  from private.vetdosis_virbac_productos
+  where id = split_part(v_virbac_item, ':', 2);
+  if v_virbac_state <> 'sin verificar' then
+    raise exception 'virbac_status_storage_normalization_failed';
+  end if;
   select count(*) into v_history_count
   from public.review_catalog_history('global', null, v_item, 100);
   if v_history_count < 1 then raise exception 'owner_global_history_missing'; end if;

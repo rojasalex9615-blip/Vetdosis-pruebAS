@@ -51,6 +51,8 @@ class ReviewCatalogItem {
 abstract interface class ReviewCatalogRepository {
   Future<List<ReviewCatalogItem>> list(String clinic, String search, int offset);
   Future<Map<String, dynamic>> progress(String clinic);
+  Future<bool> isPlatformOwner();
+  Future<void> setGlobalStatus(String sourceKey, String status);
   Future<void> setClinicStatus(String clinic, String sourceKey, String status);
   Future<void> setPersonalStatus(String sourceKey, String status);
   Future<void> report({

@@ -7,13 +7,14 @@ import 'package:vetdosis_pro/modules/review/presentation/review_catalog_screen.d
 
 class FakeReviewRepository implements ReviewCatalogRepository {
   int reports = 0;
+  int globalChanges = 0;
   int clinicChanges = 0;
   int personalChanges = 0;
   String clinicStatus = 'sin_verificar';
   String personalStatus = 'sin_verificar';
   String globalStatus = 'revisar_conflicto';
+  bool platformOwner = false;
   bool failClinicChange = false;
-  bool failPersonalChange = false;
 
   ReviewCatalogItem get item => ReviewCatalogItem(
         key: 'source:1',
@@ -41,7 +42,23 @@ class FakeReviewRepository implements ReviewCatalogRepository {
         'total': 1,
         'sin_verificar': 1,
         'en_revision': 0,
+        'global': {
+          'total': 1,
+          'sin_verificar': 0,
+          'revisar_conflicto': 1,
+          'validado': 0,
+          'descartado': 0,
+        },
       };
+
+  @override
+  Future<bool> isPlatformOwner() async => platformOwner;
+
+  @override
+  Future<void> setGlobalStatus(String sourceKey, String status) async {
+    globalChanges++;
+    globalStatus = status;
+  }
 
   @override
   Future<void> setClinicStatus(
@@ -57,7 +74,6 @@ class FakeReviewRepository implements ReviewCatalogRepository {
   @override
   Future<void> setPersonalStatus(String sourceKey, String status) async {
     personalChanges++;
-    if (failPersonalChange) throw StateError('personal write rejected');
     personalStatus = status;
   }
 
@@ -133,16 +149,32 @@ void main() {
     }
   });
 
-  testWidgets('admin puede cambiar el estado de clínica y el personal por separado',
+  testWidgets('propietaria puede cambiar el estado global sin tocar otros ámbitos',
+      (tester) async {
+    final repository = FakeReviewRepository()..platformOwner = true;
+    await pumpReviewScreen(tester, repository, member: administrator);
+
+    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(3));
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('validado').last);
+    await tester.pumpAndSettle();
+
+    expect(repository.globalChanges, 1);
+    expect(repository.globalStatus, 'validado');
+    expect(repository.clinicStatus, 'sin_verificar');
+    expect(repository.personalStatus, 'sin_verificar');
+  });
+
+  testWidgets('admin puede cambiar clínica y personal por separado',
       (tester) async {
     final repository = FakeReviewRepository();
     await pumpReviewScreen(tester, repository, member: administrator);
 
-    final pickers = find.byType(DropdownButtonFormField<String>);
-    expect(pickers, findsNWidgets(2));
+    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
     expect(find.text('Global (solo lectura): revisar_conflicto'), findsOneWidget);
 
-    await tester.tap(pickers.first);
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('en_revision').last);
     await tester.pumpAndSettle();
@@ -161,19 +193,20 @@ void main() {
     expect(repository.clinicStatus, 'en_revision');
   });
 
-  testWidgets('revisor no puede cambiar el estado de la clínica', (tester) async {
+  testWidgets('revisor no puede cambiar el estado de la clínica ni el global',
+      (tester) async {
     final repository = FakeReviewRepository();
     await pumpReviewScreen(tester, repository);
 
     expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
-    expect(find.text('Estado de esta clínica'), findsNothing);
-    expect(find.text('Mi estado personal'), findsOneWidget);
+    expect(find.text('Global (solo lectura): revisar_conflicto'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('verificado').last);
     await tester.pumpAndSettle();
 
+    expect(repository.globalChanges, 0);
     expect(repository.clinicChanges, 0);
     expect(repository.personalChanges, 1);
     expect(repository.personalStatus, 'verificado');

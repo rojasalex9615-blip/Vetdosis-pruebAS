@@ -8,7 +8,7 @@ begin
   if auth.uid() is null or not private.is_catalog_platform_owner() then
     raise exception 'platform_catalog_owner_required' using errcode='42501';
   end if;
-  if p_new_status is null or p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
+  if p_new_status is null or p_new_status not in ('sin_verificar','revisar_conflicto','validado','descartado') then
     raise exception 'invalid_review_status' using errcode='22023';
   end if;
   if p_source_key is null or length(btrim(p_source_key)) not between 1 and 300
@@ -35,7 +35,8 @@ begin
       set estado_revision=p_new_status where id=v_id::bigint;
   elsif v_source = 'claude_virbac' then
     update private.vetdosis_virbac_productos
-      set estado=p_new_status where id=v_id;
+      set estado=case when p_new_status='sin_verificar' then 'sin verificar' else p_new_status end
+      where id=v_id;
   else
     raise exception 'unsupported_catalog_source' using errcode='22023';
   end if;

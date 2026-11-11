@@ -40,6 +40,23 @@ class SupabaseReviewCatalogRepository implements ReviewCatalogRepository {
   }
 
   @override
+  Future<bool> isPlatformOwner() async {
+    final result = await client.rpc('review_catalog_is_platform_owner');
+    return result == true;
+  }
+
+  @override
+  Future<void> setGlobalStatus(String sourceKey, String status) async {
+    await client.rpc(
+      'review_catalog_set_global_status',
+      params: {
+        'p_source_key': sourceKey,
+        'p_new_status': status,
+      },
+    );
+  }
+
+  @override
   Future<void> setClinicStatus(
     String clinic,
     String sourceKey,

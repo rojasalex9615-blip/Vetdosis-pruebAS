@@ -1,6 +1,23 @@
 import 'package:flutter/material.dart';
 import '../domain/review_catalog_repository.dart';
 
+enum _ReviewScope { global, clinic, personal }
+
+const _globalReviewStatuses = [
+  'sin_verificar',
+  'revisar_conflicto',
+  'validado',
+  'descartado',
+];
+
+const _clinicPersonalReviewStatuses = [
+  'sin_verificar',
+  'en_revision',
+  'verificado',
+  'corregido',
+  'rechazado',
+];
+
 class ReviewCatalogScreen extends StatefulWidget {
   const ReviewCatalogScreen({
     super.key,
@@ -25,13 +42,17 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
   List<ReviewCatalogItem> items = [];
   Map<String, dynamic>? progress;
   final Map<String, int> pickerRevision = {};
+  bool canManageGlobal = false;
   bool loading = false, more = true;
   String? error;
 
   @override
   void initState() {
     super.initState();
-    if (!widget.offline) reload();
+    if (!widget.offline) {
+      reload();
+      refreshGlobalCapability();
+    }
   }
 
   @override
@@ -49,7 +70,33 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
       error = null;
       more = true;
       search.clear();
-      if (!widget.offline) reload();
+      canManageGlobal = false;
+      if (!widget.offline) {
+        reload();
+        refreshGlobalCapability();
+      }
+    }
+  }
+
+  Future<void> refreshGlobalCapability() async {
+    final user = widget.user;
+    final repository = widget.repository;
+    try {
+      final allowed = await repository.isPlatformOwner();
+      if (!mounted ||
+          widget.user != user ||
+          widget.repository != repository ||
+          widget.offline) {
+        return;
+      }
+      setState(() => canManageGlobal = allowed);
+    } catch (_) {
+      if (!mounted ||
+          widget.user != user ||
+          widget.repository != repository) {
+        return;
+      }
+      setState(() => canManageGlobal = false);
     }
   }
 
@@ -128,18 +175,30 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     }
   }
 
-  Future<void> changeStatus(ReviewCatalogItem item, String status, {required bool clinicScope}) async {
-    final clinic = widget.clinic, user = widget.user;
-    final pickerKey = '${item.key}-${clinicScope ? 'clinic' : 'personal'}';
+  Future<void> changeStatus(
+    ReviewCatalogItem item,
+    String status, {
+    required _ReviewScope scope,
+  }) async {
+    final clinic = widget.clinic;
+    final user = widget.user;
+    final pickerKey = '${item.key}-${scope.name}';
     try {
       if (widget.offline || widget.clinic != clinic || widget.user != user) {
         throw StateError('review_session_changed');
       }
-      if (clinicScope) {
-        if (!widget.canManageClinic) throw StateError('clinic_admin_required');
-        await widget.repository.setClinicStatus(clinic, item.key, status);
-      } else {
-        await widget.repository.setPersonalStatus(item.key, status);
+      switch (scope) {
+        case _ReviewScope.global:
+          if (!canManageGlobal) throw StateError('platform_catalog_owner_required');
+          await widget.repository.setGlobalStatus(item.key, status);
+          break;
+        case _ReviewScope.clinic:
+          if (!widget.canManageClinic) throw StateError('clinic_admin_required');
+          await widget.repository.setClinicStatus(clinic, item.key, status);
+          break;
+        case _ReviewScope.personal:
+          await widget.repository.setPersonalStatus(item.key, status);
+          break;
       }
       if (!mounted || widget.clinic != clinic || widget.user != user) return;
       await reload();
@@ -155,13 +214,26 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     }
   }
 
-  Widget statusPicker(String key, String label, String value, ValueChanged<String> onChanged) =>
+  Widget statusPicker({
+    required String key,
+    required String label,
+    required String value,
+    required List<String> statuses,
+    required ValueChanged<String> onChanged,
+  }) =>
       DropdownButtonFormField<String>(
         key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
         initialValue: value,
         decoration: InputDecoration(labelText: label, isDense: true),
-        items: const ['sin_verificar','en_revision','verificado','corregido','rechazado'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-        onChanged: (next) { if (next != null && next != value) onChanged(next); },
+        items: statuses
+            .map((status) => DropdownMenuItem(
+                  value: status,
+                  child: Text(status),
+                ))
+            .toList(),
+        onChanged: (next) {
+          if (next != null && next != value) onChanged(next);
+        },
       );
   Future<void> report(ReviewCatalogItem item) async {
     final clinic = widget.clinic, user = widget.user;
@@ -220,11 +292,45 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item.title, style: Theme.of(context).textTheme.titleMedium),
               Text(item.laboratory),
-              Text('Global (solo lectura): ${item.globalStatus}'),
+              if (canManageGlobal)
+                statusPicker(
+                  key: '${item.key}-global',
+                  label: 'Estado global',
+                  value: item.globalStatus,
+                  statuses: _globalReviewStatuses,
+                  onChanged: (value) => changeStatus(
+                    item,
+                    value,
+                    scope: _ReviewScope.global,
+                  ),
+                )
+              else
+                Text('Global (solo lectura): ${item.globalStatus}'),
               if (widget.canManageClinic)
-                statusPicker('${item.key}-clinic', 'Estado de esta clínica', item.status, (value) => changeStatus(item, value, clinicScope: true))
-              else Text('Clínica: ${item.status}'),
-              statusPicker('${item.key}-personal', 'Mi estado personal', item.personalStatus, (value) => changeStatus(item, value, clinicScope: false)),
+                statusPicker(
+                  key: '${item.key}-clinic',
+                  label: 'Estado de esta clínica',
+                  value: item.status,
+                  statuses: _clinicPersonalReviewStatuses,
+                  onChanged: (value) => changeStatus(
+                    item,
+                    value,
+                    scope: _ReviewScope.clinic,
+                  ),
+                )
+              else
+                Text('Clínica: ${item.status}'),
+              statusPicker(
+                key: '${item.key}-personal',
+                label: 'Mi estado personal',
+                value: item.personalStatus,
+                statuses: _clinicPersonalReviewStatuses,
+                onChanged: (value) => changeStatus(
+                  item,
+                  value,
+                  scope: _ReviewScope.personal,
+                ),
+              ),
               if (item.ingredient?.isNotEmpty == true) Text('Ingrediente: ${item.ingredient}'),
               if (item.presentation?.isNotEmpty == true) Text('Presentación: ${item.presentation}'),
               Text('Fuente: ${item.source ?? 'No registrada'}'
