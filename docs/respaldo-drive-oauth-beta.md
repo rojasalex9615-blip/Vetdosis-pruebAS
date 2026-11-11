@@ -13,6 +13,7 @@ La persona con permiso de respaldo vincula una cuenta Google en el teléfono, au
 5. En el sistema que compile la beta, crear `GOOGLE_DRIVE_WEB_CLIENT_ID` con el Client ID web (es un identificador público, no el client secret):
    - GitHub Actions: **Settings → Secrets and variables → Actions → Variables**.
    - GitLab CI: **Settings → CI/CD → Variables** del proyecto que genera el APK.
+
    El pipeline GitLab pasa la variable como `--dart-define`; si no está configurada, queda vacía y la app mantiene desactivada la conexión Drive, sin bloquear la exportación manual. No guardar el OAuth client secret ni el token de Google.
 6. Compilar una beta desde el commit consolidado que incluya también la rama visual/clínica. Probar conectar, subir un respaldo cifrado, verificarlo en Drive, consultar historial, desconectar/revocar y volver a conectar con otra cuenta. Probar además falta de red, cuota, permiso revocado y cuenta distinta.
 

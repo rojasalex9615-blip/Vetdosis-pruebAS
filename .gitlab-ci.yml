@@ -28,7 +28,8 @@
 #
 # Runner de GitLab validado el 10-nov-2026 con pipelines manuales. Este job
 # analiza y prueba Flutter y compila un APK debug beta; no firma un release.
-# La compilacion usa la variable OAuth de Drive solo si esta configurada.
+# La compilacion siempre pasa GOOGLE_DRIVE_WEB_CLIENT_ID como dart-define;
+# si la variable CI no existe, su valor se pasa como cadena vacia.
 
 stages:
   - build
