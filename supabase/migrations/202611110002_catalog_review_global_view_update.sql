@@ -8,7 +8,7 @@ begin
   if auth.uid() is null or not private.is_catalog_platform_owner() then
     raise exception 'platform_catalog_owner_required' using errcode='42501';
   end if;
-  if p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
+  if p_new_status is null or p_new_status not in ('sin_verificar','en_revision','verificado','corregido','rechazado') then
     raise exception 'invalid_review_status' using errcode='22023';
   end if;
   if p_source_key is null or length(btrim(p_source_key)) not between 1 and 300
