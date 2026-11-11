@@ -28,6 +28,12 @@ begin
   if not exists(select 1 from private.catalog_review_clinic_status where clinic_id=v_clinic and source_key=v_item and status='en_revision') then raise exception 'personal_write_changed_clinic'; end if;
   select coalesce(estado_revision,'sin_verificar') into v_after_global from private.vetdosis_inventario_comercial_revision where concat_ws(':',fuente_sistema,id_fuente)=v_item;
   if v_after_global is distinct from v_before_global then raise exception 'personal_write_changed_global'; end if;
+  -- The second user cannot edit the first user's personal row.
+  perform set_config('request.jwt.claim.sub',v_owner::text,true);
+  perform set_config('request.jwt.claims',json_build_object('sub',v_owner,'role','authenticated')::text,true);
+  if exists(select 1 from private.catalog_review_personal_status where user_id=v_owner and source_key=v_item) then
+    raise exception 'personal_scope_leaked_between_users';
+  end if;
   perform set_config('request.jwt.claim.sub',v_owner::text,true);
   perform set_config('request.jwt.claims',json_build_object('sub',v_owner,'role','authenticated')::text,true);
   perform public.review_catalog_set_global_status(v_item,'corregido');
