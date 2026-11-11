@@ -111,7 +111,8 @@ union all
 select 'claude_virbac', id, documento_origen, nombre_comercial, laboratorio,
   principios_activos, concentracion, presentacion, especies,
   via_administracion, dosis_catalogo_texto, indicaciones, pagina_origen,
-  habilitado_en_app, registro, jurisdiccion_registro, alerta_formato, estado
+  habilitado_en_app, registro, jurisdiccion_registro, alerta_formato,
+  case when estado = 'sin verificar' then 'sin_verificar' else estado end
 from private.vetdosis_virbac_productos;
 
 create table if not exists public.catalog_review_reports (

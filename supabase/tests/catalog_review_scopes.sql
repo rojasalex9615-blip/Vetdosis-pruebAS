@@ -43,16 +43,15 @@ begin
   limit 1;
   if v_owner is null then raise exception 'platform_owner_fixture_missing'; end if;
 
+  perform set_config('request.jwt.claim.sub', v_actor::text, true);
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', v_actor, 'role', 'authenticated')::text, true);
   if public.review_catalog_is_platform_owner() then
     raise exception 'non_owner_reported_as_platform_owner';
   end if;
 
-  perform set_config('request.jwt.claim.sub', v_actor::text, true);
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', v_actor, 'role', 'authenticated')::text, true);
-
   begin
-    perform public.review_catalog_set_global_status(v_item, 'verificado');
+    perform public.review_catalog_set_global_status(v_item, 'validado');
     raise exception 'expected_global_owner_denial';
   exception when sqlstate '42501' then null;
   end;
