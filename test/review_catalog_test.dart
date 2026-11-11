@@ -20,6 +20,10 @@ class FakeReviewRepository implements ReviewCatalogRepository {
   Future<Map<String, dynamic>> progress(String clinic) async =>
       {'total': 1, 'sin_verificar': 1, 'en_revision': 0};
   @override
+  Future<void> setClinicStatus(String clinic, String sourceKey, String status) async {}
+  @override
+  Future<void> setPersonalStatus(String sourceKey, String status) async {}
+  @override
   Future<void> report({required String clinic, required String reviewer,
     required ReviewCatalogItem item, required String comment,
     String? expected, String? source}) async {

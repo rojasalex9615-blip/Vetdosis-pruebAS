@@ -8,11 +8,12 @@ class ReviewCatalogScreen extends StatefulWidget {
     required this.clinic,
     required this.user,
     required this.offline,
+    this.canManageClinic = false,
   });
 
   final ReviewCatalogRepository repository;
   final String clinic, user;
-  final bool offline;
+  final bool offline, canManageClinic;
 
   @override
   State<ReviewCatalogScreen> createState() => _ReviewCatalogScreenState();
@@ -38,6 +39,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     if (oldWidget.clinic != widget.clinic ||
         oldWidget.user != widget.user ||
         oldWidget.offline != widget.offline ||
+        oldWidget.canManageClinic != widget.canManageClinic ||
         oldWidget.repository != widget.repository) {
       generation++;
       items = [];
@@ -124,6 +126,30 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     }
   }
 
+  Future<void> changeStatus(ReviewCatalogItem item, String status, {required bool clinicScope}) async {
+    final clinic = widget.clinic, user = widget.user;
+    try {
+      if (clinicScope) {
+        if (!widget.canManageClinic) throw StateError('clinic_admin_required');
+        await widget.repository.setClinicStatus(clinic, item.key, status);
+      } else {
+        await widget.repository.setPersonalStatus(item.key, status);
+      }
+      if (!mounted || widget.clinic != clinic || widget.user != user) return;
+      await reload();
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo cambiar el estado.')));
+    }
+  }
+
+  Widget statusPicker(String label, String value, ValueChanged<String> onChanged) =>
+      DropdownButtonFormField<String>(
+        key: ValueKey('$label-$value'),
+        initialValue: value,
+        decoration: InputDecoration(labelText: label, isDense: true),
+        items: const ['sin_verificar','en_revision','verificado','corregido','rechazado'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+        onChanged: (next) { if (next != null && next != value) onChanged(next); },
+      );
   Future<void> report(ReviewCatalogItem item) async {
     final clinic = widget.clinic, user = widget.user;
     await showDialog<void>(
@@ -180,7 +206,12 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
             padding: const EdgeInsets.all(12),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-              Text('${item.laboratory} · ${item.status}'),
+              Text(item.laboratory),
+              Text('Global (solo lectura): ${item.globalStatus}'),
+              if (widget.canManageClinic)
+                statusPicker('Estado de esta clínica', item.status, (value) => changeStatus(item, value, clinicScope: true))
+              else Text('Clínica: ${item.status}'),
+              statusPicker('Mi estado personal', item.personalStatus, (value) => changeStatus(item, value, clinicScope: false)),
               if (item.ingredient?.isNotEmpty == true) Text('Ingrediente: ${item.ingredient}'),
               if (item.presentation?.isNotEmpty == true) Text('Presentación: ${item.presentation}'),
               Text('Fuente: ${item.source ?? 'No registrada'}'

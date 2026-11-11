@@ -896,6 +896,7 @@ class CoreShell extends StatelessWidget {
                           clinic: auth!.active!.clinicId,
                           user: auth!.active!.userId,
                           offline: auth!.offline,
+                          canManageClinic: auth!.active!.role == ClinicRole.admin,
                         )
                       : const Text(
                           'El modo revisión requiere una cuenta autorizada y conexión.',
