@@ -5,19 +5,19 @@ create schema if not exists private;
 insert into auth.users(id, email, email_confirmed_at)
 values
   ('ae270fa9-5d73-4ca4-b2ab-35d46d30c28a'::uuid, 'catalog-actor@example.invalid', now()),
-  ('d57f1634-9416-4757-8897-58965c10bba8'::uuid, 'catalog-owner@example.invalid', now())
+  ('f13a9b24-5c7d-4e61-9b31-2a4d8e6f701c'::uuid, 'catalog-owner@example.invalid', now())
 on conflict (id) do nothing;
 
 insert into public.clinics(id, name, created_by)
 values
   ('2d61242b-d2aa-4624-8c7d-6cf420aad49c'::uuid, 'Catálogo scope actor', 'ae270fa9-5d73-4ca4-b2ab-35d46d30c28a'::uuid),
-  ('e68a35d4-82ef-4a9a-819b-05c23df64bba'::uuid, 'Catálogo scope owner', 'd57f1634-9416-4757-8897-58965c10bba8'::uuid)
+  ('e68a35d4-82ef-4a9a-819b-05c23df64bba'::uuid, 'Catálogo scope owner', 'f13a9b24-5c7d-4e61-9b31-2a4d8e6f701c'::uuid)
 on conflict (id) do nothing;
 
 insert into public.clinic_members(clinic_id, user_id, role)
 values
   ('2d61242b-d2aa-4624-8c7d-6cf420aad49c'::uuid, 'ae270fa9-5d73-4ca4-b2ab-35d46d30c28a'::uuid, 'admin'),
-  ('e68a35d4-82ef-4a9a-819b-05c23df64bba'::uuid, 'd57f1634-9416-4757-8897-58965c10bba8'::uuid, 'admin')
+  ('e68a35d4-82ef-4a9a-819b-05c23df64bba'::uuid, 'f13a9b24-5c7d-4e61-9b31-2a4d8e6f701c'::uuid, 'admin')
 on conflict (clinic_id, user_id) do nothing;
 
 create table if not exists private.vetdosis_catalogos_laboratorios_revision (

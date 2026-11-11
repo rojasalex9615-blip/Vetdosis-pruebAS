@@ -35,4 +35,5 @@ STAFF_MEDICAL_PRIVACY=1 bash supabase/tests/run_installments_service_returns.sh 
  supabase/migrations/202611110002_catalog_review_global_view_update.sql \
  supabase/migrations/202611110003_catalog_review_history_read.sql \
  supabase/migrations/202611110005_catalog_review_clinic_personal_status_validation.sql \
+ supabase/tests/catalog_review_scope_owner_fixture.sql \
  supabase/tests/catalog_review_scopes.sql

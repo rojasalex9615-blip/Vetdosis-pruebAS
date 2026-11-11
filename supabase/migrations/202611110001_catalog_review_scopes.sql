@@ -7,13 +7,8 @@ create table if not exists private.catalog_platform_owners (
   created_at timestamptz not null default now()
 );
 revoke all on private.catalog_platform_owners from public, anon, authenticated;
--- A clean environment may not yet contain the platform owner's auth row.
--- Skip the bootstrap rather than failing the entire migration; global writes
--- remain fail-closed until the correct owner is provisioned for that project.
-insert into private.catalog_platform_owners(user_id)
-select id from auth.users
-where id = 'd57f1634-9416-4757-8897-58965c10bba8'::uuid
-on conflict (user_id) do nothing;
+-- Platform owners are provisioned as an explicit, project-specific ops step.
+-- Do not grant global catalog authority from a versioned schema migration.
 
 create or replace function private.is_catalog_platform_owner()
 returns boolean language sql stable security definer set search_path = ''

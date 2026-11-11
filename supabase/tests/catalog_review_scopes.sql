@@ -14,7 +14,7 @@ declare
   v_actor uuid := 'ae270fa9-5d73-4ca4-b2ab-35d46d30c28a'::uuid;
   v_clinic uuid := '2d61242b-d2aa-4624-8c7d-6cf420aad49c'::uuid;
   v_other_clinic uuid := 'e68a35d4-82ef-4a9a-819b-05c23df64bba'::uuid;
-  v_owner uuid := 'd57f1634-9416-4757-8897-58965c10bba8'::uuid;
+  v_owner uuid;
 begin
   select concat_ws(':', r.fuente_sistema, r.id_fuente),
          coalesce(r.estado_revision, 'sin_verificar')
@@ -23,6 +23,14 @@ begin
   order by r.laboratorio, r.nombre_comercial, r.fuente_sistema, r.id_fuente
   limit 1;
   if v_item is null then raise exception 'fixture_catalog_empty'; end if;
+
+  select o.user_id into v_owner
+  from private.catalog_platform_owners o
+  join public.clinic_members m
+    on m.user_id = o.user_id and m.clinic_id = v_other_clinic and m.role = 'admin'
+  order by o.created_at
+  limit 1;
+  if v_owner is null then raise exception 'platform_owner_fixture_missing'; end if;
 
   perform set_config('request.jwt.claim.sub', v_actor::text, true);
   perform set_config('request.jwt.claims',
