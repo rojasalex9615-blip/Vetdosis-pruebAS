@@ -214,6 +214,42 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     }
   }
 
+  Future<void> confirmGlobalStatusChange(
+    ReviewCatalogItem item,
+    String status,
+  ) async {
+    if (status == item.globalStatus) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cambiar estado global'),
+        content: const Text(
+          'Este cambio afecta el catálogo compartido que consultan todas las clínicas. '
+          'No modifica los estados propios de cada clínica ni los personales.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Confirmar cambio global'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (confirmed == true) {
+      await changeStatus(item, status, scope: _ReviewScope.global);
+      return;
+    }
+    final pickerKey = '${item.key}-global';
+    setState(() {
+      pickerRevision[pickerKey] = (pickerRevision[pickerKey] ?? 0) + 1;
+    });
+  }
+
   Widget statusPicker({
     required String key,
     required String label,
@@ -295,14 +331,10 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
               if (canManageGlobal)
                 statusPicker(
                   key: '${item.key}-global',
-                  label: 'Estado global',
+                  label: 'Estado global (todas las clínicas)',
                   value: item.globalStatus,
                   statuses: _globalReviewStatuses,
-                  onChanged: (value) => changeStatus(
-                    item,
-                    value,
-                    scope: _ReviewScope.global,
-                  ),
+                  onChanged: (value) => confirmGlobalStatusChange(item, value),
                 )
               else
                 Text('Global (solo lectura): ${item.globalStatus}'),

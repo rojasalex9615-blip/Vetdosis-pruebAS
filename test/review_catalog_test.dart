@@ -160,6 +160,19 @@ void main() {
     await tester.tap(find.text('validado').last);
     await tester.pumpAndSettle();
 
+    expect(find.text('Cambiar estado global'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(repository.globalChanges, 0);
+    expect(repository.globalStatus, 'revisar_conflicto');
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('validado').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmar cambio global'));
+    await tester.pumpAndSettle();
+
     expect(repository.globalChanges, 1);
     expect(repository.globalStatus, 'validado');
     expect(repository.clinicStatus, 'sin_verificar');
