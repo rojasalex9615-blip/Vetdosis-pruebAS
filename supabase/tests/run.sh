@@ -36,6 +36,8 @@ elif [ "${1:-fresh}" = doses ]; then
   sql_files=(supabase/tests/bootstrap.sql supabase/tests/existing_fixture.sql supabase/adaptations/existing_clinics_m2.sql supabase/adaptations/existing_doses_m3.sql supabase/tests/doses_access.sql)
 elif [ "${1:-fresh}" = existing ]; then
   sql_files=(supabase/tests/bootstrap.sql supabase/tests/existing_fixture.sql supabase/adaptations/existing_clinics_m2.sql supabase/adaptations/existing_team_management.sql supabase/tests/existing_access.sql supabase/tests/team_access.sql)
+elif [ "${1:-fresh}" = aviculture ]; then
+  sql_files=(supabase/tests/aviculture_postura.sql)
 else
   sql_files=(supabase/tests/bootstrap.sql supabase/migrations/202610060001_clinics_auth.sql supabase/tests/access.sql)
 fi
