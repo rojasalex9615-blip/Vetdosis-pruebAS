@@ -47,6 +47,8 @@ import '../modules/ai/presentation/ai_screen.dart';
 import '../modules/subscriptions/domain/subscription_repository.dart';
 import '../modules/subscriptions/presentation/subscription_screen.dart';
 import '../modules/operations/domain/operations_repository.dart';
+import '../modules/personal_space/domain/personal_space.dart';
+import '../modules/personal_space/presentation/personal_space_screen.dart';
 import '../modules/operations/presentation/operations_screen.dart';
 import '../modules/operations/presentation/contact_directory_screen.dart';
 import '../modules/operations/presentation/promotions_screen.dart';
@@ -244,6 +246,7 @@ class VetDosisApp extends StatelessWidget {
     this.referenceLibrary,
     this.inventory,
     this.operations,
+    this.personalSpace,
     this.attendance,
     this.backup,
     this.googleDriveBackup,
@@ -271,6 +274,7 @@ class VetDosisApp extends StatelessWidget {
   final ReferenceLibraryRepository? referenceLibrary;
   final InventoryRepository? inventory;
   final OperationsRepository? operations;
+  final PersonalSpaceRepository? personalSpace;
   final AttendanceRepository? attendance;
   final BackupRepository? backup;
   final drive_auth.DriveBackupClient? googleDriveBackup;
@@ -611,6 +615,7 @@ class VetDosisApp extends StatelessWidget {
               referenceLibrary: referenceLibrary,
               inventory: inventory,
               operations: operations,
+              personalSpace: personalSpace,
               attendance: attendance,
               backup: backup,
               googleDriveBackup: googleDriveBackup,
@@ -645,6 +650,7 @@ class CoreShell extends StatelessWidget {
     this.referenceLibrary,
     this.inventory,
     this.operations,
+    this.personalSpace,
     this.attendance,
     this.backup,
     this.googleDriveBackup,
@@ -674,6 +680,7 @@ class CoreShell extends StatelessWidget {
   final ReferenceLibraryRepository? referenceLibrary;
   final InventoryRepository? inventory;
   final OperationsRepository? operations;
+  final PersonalSpaceRepository? personalSpace;
   final AttendanceRepository? attendance;
   final BackupRepository? backup;
   final drive_auth.DriveBackupClient? googleDriveBackup;
@@ -822,13 +829,20 @@ class CoreShell extends StatelessWidget {
       MaterialPageRoute<void>(
         builder: (_) => ClinicAccountScreen(
           model: auth!,
+          personalSpaceBuilder: (_) => PersonalSpaceScreen(
+            memberships: auth!.memberships,
+            repository: auth!.offline ? null : personalSpace,
+            medical: !auth!.offline && operations is StaffMedicalRepository
+                ? operations as StaffMedicalRepository
+                : null,
+          ),
           identityBuilder: (_) => Column(
             children: [
               if (auth!.repository.userId != null)
                 ProfileHeader(
                   userId: auth!.repository.userId!,
                   repository: identity,
-                  title: auth!.active?.clinicName,
+                  title: auth!.active?.displayName,
                   subtitle: auth!.active?.role.label,
                 ),
               if (auth!.repository.userId != null)
@@ -1828,12 +1842,7 @@ class CoreShell extends StatelessWidget {
                     scope: '${auth?.active?.userId}:${auth?.active?.clinicId}',
                     onNavigate: (page) {
                       if (page == 'Mi cuenta' && auth != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => AuthScreen(model: auth),
-                          ),
-                        );
+                        openAccount(context);
                       } else {
                         model.navigate(page);
                       }
@@ -2032,11 +2041,10 @@ class CoreShell extends StatelessWidget {
       ListTile(
         leading: const Icon(VetIcons.userCircle),
         title: const Text('Mi cuenta y clínicas'),
-        subtitle: const Text('Espacio personal, clínica e invitaciones'),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => AuthScreen(model: auth)),
-        ),
+        subtitle: const Text('Mi espacio personal, clínicas e invitaciones'),
+        // Ya con sesion, la pantalla de cuenta (no la de alta, que ofrecia
+        // un segundo «Usar mi espacio personal»).
+        onTap: () => openAccount(context),
       ),
     if (operations is CommissionRepository &&
         auth?.active != null &&

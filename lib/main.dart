@@ -20,6 +20,8 @@ import 'modules/subscriptions/domain/subscription_repository.dart';
 import 'modules/subscriptions/data/supabase_subscription_repository.dart';
 import 'modules/operations/domain/operations_repository.dart';
 import 'modules/operations/data/supabase_operations_repository.dart';
+import 'modules/personal_space/data/supabase_personal_space_repository.dart';
+import 'modules/personal_space/domain/personal_space.dart';
 import 'modules/attendance/domain/attendance_repository.dart';
 import 'modules/attendance/data/supabase_attendance_repository.dart';
 import 'modules/backup/domain/backup_repository.dart';
@@ -93,6 +95,7 @@ Future<void> main() async {
   ReferenceLibraryRepository? referenceLibrary;
   InventoryRepository? inventory;
   OperationsRepository? operations;
+  PersonalSpaceRepository? personalSpace;
   AttendanceRepository? attendance;
   BackupRepository? backup;
   AiRepository? ai;
@@ -121,6 +124,7 @@ Future<void> main() async {
     referenceLibrary = SupabaseReferenceLibraryRepository(Supabase.instance.client);
     inventory = SupabaseInventoryRepository(Supabase.instance.client);
     operations = SupabaseOperationsRepository(Supabase.instance.client);
+    personalSpace = SupabasePersonalSpaceRepository(Supabase.instance.client);
     attendance = SupabaseAttendanceRepository(Supabase.instance.client);
     backup = SupabaseBackupRepository(Supabase.instance.client);
     ai = SupabaseAiRepository(Supabase.instance.client);
@@ -214,6 +218,7 @@ Future<void> main() async {
       referenceLibrary: referenceLibrary,
       inventory: inventory,
       operations: operations,
+      personalSpace: personalSpace,
       attendance: attendance,
       backup: backup,
       googleDriveBackup: GoogleDriveBackupClient(),

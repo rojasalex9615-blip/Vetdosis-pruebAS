@@ -116,3 +116,22 @@ abstract interface class StaffMedicalRepository {
   Future<Map<String,dynamic>> staffMedicalDirectory(String clinic,String actor,{int offset=0});
   Future<Map<String,dynamic>> staffMedicalView(String clinic,String actor,String subject,String purpose);
 }
+
+/// Compañeros que la persona elige para consultar su ficha en una emergencia,
+/// y registro de accesos visible para ella y para la administración (16A).
+abstract interface class StaffMedicalSharingRepository {
+  Future<Map<String, dynamic>> staffMedicalDelegates(String clinic, String actor);
+  Future<void> staffMedicalDelegateSet(
+    String clinic,
+    String actor,
+    String delegate,
+    bool enabled,
+  );
+  Future<Map<String, dynamic>> staffMedicalDelegateView(
+    String clinic,
+    String actor,
+    String subject,
+    String purpose,
+  );
+  Future<Map<String, dynamic>> staffMedicalAccessLog(String clinic, String actor);
+}

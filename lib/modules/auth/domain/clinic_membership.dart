@@ -28,4 +28,9 @@ class ClinicMembership {
   final ClinicRole role;
   final String workspaceKind;
   bool get isPersonal => workspaceKind == 'personal';
+
+  /// El servidor llama «Mi espacio personal» al area de trabajo personal.
+  /// En pantalla se nombra como area de trabajo para no confundirla con
+  /// «Mi espacio personal» (notas, horarios y ficha de la persona).
+  String get displayName => isPersonal ? 'Área de trabajo personal' : clinicName;
 }

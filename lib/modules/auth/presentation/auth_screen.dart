@@ -288,7 +288,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ? null
                             : model.createPersonalWorkspace,
                         icon: const Icon(VetIcons.user),
-                        label: const Text('Usar mi espacio personal'),
+                        label: const Text('Usar mi área de trabajo personal'),
                       ),
                     const Text(
                       'Crea una clínica o ingresa el código que te compartió su administrador.',
@@ -367,8 +367,13 @@ class ClinicAccountScreen extends StatefulWidget {
     super.key,
     required this.model,
     this.identityBuilder,
+    this.personalSpaceBuilder,
   });
   final Widget Function(BuildContext context)? identityBuilder;
+
+  /// Abre «Mi espacio personal» (notas, horarios, ficha de emergencia).
+  /// Es de la persona: no cambia la clinica activa.
+  final Widget Function(BuildContext context)? personalSpaceBuilder;
   final AuthViewModel model;
   @override
   State<ClinicAccountScreen> createState() => _ClinicAccountScreenState();
@@ -408,17 +413,47 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
               children: [
             if (widget.identityBuilder != null)
               widget.identityBuilder!(context),
-            if (model.personalAvailable)
+            // Antes habia dos «Mi espacio personal»: este boton y la fila del
+            // area de trabajo personal (que el servidor llama asi). Los dos
+            // solo cambiaban de area de trabajo y dejaban a la persona en
+            // Inicio o Produccion. Ahora el espacio personal es una pantalla
+            // propia y el area de trabajo se nombra como tal.
+            if (widget.personalSpaceBuilder != null)
+              Card(
+                child: ListTile(
+                  leading: const Icon(VetIcons.userCircle),
+                  title: const Text('Mi espacio personal'),
+                  subtitle: const Text(
+                    'Notas, recordatorios, horarios y ficha de emergencia',
+                  ),
+                  trailing: const Icon(VetIcons.chevronRight),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: widget.personalSpaceBuilder!,
+                    ),
+                  ),
+                ),
+              ),
+            if (model.memberships.isNotEmpty)
+              Text(
+                'Áreas de trabajo',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            if (model.personalAvailable &&
+                !model.memberships.any((m) => m.isPersonal))
               TextButton.icon(
                 onPressed: model.busy ? null : model.createPersonalWorkspace,
                 icon: const Icon(VetIcons.user),
-                label: const Text('Abrir mi espacio personal'),
+                label: const Text('Crear mi área de trabajo personal'),
               ),
             for (final member in model.memberships)
               ListTile(
-                title: Text(member.clinicName),
+                title: Text(member.displayName),
                 subtitle: Text(
-                  member.isPersonal ? 'Espacio personal' : member.role.label,
+                  member.isPersonal
+                      ? 'Pacientes y dosis propios, sin equipo'
+                      : member.role.label,
                 ),
                 trailing: model.active == member
                     ? const Icon(VetIcons.checkCircle)

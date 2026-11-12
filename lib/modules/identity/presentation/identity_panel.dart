@@ -188,12 +188,12 @@ class _ClinicIdentityState extends State<ClinicIdentity> {
                     errorBuilder: (_, _, _) =>
                         const Icon(VetIcons.clinic, size: 40),
                   ),
-            title: Text(widget.member.clinicName),
+            title: Text(widget.member.displayName),
             subtitle: Text(
               snapshot.hasError
                   ? 'Logo no disponible · revisa conexión y acceso'
                   : widget.member.isPersonal
-                  ? 'Espacio personal'
+                  ? 'Pacientes y dosis propios, sin equipo'
                   : 'Clínica activa',
             ),
           ),
