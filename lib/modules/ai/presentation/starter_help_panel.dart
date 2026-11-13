@@ -13,16 +13,34 @@ const starterTopics = <String, String>{
   'privacy': 'Privacidad y contexto',
 };
 
+/// La ayuda de la app, que por dentro usa IA.
+///
+/// Vive en «Ayuda y soporte», no en el Asistente. Antes estaba apilada encima
+/// del chat en la misma pantalla y las dos se leían como una sola cosa: Ale lo
+/// notó en el APK. Son dos productos distintos. Esto responde dudas de USO DE LA
+/// APP a partir de la guía pública; el Asistente es una conversación abierta con
+/// la clave del usuario.
+///
+/// La respuesta se muestra AQUÍ. Antes el panel entregaba un id de chat y la
+/// pantalla de IA lo abría, que es lo que mezclaba el historial de dudas de uso
+/// con el de las conversaciones.
+///
+/// Aviso de lo que esto NO arregla: `starterHelp` crea el chat en el servidor y
+/// devuelve su id, así que el registro sigue existiendo aunque el usuario ya no
+/// acabe dentro del Asistente. Quitarlo de su historial, o borrarlo, es decisión
+/// aparte y toca el backend.
 class StarterHelpPanel extends StatefulWidget {
   const StarterHelpPanel({
     super.key,
     required this.repository,
+    required this.chats,
     required this.clinic,
-    required this.onCompleted,
   });
   final StarterAiRepository repository;
+
+  /// Solo para leer la respuesta recién creada con [AiRepository.messages].
+  final AiRepository chats;
   final String clinic;
-  final Future<void> Function(String) onCompleted;
   @override
   State<StarterHelpPanel> createState() => _StarterHelpPanelState();
 }
@@ -32,6 +50,7 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
   String topic = 'getting_started';
   bool consent = false, busy = false;
   String? error;
+  String? respuesta;
   String operation = newOperationId();
   @override
   void initState() {
@@ -73,7 +92,15 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
       if (!mounted) return;
       operation = newOperationId();
       consent = false;
-      await widget.onCompleted(id);
+      // Se lee la respuesta y se muestra aquí. El usuario preguntó por la app,
+      // no abrió una conversación: no tiene por qué acabar en otra pantalla ni
+      // en el historial de chats del Asistente.
+      final mensajes = await widget.chats.messages(id);
+      if (!mounted) return;
+      final ultima = mensajes.where((m) => m['role'] == 'assistant').toList();
+      setState(() {
+        respuesta = ultima.isEmpty ? null : ultima.last['body'] as String?;
+      });
       await load();
     } catch (e) {
       if (mounted) {
@@ -144,6 +171,24 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
                 : send,
             child: const Text('Consultar ayuda incluida'),
           ),
+          if (respuesta != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Respuesta de la guía',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            SelectableText(respuesta!),
+            const SizedBox(height: 8),
+            // El mismo límite que ya declara el Asistente, repetido aquí porque
+            // aquí ya no se pasa por él: quien lea esto puede no haber visto
+            // nunca esa pantalla.
+            Text(
+              'Orientación sobre el uso de la app. No es asesoría clínica ni '
+              'sustituye las fuentes verificadas ni el motor de cálculo.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           if (error != null)
             TextButton(
               onPressed: busy

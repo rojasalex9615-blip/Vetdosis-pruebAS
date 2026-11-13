@@ -14,10 +14,18 @@ class SupportScreen extends StatefulWidget {
     required this.repository,
     required this.member,
     this.onAi,
+    this.helpPanel,
   });
   final SupportRepository repository;
   final ClinicMembership member;
   final Future<void> Function(String)? onAi;
+
+  /// La ayuda de la app que usa IA, inyectada desde fuera.
+  ///
+  /// Va por ranura y no por import para que soporte no dependa del módulo de
+  /// IA: aquí se enseña, pero quien la construye es app.dart, que es quien ya
+  /// sabe si hay repositorio de IA y cuál.
+  final Widget? helpPanel;
   @override
   State<SupportScreen> createState() => _SupportScreenState();
 }
@@ -130,6 +138,14 @@ class _SupportScreenState extends State<SupportScreen> {
           'Ayuda, contacto y reportes',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
+        // Primero la ayuda automática, que resuelve sola las dudas de uso, y
+        // después el ticket con persona. Al revés se abrirían tickets por cosas
+        // que la guía ya contesta.
+        if (widget.helpPanel != null) ...[
+          const SizedBox(height: 12),
+          widget.helpPanel!,
+          const SizedBox(height: 12),
+        ],
         const Text(
           'Este canal guarda tu solicitud y permite seguimiento. La atención humana requiere activar el servicio de soporte; todavía no hay un tiempo de respuesta comprometido. No se envían correos ni mensajes externos automáticamente.',
         ),

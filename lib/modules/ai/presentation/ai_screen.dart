@@ -1,6 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
 import 'ai_labels.dart';
-import 'starter_help_panel.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
@@ -432,15 +431,29 @@ class _AiScreenState extends State<AiScreen> {
     }
   }
 
+  /// Ancho desde el que el historial se muestra como panel lateral. Por
+  /// debajo, se queda como lista de chips encima de la conversacion, que es lo
+  /// que cabe en un telefono.
+  static const double historyRailBreakpoint = 720;
+
+  /// Una consulta de soporte o un borrador reutiliza la pantalla, pero no
+  /// comparte el historial de chats de la app: es una conversacion aparte que
+  /// se revisa antes de enviar, no una sesion del asistente.
+  bool get draftMode => widget.initialDraft != null || widget.returnDraft;
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: vm,
-    builder: (context, _) => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    builder: (context, _) {
+      final wide = MediaQuery.sizeOf(context).width >= historyRailBreakpoint;
+      final children = <Widget>[
         if (widget.configurationOnly) ...[
           Text('Proveedores de IA y privacidad', style: Theme.of(context).textTheme.headlineSmall),
-          const Text('Administra claves personales o de clínica. Las claves no se vuelven a mostrar.'),
+          const _AiNotice(
+            icon: Icons.vpn_key_outlined,
+            text:
+                'Administra claves personales o de clínica. Las claves no se vuelven a mostrar.',
+          ),
           if (vm.busy || working) const LinearProgressIndicator(),
           if (vm.error != null) Text(vm.error!),
           FilledButton(onPressed: working ? null : key, child: const Text('Agregar proveedor / clave')),
@@ -467,26 +480,15 @@ class _AiScreenState extends State<AiScreen> {
               ),
           const Text('La privacidad de cada conversación se administra desde su chat.'),
         ] else ...[
-        Text('Asistente IA', style: Theme.of(context).textTheme.headlineSmall),
-        const Text(
-          'Apoyo con IA · respuestas sin verificar. Dosis, normativa y cálculos requieren fuentes verificadas y el motor clínico; este chat no emite recetas ni registra actos.',
+        const _AiNotice(
+          icon: Icons.auto_awesome,
+          text:
+              'Asistente IA · respuestas sin verificar. Dosis, normativa y cálculos requieren fuentes verificadas y el motor clínico; este chat no emite recetas ni registra actos.',
         ),
-        if (widget.repository is StarterAiRepository)
-          StarterHelpPanel(
-            repository: widget.repository as StarterAiRepository,
-            clinic: widget.member.clinicId,
-            onCompleted: (id) async {
-              if (!mounted) return;
-              setState(() {
-                composer.clear();
-                consent = false;
-                personal = false;
-                team = false;
-                operation = newOperationId();
-              });
-              await vm.load(chat: id);
-            },
-          ),
+        // La ayuda de uso de la app ya no vive aquí: se mudó a «Ayuda y
+        // soporte». Estaban apiladas en esta misma pantalla y se leían como una
+        // sola cosa. Esta pantalla es el chat; aquella responde dudas de uso a
+        // partir de la guía pública, sin compartir este historial.
         if (vm.busy || working) const LinearProgressIndicator(),
         if (vm.error != null) Text(vm.error!),
         Text(
@@ -495,43 +497,48 @@ class _AiScreenState extends State<AiScreen> {
         Wrap(
           spacing: 8,
           children: [
-            FilledButton(
-              onPressed: working ? null : newChat,
-              child: const Text('Nuevo chat'),
-            ),
+            if (!draftMode)
+              FilledButton(
+                onPressed: working ? null : newChat,
+                child: const Text('Nuevo chat'),
+              ),
             IconButton(
               onPressed: working ? null : vm.load,
               icon: const Icon(Icons.refresh),
             ),
           ],
         ),
-        DropdownButtonFormField<String>(
-          isExpanded: true,
-          key: ValueKey(vm.selected),
-          initialValue: vm.selected,
-          decoration: const InputDecoration(
-            labelText: 'Historial propio y chats compartidos autorizados',
+        if (!wide && !draftMode && vm.rows('chats').isNotEmpty) ...[
+          Text(
+            'Historial · propio y chats compartidos autorizados',
+            style: Theme.of(context).textTheme.titleSmall,
           ),
-          items: [
-            for (final c in vm.rows('chats'))
-              DropdownMenuItem(
-                value: c['id'] as String,
-                child: Text(
-                  '${c['title']} · ${aiVisibilityLabel(c['visibility'])}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final c in vm.rows('chats'))
+                ChoiceChip(
+                  selected: c['id'] == vm.selected,
+                  onSelected: working || c['id'] == vm.selected
+                      ? null
+                      : (_) {
+                          composer.clear();
+                          consent = false;
+                          operation = newOperationId();
+                          vm.load(chat: c['id'] as String);
+                        },
+                  label: Text(
+                    '${c['title']} · ${aiVisibilityLabel(c['visibility'])}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-          ],
-          onChanged: working
-              ? null
-              : (id) {
-                  composer.clear();
-                  consent = false;
-                  operation = newOperationId();
-                  vm.load(chat: id);
-                },
-        ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
         if (current != null) ...[
           Text('Contexto futuro: ${aiContextLabel(current!['context_mode'])}'),
           Wrap(
@@ -721,7 +728,125 @@ class _AiScreenState extends State<AiScreen> {
           ),
         ],
       ],
-      ],
+      ];
+      final thread = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+      if (!wide || widget.configurationOnly || draftMode) return thread;
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 260,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(right: 12),
+              child: _AiHistoryRail(
+                chats: vm.rows('chats'),
+                selected: vm.selected,
+                working: working,
+                onSelect: (id) {
+                  composer.clear();
+                  consent = false;
+                  operation = newOperationId();
+                  vm.load(chat: id);
+                },
+                onNew: newChat,
+                onRefresh: vm.load,
+              ),
+            ),
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(child: thread),
+        ],
+      );
+    },
+  );
+}
+
+/// Historial lateral de la pantalla de IA: los chats propios y los compartidos
+/// autorizados, con el mismo contrato de privacidad que la conversacion.
+class _AiHistoryRail extends StatelessWidget {
+  const _AiHistoryRail({
+    required this.chats,
+    required this.selected,
+    required this.working,
+    required this.onSelect,
+    required this.onNew,
+    required this.onRefresh,
+  });
+  final List<Map<String, dynamic>> chats;
+  final String? selected;
+  final bool working;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onNew;
+  final VoidCallback onRefresh;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Historial',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Nuevo chat',
+            onPressed: working ? null : onNew,
+            icon: const Icon(Icons.add_comment_outlined),
+          ),
+          IconButton(
+            tooltip: 'Actualizar historial',
+            onPressed: working ? null : onRefresh,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
+      ),
+      if (chats.isEmpty)
+        const Text('Todavía no hay chats. Crea uno para empezar.')
+      else
+        for (final c in chats)
+          ListTile(
+            dense: true,
+            selected: c['id'] == selected,
+            enabled: !working,
+            leading: const Icon(Icons.chat_bubble_outline, size: 18),
+            title: Text(
+              '${c['title']}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(aiVisibilityLabel(c['visibility'])),
+            onTap: working || c['id'] == selected
+                ? null
+                : () => onSelect(c['id'] as String),
+          ),
+    ],
+  );
+}
+
+/// Aviso destacado de la pantalla de IA, para que las advertencias de uso y de
+/// privacidad se lean como avisos y no como párrafos sueltos.
+class _AiNotice extends StatelessWidget {
+  const _AiNotice({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.symmetric(vertical: 8),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text)),
+        ],
+      ),
     ),
   );
 }

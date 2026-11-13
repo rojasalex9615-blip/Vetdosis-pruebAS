@@ -47,6 +47,19 @@ class StarterFake implements StarterAiRepository {
   }
 }
 
+/// Devuelve la respuesta que la ayuda incluida muestra en su propio panel.
+class StarterChatsFake extends AiFake {
+  String? read;
+  @override
+  Future<List<Map<String, dynamic>>> messages(String chat) async {
+    read = chat;
+    return [
+      {'role': 'user', 'body': 'tema enviado'},
+      {'role': 'assistant', 'body': 'Respuesta de la guía de uso'},
+    ];
+  }
+}
+
 void main() {
   test(
     'Plan limits have an actionable message without exposing server codes',
@@ -158,18 +171,18 @@ void main() {
     },
   );
   testWidgets(
-    'Included help requires consent and has no arbitrary message field',
+    'Included help requires consent and shows its answer in place',
     (tester) async {
       final r = StarterFake();
-      String? opened;
+      final chats = StarterChatsFake();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: StarterHelpPanel(
                 repository: r,
+                chats: chats,
                 clinic: 'c',
-                onCompleted: (id) async => opened = id,
               ),
             ),
           ),
@@ -190,7 +203,10 @@ void main() {
       await tester.tap(find.text('Consultar ayuda incluida'));
       await tester.pumpAndSettle();
       expect(r.calls, 1);
-      expect(opened, 'new-private-chat');
+      // La respuesta se ve en el propio panel y no se entrega ningún id de chat
+      // que abra el Asistente.
+      expect(chats.read, 'new-private-chat');
+      expect(find.text('Respuesta de la guía de uso'), findsOneWidget);
     },
   );
   testWidgets(
@@ -203,8 +219,8 @@ void main() {
             body: SingleChildScrollView(
               child: StarterHelpPanel(
                 repository: r,
+                chats: StarterChatsFake(),
                 clinic: 'c',
-                onCompleted: (_) async {},
               ),
             ),
           ),
