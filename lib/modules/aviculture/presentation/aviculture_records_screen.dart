@@ -583,7 +583,8 @@ class _HouseDialogState extends State<_HouseDialog> {
                 validator: _required,
               ),
               DropdownButtonFormField<String>(
-                value: _system,
+                initialValue: _system,
+                key: ValueKey(_system),
                 decoration: const InputDecoration(labelText: 'Sistema'),
                 items: const [
                   DropdownMenuItem(value: 'piso', child: Text('Piso')),
@@ -737,7 +738,8 @@ class _FlockDialogState extends State<_FlockDialog> {
                 },
               ),
               DropdownButtonFormField<String?>(
-                value: _houseId,
+                initialValue: _houseId,
+                key: ValueKey(_houseId),
                 decoration: const InputDecoration(
                   labelText: 'Caseta (opcional)',
                 ),
@@ -908,7 +910,8 @@ class _RecordDialogState extends State<_RecordDialog> {
               children: [
                 if (!editing)
                   DropdownButtonFormField<String>(
-                    value: _flockId,
+                    initialValue: _flockId,
+                    key: ValueKey(_flockId),
                     decoration: const InputDecoration(labelText: 'Parvada'),
                     items: [
                       for (final flock in widget.flocks)
@@ -1124,7 +1127,8 @@ class _EventDialogState extends State<_EventDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: _flockId,
+                initialValue: _flockId,
+                key: ValueKey(_flockId),
                 decoration: const InputDecoration(labelText: 'Parvada'),
                 items: [
                   for (final flock in widget.flocks)
@@ -1138,7 +1142,8 @@ class _EventDialogState extends State<_EventDialog> {
                 onChanged: (value) => setState(() => _flockId = value),
               ),
               DropdownButtonFormField<String>(
-                value: _kind,
+                initialValue: _kind,
+                key: ValueKey(_kind),
                 decoration: const InputDecoration(labelText: 'Tipo'),
                 items: [
                   for (final entry in AviEvent.kinds.entries)
