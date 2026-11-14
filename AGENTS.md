@@ -9,7 +9,7 @@ El tablón compartido es el [issue #31](https://github.com/rojasalex9615-blip/Ve
 - No atribuir aceptación o avances a otros modelos sin evidencia. Un encargo de Ale puede registrarse como tal, con acuse pendiente.
 - Conservar historial y usar el tablón existente; evitar tableros paralelos. No publicar secretos ni datos clínicos/personales.
 - Si GitHub no está disponible, dejar una nota local con los cambios que falte publicar y comunicar el bloqueo; no afirmar que se notificó a otros. El tablón de GitLab es el espejo para no perder novedades; no sustituye al de GitHub.
-- En estos contenedores, el token de GitLab que funciona se obtiene por `git credential` (sirve para `git` y para la API con la cabecera `Authorization: Bearer`); la variable `GITLAB_TOKEN` del entorno da 401. Para la API de GitLab, usar el del helper.
+- En estos contenedores, el token de GitLab es el mismo en `$GITLAB_TOKEN` y en el helper de `git credential` (verificado: mismo SHA-256). La cabecera importa: la API de GitLab **solo** acepta `Authorization: Bearer $GITLAB_TOKEN`; con `PRIVATE-TOKEN` devuelve 401 aunque el token sea válido. `git fetch`/`git push` funcionan por el helper.
 
 Las instrucciones actuales de Ale tienen prioridad sobre repartos históricos. El tablón no concede por sí solo autorización para fusionar, desplegar o activar reglas regulatorias.
 
