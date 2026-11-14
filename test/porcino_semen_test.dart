@@ -128,4 +128,120 @@ void main() {
       }
     });
   });
+
+  group('Aptitud de calidad', () {
+    SemenQualityAssessment assess({
+      double motility = 90,
+      double progressive = 75,
+      double str = 75,
+      double vsl = 35,
+      SemenQualityThresholds thresholds = const SemenQualityThresholds(),
+    }) => SemenQualityAssessment(
+      motilityPercent: motility,
+      progressivePercent: progressive,
+      strPercent: str,
+      vslMicronsPerSecond: vsl,
+      thresholds: thresholds,
+    );
+
+    test('Los valores por defecto cumplen los mínimos', () {
+      final a = assess();
+      expect(a.isApt, isTrue);
+      expect(a.failures, isEmpty);
+      expect(a.verdict, 'Cumple los mínimos de calidad.');
+    });
+
+    test('Lista cada criterio por debajo del umbral', () {
+      final a = assess(motility: 80, progressive: 60, vsl: 20, str: 65);
+      expect(a.isApt, isFalse);
+      expect(a.failures, [
+        'motilidad total <85 %',
+        'progresiva <70 %',
+        'VSL <30 µm/s',
+        'STR <70 %',
+      ]);
+      expect(a.verdict, startsWith('No apto para inseminar: '));
+    });
+
+    test('Los umbrales editables cambian el veredicto', () {
+      const lax = SemenQualityThresholds(
+        motilityTotalMin: 70,
+        progressiveMin: 50,
+        vslMin: 20,
+        strMin: 60,
+      );
+      expect(assess(motility: 80, progressive: 60, vsl: 25, str: 65,
+          thresholds: lax).isApt, isTrue);
+    });
+
+    test('Rechaza umbrales y valores imposibles', () {
+      expect(
+        () => assess(
+          thresholds: const SemenQualityThresholds(motilityTotalMin: 120),
+        ),
+        throwsFormatException,
+      );
+      expect(() => assess(vsl: 600), throwsFormatException);
+      expect(() => assess(str: -1), throwsFormatException);
+    });
+  });
+
+  group('Alertas del reparto', () {
+    test('Sin alertas cuando todo cuadra', () {
+      final p = SemenDosePlan(
+        volumeMl: 200,
+        concentrationMillionsPerMl: 380,
+        motilityPercent: 90,
+        morphologyPercent: 88,
+        spermPerDoseBillion: 2,
+        doseVolumeMl: 80,
+        lossPercent: 0,
+        shelfLifeDays: 3,
+        collectedOn: DateTime(2026, 11, 13),
+        doseVolumeRange: SemenInsemination.postCervical.doseVolumeRange,
+      );
+      expect(p.alerts, isEmpty);
+    });
+
+    test('Acumula eyaculado corto, pocos espermatozoides y rango', () {
+      final p = SemenDosePlan(
+        volumeMl: 40,
+        concentrationMillionsPerMl: 100,
+        motilityPercent: 90,
+        morphologyPercent: 88,
+        spermPerDoseBillion: 2,
+        doseVolumeMl: 50,
+        lossPercent: 0,
+        shelfLifeDays: 3,
+        collectedOn: DateTime(2026, 11, 13),
+        doseVolumeRange: SemenInsemination.postCervical.doseVolumeRange,
+      );
+      // 40 ml < 50 ml mínimos; 40 × 100 ×10⁶ = 4 ×10⁹ < 10; 50 ml < 60 del
+      // rango poscervical. Hay 1 dosis (final 50 ml), así que no hay aviso de
+      // volumen corto.
+      expect(p.alerts.length, 3);
+      expect(p.alerts.first, contains('Eyaculado <50 ml'));
+      expect(p.alerts.join(' '), contains('Menos de 10 × 10⁹'));
+      expect(p.alerts.join(' '), contains('fuera del rango de 60–80 ml'));
+    });
+
+    test('Avisa cuando el volumen final no cubre el eyaculado', () {
+      final p = SemenDosePlan(
+        volumeMl: 200,
+        concentrationMillionsPerMl: 380,
+        motilityPercent: 90,
+        morphologyPercent: 88,
+        spermPerDoseBillion: 2,
+        doseVolumeMl: 3,
+        lossPercent: 0,
+        shelfLifeDays: 3,
+        collectedOn: DateTime(2026, 11, 13),
+        doseVolumeRange: SemenInsemination.postCervical.doseVolumeRange,
+      );
+      // 30 dosis × 3 ml = 90 ml < 200 ml del eyaculado; 3 ml también queda por
+      // debajo del rango poscervical (60–80).
+      expect(p.alerts.join(' '), contains('menor al eyaculado'));
+      expect(p.alerts.join(' '), contains('fuera del rango de 60–80 ml'));
+    });
+  });
 }

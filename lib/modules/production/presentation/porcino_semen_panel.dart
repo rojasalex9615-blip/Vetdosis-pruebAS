@@ -16,22 +16,31 @@ class PorcinoSemenPanel extends StatefulWidget {
 class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
   final volume = TextEditingController(text: '200');
   final aspect = TextEditingController(text: 'blanquecino, sin olor');
-  final cells = TextEditingController(text: '76');
+  final cells = TextEditingController(text: '38');
   final dilution = TextEditingController(text: '200');
   final directConc = TextEditingController(text: '380');
   final motility = TextEditingController(text: '90');
   final morphology = TextEditingController(text: '88');
+  final progressive = TextEditingController(text: '75');
+  final str = TextEditingController(text: '75');
+  final vsl = TextEditingController(text: '35');
   final spermPerDose = TextEditingController(text: '2');
   final doseVolume = TextEditingController(text: '80');
   final loss = TextEditingController(text: '0');
+  final thresholdMotility = TextEditingController(text: '85');
+  final thresholdProgressive = TextEditingController(text: '70');
+  final thresholdVsl = TextEditingController(text: '30');
+  final thresholdStr = TextEditingController(text: '70');
+  final thresholdVolume = TextEditingController(text: '50');
 
-  bool fromCount = true;
+  bool fromCount = false;
   SemenChamber chamber = SemenChamber.smallSquares;
-  SemenInsemination insemination = SemenInsemination.postCervical;
+  SemenInsemination? insemination = SemenInsemination.postCervical;
   SemenDiluent diluent = SemenDiluent.short;
   late DateTime collectedOn = DateTime.now();
 
   SemenDosePlan? result;
+  SemenQualityAssessment? quality;
   double? usedConcentration;
 
   @override
@@ -50,9 +59,17 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
       directConc,
       motility,
       morphology,
+      progressive,
+      str,
+      vsl,
       spermPerDose,
       doseVolume,
       loss,
+      thresholdMotility,
+      thresholdProgressive,
+      thresholdVsl,
+      thresholdStr,
+      thresholdVolume,
     ]) {
       c.dispose();
     }
@@ -72,6 +89,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
 
   void _compute() {
     result = null;
+    quality = null;
     usedConcentration = null;
     try {
       final concentration = fromCount
@@ -82,6 +100,20 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
             ).millionsPerMl
           : SemenConcentration.direct(_decimal(directConc)).millionsPerMl;
       usedConcentration = concentration;
+      final thresholds = SemenQualityThresholds(
+        motilityTotalMin: _decimal(thresholdMotility),
+        progressiveMin: _decimal(thresholdProgressive),
+        vslMin: _decimal(thresholdVsl),
+        strMin: _decimal(thresholdStr),
+        volumeMinMl: _decimal(thresholdVolume),
+      );
+      quality = SemenQualityAssessment(
+        motilityPercent: _decimal(motility),
+        progressivePercent: _decimal(progressive),
+        strPercent: _decimal(str),
+        vslMicronsPerSecond: _decimal(vsl),
+        thresholds: thresholds,
+      );
       result = SemenDosePlan(
         volumeMl: _decimal(volume),
         concentrationMillionsPerMl: concentration,
@@ -92,6 +124,8 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
         lossPercent: _decimal(loss),
         shelfLifeDays: diluent.days,
         collectedOn: collectedOn,
+        doseVolumeRange: insemination?.doseVolumeRange,
+        thresholds: thresholds,
       );
     } on FormatException {
       // Mientras se escribe un dato incompleto no hay resultado; no se
@@ -99,7 +133,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
     }
   }
 
-  void pickSpermForDose(SemenInsemination value) {
+  void pickInsemination(SemenInsemination value) {
     setState(() {
       insemination = value;
       spermPerDose.text = _fmt(value.spermPerDoseBillion);
@@ -160,18 +194,18 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
               runSpacing: 8,
               children: [
                 ChoiceChip(
-                  label: const Text('Conteo en cámara'),
-                  selected: fromCount,
+                  label: const Text('Lectura del analizador'),
+                  selected: !fromCount,
                   onSelected: (_) {
-                    setState(() => fromCount = true);
+                    setState(() => fromCount = false);
                     recalc();
                   },
                 ),
                 ChoiceChip(
-                  label: const Text('Ya la tengo'),
-                  selected: !fromCount,
+                  label: const Text('Conteo en cámara'),
+                  selected: fromCount,
                   onSelected: (_) {
-                    setState(() => fromCount = false);
+                    setState(() => fromCount = true);
                     recalc();
                   },
                 ),
@@ -206,6 +240,11 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
                       ),
                   ],
                 ),
+              ),
+              const VetNotice(
+                text: semenCountShortcut,
+                icon: Icons.calculate_outlined,
+                kind: VetBadgeKind.warning,
               ),
             ] else
               _Field(
@@ -242,6 +281,34 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
               label: 'Morfología normal (%)',
               onChanged: recalc,
             ),
+            _Field(
+              controller: progressive,
+              label: 'Motilidad progresiva (%)',
+              onChanged: recalc,
+            ),
+            _Field(
+              controller: str,
+              label: 'STR, rectitud (%)',
+              onChanged: recalc,
+            ),
+            _Field(
+              controller: vsl,
+              label: 'VSL (µm/s)',
+              onChanged: recalc,
+            ),
+            if (quality != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: VetNotice(
+                  text: quality!.verdict,
+                  icon: quality!.isApt
+                      ? Icons.check_circle_outline
+                      : Icons.error_outline,
+                  kind: quality!.isApt
+                      ? VetBadgeKind.success
+                      : VetBadgeKind.warning,
+                ),
+              ),
           ]),
 
           _Step(title: '4. Dosis y diluyente', children: [
@@ -255,7 +322,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
                     ChoiceChip(
                       label: Text('${i.label} (${_fmt(i.spermPerDoseBillion)} ×10⁹)'),
                       selected: insemination == i,
-                      onSelected: (_) => pickSpermForDose(i),
+                      onSelected: (_) => pickInsemination(i),
                     ),
                 ],
               ),
@@ -269,7 +336,11 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
             ),
             _Field(
               controller: doseVolume,
-              label: 'Volumen por dosis (ml)',
+              label: insemination == null
+                  ? 'Volumen por dosis (ml)'
+                  : 'Volumen por dosis (ml) · rango '
+                        '${_fmt(insemination!.doseVolumeMinMl)}–'
+                        '${_fmt(insemination!.doseVolumeMaxMl)}',
               onChanged: recalc,
             ),
             _Field(
@@ -316,6 +387,43 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
             ),
           ]),
 
+          _Step(title: 'Umbrales editables', children: [
+            _Field(
+              controller: thresholdMotility,
+              label: 'Motilidad total mín. (%)',
+              onChanged: recalc,
+            ),
+            _Field(
+              controller: thresholdProgressive,
+              label: 'Progresiva mín. (%)',
+              onChanged: recalc,
+            ),
+            _Field(
+              controller: thresholdVsl,
+              label: 'VSL mín. (µm/s)',
+              onChanged: recalc,
+            ),
+            _Field(
+              controller: thresholdStr,
+              label: 'STR mín. (%)',
+              onChanged: recalc,
+            ),
+            _Field(
+              controller: thresholdVolume,
+              label: 'Volumen mín. del eyaculado (ml)',
+              onChanged: recalc,
+            ),
+            const VetNotice(
+              text:
+                  'Por defecto: criterios de tu práctica con iSPERM. Con '
+                  'microscopio y evaluación subjetiva, otras fuentes aceptan '
+                  'motilidad total de 70 % o más. Ajusta según tu equipo y '
+                  'especie.',
+              icon: Icons.tune_outlined,
+              kind: VetBadgeKind.warning,
+            ),
+          ]),
+
           if (r != null) ...[
             Container(
               margin: const EdgeInsets.only(top: 6),
@@ -332,6 +440,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
                   const SizedBox(height: 4),
                   Text(
                     '${r.doses}',
+                    key: const ValueKey('semen-doses'),
                     style: textTheme.displaySmall?.copyWith(
                       color: VetColors.pink,
                       fontWeight: FontWeight.w600,
@@ -356,12 +465,11 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
                     'Sobrante sin completar dosis',
                     '${_fmt(r.leftoverSpermBillion)} ×10⁹',
                   ),
-                  if (r.volumeShortfall)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
+                  if (r.alerts.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
                       child: VetNotice(
-                        text:
-                            'El volumen final es menor al eyaculado: revisa el volumen por dosis.',
+                        text: r.alerts.join(' '),
                         icon: Icons.warning_amber_outlined,
                         kind: VetBadgeKind.warning,
                       ),

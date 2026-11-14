@@ -8,11 +8,11 @@ library;
 FormatException _invalid(String message) => FormatException(message);
 
 /// Cámara de conteo y su factor: células contadas × factor = células/ml antes
-/// de la dilución. En una cámara de Neubauer, 5 cuadros pequeños ocupan 0.02 µl
+/// de la dilución. En una cámara de Neubauer, 5 cuadros medianos ocupan 0.02 µl
 /// (1 ÷ 0.02 µl = 50 000 por ml) y un cuadro grande de 1 mm² ocupa 0.1 µl
 /// (10 000 por ml).
 enum SemenChamber {
-  smallSquares('5 cuadros pequeños (esquinas + centro)', 50000),
+  smallSquares('5 cuadros medianos (4 esquinas + centro)', 50000),
   largeSquare('1 cuadro grande de 1 mm²', 10000);
 
   const SemenChamber(this.label, this.factor);
@@ -45,14 +45,111 @@ class SemenConcentration {
   final double millionsPerMl;
 }
 
-/// Vía de inseminación con su dosis de referencia en ×10⁹ espermatozoides.
+/// Vía de inseminación: dosis de referencia (×10⁹) y rango orientativo del
+/// volumen por dosis, en ml.
 enum SemenInsemination {
-  cervical('Cervical', 3),
-  postCervical('Poscervical', 2);
+  cervical('Cervical', 3, 80, 100),
+  postCervical('Poscervical', 2, 60, 80);
 
-  const SemenInsemination(this.label, this.spermPerDoseBillion);
+  const SemenInsemination(
+    this.label,
+    this.spermPerDoseBillion,
+    this.doseVolumeMinMl,
+    this.doseVolumeMaxMl,
+  );
   final String label;
-  final double spermPerDoseBillion;
+  final double spermPerDoseBillion, doseVolumeMinMl, doseVolumeMaxMl;
+
+  ({double min, double max}) get doseVolumeRange =>
+      (min: doseVolumeMinMl, max: doseVolumeMaxMl);
+}
+
+/// Umbrales de calidad editables. Por defecto son los criterios de la práctica
+/// con analizador (iSPERM); con microscopio y evaluación subjetiva otras
+/// fuentes aceptan mínimos distintos. No son un contrato del servidor.
+class SemenQualityThresholds {
+  const SemenQualityThresholds({
+    this.motilityTotalMin = 85,
+    this.progressiveMin = 70,
+    this.vslMin = 30,
+    this.strMin = 70,
+    this.volumeMinMl = 50,
+  });
+
+  final double motilityTotalMin, progressiveMin, vslMin, strMin, volumeMinMl;
+}
+
+void _checkThresholds(SemenQualityThresholds t) {
+  for (final (value, label) in [
+    (t.motilityTotalMin, 'Motilidad total mínima'),
+    (t.progressiveMin, 'Progresiva mínima'),
+    (t.strMin, 'STR mínimo'),
+  ]) {
+    if (!value.isFinite || value < 0 || value > 100) {
+      throw _invalid('$label: entre 0 y 100 %.');
+    }
+  }
+  if (!t.vslMin.isFinite || t.vslMin < 0 || t.vslMin > 500) {
+    throw _invalid('VSL mínimo: entre 0 y 500 µm/s.');
+  }
+  if (!t.volumeMinMl.isFinite || t.volumeMinMl < 0 || t.volumeMinMl > 1000) {
+    throw _invalid('Volumen mínimo del eyaculado: entre 0 y 1000 ml.');
+  }
+}
+
+/// Aptitud del eyaculado para inseminar, contra los umbrales elegidos.
+class SemenQualityAssessment {
+  SemenQualityAssessment({
+    required this.motilityPercent,
+    required this.progressivePercent,
+    required this.strPercent,
+    required this.vslMicronsPerSecond,
+    this.thresholds = const SemenQualityThresholds(),
+  }) {
+    for (final (value, label) in [
+      (motilityPercent, 'Motilidad'),
+      (progressivePercent, 'Motilidad progresiva'),
+      (strPercent, 'STR'),
+    ]) {
+      if (!value.isFinite || value < 0 || value > 100) {
+        throw _invalid('$label: entre 0 y 100 %.');
+      }
+    }
+    if (!vslMicronsPerSecond.isFinite ||
+        vslMicronsPerSecond < 0 ||
+        vslMicronsPerSecond > 500) {
+      throw _invalid('VSL: entre 0 y 500 µm/s.');
+    }
+    _checkThresholds(thresholds);
+  }
+
+  final double motilityPercent, progressivePercent, strPercent;
+  final double vslMicronsPerSecond;
+  final SemenQualityThresholds thresholds;
+
+  /// Criterios por debajo del umbral, con su valor exigido.
+  List<String> get failures {
+    final list = <String>[];
+    if (motilityPercent < thresholds.motilityTotalMin) {
+      list.add('motilidad total <${_num(thresholds.motilityTotalMin)} %');
+    }
+    if (progressivePercent < thresholds.progressiveMin) {
+      list.add('progresiva <${_num(thresholds.progressiveMin)} %');
+    }
+    if (vslMicronsPerSecond < thresholds.vslMin) {
+      list.add('VSL <${_num(thresholds.vslMin)} µm/s');
+    }
+    if (strPercent < thresholds.strMin) {
+      list.add('STR <${_num(thresholds.strMin)} %');
+    }
+    return list;
+  }
+
+  bool get isApt => failures.isEmpty;
+
+  String get verdict => isApt
+      ? 'Cumple los mínimos de calidad.'
+      : 'No apto para inseminar: ${failures.join(', ')}.';
 }
 
 /// Vida útil del diluyente, en días desde la colecta.
@@ -67,7 +164,16 @@ enum SemenDiluent {
 }
 
 const semenSource =
-    'Prototipo «Dosis seminales porcinas» de la hoja de clase. Dilución y área de conteo por confirmar con el material del curso; sin validación externa.';
+    'Prototipo «Dosis seminales porcinas» de la hoja de clase. La dilución '
+    'cambia según el método (1:200 o 1:100): confírmala con tu material del '
+    'curso; sin validación externa.';
+
+/// Atajo del conteo: con dilución 1:200 y 5 cuadros medianos, células
+/// contadas × 10 = millones/ml. La dilución depende del protocolo.
+const semenCountShortcut =
+    'Atajo con 1:200 y 5 cuadros medianos: células contadas × 10 = millones/ml. '
+    'La dilución cambia según el método (ej. 1:100 en otros protocolos): '
+    'confírmala con tu profe.';
 
 const semenProtocol = [
   'Preparar el diluyente y atemperarlo.',
@@ -76,6 +182,7 @@ const semenProtocol = [
   'Media hora a temperatura ambiente y luego a 17 °C.',
   'Rotar las dosis de forma periódica (el esperma se asienta).',
   'Antes de inseminar, mover lento y atemperar.',
+  'Inseminar al detectar el celo, de nuevo a las 12 h y a las 24 h.',
 ];
 
 /// Reparto de un eyaculado en dosis de inseminación.
@@ -94,6 +201,8 @@ class SemenDosePlan {
     required this.lossPercent,
     required this.shelfLifeDays,
     required this.collectedOn,
+    this.doseVolumeRange,
+    this.thresholds = const SemenQualityThresholds(),
   }) {
     if (!volumeMl.isFinite || volumeMl <= 0 || volumeMl > 1000) {
       throw _invalid('Volumen del eyaculado: mayor que 0 y hasta 1000 ml.');
@@ -125,6 +234,7 @@ class SemenDosePlan {
     if (shelfLifeDays < 1 || shelfLifeDays > 60) {
       throw _invalid('Vida del diluyente: de 1 a 60 días.');
     }
+    _checkThresholds(thresholds);
   }
 
   final double volumeMl, concentrationMillionsPerMl;
@@ -132,6 +242,10 @@ class SemenDosePlan {
   final double spermPerDoseBillion, doseVolumeMl, lossPercent;
   final int shelfLifeDays;
   final DateTime collectedOn;
+
+  /// Rango orientativo del volumen por dosis para la vía elegida, si se conoce.
+  final ({double min, double max})? doseVolumeRange;
+  final SemenQualityThresholds thresholds;
 
   double get _motileFraction => motilityPercent / 100;
   double get _normalFraction => morphologyPercent / 100;
@@ -181,4 +295,44 @@ class SemenDosePlan {
 
   /// El volumen final no cubre ni el eyaculado: algo no cuadra.
   bool get volumeShortfall => finalVolumeMl < volumeMl;
+
+  /// Espermatozoides totales del eyaculado (sin descontar calidad), ×10⁹.
+  double get totalSpermBillion =>
+      volumeMl * concentrationMillionsPerMl * 1e6 / 1e9;
+
+  /// Avisos del reparto, en el orden del prototipo. Lista vacía si todo cuadra.
+  List<String> get alerts {
+    final list = <String>[];
+    if (volumeShortfall) {
+      list.add(
+        'El volumen final es menor al eyaculado: revisa el volumen por dosis.',
+      );
+    }
+    if (volumeMl < thresholds.volumeMinMl) {
+      list.add(
+        'Eyaculado <${_num(thresholds.volumeMinMl)} ml: posible colecta '
+        'incompleta, repetir.',
+      );
+    }
+    if (totalSpermBillion < 10) {
+      list.add(
+        'Menos de 10 × 10⁹ espermatozoides totales en el eyaculado.',
+      );
+    }
+    final range = doseVolumeRange;
+    if (range != null &&
+        (doseVolumeMl < range.min || doseVolumeMl > range.max)) {
+      list.add(
+        'Volumen por dosis fuera del rango de ${_num(range.min)}–'
+        '${_num(range.max)} ml.',
+      );
+    }
+    return list;
+  }
+}
+
+/// Formatea un número sin decimales sobrantes (85 → «85», 70.5 → «70.5»).
+String _num(double value) {
+  final fixed = value.toStringAsFixed(1);
+  return fixed.endsWith('.0') ? fixed.substring(0, fixed.length - 2) : fixed;
 }
