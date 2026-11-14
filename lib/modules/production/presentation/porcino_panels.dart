@@ -4,6 +4,7 @@ import '../../../vet_ui/vet_theme.dart';
 import '../../finance/domain/investment_estimate.dart';
 import '../domain/porcino_calculators.dart';
 import '../domain/porcino_capacity.dart';
+import '../domain/porcino_facilities.dart';
 import '../domain/porcino_reference.dart';
 import 'growth_panel.dart';
 import '../../../vet_ui/vet_icons.dart';
@@ -26,6 +27,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
       const _Gap(),
       const PorcinoInverseCapacityPanel(),
       const _Gap(),
+      const PorcinoPenCapacityPanel(),
+      const _Gap(),
       PorcinoVentilationPanel(stages: _ventStages(['Gestación'])),
       const _Gap(),
       const PorcinoSiloPanel(
@@ -47,6 +50,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
         weights: porcinoNurseryWeights,
         icon: VetIcons.grid,
       ),
+      const _Gap(),
+      const PorcinoFacilitySizingPanel(),
       const _Gap(),
       const PorcinoSiloPanel(
         title: 'Silo para maternidad y destete',
@@ -71,6 +76,12 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
         weights: porcinoFinishingWeights,
         icon: VetIcons.grid,
       ),
+      const _Gap(),
+      const PorcinoAreaBalancePanel(),
+      const _Gap(),
+      const PorcinoStageCapacityPanel(),
+      const _Gap(),
+      const PorcinoGrowthProjectionPanel(),
       const _Gap(),
       const PorcinoSiloPanel(
         title: 'Silo para desarrollo y finalización',
@@ -694,6 +705,15 @@ String _int(double v) {
     b.write(s[i]);
   }
   return b.toString();
+}
+
+/// Formatea una diferencia con su signo explícito: «+22.5», «-3», «0».
+String _signed(double v, [int decimals = 2]) {
+  final rounded = double.parse(v.toStringAsFixed(decimals));
+  final body = _fmt(rounded.abs(), decimals);
+  if (rounded > 0) return '+$body';
+  if (rounded < 0) return '-$body';
+  return body;
 }
 
 /// Caudal de aire de una sala = animales × tasa de diseño por animal.
@@ -1419,6 +1439,692 @@ String _money(int cents) {
   final entero = _int(pesos.truncateToDouble());
   final centavos = (cents.abs() % 100).toString().padLeft(2, '0');
   return '$entero.$centavos MXN';
+}
+
+/// Capacidad de corral: cuántos animales caben y qué superficie hace falta.
+///
+/// La densidad de referencia sale de la tabla de clase por peso y tipo de
+/// piso; no se interpola. El resultado no es dictamen normativo.
+class PorcinoPenCapacityPanel extends StatefulWidget {
+  const PorcinoPenCapacityPanel({super.key});
+  @override
+  State<PorcinoPenCapacityPanel> createState() =>
+      _PorcinoPenCapacityPanelState();
+}
+
+class _PorcinoPenCapacityPanelState extends State<PorcinoPenCapacityPanel> {
+  final available = TextEditingController();
+  final animals = TextEditingController();
+  int? weightKg;
+  PorcinoFloor floor = PorcinoFloor.partial;
+  PenCapacity? result;
+  String? error;
+
+  @override
+  void dispose() {
+    available.dispose();
+    animals.dispose();
+    super.dispose();
+  }
+
+  double? get density =>
+      weightKg == null ? null : swineDensityFor(weightKg!, floor);
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        final reference = density;
+        if (reference == null) {
+          throw const FormatException(
+            'Elige un peso con densidad publicada en la tabla de clase.',
+          );
+        }
+        result = PenCapacity(
+          availableM2: _decimal(available, 'Superficie disponible'),
+          m2PerAnimal: reference,
+          animals: _whole(animals, 'Número de animales'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final textTheme = Theme.of(context).textTheme;
+    final reference = density;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.grid,
+            title: 'Capacidad de corral',
+            subtitle:
+                'Cuántos animales caben en la superficie disponible, según peso y piso.',
+          ),
+          Text('Peso del animal', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final w in swineDensityWeights)
+                ChoiceChip(
+                  label: Text('$w kg'),
+                  selected: weightKg == w,
+                  onSelected: (_) => setState(() {
+                    weightKg = w;
+                    result = null;
+                    error = null;
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Tipo de piso', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final f in PorcinoFloor.values)
+                ChoiceChip(
+                  label: Text(f.label),
+                  selected: floor == f,
+                  onSelected: (_) => setState(() {
+                    floor = f;
+                    result = null;
+                    error = null;
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _Field(
+            controller: available,
+            label: 'Superficie disponible (m²)',
+            decimal: true,
+            helper: reference == null
+                ? 'Elige peso y piso para ver la densidad de referencia'
+                : 'Densidad de referencia: ${_fmt(reference)} m² por animal',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: animals,
+            label: 'Número de animales',
+            helper: 'Se compara contra la capacidad calculada',
+            onChanged: reset,
+          ),
+          const SizedBox(height: 4),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular capacidad',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null) ...[
+            _Results([
+              ('Capacidad estimada', '${_int(r.capacity.toDouble())} animales'),
+              ('Superficie requerida', '${_fmt(r.requiredM2, 2)} m²'),
+              (
+                'Diferencia de superficie',
+                '${_signed(r.differenceM2, 2)} m²',
+              ),
+            ]),
+            if (!r.fits)
+              const Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: VetNotice(
+                  text:
+                      'No caben los animales declarados: falta superficie o sobra densidad.',
+                  icon: VetIcons.alertOctagon,
+                  kind: VetBadgeKind.warning,
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Dimensionamiento de instalaciones: superficie necesaria para una cantidad
+/// de animales en una etapa concreta.
+class PorcinoFacilitySizingPanel extends StatefulWidget {
+  const PorcinoFacilitySizingPanel({super.key});
+  @override
+  State<PorcinoFacilitySizingPanel> createState() =>
+      _PorcinoFacilitySizingPanelState();
+}
+
+class _PorcinoFacilitySizingPanelState
+    extends State<PorcinoFacilitySizingPanel> {
+  final animals = TextEditingController();
+  int? weightKg;
+  PorcinoFloor floor = PorcinoFloor.partial;
+  FacilitySizing? result;
+  String? error;
+
+  @override
+  void dispose() {
+    animals.dispose();
+    super.dispose();
+  }
+
+  double? get density =>
+      weightKg == null ? null : swineDensityFor(weightKg!, floor);
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        final reference = density;
+        if (reference == null) {
+          throw const FormatException(
+            'Elige un peso con densidad publicada en la tabla de clase.',
+          );
+        }
+        result = FacilitySizing(
+          animals: _whole(animals, 'Animales'),
+          m2PerAnimal: reference,
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final textTheme = Theme.of(context).textTheme;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.clipboardChecks,
+            title: 'Dimensionamiento de instalaciones',
+            subtitle: 'Superficie necesaria para alojar una cantidad de animales.',
+          ),
+          Text('Peso del animal', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final w in swineDensityWeights)
+                ChoiceChip(
+                  label: Text('$w kg'),
+                  selected: weightKg == w,
+                  onSelected: (_) => setState(() {
+                    weightKg = w;
+                    result = null;
+                    error = null;
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Tipo de piso', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final f in PorcinoFloor.values)
+                ChoiceChip(
+                  label: Text(f.label),
+                  selected: floor == f,
+                  onSelected: (_) => setState(() {
+                    floor = f;
+                    result = null;
+                    error = null;
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _Field(
+            controller: animals,
+            label: 'Animales a alojar',
+            onChanged: () => setState(() {
+              result = null;
+              error = null;
+            }),
+          ),
+          const SizedBox(height: 4),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular superficie',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Superficie necesaria', '${_fmt(r.requiredM2, 2)} m²'),
+              ('Densidad usada', '${_fmt(r.m2PerAnimal)} m²/animal'),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
+/// Distribución de UPP: compara lo que existe contra lo requerido y separa
+/// déficit de sobrante.
+class PorcinoAreaBalancePanel extends StatefulWidget {
+  const PorcinoAreaBalancePanel({super.key});
+  @override
+  State<PorcinoAreaBalancePanel> createState() =>
+      _PorcinoAreaBalancePanelState();
+}
+
+class _PorcinoAreaBalancePanelState extends State<PorcinoAreaBalancePanel> {
+  final existing = TextEditingController();
+  final required = TextEditingController();
+  AreaBalance? result;
+  String? error;
+
+  @override
+  void dispose() {
+    existing.dispose();
+    required.dispose();
+    super.dispose();
+  }
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = AreaBalance(
+          existingM2: _decimal(existing, 'Superficie existente'),
+          requiredM2: _decimal(required, 'Superficie requerida'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.hierarchy,
+            title: 'Distribución de UPP y déficit',
+            subtitle:
+                'Compara la superficie existente contra la requerida. Separa lo que falta de lo que sobra.',
+          ),
+          _Field(
+            controller: existing,
+            label: 'Superficie existente (m²)',
+            decimal: true,
+            onChanged: () => setState(() {
+              result = null;
+              error = null;
+            }),
+          ),
+          _Field(
+            controller: required,
+            label: 'Superficie requerida (m²)',
+            decimal: true,
+            helper: 'Puede salir del dimensionamiento o de tu propio cálculo',
+            onChanged: () => setState(() {
+              result = null;
+              error = null;
+            }),
+          ),
+          const SizedBox(height: 4),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Comparar superficies',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Diferencia', '${_signed(r.differenceM2, 2)} m²'),
+              if (r.hasDeficit)
+                ('Déficit de infraestructura', '${_fmt(r.deficitM2, 2)} m²')
+              else
+                ('Superficie que sobra', '${_fmt(r.surplusM2, 2)} m²'),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
+/// Capacidad productiva y balance entre etapas: cuántos animales aloja cada
+/// etapa y cuál limita al conjunto.
+class PorcinoStageCapacityPanel extends StatefulWidget {
+  const PorcinoStageCapacityPanel({super.key});
+  @override
+  State<PorcinoStageCapacityPanel> createState() =>
+      _PorcinoStageCapacityPanelState();
+}
+
+class _PorcinoStageCapacityPanelState
+    extends State<PorcinoStageCapacityPanel> {
+  final stage = TextEditingController();
+  final area = TextEditingController();
+  final density = TextEditingController();
+  final stages = <StageArea>[];
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [stage, area, density]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void add() {
+    setState(() {
+      error = null;
+      try {
+        stages.add(
+          StageArea(
+            stage: stage.text.trim(),
+            areaM2: _decimal(area, 'Superficie'),
+            m2PerAnimal: _decimal(density, 'Densidad'),
+          ),
+        );
+        stage.clear();
+        area.clear();
+        density.clear();
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final plan = stages.isEmpty ? null : StageCapacityPlan(stages);
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.hierarchy,
+            title: 'Capacidad productiva y balance',
+            subtitle:
+                'Animales que aloja cada etapa y la etapa que limita al conjunto.',
+          ),
+          _Field(
+            controller: stage,
+            label: 'Etapa',
+            helper: 'Maternidad, destete, engorda…',
+            onChanged: () {},
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: _Field(
+                  controller: area,
+                  label: 'Superficie (m²)',
+                  decimal: true,
+                  onChanged: () {},
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _Field(
+                  controller: density,
+                  label: 'Densidad (m²/animal)',
+                  decimal: true,
+                  onChanged: () {},
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.add,
+            label: 'Agregar etapa',
+            onPressed: add,
+          ),
+          if (error != null)
+            VetNotice(
+              text: error!,
+              icon: VetIcons.alertOctagon,
+              kind: VetBadgeKind.danger,
+            ),
+          for (final (i, s) in stages.indexed)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(s.stage, style: textTheme.titleSmall),
+              subtitle: Text(
+                '${_fmt(s.areaM2, 2)} m² ÷ ${_fmt(s.m2PerAnimal)} m²/animal = '
+                '${_int((s.areaM2 / s.m2PerAnimal + 1e-9).floorToDouble())} animales',
+                style: textTheme.bodySmall,
+              ),
+              trailing: IconButton(
+                icon: const Icon(VetIcons.trash),
+                tooltip: 'Quitar etapa',
+                onPressed: () => setState(() => stages.removeAt(i)),
+              ),
+            ),
+          if (plan != null) ...[
+            _Results([
+              ('Capacidad total', '${_int(plan.totalCapacity.toDouble())} animales'),
+              (
+                'Cuello de botella',
+                '${plan.bottleneckStage.stage} (${_int(plan.bottleneckCapacity.toDouble())})',
+              ),
+            ]),
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text:
+                    'La etapa con menos lugares limita al conjunto: la capacidad real es la del cuello de botella, no la suma.',
+                icon: VetIcons.info,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Proyección de crecimiento: infraestructura necesaria para subir el
+/// inventario. Si la meta no crece, no pide superficie.
+class PorcinoGrowthProjectionPanel extends StatefulWidget {
+  const PorcinoGrowthProjectionPanel({super.key});
+  @override
+  State<PorcinoGrowthProjectionPanel> createState() =>
+      _PorcinoGrowthProjectionPanelState();
+}
+
+class _PorcinoGrowthProjectionPanelState
+    extends State<PorcinoGrowthProjectionPanel> {
+  final current = TextEditingController();
+  final target = TextEditingController();
+  int? weightKg;
+  PorcinoFloor floor = PorcinoFloor.partial;
+  GrowthProjection? result;
+  String? error;
+
+  @override
+  void dispose() {
+    current.dispose();
+    target.dispose();
+    super.dispose();
+  }
+
+  double? get density =>
+      weightKg == null ? null : swineDensityFor(weightKg!, floor);
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        final reference = density;
+        if (reference == null) {
+          throw const FormatException(
+            'Elige un peso con densidad publicada en la tabla de clase.',
+          );
+        }
+        result = GrowthProjection(
+          currentAnimals: _whole(current, 'Inventario actual'),
+          targetAnimals: _whole(target, 'Meta de inventario'),
+          m2PerAnimal: reference,
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final textTheme = Theme.of(context).textTheme;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.trendingUp,
+            title: 'Proyección de crecimiento',
+            subtitle:
+                'Superficie adicional necesaria para aumentar el inventario.',
+          ),
+          Text('Peso del animal', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final w in swineDensityWeights)
+                ChoiceChip(
+                  label: Text('$w kg'),
+                  selected: weightKg == w,
+                  onSelected: (_) => setState(() {
+                    weightKg = w;
+                    result = null;
+                    error = null;
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Tipo de piso', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final f in PorcinoFloor.values)
+                ChoiceChip(
+                  label: Text(f.label),
+                  selected: floor == f,
+                  onSelected: (_) => setState(() {
+                    floor = f;
+                    result = null;
+                    error = null;
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _Field(
+                  controller: current,
+                  label: 'Inventario actual',
+                  onChanged: () => setState(() {
+                    result = null;
+                    error = null;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _Field(
+                  controller: target,
+                  label: 'Meta de inventario',
+                  onChanged: () => setState(() {
+                    result = null;
+                    error = null;
+                  }),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Proyectar superficie',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Animales que se suman', _int(r.additionalAnimals.toDouble())),
+              ('Superficie adicional', '${_fmt(r.additionalM2, 2)} m²'),
+              ('Superficie actual', '${_fmt(r.currentM2, 2)} m²'),
+              ('Superficie de la meta', '${_fmt(r.targetM2, 2)} m²'),
+            ]),
+        ],
+      ),
+    );
+  }
 }
 
 /// Estimado de inversión en equipo y materiales para la granja.
