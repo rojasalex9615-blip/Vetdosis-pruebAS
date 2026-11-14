@@ -79,7 +79,7 @@ create table private.lab_results(
  clinic_id uuid not null references public.clinics(id),
  panel_id uuid not null,
  analyte_key text not null check(length(btrim(analyte_key)) between 1 and 80),
- value numeric not null check(value>=0),
+ value numeric not null check(value>=0 and value<=1000000000),
  unit text not null check(length(btrim(unit)) between 1 and 30),
  actor_id uuid not null references auth.users(id),
  created_at timestamptz not null default clock_timestamp(),
@@ -168,6 +168,7 @@ begin
    if jsonb_typeof(item->k) is distinct from 'string' then raise exception 'invalid_lab_result';end if;end loop;
   -- Misma expresion que el cliente: punto decimal, nunca coma.
   if coalesce(item->>'value','') !~ '^\d{1,12}(\.\d{1,9})?$' then raise exception 'exact_lab_value_required';end if;
+  if (item->>'value')::numeric > 1000000000 then raise exception 'lab_value_out_of_range';end if;
   if lower(btrim(item->>'analyte_key'))=any(vistos) then raise exception 'lab_analyte_repeated';end if;
   vistos=vistos||lower(btrim(item->>'analyte_key'));
  end loop;
@@ -202,6 +203,7 @@ begin
  foreach k in array array['value','unit','correction_reason'] loop
   if jsonb_typeof(p_data->k) is distinct from 'string' then raise exception 'invalid_lab_result';end if;end loop;
  if coalesce(p_data->>'value','') !~ '^\d{1,12}(\.\d{1,9})?$' then raise exception 'exact_lab_value_required';end if;
+ if (p_data->>'value')::numeric > 1000000000 then raise exception 'lab_value_out_of_range';end if;
  if not private.clinical_professional_at(p_clinic,auth.uid(),clock_timestamp()) then raise exception 'lab_authority_required';end if;
  fp=jsonb_build_object('kind','lab_result_correction','result',p_result,'data',p_data);
  receipt=private.vet_receipt(p_clinic,p_operation,fp);if receipt is not null then return receipt;end if;

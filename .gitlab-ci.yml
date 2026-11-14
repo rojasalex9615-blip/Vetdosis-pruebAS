@@ -26,13 +26,37 @@
 #    al servidor antes de compilar, para no entregar un APK que no puede
 #    autenticar.
 #
-# Runner de GitLab validado el 10-nov-2026 con pipelines manuales. Este job
-# analiza y prueba Flutter y compila un APK debug beta; no firma un release.
+# El runner de GitLab se ejecuto el 10-nov-2026. El job sql-lab-results
+# usa un servicio PostgreSQL 17 efimero para reproducir la migracion 15M y sus
+# aserciones; apk-depuracion analiza, prueba Flutter y compila APK debug beta.
+# Ninguno de estos jobs aplica SQL a Supabase Pruebas ni firma un APK de release.
 # La compilacion siempre pasa GOOGLE_DRIVE_WEB_CLIENT_ID como dart-define;
 # si la variable CI no existe, su valor se pasa como cadena vacia.
 
 stages:
+  - verify
   - build
+
+# Reproduce 15M y sus contratos en PostgreSQL 17 efimero.
+# No toca Supabase Pruebas ni requiere secretos.
+sql-lab-results:
+  stage: verify
+  image: postgres:17
+  services:
+    - name: postgres:17-alpine
+      alias: db
+  variables:
+    POSTGRES_DB: vetdosis_lab
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ci-postgres-password
+    PGHOST: db
+    PGPORT: '5432'
+    PGUSER: postgres
+    PGPASSWORD: ci-postgres-password
+    PGDATABASE: vetdosis_lab
+  timeout: 20m
+  script:
+    - bash supabase/tests/run_lab_results.sh
 
 variables:
   FLUTTER_VERSION: '3.47.6'

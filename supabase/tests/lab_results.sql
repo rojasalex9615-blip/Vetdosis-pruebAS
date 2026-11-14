@@ -66,6 +66,7 @@ select pg_temp.assert_true((:'ws'::jsonb#>>'{panels,0,species}')='synthetic','la
 
 -- Validaciones de entrada.
 select pg_temp.expect_error($q$select public.lab_panel_record(current_setting('test.clinic')::uuid,current_setting('test.patient')::uuid,jsonb_set(current_setting('test.panel_data')::jsonb,'{results,0,value}','"1,200"'),repeat('0b',24))$q$,'exact_lab_value_required');
+select pg_temp.expect_error($q$select public.lab_panel_record(current_setting('test.clinic')::uuid,current_setting('test.patient')::uuid,jsonb_set(current_setting('test.panel_data')::jsonb,'{results,0,value}','"1000000001"'),repeat('0b',24))$q$,'lab_value_out_of_range');
 select pg_temp.expect_error($q$select public.lab_panel_record(current_setting('test.clinic')::uuid,current_setting('test.patient')::uuid,jsonb_set(current_setting('test.panel_data')::jsonb,'{results,1,analyte_key}','"Hematocrito "'),repeat('0c',24))$q$,'lab_analyte_repeated');
 select pg_temp.expect_error($q$select public.lab_panel_record(current_setting('test.clinic')::uuid,current_setting('test.patient')::uuid,jsonb_set(current_setting('test.panel_data')::jsonb,'{collected_at}','"2099-01-01T00:00:00Z"'),repeat('0d',24))$q$,'invalid_lab_collection_time');
 select pg_temp.expect_error($q$select public.lab_panel_record(current_setting('test.clinic')::uuid,current_setting('test.patient')::uuid,jsonb_set(current_setting('test.panel_data')::jsonb,'{results}','[]'),repeat('0e',24))$q$,'lab_results_required');
@@ -94,6 +95,7 @@ reset role;
 select id as segundo from private.lab_results where panel_id=:'panel'::uuid and analyte_key='albumina' \gset
 select set_config('test.segundo',:'segundo',false);
 set role authenticated;
+select pg_temp.expect_error($q$select public.lab_result_correct(current_setting('test.clinic')::uuid,current_setting('test.segundo')::uuid,'{"confirmed":true,"value":"1000000001","unit":"g/dL","correction_reason":"Valor fuera del limite"}'::jsonb,repeat('2a',24))$q$,'lab_value_out_of_range');
 select pg_temp.expect_error($q$select public.lab_result_correct(current_setting('test.clinic')::uuid,current_setting('test.segundo')::uuid,'{"confirmed":true,"value":"3.4","unit":"g/dL"}'::jsonb,repeat('1e',24))$q$,'invalid_lab_result');
 -- Y sin confirmar tampoco.
 select pg_temp.expect_error($q$select public.lab_result_correct(current_setting('test.clinic')::uuid,current_setting('test.segundo')::uuid,'{"value":"3.4","unit":"g/dL","correction_reason":"Sin confirmar"}'::jsonb,repeat('2b',24))$q$,'lab_confirmation_required');

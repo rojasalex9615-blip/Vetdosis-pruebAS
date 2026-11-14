@@ -14,6 +14,7 @@ class LabReferenceRange {
     required this.low,
     required this.high,
     required this.source,
+    this.verified = false,
   }) {
     if (analyteKey.trim().isEmpty) throw _invalid('Analito vacío.');
     if (species.trim().isEmpty) throw _invalid('Especie vacía.');
@@ -27,6 +28,10 @@ class LabReferenceRange {
   }
   final String analyteKey, species, unit, source;
   final double low, high;
+
+  /// La comparación matemática no valida la referencia. Solo es true
+  /// después de una revisión profesional explícita.
+  final bool verified;
 }
 
 enum LabFlag {
@@ -78,7 +83,11 @@ class LabResult {
     if (!RegExp(r'^\d+(?:\.\d+)?$').hasMatch(text)) {
       throw _invalid('Valor: usa números sin separadores de miles.');
     }
-    return double.parse(text);
+    final value = double.parse(text);
+    if (!value.isFinite || value > 1e9) {
+      throw _invalid('Valor fuera de rango: el máximo permitido es 1000000000.');
+    }
+    return value;
   }
 
   /// Una lectura del valor contra UN rango, con el rango que la produjo.

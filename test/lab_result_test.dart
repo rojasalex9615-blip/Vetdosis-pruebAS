@@ -8,6 +8,7 @@ LabReferenceRange range({
   double low = 37,
   double high = 55,
   String source = 'Fuente de prueba',
+  bool verified = false,
 }) => LabReferenceRange(
   analyteKey: analyte,
   species: species,
@@ -15,6 +16,7 @@ LabReferenceRange range({
   low: low,
   high: high,
   source: source,
+  verified: verified,
 );
 
 LabResult result(double v, {String unit = '%', String key = 'hematocrito'}) =>
@@ -77,6 +79,10 @@ void main() {
   });
 
   group('Validaciones', () {
+    test('la referencia no se considera verificada por defecto', () {
+      expect(range().verified, isFalse);
+      expect(range(verified: true).verified, isTrue);
+    });
     test('un rango sin fuente no existe', () {
       expect(() => range(source: '  '), throwsFormatException);
     });
@@ -94,6 +100,15 @@ void main() {
       expect(LabResult.parseValue('45.2'), 45.2);
       expect(LabResult.parseValue('1200'), 1200);
       expect(LabResult.parseValue('0.123'), 0.123);
+      expect(LabResult.parseValue('1000000000'), 1000000000);
+      expect(
+        () => LabResult.parseValue('1000000000.01'),
+        throwsFormatException,
+      );
+      expect(
+        () => LabResult.parseValue('1000000001'),
+        throwsFormatException,
+      );
       // En Mexico «1,200» son mil doscientos. Leyendo la coma como decimal
       // entraba como 1.2: mil veces menos, en silencio y en un dato clinico.
       expect(() => LabResult.parseValue('1,200'), throwsFormatException);
