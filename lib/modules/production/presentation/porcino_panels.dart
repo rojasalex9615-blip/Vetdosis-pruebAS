@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../finance/domain/investment_estimate.dart';
+import '../domain/porcino_bandas.dart';
 import '../domain/porcino_calculators.dart';
 import '../domain/porcino_capacity.dart';
 import '../domain/porcino_facilities.dart';
@@ -21,6 +22,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
   return switch (activity) {
     'Reproducción y gestación' => [
       notice,
+      const PorcinoBandFlowPanel(),
+      const _Gap(),
       const PorcinoFlowPanel(),
       const _Gap(),
       const PorcinoSemenPanel(),
@@ -58,6 +61,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
         phases: [...porcinoMaternityFeed, ...porcinoNurseryFeed],
       ),
       const _Gap(),
+      const PorcinoInventoryPanel(),
+      const _Gap(),
       const PorcinoReferenceCard(
         title: 'Referencias de maternidad y destete',
         rows: porcinoMaternityReference,
@@ -87,6 +92,10 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
         title: 'Silo para desarrollo y finalización',
         phases: porcinoGrowingFeed,
       ),
+      const _Gap(),
+      const PorcinoStagePerformancePanel(),
+      const _Gap(),
+      const PorcinoYieldPanel(),
       const _Gap(),
       const PorcinoReferenceCard(
         title: 'Referencias de crecimiento y engorda',
@@ -2306,3 +2315,490 @@ class _PorcinoInvestmentPanelState extends State<PorcinoInvestmentPanel> {
     );
   }
 }
+
+/// Flujo por bandas: de vientres a partos, lechones, jaulas y reemplazos.
+///
+/// Reproduce la hoja de clase «Flujo_produccion_bandas.xlsx» (550 vientres,
+/// banda de 14 días). Es una calculadora de sesión: no guarda registros.
+class PorcinoBandFlowPanel extends StatefulWidget {
+  const PorcinoBandFlowPanel({super.key});
+  @override
+  State<PorcinoBandFlowPanel> createState() => _PorcinoBandFlowPanelState();
+}
+
+class _PorcinoBandFlowPanelState extends State<PorcinoBandFlowPanel> {
+  final sows = TextEditingController(text: '550');
+  final gestation = TextEditingController(text: '114');
+  final lactation = TextEditingController(text: '28');
+  final open = TextEditingController(text: '7');
+  final interval = TextEditingController(text: '14');
+  final infertility = TextEditingController(text: '15');
+  final bornAlive = TextEditingController(text: '12.5');
+  final pigletMortality = TextEditingController(text: '10');
+  final nursingBands = TextEditingController(text: '2');
+  final washBands = TextEditingController(text: '1');
+  final replacement = TextEditingController(text: '45');
+  PorcinoBandFlow? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [
+      sows,
+      gestation,
+      lactation,
+      open,
+      interval,
+      infertility,
+      bornAlive,
+      pigletMortality,
+      nursingBands,
+      washBands,
+      replacement,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = PorcinoBandFlow(
+          sows: _whole(sows, 'Vientres'),
+          gestationDays: _whole(gestation, 'Días de gestación'),
+          lactationDays: _whole(lactation, 'Días de lactancia'),
+          openDays: _whole(open, 'Días abiertos'),
+          bandIntervalDays: _whole(interval, 'Intervalo entre bandas'),
+          infertility: _decimal(infertility, '% de infertilidad') / 100,
+          bornAlivePerLitter: _decimal(
+            bornAlive,
+            'Lechones nacidos vivos por parto',
+          ),
+          pigletMortality:
+              _decimal(pigletMortality, '% mortalidad de lechones') / 100,
+          nursingBands: _whole(nursingBands, 'Bandas de lactancia'),
+          washBands: _whole(washBands, 'Bandas de lavado'),
+          annualReplacement:
+              _decimal(replacement, '% de reemplazo anual') / 100,
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PanelHeader(
+            icon: VetIcons.grid,
+            title: 'Flujo de producción por bandas',
+            subtitle:
+                'Ciclo, servicios, partos, lechones, jaulas y reemplazos. '
+                'Ejemplo de clase: 550 vientres, banda de 14 días.',
+          ),
+          _Field(controller: sows, label: 'Vientres', onChanged: reset),
+          _Field(
+            controller: gestation,
+            label: 'Días de gestación',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: lactation,
+            label: 'Días de lactancia',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: open,
+            label: 'Días abiertos',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: interval,
+            label: 'Intervalo entre bandas (días)',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: infertility,
+            label: '% de infertilidad',
+            decimal: true,
+            helper: 'En porcentaje; 15 equivale a 15 %.',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: bornAlive,
+            label: 'Lechones nacidos vivos por parto',
+            decimal: true,
+            onChanged: reset,
+          ),
+          _Field(
+            controller: pigletMortality,
+            label: '% mortalidad de lechones',
+            decimal: true,
+            helper: 'En porcentaje; 10 equivale a 10 %.',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: nursingBands,
+            label: 'Bandas de lactancia ocupando jaula',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: washBands,
+            label: 'Bandas de lavado y desinfección',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: replacement,
+            label: '% de reemplazo anual',
+            decimal: true,
+            helper: 'En porcentaje; 45 equivale a 45 %.',
+            onChanged: reset,
+          ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular flujo',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Duración del ciclo productivo', '${r.cycleDays} días'),
+              ('Bandas del ciclo', _fmt(r.cycleBands, 2)),
+              ('Servicios por banda', _fmt(r.servicesPerBand, 2)),
+              ('Partos por banda', _fmt(r.farrowingsPerBand, 2)),
+              ('Lechones nacidos vivos por banda', _fmt(r.bornAlivePerBand, 2)),
+              ('Lechones destetados por banda', _fmt(r.weanedPerBand, 2)),
+              ('Jaulas de lactancia necesarias', _fmt(r.nursingCrates, 2)),
+              ('Reemplazos al año', _fmt(r.annualReplacements, 2)),
+              ('Reemplazos por mes', _fmt(r.replacementsPerMonth, 2)),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
+/// Inventario por etapa: población por semana y total, encadenando etapas.
+class PorcinoInventoryPanel extends StatefulWidget {
+  const PorcinoInventoryPanel({super.key});
+  @override
+  State<PorcinoInventoryPanel> createState() => _PorcinoInventoryPanelState();
+}
+
+class _PorcinoInventoryPanelState extends State<PorcinoInventoryPanel> {
+  final weanedPerBand = TextEditingController(text: '494.17');
+  final bandInterval = TextEditingController(text: '14');
+  PorcinoStageInventory? result;
+  String? error;
+
+  @override
+  void dispose() {
+    weanedPerBand.dispose();
+    bandInterval.dispose();
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        final interval = _whole(bandInterval, 'Intervalo entre bandas');
+        if (interval <= 0) {
+          throw const FormatException('Intervalo entre bandas: mayor que 0.');
+        }
+        final perWeek = _decimal(weanedPerBand, 'Lechones destetados por banda');
+        result = PorcinoStageInventory(weanedPerWeek: perWeek / (interval / 7));
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final textTheme = Theme.of(context).textTheme;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PanelHeader(
+            icon: VetIcons.clipboardChecks,
+            title: 'Inventario por etapa',
+            subtitle:
+                'Pre-iniciación, iniciación, crecimiento y finalización. '
+                'Cada etapa hereda la población final de la anterior.',
+          ),
+          _Field(
+            controller: weanedPerBand,
+            label: 'Lechones destetados por banda',
+            decimal: true,
+            helper: 'Sale del flujo por bandas; edítalo si tienes tu dato.',
+            onChanged: reset,
+          ),
+          _Field(
+            controller: bandInterval,
+            label: 'Intervalo entre bandas (días)',
+            onChanged: reset,
+          ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular inventario',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null) ...[
+            const SizedBox(height: 12),
+            for (final stage in r.stages)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(stage.name, style: textTheme.titleSmall),
+                    Text(
+                      '${stage.weeks} sem · inicial ${_fmt(stage.initialPerWeek, 2)} · '
+                      'mortalidad ${_fmt(stage.mortality * 100, 1)} % · '
+                      'final ${_fmt(stage.finalPerWeek, 2)} · '
+                      'total ${_fmt(stage.total, 2)}',
+                      style: textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            _Results([
+              ('Inventario total', _fmt(r.total, 2)),
+            ]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Ganancia diaria de peso y conversión alimenticia de una etapa.
+class PorcinoStagePerformancePanel extends StatefulWidget {
+  const PorcinoStagePerformancePanel({super.key});
+  @override
+  State<PorcinoStagePerformancePanel> createState() =>
+      _PorcinoStagePerformancePanelState();
+}
+
+class _PorcinoStagePerformancePanelState
+    extends State<PorcinoStagePerformancePanel> {
+  final start = TextEditingController(text: '15');
+  final end = TextEditingController(text: '30');
+  final days = TextEditingController(text: '23');
+  final feed = TextEditingController(text: '0.9');
+  PorcinoStagePerformance? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [start, end, days, feed]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = PorcinoStagePerformance(
+          startKg: _decimal(start, 'Peso inicial'),
+          endKg: _decimal(end, 'Peso final'),
+          days: _whole(days, 'Días de la etapa'),
+          dailyFeedKg: _decimal(feed, 'Consumo diario'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PanelHeader(
+            icon: VetIcons.chartGrowth,
+            title: 'Ganancia diaria y conversión',
+            subtitle:
+                'Ejemplo de clase: 15–30 kg en 23 días con 0.9 kg/día. '
+                'Verifica las cifras del pizarrón antes de usarlas.',
+          ),
+          _Field(controller: start, label: 'Peso inicial (kg)', decimal: true, onChanged: reset),
+          _Field(controller: end, label: 'Peso final (kg)', decimal: true, onChanged: reset),
+          _Field(controller: days, label: 'Días de la etapa', onChanged: reset),
+          _Field(
+            controller: feed,
+            label: 'Consumo diario de alimento (kg/día)',
+            decimal: true,
+            onChanged: reset,
+          ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular etapa',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Ganancia diaria de peso (GDP)', '${_fmt(r.dailyGain, 3)} kg/día'),
+              ('Peso promedio de la etapa', '${_fmt(r.averageKg, 2)} kg'),
+              ('Consumo total de la etapa', '${_fmt(r.totalFeed, 2)} kg/animal'),
+              ('Conversión alimenticia', '${_fmt(r.feedConversion, 2)} kg alim./kg'),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
+/// Rendimiento de transformación = producto final ÷ materia prima × 100.
+class PorcinoYieldPanel extends StatefulWidget {
+  const PorcinoYieldPanel({super.key});
+  @override
+  State<PorcinoYieldPanel> createState() => _PorcinoYieldPanelState();
+}
+
+class _PorcinoYieldPanelState extends State<PorcinoYieldPanel> {
+  final input = TextEditingController(text: '90');
+  final output = TextEditingController(text: '67.5');
+  PorcinoYield? result;
+  String? error;
+
+  @override
+  void dispose() {
+    input.dispose();
+    output.dispose();
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = PorcinoYield(
+          inputKg: _decimal(input, 'Materia prima inicial'),
+          outputKg: _decimal(output, 'Producto final'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PanelHeader(
+            icon: VetIcons.chartGrowth,
+            title: 'Rendimiento de canal',
+            subtitle:
+                'Producto final ÷ materia prima × 100. Ejemplo: canal 75 % '
+                'de 90 kg. Ajusta con los datos de tu UPP.',
+          ),
+          _Field(
+            controller: input,
+            label: 'Peso de materia prima inicial (kg)',
+            decimal: true,
+            onChanged: reset,
+          ),
+          _Field(
+            controller: output,
+            label: 'Peso producto final / transformado (kg)',
+            decimal: true,
+            onChanged: reset,
+          ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular rendimiento',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Rendimiento', '${_fmt(r.percent, 2)} %'),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
