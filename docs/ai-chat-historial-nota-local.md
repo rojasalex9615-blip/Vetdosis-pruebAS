@@ -1,5 +1,43 @@
 # Chat de IA: historial lateral y separación de la IA de soporte
 
+## Actualización 2026-11-13 (segunda sesión) — separación en datos y panel lateral
+
+La primera entrega separó las pantallas (la ayuda dejó de abrir el Asistente),
+pero la **causa de datos** seguía: `ai_chats` guardaba en la misma tabla el chat
+del asistente, la ayuda incluida y los borradores de soporte, y `ai_dashboard`
+los listaba juntos. Con Postgres 17 se comprobó: aparecían "Chat real",
+"Ayuda de soporte" y "Ayuda incluida · Primeros pasos" mezclados en el historial
+del asistente.
+
+Cambios de esta sesión:
+
+- `ai_chats.kind` (`assistant` / `help` / `support`). `ai_chat_create` recibe el
+  tipo; el borrador de soporte se crea con `kind=support` y la ayuda incluida
+  (`starter_ai_prepare`) con `kind=help`. Migración:
+  `supabase/proposed/16B_ai_chat_kinds.sql`.
+- La pantalla del asistente filtra el historial por `kind` (`AiViewModel.history`).
+  El chat abierto (soporte/ayuda) se resuelve por id (`chatById`) sin entrar al
+  historial. El servidor no se toca en `ai_dashboard` a propósito: ya devuelve
+  `kind` en cada fila y 13P lo recrea, así que redefinirlo aquí perdería
+  `can_manage`.
+- Historial lateral: riel de 260 px en pantalla ancha; en teléfono, antes chips,
+  ahora **panel lateral deslizante** (botón «Historial», `showModalBottomSheet`).
+
+Verificación: `flutter test` completo 895 pruebas (EXIT=0); suite SQL
+`supabase/tests/run.sh ai_plans` pasa; nueva prueba `supabase/tests/ai_chat_kinds.sql`;
+`flutter analyze` sin errores nuevos.
+
+Publicación: rama `integracion/rc-20261114` (no `main`), commits `6940377`
+(IA) y `2354c4d` (porcino reubicado), subidos a GitLab. Nota en el issue #1
+de GitLab (id 4235789345).
+
+Límites: no probado en teléfono físico ni desplegado. `GITHUB_TOKEN` ausente:
+el tablón de GitHub #31 sigue sin actualizar.
+
+---
+
+## Primera sesión — estado previo (2026-11-13)
+
 Estado: **publicado en GitLab** (2026-11-13). El tablero
 [GitHub issue #31](https://github.com/rojasalex9615-blip/Vetdosis-pruebAS/issues/31)
 sigue **sin** actualizarse: desde esta sesión no hay escritura en GitHub (sin

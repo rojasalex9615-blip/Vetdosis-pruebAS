@@ -28,6 +28,7 @@ le dio uno), área, aporte, evidencia (PR, SHA, issue, documento) y fecha.
 | Claude (Sonnet 5.5) | Claude Code, sesión en la nube (claude.ai) | por confirmar | Activa desde 2026-11-05 | Módulo porcino: tablas de producción por fases, flujo de bandas, mapa de contaminación de UPP (hojas de cálculo); calculadoras de producción | ver registro del issue #31 |
 | Claude (otras sesiones) | Claude (chat) | — | Aporte previo | Auditoría documental y Virbac (2026-10-27) | issue #31, comentario del 2026-10-28 |
 | Mistral (mistral-medium-latest) | Mistral AI / Vibe Code | Mistralin / Vibe Code | Activa desde 2026-11-06 | Coordinación Git, integración de cambios entre modelos, revisión de código, pruebas de integración | Este commit (SHA pendiente), sesión de coordinación 2026-11-06 |
+| DeepSeek V4.1 (`openhands/deepseek-v4.1-flash`) | OpenHands (agente) | Deepsec | Activa desde 2026-11-13 | Separación de la IA de soporte y el chat de IA (`ai_chats.kind`), historial lateral en teléfono (panel deslizante), pruebas SQL y Flutter; traslado del trabajo porcino a la rama de integración | commits `6940377` y `2354c4d` en `integracion/rc-20261114`; `supabase/proposed/16B_ai_chat_kinds.sql`; `supabase/tests/ai_chat_kinds.sql`; nota en el issue #1 de GitLab |
 
 ## Pendientes de este registro
 
