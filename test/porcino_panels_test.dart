@@ -112,4 +112,77 @@ void main() {
       expect(find.textContaining('no están habilitadas'), findsOneWidget);
     }
   });
+
+  testWidgets('Biosecurity and environment activity shows its two panels', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app(admin));
+    await tester.ensureVisible(find.text('Porcinos'));
+    await tester.tap(find.text('Porcinos'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Bioseguridad y ambiente'));
+    await tester.tap(find.text('Bioseguridad y ambiente'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PorcinoBiosecurityPanel), findsOneWidget);
+    expect(find.byType(PorcinoNitrogenPanel), findsOneWidget);
+    expect(find.text('0 de 20 revisados'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  group('Precios cotizados', () {
+    test('uno, varios, vacio y basura', () {
+      expect(parseQuotedPrices(''), isEmpty);
+      expect(parseQuotedPrices('1200'), [120000]);
+      expect(parseQuotedPrices('1200; 1350 ;1290'), [120000, 135000, 129000]);
+      // La coma vale como decimal, no como separador de lista.
+      expect(parseQuotedPrices('1,5'), [150]);
+      expect(parseQuotedPrices('1200,50'), [120050]);
+      // Dos cotizaciones escritas con coma. Antes casaba como un solo numero
+      // de cuatro decimales y entraba callado como 1 200.14 pesos.
+      expect(() => parseQuotedPrices('1200,1350'), throwsFormatException);
+      // El dinero no tiene tres decimales; si llegan, es otra cosa.
+      expect(() => parseQuotedPrices('1200.135'), throwsFormatException);
+      expect(() => parseQuotedPrices('mil'), throwsFormatException);
+      expect(() => parseQuotedPrices('0'), throwsFormatException);
+    });
+  });
+
+  testWidgets('El estimado de inversion suma y avisa de lo que no incluye', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app(admin));
+    await tester.ensureVisible(find.text('Porcinos'));
+    await tester.tap(find.text('Porcinos'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Planeación financiera'));
+    await tester.tap(find.text('Planeación financiera'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PorcinoInvestmentPanel), findsOneWidget);
+
+    Future<void> agregar(String concepto, String cantidad, String precios) async {
+      await tester.enterText(find.widgetWithText(TextField, 'Concepto'), concepto);
+      await tester.enterText(find.widgetWithText(TextField, 'Cantidad'), cantidad);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Precios cotizados por unidad (MXN)'),
+        precios,
+      );
+      await tester.ensureVisible(find.text('Agregar concepto'));
+      await tester.tap(find.text('Agregar concepto'));
+      await tester.pumpAndSettle();
+    }
+
+    await agregar('Ventilador', '4', '1200');
+    expect(find.text('Total estimado'), findsOneWidget);
+    // El renglon lleva el desglose completo y el total va solo con la cifra,
+    // asi que find.text, que compara exacto, distingue uno de otro. Antes no:
+    // con un concepto suelto los dos decian «4 800.00 MXN» y nada mas.
+    expect(find.textContaining('× 1 200.00 MXN = 4 800.00 MXN'), findsOneWidget);
+    expect(find.text('4 800.00 MXN'), findsOneWidget);
+
+    // Un concepto sin precio no entra al total, y la pantalla lo dice.
+    await agregar('Cielo-raso', '100', '');
+    expect(find.text('4 800.00 MXN'), findsOneWidget);
+    expect(find.textContaining('NO incluye 1 concepto'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

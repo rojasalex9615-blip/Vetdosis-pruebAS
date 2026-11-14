@@ -13,7 +13,6 @@ import 'package:vetdosis_pro/modules/production/presentation/production_menu.dar
 import 'package:vetdosis_pro/modules/aviculture/presentation/aviculture_screen.dart';
 import 'package:vetdosis_pro/modules/incubation/presentation/incubation_screen.dart';
 import 'package:vetdosis_pro/modules/operations/presentation/operations_screen.dart';
-import 'package:vetdosis_pro/vet_ui/vet_theme.dart';
 import 'module_navigation_dashboard_test.dart' show contract;
 import 'support/fake_auth.dart';
 import 'remaining_test.dart' show FakeOperations;
@@ -58,7 +57,19 @@ void main() {
       );
       final theme = Theme.of(tester.element(drawer));
       expect(theme.drawerTheme.backgroundColor, theme.colorScheme.surface);
-      expect(theme.colorScheme.primary, VetColors.purple);
+      // El primary sale de la semilla del tema elegido en Ajustes, no de una
+      // constante. Esta linea fijo primero #087F83 y luego VetColors.purple:
+      // las dos veces el color que el neu llevaba puesto a mano. Por eso no se
+      // entero de que el selector de tema no hacia nada, daba igual el tono.
+      // Comprobar la RELACION si lo nota, y de paso sigue cubriendo el morado,
+      // que es la semilla del indice 0 y por tanto lo que se ve por omision.
+      expect(
+        theme.colorScheme.primary,
+        ColorScheme.fromSeed(
+          seedColor: paletteColors[core.settings.palette],
+          brightness: theme.brightness,
+        ).primary,
+      );
       tester.state<ScaffoldState>(find.byType(Scaffold).first).closeDrawer();
       await tester.pumpAndSettle();
       expect(

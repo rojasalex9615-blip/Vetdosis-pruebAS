@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../domain/review_catalog_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ReviewCatalogScreen extends StatefulWidget {
   const ReviewCatalogScreen({
@@ -167,7 +168,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
           decoration: InputDecoration(
             labelText: 'Buscar producto, laboratorio o ingrediente',
             suffixIcon: IconButton(
-              tooltip: 'Buscar', icon: const Icon(Icons.search), onPressed: reload,
+              tooltip: 'Buscar', icon: const Icon(VetIcons.search), onPressed: reload,
             ),
           ),
           onSubmitted: (_) => reload(),

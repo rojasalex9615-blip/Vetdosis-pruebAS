@@ -1,6 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
 import 'ai_labels.dart';
-import 'starter_help_panel.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +9,7 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/ai_repository.dart';
 import 'ai_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class AiScreen extends StatefulWidget {
   const AiScreen({
@@ -471,22 +471,10 @@ class _AiScreenState extends State<AiScreen> {
         const Text(
           'Apoyo con IA · respuestas sin verificar. Dosis, normativa y cálculos requieren fuentes verificadas y el motor clínico; este chat no emite recetas ni registra actos.',
         ),
-        if (widget.repository is StarterAiRepository)
-          StarterHelpPanel(
-            repository: widget.repository as StarterAiRepository,
-            clinic: widget.member.clinicId,
-            onCompleted: (id) async {
-              if (!mounted) return;
-              setState(() {
-                composer.clear();
-                consent = false;
-                personal = false;
-                team = false;
-                operation = newOperationId();
-              });
-              await vm.load(chat: id);
-            },
-          ),
+        // La ayuda de uso de la app ya no vive aqui: se fue a «Ayuda y
+        // soporte». Estaban apiladas en esta misma pantalla y se leian como
+        // una sola cosa. Esta pantalla es el chat; aquella responde dudas de
+        // uso a partir de la guia publica.
         if (vm.busy || working) const LinearProgressIndicator(),
         if (vm.error != null) Text(vm.error!),
         Text(
@@ -501,7 +489,7 @@ class _AiScreenState extends State<AiScreen> {
             ),
             IconButton(
               onPressed: working ? null : vm.load,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(VetIcons.refresh),
             ),
           ],
         ),
@@ -568,7 +556,7 @@ class _AiScreenState extends State<AiScreen> {
                     if (widget.returnDraft && m['role'] == 'assistant')
                       TextButton.icon(
                         onPressed: working ? null : () => Navigator.pop(context, m['body'] as String),
-                        icon: const Icon(Icons.edit_note),
+                        icon: const Icon(VetIcons.noteEdit),
                         label: const Text('Usar como borrador editable'),
                       ),
                   ],

@@ -16,6 +16,7 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/attendance_repository.dart';
 import 'attendance_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({
@@ -360,7 +361,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             onPressed: model.data['consented'] == true && !working
                 ? scan
                 : null,
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: const Icon(VetIcons.qrScan),
             label: const Text('Escanear entrada / salida'),
           ),
         ],
@@ -382,7 +383,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             ),
             IconButton(
               onPressed: working ? null : model.load,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(VetIcons.refresh),
             ),
           ],
         ),
@@ -396,7 +397,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             ),
             trailing: canManageWorkspace
                 ? IconButton(
-                    icon: const Icon(Icons.edit_note),
+                    icon: const Icon(VetIcons.noteEdit),
                     onPressed: () async {
                       await Navigator.push(
                         context,

@@ -17,6 +17,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../domain/backup_repository.dart';
 import '../domain/backup_archive.dart';
 import 'backup_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// Reports what the platform picker returned, without claiming remote sync.
 @visibleForTesting
@@ -944,7 +945,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 if (model.error != null) Text(model.error!),
                 IconButton(
                   onPressed: working ? null : model.load,
-                  icon: const Icon(Icons.refresh),
+                  icon: const Icon(VetIcons.refresh),
                 ),
                 if (!widget.backupOnly && access!.statistics) ...[
                   const Text(
@@ -968,7 +969,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   const Text('Productos en stock mínimo o inferior'),
                   for (final p in model.data['low_stock'] as List? ?? [])
                     ListTile(
-                      leading: const Icon(Icons.inventory_2_outlined),
+                      leading: const Icon(VetIcons.box),
                       title: Text('${p['name']}'),
                       subtitle: Text('${p['stock']} · mínimo ${p['minimum']}'),
                     ),
@@ -1148,7 +1149,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   for (final receipt in googleDriveHistory.take(5))
                     ListTile(
                       dense: true,
-                      leading: const Icon(Icons.cloud_done_outlined),
+                      leading: const Icon(VetIcons.cloudCheck),
                       title: Text(receipt.name),
                       subtitle: Text(
                         '${receipt.bytes} bytes · ${receipt.createdAt.toLocal()} · SHA-256 ${receipt.sha256.isEmpty ? "sin manifiesto" : receipt.sha256.substring(0, receipt.sha256.length < 12 ? receipt.sha256.length : 12)}',
@@ -1218,7 +1219,7 @@ class _BackupScreenState extends State<BackupScreen> {
                               stageRestorePreview,
                               clearInspection: false,
                             ),
-                      icon: const Icon(Icons.preview_outlined),
+                      icon: const Icon(VetIcons.eye),
                       label: const Text('Preparar vista previa en servidor'),
                     ),
                     if (restoreStage != null &&
@@ -1288,8 +1289,8 @@ class _BackupScreenState extends State<BackupScreen> {
                           ListTile(
                             leading: Icon(
                               restorePreflight!['applicable'] == true
-                                  ? Icons.verified_outlined
-                                  : Icons.block_outlined,
+                                  ? VetIcons.verified
+                                  : VetIcons.block,
                             ),
                             title: Text(
                               restorePreflight!['applicable'] == true
@@ -1333,7 +1334,7 @@ class _BackupScreenState extends State<BackupScreen> {
                                         applyOwnerRestore,
                                         clearInspection: false,
                                       ),
-                                icon: const Icon(Icons.restore_outlined),
+                                icon: const Icon(VetIcons.history),
                                 label: const Text(
                                   'Restaurar solo tutores nuevos',
                                 ),
@@ -1355,7 +1356,7 @@ class _BackupScreenState extends State<BackupScreen> {
                                           stageRestorePreview,
                                           clearInspection: false,
                                         ),
-                                  icon: const Icon(Icons.sync_outlined),
+                                  icon: const Icon(VetIcons.sync),
                                   label: const Text('Continuar con pacientes'),
                                 ),
                               if (inspection!.restorePatients.isNotEmpty &&
@@ -1386,7 +1387,7 @@ class _BackupScreenState extends State<BackupScreen> {
                                         applyPatientRestore,
                                         clearInspection: false,
                                       ),
-                                icon: const Icon(Icons.pets_outlined),
+                                icon: const Icon(VetIcons.paw),
                                 label: const Text(
                                   'Restaurar solo pacientes nuevos',
                                 ),

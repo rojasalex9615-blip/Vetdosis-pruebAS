@@ -24,6 +24,22 @@ class LongChatFake extends AiFake {
   }
 }
 
+/// Solo sirve para devolver la respuesta del chat que la ayuda acaba de
+/// crear. La ayuda ya no lleva al usuario al Asistente: la enseña ella misma.
+class ChatsFake implements AiRepository {
+  String? leido;
+  @override
+  Future<List<Map<String, dynamic>>> messages(String chat) async {
+    leido = chat;
+    return [
+      {'role': 'user', 'body': 'Primeros pasos'},
+      {'role': 'assistant', 'body': 'Empieza por registrar tu clínica.'},
+    ];
+  }
+  @override
+  noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 class StarterFake implements StarterAiRepository {
   int calls = 0;
   bool enabled = true;
@@ -161,15 +177,15 @@ void main() {
     'Included help requires consent and has no arbitrary message field',
     (tester) async {
       final r = StarterFake();
-      String? opened;
+      final chats = ChatsFake();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: StarterHelpPanel(
                 repository: r,
+                chats: chats,
                 clinic: 'c',
-                onCompleted: (id) async => opened = id,
               ),
             ),
           ),
@@ -190,7 +206,13 @@ void main() {
       await tester.tap(find.text('Consultar ayuda incluida'));
       await tester.pumpAndSettle();
       expect(r.calls, 1);
-      expect(opened, 'new-private-chat');
+      // La respuesta se muestra en la propia ayuda. Antes esto comprobaba que
+      // se entregara un id de chat para que el Asistente lo abriera, que es
+      // justo lo que mezclaba el historial de dudas de uso con el de las
+      // conversaciones.
+      expect(chats.leido, 'new-private-chat');
+      expect(find.text('Empieza por registrar tu clínica.'), findsOneWidget);
+      expect(find.text('Respuesta de la guía'), findsOneWidget);
     },
   );
   testWidgets(
@@ -203,8 +225,8 @@ void main() {
             body: SingleChildScrollView(
               child: StarterHelpPanel(
                 repository: r,
+                chats: ChatsFake(),
                 clinic: 'c',
-                onCompleted: (_) async {},
               ),
             ),
           ),

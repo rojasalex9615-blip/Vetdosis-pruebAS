@@ -12,6 +12,7 @@ import '../domain/patient_models.dart';
 import '../domain/patient_timeline.dart';
 import '../domain/clinical_record_fields.dart';
 import 'preventive_preview.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PreventiveScreen extends StatefulWidget {
   const PreventiveScreen({
@@ -109,17 +110,17 @@ class _PreventiveScreenState extends State<PreventiveScreen>
                 subtitle: Text('Foto, imagen guardada o PDF escaneado.'),
               ),
               ListTile(
-                leading: const Icon(Icons.document_scanner_outlined),
+                leading: const Icon(VetIcons.documentScan),
                 title: const Text('Fotografiar documento'),
                 onTap: () => Navigator.pop(context, 'camera'),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
+                leading: const Icon(VetIcons.image),
                 title: const Text('Elegir foto'),
                 onTap: () => Navigator.pop(context, 'photo'),
               ),
               ListTile(
-                leading: const Icon(Icons.picture_as_pdf_outlined),
+                leading: const Icon(VetIcons.pdf),
                 title: const Text('Elegir PDF o escaneo'),
                 onTap: () => Navigator.pop(context, 'pdf'),
               ),
@@ -292,7 +293,7 @@ class _PreventiveScreenState extends State<PreventiveScreen>
       actions: [
         IconButton(
           onPressed: model.load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
           tooltip: 'Actualizar carnet',
         ),
       ],
@@ -325,7 +326,7 @@ class _PreventiveScreenState extends State<PreventiveScreen>
               children: [
                 OutlinedButton.icon(
                   onPressed: share,
-                  icon: const Icon(Icons.picture_as_pdf),
+                  icon: const Icon(VetIcons.pdf),
                   label: const Text('Revisar / compartir carnet'),
                 ),
                 if (model.data!['can_confirm'] == true)
@@ -503,7 +504,7 @@ class _PreventiveScreenState extends State<PreventiveScreen>
                                     .rows('evidence')
                                     .where((f) => f['event_id'] == event.id))
                               TextButton.icon(
-                                icon: const Icon(Icons.attach_file),
+                                icon: const Icon(VetIcons.paperclip),
                                 label: Text(
                                   '${file['label']} · ${(file['size'] as num) / 1024 ~/ 1} KB',
                                 ),
@@ -523,9 +524,7 @@ class _PreventiveScreenState extends State<PreventiveScreen>
                             if (model.data!['can_attach'] == true)
                               TextButton.icon(
                                 onPressed: () => attach(event),
-                                icon: const Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                ),
+                                icon: const Icon(VetIcons.image),
                                 label: const Text(
                                   'Agregar foto o PDF escaneado',
                                 ),

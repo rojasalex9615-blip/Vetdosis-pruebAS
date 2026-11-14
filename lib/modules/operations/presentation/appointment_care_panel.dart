@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../domain/appointment_care.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import 'operations_view_model.dart' show operationError;
+import '../../../vet_ui/vet_icons.dart';
 
 class AppointmentCarePanel extends StatelessWidget {
   const AppointmentCarePanel({
@@ -199,7 +200,7 @@ class AppointmentCarePanel extends StatelessWidget {
                 ['agendado', 'en_atencion'].contains(state))
               OutlinedButton.icon(
                 onPressed: () => capture(context, 'admit'),
-                icon: const Icon(Icons.login),
+                icon: const Icon(VetIcons.login),
                 label: const Text('Registrar ingreso'),
               ),
             if (data!['can_close'] == true &&
@@ -207,13 +208,13 @@ class AppointmentCarePanel extends StatelessWidget {
                 ['en_atencion', 'listo'].contains(state))
               OutlinedButton.icon(
                 onPressed: () => capture(context, 'ready'),
-                icon: const Icon(Icons.assignment_turned_in_outlined),
+                icon: const Icon(VetIcons.clipboardCheck),
                 label: const Text('Indicaciones y listo'),
               ),
             if (data!['can_manage'] == true && state == 'listo' && has('ready'))
               OutlinedButton.icon(
                 onPressed: () => capture(context, 'deliver'),
-                icon: const Icon(Icons.logout),
+                icon: const Icon(VetIcons.logout),
                 label: const Text('Registrar entrega'),
               ),
           ],

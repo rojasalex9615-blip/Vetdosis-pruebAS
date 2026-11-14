@@ -7,6 +7,7 @@ import 'package:vetdosis_pro/modules/forms/clinical/clinical_view_model.dart';
 import 'package:vetdosis_pro/modules/prescribing/presentation/rx_entry_screen.dart';
 import 'clinical_screen_contract_test.dart'
     show ContractClinical, NoLegacyStaff, admin;
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 class IntakeFake extends ContractClinical
     implements ClinicalCaseRegistrationRepository {
@@ -157,7 +158,7 @@ void main() {
       );
       await t.pumpAndSettle();
       expect(find.text('Selecciona fecha'), findsOneWidget);
-      await t.tap(find.byIcon(Icons.calendar_month));
+      await t.tap(find.byIcon(VetIcons.calendar));
       await t.pumpAndSettle();
       await t.tap(find.text('OK'));
       await t.pumpAndSettle();

@@ -15,6 +15,8 @@ import 'document_editor.dart';
 import 'document_flow_screen.dart';
 import 'form_pdf_screen.dart';
 import 'branding_editor.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class FormsScreen extends StatefulWidget {
   const FormsScreen({
@@ -285,7 +287,7 @@ class _FormsScreenState extends State<FormsScreen> {
           ),
         OutlinedButton.icon(
           onPressed: model.busy ? null : model.load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
           label: const Text('Actualizar'),
         ),
         if (model.canBrand)
@@ -315,12 +317,17 @@ class _FormsScreenState extends State<FormsScreen> {
                   },
             child: const Text('Casos clínicos, mediciones y actuaciones'),
           ),
-        Text(
-          '1. Configurar formatos de la clínica',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const Text(
-          'Aquí el equipo autorizado edita el texto fijo: cláusulas legales, explicaciones e indicaciones. También configura los campos que se llenarán al atender. Cada cambio crea una versión nueva; los documentos firmados conservan la versión que utilizaron.',
+        const SizedBox(height: 20),
+        const VetSectionHeader(
+          step: 1,
+          large: true,
+          title: 'Configurar formatos de la clínica',
+          subtitle:
+              'Aquí el equipo autorizado edita el texto fijo: cláusulas '
+              'legales, explicaciones e indicaciones. También configura los '
+              'campos que se llenarán al atender. Cada cambio crea una '
+              'versión nueva; los documentos firmados conservan la versión '
+              'que utilizaron.',
         ),
         if (!model.busy && model.error == null && model.templates.isEmpty)
           Text(
@@ -333,7 +340,7 @@ class _FormsScreenState extends State<FormsScreen> {
         for (final version in model.templates)
           NeuHeaderCard(
             title: version.schema['title'] as String,
-            icon: Icons.description_outlined,
+            icon: VetIcons.document,
             color: const Color(0xFFAC8DD5),
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -384,15 +391,17 @@ class _FormsScreenState extends State<FormsScreen> {
             ),
           ),
         const SizedBox(height: 20),
-        Text(
-          '2. Llenar un consentimiento o formato',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            'Elige una plantilla aprobada. Los datos ya registrados del paciente aparecen vinculados. El tutor/propietario completa o confirma sus datos de identificación; el equipo captura los datos clínicos y del procedimiento. Las cláusulas e indicaciones se leen en el documento y no se editan durante el llenado.',
-          ),
+        const VetSectionHeader(
+          step: 2,
+          large: true,
+          title: 'Llenar un consentimiento o formato',
+          subtitle:
+              'Elige una plantilla aprobada. Los datos ya registrados del '
+              'paciente aparecen vinculados. El tutor/propietario completa o '
+              'confirma sus datos de identificación; el equipo captura los '
+              'datos clínicos y del procedimiento. Las cláusulas e '
+              'indicaciones se leen en el documento y no se editan durante '
+              'el llenado.',
         ),
         if (!model.busy &&
             model.error == null &&
@@ -405,17 +414,19 @@ class _FormsScreenState extends State<FormsScreen> {
               subtitle: Text(
                 'Versión ${version.version} · aprobada para uso por la clínica',
               ),
-              trailing: const Icon(Icons.edit_note),
+              trailing: const Icon(VetIcons.noteEdit),
               onTap: model.busy ? null : () => create(version),
             ),
           ),
         const SizedBox(height: 20),
-        Text(
-          '3. Documentos del expediente',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const Text(
-          'Llena un formato con los datos autorizados del paciente, revisa la vista previa, firma y guarda el PDF como evidencia inmutable.',
+        const VetSectionHeader(
+          step: 3,
+          large: true,
+          title: 'Documentos del expediente',
+          subtitle:
+              'Llena un formato con los datos autorizados del paciente, '
+              'revisa la vista previa, firma y guarda el PDF como evidencia '
+              'inmutable.',
         ),
         if (model.documents.isEmpty && !model.busy)
           const Text('Sin documentos disponibles para tu acceso.'),
@@ -426,7 +437,7 @@ class _FormsScreenState extends State<FormsScreen> {
               '${formStateLabel(doc.state)} · ${doc.snapshot['patient']['name']}\n'
               '${doc.signed ? 'Firmado y agregado al expediente' : 'Borrador editable'}',
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const Icon(VetIcons.chevronRight),
             onTap: model.busy ? null : () => open(doc),
           ),
           if (widget.clinical != null &&

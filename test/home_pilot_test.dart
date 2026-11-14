@@ -13,6 +13,7 @@ import 'package:vetdosis_pro/vet_ui/vet_theme.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/dashboard_view_model.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/home_pilot.dart';
 import 'dashboard_test.dart' show Agenda, member;
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 class PilotAgenda extends Agenda {
   int reads = 0;
@@ -157,7 +158,7 @@ void main() {
                           (
                             'Hospitalizados',
                             '—',
-                            Icons.pets,
+                            VetIcons.paw,
                             VetColors.turquoise,
                           ),
                         ],
@@ -232,10 +233,10 @@ void main() {
     // pinta: esta prueba lee el color real del glifo y el de su tarjeta del
     // arbol ya construido, en los dos temas.
     const metricas = [
-      ('Pacientes', '12', Icons.pets_outlined, VetColors.turquoise),
-      ('Citas por venir', '3', Icons.calendar_month_outlined, VetColors.violet),
-      ('En hospital', '2', Icons.local_hospital_outlined, VetColors.cyan),
-      ('Tareas visibles', '5', Icons.task_alt, VetColors.lilac),
+      ('Pacientes', '12', VetIcons.paw, VetColors.turquoise),
+      ('Citas por venir', '3', VetIcons.calendar, VetColors.violet),
+      ('En hospital', '2', VetIcons.hospital, VetColors.cyan),
+      ('Tareas visibles', '5', VetIcons.checkCircle, VetColors.lilac),
     ];
     for (final brillo in [Brightness.light, Brightness.dark]) {
       await tester.pumpWidget(

@@ -14,6 +14,7 @@ import 'reference_library_screen.dart';
 import '../domain/calculation_catalog.dart';
 import '../domain/calculation_engine.dart';
 import 'calculation_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class CalculationScreen extends StatefulWidget {
   const CalculationScreen({
@@ -134,6 +135,12 @@ class _CalculationScreenState extends State<CalculationScreen> {
     setState(() {});
   }
 
+  /// Si la herramienta de constantes puede mostrar las guardadas en la base.
+  bool get showsStoredConstants =>
+      selected == 'vitals' &&
+      widget.referenceLibrary != null &&
+      widget.clinicId != null;
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: model,
@@ -169,7 +176,7 @@ class _CalculationScreenState extends State<CalculationScreen> {
                   builder: (_) => const AvicultureScreen(),
                 ),
               ),
-              icon: const Icon(Icons.agriculture_outlined),
+              icon: const Icon(VetIcons.stable),
               label: const Text('Aves · Capacidad e instalaciones'),
             ),
           if (widget.showAviculture)
@@ -180,7 +187,7 @@ class _CalculationScreenState extends State<CalculationScreen> {
                   builder: (_) => const IncubationScreen(),
                 ),
               ),
-              icon: const Icon(Icons.egg_outlined),
+              icon: const Icon(VetIcons.egg),
               label: const Text('Aves · Incubación'),
             ),
           const SizedBox(height: 12),
@@ -199,7 +206,7 @@ class _CalculationScreenState extends State<CalculationScreen> {
                       ),
                     ),
                   ),
-                  icon: const Icon(Icons.monitor_heart_outlined),
+                  icon: const Icon(VetIcons.heartPulse),
                   label: const Text('Referencias fisiológicas'),
                 ),
                 OutlinedButton.icon(
@@ -213,7 +220,7 @@ class _CalculationScreenState extends State<CalculationScreen> {
                       ),
                     ),
                   ),
-                  icon: const Icon(Icons.science_outlined),
+                  icon: const Icon(VetIcons.flask),
                   label: const Text('Referencias de laboratorio'),
                 ),
               ],
@@ -280,9 +287,23 @@ class _CalculationScreenState extends State<CalculationScreen> {
           ),
           const SizedBox(height: 16),
           if (type.isNotEmpty) ...[
-            if (refs.isEmpty)
-              const Text(
-                'Sin referencias disponibles. Faltan datos con fuente y estado de verificación; no se proponen valores.',
+            // Las constantes guardadas en la base se consultan aqui mismo.
+            // El catalogo incluido en la app no trae ninguna, y antes esta
+            // herramienta solo decia «sin referencias» aunque la clinica
+            // tuviera cientos guardadas. Siguen pendientes de revision MVZ:
+            // se muestran con su fuente, no evaluan un valor medido.
+            if (showsStoredConstants)
+              ReferenceLibraryPanel(
+                key: ValueKey('stored-constants:${widget.clinicId}'),
+                repository: widget.referenceLibrary!,
+                clinicId: widget.clinicId!,
+                showSections: false,
+              ),
+            if (refs.isEmpty && !showsStoredConstants)
+              Text(
+                selected == 'vitals'
+                    ? 'Sin referencias disponibles en este momento. Las constantes guardadas se consultan con cuenta de clínica y conexión; sin ellas no se proponen valores.'
+                    : 'Sin referencias disponibles. Faltan datos con fuente y estado de verificación; no se proponen valores.',
               ),
             if (refs.isNotEmpty)
               DropdownButtonFormField<String>(

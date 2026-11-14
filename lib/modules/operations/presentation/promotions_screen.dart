@@ -11,6 +11,7 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import 'promotion_image_screen.dart';
 import '../domain/operations_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PromotionsScreen extends StatefulWidget {
   const PromotionsScreen({
@@ -315,7 +316,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     actions: [
       IconButton(
         onPressed: busy ? null : load,
-        icon: const Icon(Icons.refresh),
+        icon: const Icon(VetIcons.refresh),
       ),
     ],
     body: ListView(
@@ -335,13 +336,13 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
         if (admin)
           FilledButton.icon(
             onPressed: () => edit(),
-            icon: const Icon(Icons.add),
+            icon: const Icon(VetIcons.add),
             label: const Text('Agregar oferta, promoción, recompensa o evento'),
           ),
         if (admin && widget.ai != null)
           OutlinedButton.icon(
             onPressed: suggestWithAi,
-            icon: const Icon(Icons.auto_awesome),
+            icon: const Icon(VetIcons.sparkles),
             label: const Text('Pedir ideas a la IA'),
           ),
         if (promotions.any((p) => p['kind'] == 'recompensa'))
@@ -354,7 +355,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
               for (final client in clients)
                 ListTile(
                   title: Text('${client['name']}'),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(VetIcons.chevronRight),
                   onTap: () => openLoyalty(client),
                 ),
             ],
@@ -393,7 +394,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                             ),
                           ),
                         ),
-                        icon: const Icon(Icons.image_outlined),
+                        icon: const Icon(VetIcons.image),
                         label: const Text('Crear imagen'),
                       ),
                       TextButton(
@@ -612,7 +613,7 @@ class _LoyaltyAccountScreenState extends State<_LoyaltyAccountScreen> {
         actions: [
           IconButton(
             onPressed: busy ? null : load,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(VetIcons.refresh),
           ),
         ],
       ),

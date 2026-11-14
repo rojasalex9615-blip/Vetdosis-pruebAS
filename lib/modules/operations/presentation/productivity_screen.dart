@@ -8,6 +8,7 @@ import '../../patients/presentation/patient_view_model.dart' show newOperationId
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/operations_repository.dart';
 import 'weekly_plan_tasks_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 const _days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 String _date(DateTime d) => '${d.year.toString().padLeft(4,'0')}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}';
@@ -146,11 +147,11 @@ class _ProductivityScreenState extends State<ProductivityScreen> {
     final tasks=rows('tasks');
     final completed=tasks.where((t)=>t['completed_at']!=null).length;
     final unassigned=tasks.where((t)=>t['assigned_to']==null&&t['completed_at']==null).length;
-    return ModulePage(embedded:widget.embedded,title:'Productividad y semana',actions:[IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh))],
+    return ModulePage(embedded:widget.embedded,title:'Productividad y semana',actions:[IconButton(onPressed:busy?null:load,icon:const Icon(VetIcons.refresh))],
       body:ListView(shrinkWrap:widget.embedded,physics:widget.embedded?const NeverScrollableScrollPhysics():null,padding:const EdgeInsets.all(16),children:[
-        Row(children:[IconButton(onPressed:busy?null:(){week=week.subtract(const Duration(days:7));load();},icon:const Icon(Icons.chevron_left)),
+        Row(children:[IconButton(onPressed:busy?null:(){week=week.subtract(const Duration(days:7));load();},icon:const Icon(VetIcons.chevronLeft)),
           Expanded(child:Text('${_date(week)} — ${_date(week.add(const Duration(days:6)))}',textAlign:TextAlign.center)),
-          IconButton(onPressed:busy?null:(){week=week.add(const Duration(days:7));load();},icon:const Icon(Icons.chevron_right))]),
+          IconButton(onPressed:busy?null:(){week=week.add(const Duration(days:7));load();},icon:const Icon(VetIcons.chevronRight))]),
         if(busy)const LinearProgressIndicator(),
         if(error!=null)Text(error!,style:TextStyle(color:Theme.of(context).colorScheme.error)),
         if(!busy&&error==null)...[
@@ -162,15 +163,15 @@ class _ProductivityScreenState extends State<ProductivityScreen> {
             ]),
             Wrap(spacing:8,children:[
               TextButton(onPressed:()=>plan(),child:const Text('Editar plan semanal')),
-              if(widget.repository is WeeklyTaskPlanRepository)TextButton.icon(onPressed:planTasks,icon:const Icon(Icons.playlist_add),label:const Text('Crear tareas desde el plan')),
-              if(widget.ai!=null)TextButton.icon(onPressed:()=>plan(useAi:true),icon:const Icon(Icons.auto_awesome),label:const Text('Sugerir plan con IA')),
+              if(widget.repository is WeeklyTaskPlanRepository)TextButton.icon(onPressed:planTasks,icon:const Icon(VetIcons.listPlus),label:const Text('Crear tareas desde el plan')),
+              if(widget.ai!=null)TextButton.icon(onPressed:()=>plan(useAi:true),icon:const Icon(VetIcons.sparkles),label:const Text('Sugerir plan con IA')),
             ]),
             if('${data['plan']??''}'.isNotEmpty)ExpansionTile(title:const Text('Plan de la semana'),children:[Padding(padding:const EdgeInsets.all(12),child:SelectableText('${data['plan']}'))]),
             ExpansionTile(title:const Text('Rutinas recurrentes'),children:[
-              TextButton.icon(onPressed:()=>routine(),icon:const Icon(Icons.add),label:const Text('Agregar rutina')),
+              TextButton.icon(onPressed:()=>routine(),icon:const Icon(VetIcons.add),label:const Text('Agregar rutina')),
               for(final r in rows('routines'))ListTile(title:Text('${r['title']} · ${r['estimated_minutes']} min'),
                 subtitle:Text((r['weekdays'] as List).map((d)=>_days[d as int]).join(', ')),
-                onTap:()=>routine(r),trailing:IconButton(icon:const Icon(Icons.archive_outlined),onPressed:()async{
+                onTap:()=>routine(r),trailing:IconButton(icon:const Icon(VetIcons.drawer),onPressed:()async{
                   final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Archivar rutina'),content:Text('¿Archivar ${r['title']}? Se conservarán las tareas creadas.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Cancelar')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Archivar'))]));
                   if(yes==true)await perform('archive',{'id':r['id'],'version':r['version']});
                 })),
@@ -185,7 +186,7 @@ class _ProductivityScreenState extends State<ProductivityScreen> {
               title:Text('${t['title']} · ${t['estimated_minutes']} min'),
               subtitle:Text('${people[t['assigned_to']]??'Sin asignar'} · ${t['area']}\n${t['instructions']}'),
               onTap:manage&&t['completed_at']==null?()=>task(t):null,
-              trailing:t['completed_at']!=null?const Icon(Icons.task_alt):IconButton(icon:const Icon(Icons.check_box_outline_blank),tooltip:'Completar tarea',onPressed:()=>perform('complete',{'id':t['id']})),
+              trailing:t['completed_at']!=null?const Icon(VetIcons.checkCircle):IconButton(icon:const Icon(VetIcons.checkboxBlank),tooltip:'Completar tarea',onPressed:()=>perform('complete',{'id':t['id']})),
             )),
           ],
         ],

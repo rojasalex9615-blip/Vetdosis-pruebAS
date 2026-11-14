@@ -6,6 +6,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/contact_actions.dart' show patientContactChannel;
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/operations_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ContactDirectoryScreen extends StatefulWidget {
   const ContactDirectoryScreen({super.key, required this.repository, required this.member, this.embedded=false});
@@ -126,13 +127,13 @@ class _ContactDirectoryScreenState extends State<ContactDirectoryScreen> {
     final allowed = data?['${kind == 'staff' ? 'team' : kind}_allowed'] == true;
     final editable = kind != 'clients' && data?['${kind == 'staff' ? 'team' : 'supplier'}_manage'] == true;
     return ModulePage(embedded:widget.embedded,
-      title:'Agenda telefónica', actions: [IconButton(onPressed: busy ? null : load, icon: const Icon(Icons.refresh), tooltip: 'Actualizar')],
+      title:'Agenda telefónica', actions: [IconButton(onPressed: busy ? null : load, icon: const Icon(VetIcons.refresh), tooltip: 'Actualizar')],
       body: ListView(shrinkWrap:widget.embedded,physics:widget.embedded?const NeverScrollableScrollPhysics():null,padding: const EdgeInsets.all(16), children: [
         const Text('Directorio de la clínica. Guardar en el teléfono requiere tu confirmación.'),
         const SizedBox(height: 12),
         SegmentedButton<String>(segments: const [ButtonSegment(value: 'staff', label: Text('Personal')), ButtonSegment(value: 'suppliers', label: Text('Proveedores')), ButtonSegment(value: 'clients', label: Text('Clientes'))], selected: {kind}, onSelectionChanged: (value) => setState(() => kind = value.first)),
         const SizedBox(height: 12),
-        TextField(decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'Buscar contacto'), onChanged: (value) => setState(() => search = value)),
+        TextField(decoration: const InputDecoration(prefixIcon: Icon(VetIcons.search), labelText: 'Buscar contacto'), onChanged: (value) => setState(() => search = value)),
         if (busy) const LinearProgressIndicator(),
         if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
         if (data != null && !allowed) const Padding(padding: EdgeInsets.all(16), child: Text('Necesitas permiso de equipo o proveedores para ver estos contactos.')),
@@ -157,7 +158,7 @@ class _ContactDirectoryScreenState extends State<ContactDirectoryScreen> {
           try { await patientContactChannel.invokeMethod<void>('openContacts'); } catch (_) {
             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('La agenda del teléfono no está disponible.')));
           }
-        }, icon: const Icon(Icons.contacts_outlined), label: const Text('Abrir agenda del teléfono')),
+        }, icon: const Icon(VetIcons.phonebook), label: const Text('Abrir agenda del teléfono')),
       ]),
     );
   }

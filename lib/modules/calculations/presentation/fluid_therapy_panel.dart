@@ -10,6 +10,7 @@ import '../domain/calculation_engine.dart';
 import '../domain/fluid_plan.dart';
 import 'drip_metronome.dart';
 import 'reference_library_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class FluidTherapyPanel extends StatefulWidget {
   const FluidTherapyPanel({
@@ -338,7 +339,7 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             ),
           if (weightNote != null) Text(weightNote!),
         ],
-        section('1. Paciente y mantenimiento', Icons.pets_outlined, [
+        section('1. Paciente y mantenimiento', VetIcons.paw, [
           input('weight', 'Peso (kg)'),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
@@ -364,7 +365,7 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             ),
           ],
         ]),
-        section('2. Deshidratación estimada', Icons.water_drop_outlined, [
+        section('2. Deshidratación estimada', VetIcons.drop, [
           input('percent', 'Deshidratación estimada (%)'),
           Wrap(
             spacing: 8,
@@ -390,7 +391,7 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             '${dehydrationNote()}\nFuente: Salom Morell y Soler Aracil, 2023, p. 56, tabla 5.1 (PDF p. 72).',
           ),
         ),
-        section('3. Pérdidas, periodo y equipo', Icons.schedule, [
+        section('3. Pérdidas, periodo y equipo', VetIcons.clock, [
           input('hours', 'Periodo de reposición (h)'),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
@@ -440,7 +441,7 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             'Confirma composición, indicación y presentación del fabricante. El nombre no implica recomendación ni compatibilidad.',
           ),
         ]),
-        section('4. Potasio y bolo (opcionales)', Icons.science_outlined, [
+        section('4. Potasio y bolo (opcionales)', VetIcons.flask, [
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Comprobar aporte de potasio'),
@@ -496,7 +497,7 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         if (plan != null)
-          section('Plan de rehidratación', Icons.water, [
+          section('Plan de rehidratación', VetIcons.waves, [
             if (allometric)
               const Text('Mantenimiento alométrico aproximado a 9 decimales.'),
             for (final e in {
@@ -556,7 +557,7 @@ class _FluidTherapyPanelState extends State<FluidTherapyPanel> {
                 onPressed: reviewed && !kExceeded && patient != null
                     ? () => widget.onReminder!(patient!.id, summary())
                     : null,
-                icon: const Icon(Icons.notifications_outlined),
+                icon: const Icon(VetIcons.bell),
                 label: const Text('Programar revisión de fluidoterapia'),
               ),
             if (widget.onReminder != null && patient == null)

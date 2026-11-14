@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../patients/domain/patient_models.dart';
 import '../../patients/presentation/patient_view_model.dart';
 import '../domain/hospital_models.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class HospitalAdmitForm extends StatefulWidget {
   const HospitalAdmitForm({
@@ -377,12 +378,12 @@ class _HospitalOrderFormState extends State<HospitalOrderForm> {
                         times.remove(time);
                         reviewed = false;
                       }),
-                icon: const Icon(Icons.delete_outline),
+                icon: const Icon(VetIcons.trash),
               ),
             ),
           OutlinedButton.icon(
             onPressed: busy ? null : addTime,
-            icon: const Icon(Icons.schedule),
+            icon: const Icon(VetIcons.clock),
             label: const Text('Añadir horario'),
           ),
           TextField(

@@ -8,6 +8,7 @@ import 'package:vetdosis_pro/modules/inventory/domain/partial_return.dart';
 import 'package:vetdosis_pro/modules/inventory/presentation/credit_accounts_screen.dart';
 import 'package:vetdosis_pro/modules/inventory/presentation/partial_return_screen.dart';
 import 'package:vetdosis_pro/modules/inventory/presentation/sale_screen.dart';
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 const member = ClinicMembership(
   clinicId: 'clinic',
@@ -361,7 +362,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.add));
+      await tester.tap(find.byIcon(VetIcons.add));
       await tester.pump();
       await tester.ensureVisible(find.byType(SwitchListTile));
       await tester.tap(find.byType(SwitchListTile));

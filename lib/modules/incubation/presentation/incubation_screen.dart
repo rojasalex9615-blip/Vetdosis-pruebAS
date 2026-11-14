@@ -2,6 +2,7 @@ import '../../../core/widgets/calculator_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'incubation_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class IncubationScreen extends StatefulWidget {
   const IncubationScreen({super.key});
@@ -230,7 +231,7 @@ class _IncubationScreenState extends State<IncubationScreen> {
                         ),
                         trailing: IconButton(
                           tooltip: 'Abrir fuente externa',
-                          icon: const Icon(Icons.open_in_new),
+                          icon: const Icon(VetIcons.externalLink),
                           onPressed: () async {
                             final url = Uri.tryParse(
                               catalog.source(p['fuente_id'] as String)['url']

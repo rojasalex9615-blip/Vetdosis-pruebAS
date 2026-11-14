@@ -122,3 +122,71 @@ class _AccentChip extends StatelessWidget {
     );
   }
 }
+
+/// Forma redondeada que ademas pinta un halo del color [glow] por fuera.
+///
+/// Sirve donde el tema solo deja pasar una forma y un color —el indicador de
+/// la barra inferior, por ejemplo— y no hay hueco para una sombra. El halo se
+/// pinta solo fuera de la forma, asi que el relleno translucido de dentro no
+/// se ensucia.
+class GlowRoundedBorder extends RoundedRectangleBorder {
+  const GlowRoundedBorder({
+    required this.glow,
+    this.blur = 9,
+    super.side,
+    super.borderRadius,
+  });
+
+  final Color glow;
+  final double blur;
+
+  @override
+  GlowRoundedBorder copyWith({
+    BorderSide? side,
+    BorderRadiusGeometry? borderRadius,
+  }) => GlowRoundedBorder(
+    glow: glow,
+    blur: blur,
+    side: side ?? this.side,
+    borderRadius: borderRadius ?? this.borderRadius,
+  );
+
+  @override
+  ShapeBorder scale(double t) => GlowRoundedBorder(
+    glow: glow.withValues(alpha: glow.a * t),
+    blur: blur,
+    side: side.scale(t),
+    borderRadius: borderRadius * t,
+  );
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    final shape = borderRadius.resolve(textDirection).toRRect(rect);
+    canvas.save();
+    canvas.clipPath(
+      Path()
+        ..fillType = PathFillType.evenOdd
+        ..addRect(rect.inflate(blur * 3))
+        ..addRRect(shape),
+    );
+    canvas.drawRRect(
+      shape,
+      Paint()
+        ..color = glow
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur),
+    );
+    canvas.restore();
+    super.paint(canvas, rect, textDirection: textDirection);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is GlowRoundedBorder &&
+      other.glow == glow &&
+      other.blur == blur &&
+      other.side == side &&
+      other.borderRadius == borderRadius;
+
+  @override
+  int get hashCode => Object.hash(glow, blur, side, borderRadius);
+}

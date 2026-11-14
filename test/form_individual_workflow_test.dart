@@ -6,6 +6,7 @@ import 'package:vetdosis_pro/modules/forms/presentation/form_view_model.dart';
 import 'package:vetdosis_pro/modules/forms/presentation/document_flow_screen.dart';
 import 'form_document_drafts_test.dart' show DraftRepo;
 import 'form_template_permissions_test.dart' show stylist;
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 class WorkflowRepo extends DraftRepo implements FormWorkflowRepository {
   WorkflowRepo() {
@@ -188,7 +189,7 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('Firmar mi atención / explicación'), findsOneWidget);
     r.deny = true;
-    await t.tap(find.byIcon(Icons.refresh));
+    await t.tap(find.byIcon(VetIcons.refresh));
     await t.pumpAndSettle();
     expect(find.text('Firmar mi atención / explicación'), findsNothing);
     expect(find.textContaining('No se pudo verificar'), findsOneWidget);

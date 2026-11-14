@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../domain/clinic_experience.dart';
 import '../domain/clinic_experience_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ClinicExperienceScreen extends StatefulWidget {
   const ClinicExperienceScreen({
@@ -138,7 +139,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                               'aplicar el cambio a la clínica.';
                         });
                       } : null,
-                      icon: const Icon(Icons.restart_alt_outlined),
+                      icon: const Icon(VetIcons.refresh),
                       label: const Text('Restablecer este módulo'),
                     ),
                   ),
@@ -232,7 +233,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
           if (message != null) Text(message!),
           FilledButton.icon(
             onPressed: canEdit ? save : null,
-            icon: const Icon(Icons.save_outlined),
+            icon: const Icon(VetIcons.save),
             label: Text(saving ? 'Guardando...' : 'Guardar configuración de la clínica'),
           ),
         ],

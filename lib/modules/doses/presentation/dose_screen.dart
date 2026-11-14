@@ -9,6 +9,7 @@ import '../data/catalog_repository.dart';
 import '../domain/catalog.dart';
 import 'dose_view_model.dart';
 import 'commercial_package_dose_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class DoseScreen extends StatefulWidget {
   const DoseScreen({
@@ -323,7 +324,7 @@ class _DoseScreenState extends State<DoseScreen> {
                   CalculatorActionButton.icon(
                     id: 'dose',
                     onPressed: widget.offline ? null : widget.onChoosePatient,
-                    icon: const Icon(Icons.person_search_outlined),
+                    icon: const Icon(VetIcons.userSearch),
                     label: const Text('Elegir paciente y peso registrado'),
                   ),
                 ],
@@ -364,7 +365,7 @@ class _DoseScreenState extends State<DoseScreen> {
                 ),
               ),
             ),
-            icon: const Icon(Icons.medication_liquid_outlined),
+            icon: const Icon(VetIcons.medicineBottle),
             label: const Text('Vademécum comercial · dosis del empaque'),
           ),
           const SizedBox(height: 12),
@@ -380,7 +381,7 @@ class _DoseScreenState extends State<DoseScreen> {
           if (widget.admin)
             OutlinedButton.icon(
               onPressed: importCatalog,
-              icon: const Icon(Icons.file_open_outlined),
+              icon: const Icon(VetIcons.folder),
               label: const Text('Importar catálogo'),
             ),
           if (widget.personalRepository != null &&
@@ -440,7 +441,7 @@ class _DoseScreenState extends State<DoseScreen> {
             TextField(
               decoration: const InputDecoration(
                 labelText: 'Buscar principio activo o nombre comercial',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(VetIcons.search),
               ),
               onChanged: (s) => setState(() => query = s),
             ),
@@ -633,7 +634,7 @@ class _DoseScreenState extends State<DoseScreen> {
                           widget.recordedWeight!.patientId,
                         );
                       },
-                icon: const Icon(Icons.assignment_outlined),
+                icon: const Icon(VetIcons.clipboardList),
                 label: const Text('Revisar indicaciones del paciente'),
               ),
           ],

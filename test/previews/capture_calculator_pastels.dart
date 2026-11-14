@@ -60,6 +60,9 @@ void main() {
         await (FontLoader(
           'MaterialIcons',
         )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+        await (FontLoader(
+          'VetIcons',
+        )..addFont(rootBundle.load('assets/fonts/VetIcons.ttf'))).load();
         final core = CoreViewModel(
           SettingsRepository(),
           AppSettings(visualStyle: 'neu'),

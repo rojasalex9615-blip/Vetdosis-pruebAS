@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/commercial_package_dose.dart';
 import '../domain/quantity.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// Separate from generic pharmacological dosing.
 /// Until product labels have been verified and published as reviewed data,
@@ -295,7 +296,7 @@ class _CommercialPackageDoseScreenState
                 title: 'Producto del fabricante',
                 child: OutlinedButton.icon(
                   onPressed: chooseProduct,
-                  icon: const Icon(Icons.search),
+                  icon: const Icon(VetIcons.search),
                   label: const Text(
                     'Elegir producto del catálogo de fabricantes',
                   ),
@@ -431,7 +432,7 @@ class _CommercialPackageDoseScreenState
               CalculatorActionButton.icon(
                 id: 'manufacturer',
                 onPressed: checkingWeight ? null : calculate,
-                icon: const Icon(Icons.calculate_outlined),
+                icon: const Icon(VetIcons.calculator),
                 label: const Text('Calcular cantidad según empaque'),
               ),
               if (error != null)

@@ -1,6 +1,8 @@
 import '../../../core/widgets/accent_glow.dart';
 import '../../../vet_ui/vet_theme.dart';
 import 'package:flutter/material.dart';
+
+import '../../../core/widgets/neu_identity.dart';
 import '../../calculations/data/reference_library_repository.dart';
 import '../../calculations/presentation/reference_library_screen.dart';
 import '../../auth/domain/clinic_membership.dart';
@@ -9,6 +11,7 @@ import 'clinical_models.dart';
 import 'clinical_repository.dart';
 import 'vital_reference_catalog.dart';
 import 'vitals_models.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// Registro de constantes clinicas de un paciente hospitalizado.
 class ClinicalVitalsScreen extends StatefulWidget {
@@ -61,13 +64,13 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
 
   IconData speciesIcon(String raw) {
     final s = raw.toLowerCase();
-    if (s.contains('equin') || s.contains('bovin') || s.contains('porcin')) {
-      return Icons.agriculture_outlined;
-    }
-    if (s.contains('ave') || s.contains('avian')) return Icons.egg_outlined;
-    if (s.contains('conej')) return Icons.cruelty_free_outlined;
-    if (s.contains('rept')) return Icons.terrain_outlined;
-    return Icons.pets_outlined;
+    if (s.contains('equin')) return VetIcons.horse;
+    if (s.contains('bovin')) return VetIcons.cow;
+    if (s.contains('porcin')) return VetIcons.pig;
+    if (s.contains('ave') || s.contains('avian')) return VetIcons.bird;
+    if (s.contains('conej')) return VetIcons.rabbit;
+    if (s.contains('rept')) return VetIcons.lizard;
+    return VetIcons.paw;
   }
 
   String? get pam {
@@ -216,8 +219,8 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
               Chip(
                 avatar: Icon(
                   outside
-                      ? Icons.priority_high_rounded
-                      : Icons.check_circle_outline,
+                      ? VetIcons.exclamation
+                      : VetIcons.checkCircle,
                   size: 16,
                 ),
                 label: Text(evaluation.label),
@@ -259,18 +262,11 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             ? VetColors.darkBorder
             : const Color(0xFFE4EDF3),
       ),
-      boxShadow: [
-        BoxShadow(
-          color: dark ? const Color(0x99000000) : const Color(0xFFD6E1E8),
-          offset: const Offset(7, 8),
-          blurRadius: 18,
-        ),
-        BoxShadow(
-          color: dark ? const Color(0x162DE6D1) : Colors.white,
-          offset: const Offset(-6, -6),
-          blurRadius: 15,
-        ),
-      ],
+      // El par del sistema, no uno a mano. Estos valores (7/8 y 18 de
+      // desenfoque) son los de antes de que Ale pidiera el relieve mas suave:
+      // neuShadows se bajo entonces a 3/3 y 14 y estos dos sitios se quedaron
+      // con los duros, asi que la misma app tenia dos profundidades.
+      boxShadow: neuShadows(dark, depth: 1.2),
     );
   }
 
@@ -399,7 +395,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             decoration: softDecoration(context),
             child: ListTile(
               leading: Icon(
-                Icons.schedule_outlined,
+                VetIcons.clock,
                 color: theme.colorScheme.primary,
               ),
               title: const Text('Hora observada'),
@@ -407,13 +403,13 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                 '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} · '
                 '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
               ),
-              trailing: const Icon(Icons.edit_calendar_outlined),
+              trailing: const Icon(VetIcons.calendarClock),
               onTap: busy ? null : chooseObservedAt,
             ),
           ),
           const SizedBox(height: 26),
           sectionTitle(
-            Icons.monitor_heart_outlined,
+            VetIcons.heartPulse,
             'Constantes',
             subtitle: 'Registro estructurado del examen físico',
           ),
@@ -422,32 +418,32 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             'fc',
             'Frecuencia cardíaca',
             'lpm',
-            icon: Icons.favorite_outline,
+            icon: VetIcons.heart,
           ),
           const SizedBox(height: 12),
           numberField(
             'fr',
             'Frecuencia respiratoria',
             'rpm',
-            icon: Icons.air_outlined,
+            icon: VetIcons.wind,
           ),
           const SizedBox(height: 12),
           numberField(
             'temperature',
             'Temperatura',
             '°C',
-            icon: Icons.thermostat_outlined,
+            icon: VetIcons.thermometer,
           ),
           const SizedBox(height: 12),
           numberField(
             'tllc',
             'Tiempo de llenado capilar',
             's',
-            icon: Icons.timer_outlined,
+            icon: VetIcons.stopwatch,
           ),
           const SizedBox(height: 28),
           sectionTitle(
-            Icons.bloodtype_outlined,
+            VetIcons.drop,
             'Presión arterial',
             subtitle: 'PAS y PAD se guardan como pareja',
           ),
@@ -456,14 +452,14 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             'bp_systolic',
             'PAS',
             'mmHg',
-            icon: Icons.arrow_upward_rounded,
+            icon: VetIcons.arrowUp,
           ),
           const SizedBox(height: 12),
           numberField(
             'bp_diastolic',
             'PAD',
             'mmHg',
-            icon: Icons.arrow_downward_rounded,
+            icon: VetIcons.arrowDown,
           ),
           const SizedBox(height: 14),
           Container(
@@ -472,7 +468,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.calculate_outlined,
+                  VetIcons.calculator,
                   color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 12),
@@ -500,7 +496,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
           ),
           const SizedBox(height: 28),
           sectionTitle(
-            Icons.water_drop_outlined,
+            VetIcons.drop,
             'Mucosas',
             subtitle: 'Color y humedad se registran por separado',
           ),
@@ -520,7 +516,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
           ),
           const SizedBox(height: 28),
           sectionTitle(
-            Icons.notes_outlined,
+            VetIcons.document,
             'Observaciones',
             subtitle: 'Hallazgos adicionales del examen físico',
           ),
@@ -533,7 +529,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             decoration: const InputDecoration(
               labelText: 'Observaciones del examen físico',
               alignLabelWithHint: true,
-              prefixIcon: Icon(Icons.edit_note_outlined),
+              prefixIcon: Icon(VetIcons.noteEdit),
             ),
           ),
           const SizedBox(height: 12),
@@ -544,7 +540,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  Icons.verified_user_outlined,
+                  VetIcons.shieldCheck,
                   color: theme.colorScheme.secondary,
                 ),
                 const SizedBox(width: 12),
@@ -574,7 +570,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                             repository: widget.referenceLibrary!,
                             clinicId: widget.member.clinicId,
                           ))),
-                          icon: const Icon(Icons.menu_book_outlined),
+                          icon: const Icon(VetIcons.book),
                           label: const Text('Consultar referencias fisiológicas'),
                         ),
                     ],
@@ -607,7 +603,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
-              icon: const Icon(Icons.save_outlined),
+              icon: const Icon(VetIcons.save),
               label: Text(
                 busy ? 'Guardando…' : 'Guardar constantes en historial clínico',
               ),

@@ -6,6 +6,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../patients/domain/patient_contacts.dart';
 import '../domain/operations_repository.dart';
 import 'appointment_summary.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class AppointmentMessageScreen extends StatefulWidget {
   const AppointmentMessageScreen({
@@ -224,7 +225,7 @@ class _AppointmentMessageScreenState extends State<AppointmentMessageScreen> {
       actions: [
         IconButton(
           onPressed: busy ? null : load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
         ),
       ],
     ),
@@ -316,7 +317,7 @@ class _AppointmentMessageScreenState extends State<AppointmentMessageScreen> {
             if (widget.ai != null)
               OutlinedButton.icon(
                 onPressed: busy ? null : suggest,
-                icon: const Icon(Icons.auto_awesome),
+                icon: const Icon(VetIcons.sparkles),
                 label: const Text('Redactar con IA'),
               ),
             TextField(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 const productTools = <(String, String, String)>[
   (
@@ -63,7 +64,7 @@ class ProductScreen extends StatelessWidget {
             subtitle: Text(tool.$2),
             trailing: onNavigate == null
                 ? null
-                : const Icon(Icons.chevron_right),
+                : const Icon(VetIcons.chevronRight),
             onTap: onNavigate == null ? null : () => onNavigate!(tool.$3),
           ),
         ),

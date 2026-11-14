@@ -6,46 +6,47 @@ import 'package:flutter/material.dart';
 import 'neu_identity.dart';
 import 'neu_header_card.dart';
 import 'workspace_panel.dart';
+import '../../vet_ui/vet_icons.dart';
 
 /// Stable identities shared by the tool selector and its calculation surface.
 ({Color color, IconData icon}) calculatorIdentity(String id) => switch (id) {
-  'dose' => (color: const Color(0xFF7BEADC), icon: Icons.medication_outlined),
+  'dose' => (color: const Color(0xFF7BEADC), icon: VetIcons.capsule),
   'concentration' => (
     color: const Color(0xFF7BD8EA),
-    icon: Icons.medication_liquid_outlined,
+    icon: VetIcons.medicineBottle,
   ),
-  'withdrawals' => (color: const Color(0xFFAE9ACB), icon: Icons.schedule),
+  'withdrawals' => (color: const Color(0xFFAE9ACB), icon: VetIcons.clock),
   'manufacturer' => (
     color: const Color(0xFF8DADD8),
-    icon: Icons.medication_liquid_outlined,
+    icon: VetIcons.medicineBottle,
   ),
   'aviculture' => (
     color: const Color(0xFF7BCFEA),
-    icon: Icons.agriculture_outlined,
+    icon: VetIcons.chicken,
   ),
-  'incubation' => (color: const Color(0xFFAA94D1), icon: Icons.egg_outlined),
-  'fluids' => (color: const Color(0xFF7BD8EA), icon: Icons.water_drop_outlined),
-  'cri' => (color: const Color(0xFFAC96CF), icon: Icons.speed_outlined),
-  'herd' => (color: const Color(0xFF979BCE), icon: Icons.pets_outlined),
-  'water' => (color: const Color(0xFF7BE6EA), icon: Icons.water_outlined),
-  'feed' => (color: const Color(0xFFC0A1C4), icon: Icons.grass_outlined),
-  'adjustment' => (color: const Color(0xFFCD8ADB), icon: Icons.tune),
+  'incubation' => (color: const Color(0xFFAA94D1), icon: VetIcons.egg),
+  'fluids' => (color: const Color(0xFF7BD8EA), icon: VetIcons.drop),
+  'cri' => (color: const Color(0xFFAC96CF), icon: VetIcons.gauge),
+  'herd' => (color: const Color(0xFF979BCE), icon: VetIcons.cow),
+  'water' => (color: const Color(0xFF7BE6EA), icon: VetIcons.waves),
+  'feed' => (color: const Color(0xFFC0A1C4), icon: VetIcons.feedBag),
+  'adjustment' => (color: const Color(0xFFCD8ADB), icon: VetIcons.sliders),
   'vitals' => (
     color: const Color(0xFF7BD3EA),
-    icon: Icons.monitor_heart_outlined,
+    icon: VetIcons.heartPulse,
   ),
   'metabolic' => (
     color: const Color(0xFFA098CD),
-    icon: Icons.monitor_weight_outlined,
+    icon: VetIcons.scale,
   ),
-  'protocols' => (color: const Color(0xFF96A3CF), icon: Icons.checklist),
-  'ruleOfThree' => (color: const Color(0xFF979BCE), icon: Icons.balance),
+  'protocols' => (color: const Color(0xFF96A3CF), icon: VetIcons.checklist),
+  'ruleOfThree' => (color: const Color(0xFF979BCE), icon: VetIcons.balance),
   'internationalUnits' => (
     color: const Color(0xFFC0A1C4),
-    icon: Icons.vaccines_outlined,
+    icon: VetIcons.syringe,
   ),
-  'conversion' => (color: const Color(0xFF7BD8EA), icon: Icons.swap_horiz),
-  _ => (color: const Color(0xFFAC96CF), icon: Icons.schedule),
+  'conversion' => (color: const Color(0xFF7BD8EA), icon: VetIcons.swapHoriz),
+  _ => (color: const Color(0xFFAC96CF), icon: VetIcons.clock),
 };
 
 /// Persistent tool colors: independent of the user's global palette.
@@ -203,6 +204,7 @@ class CalculatorSurface extends StatelessWidget {
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             backgroundColor: accent,
+            backgroundBuilder: plainButtonLayer,
             // La tinta se elige midiendo contra el acento ya ajustado. Fijar
             // blanco dejaba el peor caso en 4.51:1, justo en el limite de
             // 4.5:1 que pide el texto: cualquier retoque posterior lo rompia.

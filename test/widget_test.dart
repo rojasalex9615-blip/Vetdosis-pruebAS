@@ -26,10 +26,21 @@ void main() {
     expect(find.byTooltip('Ajustes'), findsNothing);
     model.navigate('Ajustes');
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Océano'));
-    await tester.tap(find.text('Océano'));
+    // Elegir un tono tiene que CAMBIAR el color, no solo guardar el indice.
+    // Antes esta prueba solo comprobaba lo segundo, y por eso convivio con el
+    // defecto: el chip quedaba marcado, el indice se guardaba y el tema seguia
+    // igual, porque el estilo neu ignoraba la paleta.
+    final antes = Theme.of(
+      tester.element(find.byType(Scaffold).first),
+    ).colorScheme.primary;
+    await tester.ensureVisible(find.text('Amatista'));
+    await tester.tap(find.text('Amatista'));
     await tester.pumpAndSettle();
     expect((await repository.load()).palette, 1);
+    expect(
+      Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary,
+      isNot(antes),
+    );
     await model.updateSettings(brightness: 'dark');
     await tester.pumpAndSettle();
     expect(

@@ -6,6 +6,7 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/subscription_repository.dart';
 import 'subscription_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({
@@ -136,7 +137,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         if (model.error != null) Text(model.error!),
         IconButton(
           onPressed: model.busy ? null : model.load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
         ),
         if (model.data['effective'] != null) ...[
           Text(

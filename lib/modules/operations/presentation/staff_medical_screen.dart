@@ -8,11 +8,12 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../domain/operations_repository.dart';
 
 const medicalFields = {
-  'blood': 'Grupo sanguíneo',
+  'emergency': 'Contacto de emergencia (nombre, parentesco y teléfono)',
+  'blood': 'Tipo de sangre',
   'allergies': 'Alergias',
-  'conditions': 'Antecedentes',
+  'drug_allergies': 'Fármacos a los que soy alérgico/a',
+  'conditions': 'Enfermedades o padecimientos (opcional)',
   'vaccines': 'Vacunación',
-  'emergency': 'Contacto de emergencia',
 };
 String medicalFailure(Object error) {
   final text = error.toString();
@@ -25,6 +26,15 @@ String medicalFailure(Object error) {
   }
   if (text.contains('staff_medical_profile_unavailable')) {
     return 'La ficha se retiró o no tiene consentimiento vigente. Actualiza la lista.';
+  }
+  if (text.contains('staff_medical_fields_invalid')) {
+    return 'El servidor de esta clínica aún no admite todos los campos (fármacos). Deja ese campo vacío o espera la actualización.';
+  }
+  if (text.contains('staff_medical_delegate_required')) {
+    return 'Esta persona ya no te comparte su ficha.';
+  }
+  if (text.contains('PGRST202')) {
+    return 'Esta función requiere la actualización del servidor.';
   }
   if (text.contains('staff_medical_consent_required')) {
     return 'Revisa el aviso vigente y confirma tu consentimiento para guardar.';
@@ -151,7 +161,8 @@ class _StaffMedicalScreenState extends State<StaffMedicalScreen>
       if (current(revision)) {
         setState(() {
           clear();
-          error = 'No se pudo consultar tu ficha. Comprueba conexión, sesión y la actualización de la clínica.';
+          error =
+              'No se pudo consultar tu ficha. Comprueba conexión, sesión y la actualización de la clínica.';
         });
       }
     } finally {
@@ -184,7 +195,8 @@ class _StaffMedicalScreenState extends State<StaffMedicalScreen>
     if (accepted != true || !mounted) return;
     if (!current(revision)) {
       setState(
-        () => error = 'La pantalla se ocultó antes de confirmar. Revisa tu ficha y repite la retirada.',
+        () => error =
+            'La pantalla se ocultó antes de confirmar. Revisa tu ficha y repite la retirada.',
       );
       return;
     }
@@ -306,18 +318,30 @@ class _StaffMedicalScreenState extends State<StaffMedicalScreen>
               onPressed: busy ? null : team,
               child: const Text('Consulta autorizada de fichas del equipo'),
             ),
+          if (widget.repository is StaffMedicalSharingRepository &&
+              !widget.member.isPersonal)
+            StaffMedicalSharingPanel(
+              repository: widget.repository as StaffMedicalSharingRepository,
+              member: widget.member,
+              profileShared: data!['profile']?['consent_current'] == true,
+            ),
           if ((data!['events'] as List? ?? []).isNotEmpty)
             const Text('Historial de consentimiento de mi ficha'),
           for (final event in (data!['events'] as List? ?? []).cast<Map>())
             Text(
               '${event['created_at']} · ${event['action'] == 'accepted' ? 'Aceptación' : 'Retirada'}',
             ),
-          if ((data!['accesses'] as List? ?? []).isNotEmpty)
-            const Text('Últimos accesos administrativos a mi ficha'),
-          for (final access in (data!['accesses'] as List? ?? []).cast<Map>())
-            Text(
-              '${access['created_at']} · ${access['actor_id']} · ${access['purpose'] == 'emergency' ? 'Emergencia' : 'Preparación para emergencias'}',
-            ),
+          // Con el servidor actualizado el panel de arriba muestra los
+          // accesos con nombre; sin el, queda la lista anterior.
+          if (widget.repository is! StaffMedicalSharingRepository ||
+              widget.member.isPersonal) ...[
+            if ((data!['accesses'] as List? ?? []).isNotEmpty)
+              const Text('Últimos accesos administrativos a mi ficha'),
+            for (final access in (data!['accesses'] as List? ?? []).cast<Map>())
+              Text(
+                '${access['created_at']} · ${access['actor_id']} · ${medicalPurposeLabel(access['purpose'])}',
+              ),
+          ],
         ],
         if (error != null)
           Text(
@@ -390,7 +414,8 @@ class _StaffMedicalTeamScreenState extends State<StaffMedicalTeamScreen>
         people = [];
         busy = false;
         more = false;
-        error = 'La consulta se ocultó al salir de la aplicación. Actualiza y confirma de nuevo la finalidad para consultar otra ficha.';
+        error =
+            'La consulta se ocultó al salir de la aplicación. Actualiza y confirma de nuevo la finalidad para consultar otra ficha.';
       });
     }
   }
@@ -440,63 +465,15 @@ class _StaffMedicalTeamScreenState extends State<StaffMedicalTeamScreen>
     if (busy) return;
     final revision = generation;
     setState(() => viewed = null);
-    String? purpose;
-    bool confirmed = false;
-    final accepted = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, update) => AlertDialog(
-          title: const Text('Finalidad de la consulta'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${person['display_name']}'),
-              DropdownButtonFormField<String>(
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Finalidad'),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'emergency',
-                    child: Text('Emergencia'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'emergency_preparation',
-                    child: Text('Preparación para emergencias'),
-                  ),
-                ],
-                onChanged: (v) => update(() {
-                  purpose = v;
-                  confirmed = false;
-                }),
-              ),
-              CheckboxListTile(
-                value: confirmed,
-                title: const Text(
-                  'Confirmo esta finalidad y el registro de mi acceso',
-                ),
-                onChanged: (v) => update(() => confirmed = v ?? false),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: purpose == null || !confirmed
-                  ? null
-                  : () => Navigator.pop(context, true),
-              child: const Text('Consultar y registrar acceso'),
-            ),
-          ],
-        ),
-      ),
+    final purpose = await askMedicalPurpose(
+      context,
+      '${person['display_name']}',
     );
-    if (accepted != true || !mounted) return;
+    if (purpose == null || !mounted) return;
     if (!current(revision)) {
       setState(
-        () => error = 'La pantalla se ocultó antes de confirmar. Confirma de nuevo la finalidad de consulta.',
+        () => error =
+            'La pantalla se ocultó antes de confirmar. Confirma de nuevo la finalidad de consulta.',
       );
       return;
     }
@@ -509,7 +486,7 @@ class _StaffMedicalTeamScreenState extends State<StaffMedicalTeamScreen>
         widget.member.clinicId,
         widget.member.userId,
         '${person['user_id']}',
-        purpose!,
+        purpose,
       );
       if (!current(revision)) return;
       if (!medicalScope(data, widget.member) ||
@@ -576,4 +553,330 @@ class _StaffMedicalTeamScreenState extends State<StaffMedicalTeamScreen>
       ],
     ),
   );
+}
+
+String medicalPurposeLabel(Object? purpose) =>
+    purpose == 'emergency' ? 'Emergencia' : 'Preparación para emergencias';
+
+/// Pide la finalidad y la confirmacion de que el acceso queda registrado.
+/// Devuelve null si la persona cancela.
+Future<String?> askMedicalPurpose(BuildContext context, String name) async {
+  String? purpose;
+  bool confirmed = false;
+  final accepted = await showDialog<bool>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, update) => AlertDialog(
+        title: const Text('Finalidad de la consulta'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(name),
+            DropdownButtonFormField<String>(
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Finalidad'),
+              items: const [
+                DropdownMenuItem(value: 'emergency', child: Text('Emergencia')),
+                DropdownMenuItem(
+                  value: 'emergency_preparation',
+                  child: Text('Preparación para emergencias'),
+                ),
+              ],
+              onChanged: (v) => update(() {
+                purpose = v;
+                confirmed = false;
+              }),
+            ),
+            CheckboxListTile(
+              value: confirmed,
+              title: const Text(
+                'Confirmo esta finalidad y el registro de mi acceso',
+              ),
+              onChanged: (v) => update(() => confirmed = v ?? false),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: purpose == null || !confirmed
+                ? null
+                : () => Navigator.pop(context, true),
+            child: const Text('Consultar y registrar acceso'),
+          ),
+        ],
+      ),
+    ),
+  );
+  return accepted == true ? purpose : null;
+}
+
+/// Compañeros elegidos, fichas que me compartieron y registro de accesos.
+///
+/// La ficha solo la consultan la administración con permiso específico y los
+/// compañeros que su dueño elige aqui. Cada consulta pide finalidad y queda
+/// registrada; ese registro lo ven el dueño y la administración.
+class StaffMedicalSharingPanel extends StatefulWidget {
+  const StaffMedicalSharingPanel({
+    super.key,
+    required this.repository,
+    required this.member,
+    required this.profileShared,
+  });
+  final StaffMedicalSharingRepository repository;
+  final ClinicMembership member;
+
+  /// Si la ficha propia tiene consentimiento vigente. Sin el, elegir
+  /// compañeros no les da nada que consultar y se avisa.
+  final bool profileShared;
+  @override
+  State<StaffMedicalSharingPanel> createState() =>
+      _StaffMedicalSharingPanelState();
+}
+
+class _StaffMedicalSharingPanelState extends State<StaffMedicalSharingPanel>
+    with WidgetsBindingObserver {
+  List<Map<String, dynamic>> colleagues = [], shared = [], log = [];
+  Map<String, dynamic>? viewed;
+  String? viewedName, error, scope;
+  bool busy = false;
+  int generation = 0;
+  bool current(int revision) => mounted && generation == revision;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    load();
+  }
+
+  @override
+  void dispose() {
+    generation++;
+    viewed = null;
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant StaffMedicalSharingPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.repository != widget.repository ||
+        oldWidget.member.userId != widget.member.userId ||
+        oldWidget.member.clinicId != widget.member.clinicId) {
+      generation++;
+      viewed = null;
+      load();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Una ficha ajena no se queda en pantalla al salir de la aplicacion.
+    if ((state == AppLifecycleState.inactive ||
+            state == AppLifecycleState.paused) &&
+        viewed != null) {
+      setState(() {
+        viewed = null;
+        viewedName = null;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> rows(Object? value) => (value as List? ?? [])
+      .map((e) => Map<String, dynamic>.from(e as Map))
+      .toList();
+
+  Future<void> load() async {
+    final revision = generation;
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      final c = widget.member.clinicId, a = widget.member.userId;
+      final delegates = await widget.repository.staffMedicalDelegates(c, a);
+      final access = await widget.repository.staffMedicalAccessLog(c, a);
+      if (!current(revision)) return;
+      if (!medicalScope(delegates, widget.member) ||
+          !medicalScope(access, widget.member)) {
+        throw StateError('session_changed');
+      }
+      setState(() {
+        colleagues = rows(delegates['colleagues']);
+        shared = rows(delegates['shared_with_me']);
+        log = rows(access['items']);
+        scope = access['scope'] as String?;
+      });
+    } catch (e) {
+      if (current(revision)) {
+        setState(() {
+          colleagues = [];
+          shared = [];
+          log = [];
+          error = medicalFailure(e);
+        });
+      }
+    } finally {
+      if (current(revision)) setState(() => busy = false);
+    }
+  }
+
+  Future<void> toggle(Map<String, dynamic> person, bool enabled) async {
+    if (busy) return;
+    final revision = generation;
+    setState(() => busy = true);
+    try {
+      await widget.repository.staffMedicalDelegateSet(
+        widget.member.clinicId,
+        widget.member.userId,
+        '${person['user_id']}',
+        enabled,
+      );
+      if (!current(revision)) return;
+      busy = false;
+      await load();
+    } catch (e) {
+      if (current(revision)) {
+        setState(() {
+          busy = false;
+          error = medicalFailure(e);
+        });
+      }
+    }
+  }
+
+  Future<void> open(Map<String, dynamic> person) async {
+    if (busy) return;
+    final revision = generation;
+    final name = '${person['display_name']}';
+    final purpose = await askMedicalPurpose(context, name);
+    if (purpose == null || !current(revision)) return;
+    setState(() {
+      busy = true;
+      viewed = null;
+      error = null;
+    });
+    try {
+      final data = await widget.repository.staffMedicalDelegateView(
+        widget.member.clinicId,
+        widget.member.userId,
+        '${person['user_id']}',
+        purpose,
+      );
+      if (!current(revision)) return;
+      if (!medicalScope(data, widget.member) ||
+          data['subject_id'] != person['user_id'] ||
+          data['details'] is! Map) {
+        throw StateError('session_changed');
+      }
+      setState(() {
+        viewed = data;
+        viewedName = name;
+      });
+    } catch (e) {
+      if (current(revision)) setState(() => error = medicalFailure(e));
+    } finally {
+      if (current(revision)) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          Text('Compañeros con acceso en emergencia', style: text.titleMedium),
+          Text(
+            widget.profileShared
+                ? 'Elige quién de esta clínica puede consultar tu ficha si te pasa algo. Puedes quitarlo cuando quieras.'
+                : 'Guarda tu ficha con el aviso vigente para que los compañeros que elijas puedan consultarla.',
+          ),
+          if (busy) const LinearProgressIndicator(),
+          if (colleagues.isEmpty && !busy && error == null)
+            const Text('No hay más integrantes en esta clínica.'),
+          for (final person in colleagues)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('${person['display_name']}'),
+              value: person['delegated'] == true,
+              onChanged: busy ? null : (v) => toggle(person, v),
+            ),
+          if (shared.isNotEmpty) ...[
+            const Divider(),
+            Text('Fichas que me compartieron', style: text.titleMedium),
+            for (final person in shared)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text('${person['display_name']}'),
+                subtitle: person['available'] == true
+                    ? null
+                    : const Text('Sin ficha vigente por ahora'),
+                trailing: TextButton(
+                  onPressed: busy || person['available'] != true
+                      ? null
+                      : () => open(person),
+                  child: const Text('Consultar'),
+                ),
+              ),
+          ],
+          if (viewed != null) ...[
+            Text(
+              'Ficha de $viewedName · acceso registrado',
+              style: text.titleSmall,
+            ),
+            for (final field in medicalFields.entries)
+              if (viewed!['details'][field.key] != null)
+                Text('${field.value}: ${viewed!['details'][field.key]}'),
+            TextButton(
+              onPressed: () => setState(() {
+                viewed = null;
+                viewedName = null;
+              }),
+              child: const Text('Ocultar ficha'),
+            ),
+          ],
+          const Divider(),
+          Text(
+            scope == 'clinic'
+                ? 'Registro de accesos a fichas de la clínica'
+                : 'Quién consultó mi ficha',
+            style: text.titleMedium,
+          ),
+          if (log.isEmpty && !busy && error == null)
+            const Text('Nadie ha consultado todavía.'),
+          for (final item in log)
+            Text(
+              '${_when(item['created_at'])} · ${item['actor_name']}'
+              '${scope == 'clinic' ? ' → ${item['subject_name']}' : ''}'
+              ' · ${item['via'] == 'delegate' ? 'Compañero elegido' : 'Administración'}'
+              ' · ${medicalPurposeLabel(item['purpose'])}',
+            ),
+          TextButton(
+            onPressed: busy ? null : load,
+            child: const Text('Actualizar compañeros y accesos'),
+          ),
+          if (error != null)
+            Text(
+              error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String _when(Object? value) {
+  final at = DateTime.tryParse('$value')?.toLocal();
+  if (at == null) return '$value';
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(at.day)}/${two(at.month)}/${at.year} ${two(at.hour)}:${two(at.minute)}';
 }

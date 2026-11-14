@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../domain/beta_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PlatformBetaScreen extends StatefulWidget {
   const PlatformBetaScreen({
@@ -266,7 +267,7 @@ class _PlatformBetaScreenState extends State<PlatformBetaScreen> {
                               ),
                             ),
                           ),
-                    icon: const Icon(Icons.verified_user_outlined),
+                    icon: const Icon(VetIcons.shieldCheck),
                     label: const Text('Habilitaciones profesionales globales'),
                   ),
                 for (final section in [
@@ -311,7 +312,7 @@ class _PlatformBetaScreenState extends State<PlatformBetaScreen> {
                                       );
                                       await load();
                                     }),
-                              icon: const Icon(Icons.block),
+                              icon: const Icon(VetIcons.block),
                             )
                           : null,
                     ),

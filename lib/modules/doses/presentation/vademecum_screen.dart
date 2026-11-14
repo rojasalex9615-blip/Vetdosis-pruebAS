@@ -1,10 +1,14 @@
 import 'manufacturer_catalog_screen.dart';
+import '../../../core/widgets/contrast.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_theme.dart';
 import 'package:flutter/material.dart';
 import '../data/catalog_repository.dart';
 import '../data/personal_dose_repository.dart';
 import '../domain/catalog.dart';
 import 'dose_screen.dart';
 import 'personal_dose_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class VademecumScreen extends StatefulWidget {
   const VademecumScreen({super.key, required this.catalog, this.personal,
@@ -54,31 +58,61 @@ class _VademecumScreenState extends State<VademecumScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text('Vademécum', style: Theme.of(context).textTheme.headlineMedium),
       const Text('Consulta fuentes y presentaciones antes de calcular.'),
-      OutlinedButton.icon(icon: const Icon(Icons.menu_book),
+      OutlinedButton.icon(icon: const Icon(VetIcons.book),
         label: const Text('Catálogo comercial y dosis del fabricante'),
         onPressed: () => Navigator.push<void>(context, MaterialPageRoute(
           builder: (_) => ManufacturerCatalogScreen(canCalculate: widget.canCalculate)))),
       if (busy) const LinearProgressIndicator(),
       if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-      TextField(decoration: const InputDecoration(labelText: 'Buscar fármaco o nombre comercial', prefixIcon: Icon(Icons.search)),
+      TextField(decoration: const InputDecoration(labelText: 'Buscar fármaco o nombre comercial', prefixIcon: Icon(VetIcons.search)),
         onChanged: (value) => setState(() => query = value)),
-      DropdownButtonFormField<String>(initialValue: scope, decoration: const InputDecoration(labelText: 'Ver fichas'),
-        items: const [
-          DropdownMenuItem(value: 'todos', child: Text('Todas')),
-          DropdownMenuItem(value: 'Base de la app', child: Text('Base de la app')),
-          DropdownMenuItem(value: 'Clínica', child: Text('Compartidas con la clínica')),
-          DropdownMenuItem(value: 'Personal', child: Text('Solo mías')),
-        ], onChanged: (value) => setState(() => scope = value ?? 'todos')),
+      // El filtro pasa de lista desplegable a fila de pastillas, como en el
+      // «Vademecum rapido» de las referencias: las cuatro vistas a la vista
+      // y un toque para cambiar, en vez de abrir un menu.
+      const SizedBox(height: 12),
+      SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(children: [
+          for (final option in const [
+            ('todos', 'Todas'),
+            ('Base de la app', 'Base de la app'),
+            ('Clínica', 'Compartidas con la clínica'),
+            ('Personal', 'Solo mías'),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(option.$2),
+                selected: scope == option.$1,
+                onSelected: (_) => setState(() => scope = option.$1),
+              ),
+            ),
+        ]),
+      ),
+      const SizedBox(height: 8),
       if (widget.personal != null && widget.clinicId != null && !widget.offline)
         OutlinedButton.icon(onPressed: () async {
           await Navigator.push<void>(context, MaterialPageRoute(builder: (_) => PersonalDoseScreen(
             repository: widget.personal!, clinicId: widget.clinicId!, admin: widget.admin,
             general: catalog?.drugs ?? [])));
           if (mounted) await load();
-        }, icon: const Icon(Icons.add), label: const Text('Agregar ficha personal o solicitar compartirla')),
+        }, icon: const Icon(VetIcons.add), label: const Text('Agregar ficha personal o solicitar compartirla')),
       if (!busy && visible.isEmpty) const Text('Aún no hay fichas en esta vista. Añade una ficha con fuente verificable o importa el catálogo general.'),
       for (final entry in visible)
-        Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
+        // Ficha con barra de color a la izquierda segun de donde viene
+        // (app, clinica o personal), como las de la referencia.
+        Padding(padding: const EdgeInsets.only(top: 12), child: VetCard(padding: const EdgeInsets.all(14), child: IntrinsicHeight(child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Container(width: 5, decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            color: readableOn(switch (entry.$2) {
+              'Clínica' => VetColors.lilac,
+              'Personal' => VetColors.mint,
+              _ => VetColors.brandSky,
+            }, Theme.of(context).colorScheme.surface))),
+          const SizedBox(width: 12),
+          Expanded(child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text(entry.$1.name, style: Theme.of(context).textTheme.titleMedium),
             Text('${entry.$1.species} · ${entry.$2} · ${entry.$1.evidence.verified ? 'Verificada' : 'Sin verificar'}'),
@@ -93,8 +127,9 @@ class _VademecumScreenState extends State<VademecumScreen> {
                     repository: widget.catalog, personalRepository: widget.personal,
                     clinicId: widget.clinicId, userId: widget.userId,
                     admin: widget.admin, offline: widget.offline, initialDrug: entry.$1))))),
-                icon: const Icon(Icons.calculate), label: const Text('Calcular dosis')),
-          ]))),
+                icon: const Icon(VetIcons.calculator), label: const Text('Calcular dosis')),
+          ])),
+        ])))),
     ]);
   }
 }

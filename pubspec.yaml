@@ -38,6 +38,7 @@ dependencies:
   cryptography: ^2.9.0
   archive: ^4.0.9
   google_sign_in: 7.2.0
+  video_player: ^2.9.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -51,3 +52,26 @@ flutter:
     - assets/clinical/
     - assets/clinical/aviculture/
     - assets/clinical/incubation/
+  # Plus Jakarta Sans, bajo SIL Open Font License 1.1 (assets/fonts/
+  # PlusJakartaSans-OFL.txt). Se reparte en instancias estaticas, una por
+  # peso, y no como fuente variable: con la variable Flutter necesita
+  # fontVariations en cada TextStyle, y cualquier copyWith(fontWeight:) del
+  # resto de la app se pintaria con el peso base sin avisar.
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/PlusJakartaSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-700.ttf
+          weight: 700
+        - asset: assets/fonts/PlusJakartaSans-800.ttf
+          weight: 800
+    # Iconos propios de VetDosis. Se genera con tools/icons/build_font.py
+    # a partir de tools/icons/svg/; no se edita a mano.
+    - family: VetIcons
+      fonts:
+        - asset: assets/fonts/VetIcons.ttf

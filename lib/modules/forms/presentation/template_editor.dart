@@ -6,6 +6,7 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../domain/form_models.dart';
 import '../domain/form_repository.dart';
 import 'form_pdf_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class TemplateEditor extends StatefulWidget {
   const TemplateEditor({
@@ -280,9 +281,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
             for (final f in (schema['fields'] as List).cast<Map>())
               ListTile(
                 leading: Icon(
-                  f['locked'] == true
-                      ? Icons.lock_outline
-                      : Icons.edit_outlined,
+                  f['locked'] == true ? VetIcons.lock : VetIcons.pencil,
                 ),
                 title: Text(f['label']),
                 subtitle: Text(
@@ -298,7 +297,7 @@ class _TemplateEditorState extends State<TemplateEditor> {
                                 (schema['fields'] as List).remove(f);
                                 changed();
                               },
-                        icon: const Icon(Icons.delete_outline),
+                        icon: const Icon(VetIcons.trash),
                       ),
               ),
             OutlinedButton(

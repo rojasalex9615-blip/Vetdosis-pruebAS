@@ -24,49 +24,53 @@ class NeuHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final base = Theme.of(context).scaffoldBackgroundColor;
-    return AccentGlow(
-      color: color,
+    // El tono de la franja sale del color de la seccion, pero apagado: los
+    // colores de marca son muy luminosos y al 20% dejaban la cabecera mas
+    // cargada que el resto de la tarjeta. Se baja saturacion y luminosidad
+    // antes de mezclar, como en las cabeceras que Ale dio por buenas.
+    final hsl = HSLColor.fromColor(color);
+    final quiet = hsl
+        .withSaturation(hsl.saturation.clamp(0, .6).toDouble())
+        .withLightness(dark ? .62 : .42)
+        .toColor();
+    // El halo vive solo en la franja de la cabecera y muy tenue. La tarjeta
+    // entera ya no brilla: por indicacion de Ale el glow marca el titulo del
+    // apartado, no su contenido.
+    return WorkspacePanel(
       radius: soft ? 32 : 24,
-      emphasis: .65, // Subdue the unmarked card body.
-      child: WorkspacePanel(
-        radius: soft ? 32 : 24,
-        depth: soft ? 1.35 : 1,
-        softLighting: soft,
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AccentGlow(
-                color: color,
-                radius: 0,
-                emphasis: 1.4,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    // Uniform pastel strip, matching the existing app cards.
-                    color: soft
-                        ? Color.lerp(base, color, dark ? .25 : .22)
-                        : color.withValues(alpha: dark ? .25 : .20),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(icon),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+      depth: soft ? 1.35 : 1,
+      softLighting: soft,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AccentGlow(
+              color: color,
+              radius: 0,
+              emphasis: .55,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Color.lerp(base, quiet, dark ? .26 : .2),
+                ),
+                child: Row(
+                  children: [
+                    Icon(icon),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      ?trailing,
-                    ],
-                  ),
+                    ),
+                    ?trailing,
+                  ],
                 ),
               ),
-              child,
-            ],
-          ),
+            ),
+            child,
+          ],
         ),
       ),
     );

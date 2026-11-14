@@ -4,6 +4,7 @@ import '../../core/presentation/unsaved_form_scope.dart';
 import '../../patients/presentation/patient_view_model.dart';
 import '../domain/hospital_care.dart';
 import '../domain/hospital_models.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class HospitalCareForm extends StatefulWidget {
   const HospitalCareForm({
@@ -307,7 +308,7 @@ class _HospitalCareFormState extends State<HospitalCareForm> {
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: busy ? null : chooseDates,
-              icon: const Icon(Icons.date_range),
+              icon: const Icon(VetIcons.calendar),
               label: Text(
                 dates == null
                     ? 'Elegir fechas'
@@ -331,7 +332,7 @@ class _HospitalCareFormState extends State<HospitalCareForm> {
             ),
             OutlinedButton.icon(
               onPressed: busy ? null : addTime,
-              icon: const Icon(Icons.schedule),
+              icon: const Icon(VetIcons.clock),
               label: const Text('Añadir horario diario'),
             ),
             if (scheduleNotice != null)

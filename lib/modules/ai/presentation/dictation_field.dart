@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../patients/application/voice_dictation.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class DictationField extends StatefulWidget {
   const DictationField({
@@ -127,7 +128,7 @@ class _DictationFieldState extends State<DictationField>
         alignment: Alignment.centerLeft,
         child: OutlinedButton.icon(
           onPressed: toggle,
-          icon: Icon(listening ? Icons.stop : Icons.mic),
+          icon: Icon(listening ? VetIcons.stop : VetIcons.mic),
           label: Text(listening ? 'Detener dictado' : 'Dictar texto'),
         ),
       ),

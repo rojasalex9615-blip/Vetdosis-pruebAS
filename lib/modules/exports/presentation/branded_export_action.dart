@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../identity/domain/identity_repository.dart';
 import '../domain/branded_export.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 Future<Uint8List> brandedPdf(
   ExportBranding brand,
@@ -163,11 +164,7 @@ class _BrandedExportActionState extends State<BrandedExportAction> {
           onPressed: busy || widget.repository == null
               ? null
               : () => export(format),
-          icon: Icon(
-            format == 'pdf'
-                ? Icons.picture_as_pdf_outlined
-                : Icons.table_chart_outlined,
-          ),
+          icon: Icon(format == 'pdf' ? VetIcons.pdf : VetIcons.table),
           label: Text('Exportar ${format.toUpperCase()} con membrete'),
         ),
       if (busy)

@@ -24,6 +24,7 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/operations_repository.dart';
 import 'operations_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class OperationsScreen extends StatefulWidget {
   const OperationsScreen({
@@ -471,7 +472,7 @@ class _OperationsScreenState extends State<OperationsScreen>
         if (widget.onOpenDuty != null && !widget.member.isPersonal)
           OutlinedButton.icon(
             onPressed: widget.onOpenDuty,
-            icon: const Icon(Icons.schedule),
+            icon: const Icon(VetIcons.clock),
             label: const Text('Horarios, faltas y coberturas'),
           ),
         Wrap(
@@ -526,7 +527,7 @@ class _OperationsScreenState extends State<OperationsScreen>
             IconButton(
               tooltip: 'Actualizar registros',
               onPressed: model.busy ? null : model.load,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(VetIcons.refresh),
             ),
           ],
         ),
@@ -551,7 +552,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: model.busy ? null : model.load,
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(VetIcons.refresh),
                     label: const Text('Actualizar permisos'),
                   ),
                 ],
@@ -584,7 +585,7 @@ class _OperationsScreenState extends State<OperationsScreen>
           if (model.careError != null) Text(model.careError!),
           VetActionButton(
             label: 'Agendar cita',
-            icon: Icons.add,
+            icon: VetIcons.add,
             onPressed:
                 model.busy ||
                     (model.explicitPermissions &&
@@ -651,7 +652,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                       if (widget.repository is ServiceContactRepository)
                         TextButton.icon(
                           onPressed: () => reminderWithAi(a),
-                          icon: const Icon(Icons.auto_awesome),
+                          icon: const Icon(VetIcons.sparkles),
                           label: const Text(
                             'Recordatorio / seguimiento y autorización',
                           ),
@@ -661,7 +662,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                           (!model.explicitPermissions ||
                               model.allowed('patient.read')))
                         TextButton.icon(
-                          icon: const Icon(Icons.folder_open),
+                          icon: const Icon(VetIcons.folder),
                           label: const Text(
                             'Abrir expediente / registrar evolución',
                           ),
@@ -786,7 +787,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                     children: [
                       for (final example in serviceExamples[category.key]!)
                         ActionChip(
-                          avatar: const Icon(Icons.add, size: 18),
+                          avatar: const Icon(VetIcons.add, size: 18),
                           label: Text(example),
                           onPressed: () => service(null, category.key, example),
                         ),
@@ -794,7 +795,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                   ),
                 if (admin && canWrite('service.manage', legacy: admin))
                   TextButton.icon(
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(VetIcons.add),
                     label: const Text(
                       'Otro servicio / subcategoría personalizada',
                     ),
@@ -813,7 +814,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                     children: [
                       if (admin && canWrite('service.manage', legacy: admin))
                         TextButton.icon(
-                          icon: const Icon(Icons.add),
+                          icon: const Icon(VetIcons.add),
                           label: const Text('Agregar servicio aquí'),
                           onPressed: () => service(null, category.key, '', sub),
                         ),
@@ -834,7 +835,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                               admin && canWrite('service.manage', legacy: admin)
                               ? IconButton(
                                   tooltip: 'Editar servicio',
-                                  icon: const Icon(Icons.edit),
+                                  icon: const Icon(VetIcons.pencil),
                                   onPressed: () => service(row),
                                 )
                               : null,
@@ -868,7 +869,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                             widget.canOpenInventory && widget.onNavigate != null
                             ? () => widget.onNavigate!('Inventario')
                             : null,
-                        icon: const Icon(Icons.inventory_2_outlined),
+                        icon: const Icon(VetIcons.box),
                         label: const Text('Productos y farmacia'),
                       ),
                       OutlinedButton.icon(
@@ -876,7 +877,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                             widget.canOpenSales && widget.onNavigate != null
                             ? () => widget.onNavigate!('Caja')
                             : null,
-                        icon: const Icon(Icons.point_of_sale),
+                        icon: const Icon(VetIcons.cashRegister),
                         label: const Text('Registrar venta'),
                       ),
                     ],
@@ -893,7 +894,7 @@ class _OperationsScreenState extends State<OperationsScreen>
           if (widget.onNavigate != null)
             OutlinedButton.icon(
               onPressed: () => widget.onNavigate!('Productividad y semana'),
-              icon: const Icon(Icons.calendar_view_week),
+              icon: const Icon(VetIcons.calendar),
               label: const Text('Organizar tareas de la semana'),
             ),
           if (canWrite('team.manage', legacy: !widget.member.isPersonal))
@@ -951,7 +952,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                   t['completed_at'] == null &&
                       canWrite('team.manage', legacy: !widget.member.isPersonal)
                   ? IconButton(
-                      icon: const Icon(Icons.check),
+                      icon: const Icon(VetIcons.check),
                       onPressed: () => form(
                         'Completar pendiente',
                         'task_complete',
@@ -959,7 +960,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                         initial: {'id': t['id']},
                       ),
                     )
-                  : const Icon(Icons.done_all),
+                  : const Icon(VetIcons.checkDouble),
             ),
         ],
         if (activeSection == 'messages' || activeSection == 'notices') ...[
@@ -1048,7 +1049,7 @@ class _OperationsScreenState extends State<OperationsScreen>
         if (activeSection == 'suppliers') ...[
           OutlinedButton.icon(
             onPressed: () => widget.onNavigate?.call('Agenda telefónica'),
-            icon: const Icon(Icons.contacts_outlined),
+            icon: const Icon(VetIcons.phonebook),
             label: const Text('Agenda telefónica de personal y proveedores'),
           ),
           const Text(
@@ -1164,7 +1165,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                     commissionMonth.month - 1,
                   ),
                 ),
-                icon: const Icon(Icons.chevron_left),
+                icon: const Icon(VetIcons.chevronLeft),
               ),
               Expanded(
                 child: Text(
@@ -1180,7 +1181,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                     commissionMonth.month + 1,
                   ),
                 ),
-                icon: const Icon(Icons.chevron_right),
+                icon: const Icon(VetIcons.chevronRight),
               ),
             ],
           ),

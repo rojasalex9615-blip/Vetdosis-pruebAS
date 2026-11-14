@@ -7,6 +7,7 @@ import '../domain/module_access.dart';
 import '../../clinic_experience/domain/clinic_experience.dart';
 import '../domain/navigation_access.dart';
 import '../domain/section_catalog.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class SectionMenu extends StatefulWidget {
   const SectionMenu({
@@ -63,7 +64,7 @@ class _SectionMenuState extends State<SectionMenu> {
         TextField(
           decoration: const InputDecoration(
             labelText: 'Buscar secciones',
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: Icon(VetIcons.search),
           ),
           onChanged: (value) => setState(() => query = normalizeSection(value)),
         ),
@@ -71,7 +72,7 @@ class _SectionMenuState extends State<SectionMenu> {
         if (filtered.isEmpty)
           const VetNotice(
             text: 'No hay secciones disponibles para esa búsqueda.',
-            icon: Icons.search_off,
+            icon: VetIcons.searchOff,
           ),
         for (final (index, group) in filtered.indexed)
           Padding(
@@ -87,7 +88,7 @@ class _SectionMenuState extends State<SectionMenu> {
                   leading: VetIconBox(
                     icon: group.pages.isNotEmpty
                         ? sectionIcon(group.pages.first)
-                        : Icons.schedule,
+                        : VetIcons.clock,
                     accent: _groupAccents[index % _groupAccents.length],
                   ),
                   title: Text(
@@ -107,7 +108,7 @@ class _SectionMenuState extends State<SectionMenu> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        leading: const Icon(Icons.schedule),
+                        leading: const Icon(VetIcons.clock),
                         title: Text(page),
                         trailing: const VetStatusBadge(
                           label: 'En preparación',
@@ -126,7 +127,7 @@ class _SectionMenuState extends State<SectionMenu> {
                         ),
                         title: Text(page),
                         trailing: const Icon(
-                          Icons.chevron_right,
+                          VetIcons.chevronRight,
                           color: VetColors.muted,
                         ),
                         onTap: page == 'Mi cuenta y clínicas'
@@ -180,7 +181,7 @@ class CalculationMenu extends StatelessWidget {
         ),
         if (experience?.visible('Vademécum') ?? true)
           _CalculationChoice(
-            icon: Icons.menu_book_outlined,
+            icon: VetIcons.book,
             title: 'Vademécum',
             description:
                 'Consulta fichas de la app, compartidas con la clínica y personales.',
@@ -188,7 +189,7 @@ class CalculationMenu extends StatelessWidget {
           ),
         if (canDose)
           _CalculationChoice(
-            icon: Icons.medication_outlined,
+            icon: VetIcons.capsule,
             title: 'Calcular dosis de un producto',
             description:
                 'Usa un catálogo con fuente y concentración por presentación; requiere revisión y confirmación.',
@@ -197,7 +198,7 @@ class CalculationMenu extends StatelessWidget {
         if (navigationAllowed('Operaciones de dosis', member, access) &&
             (experience?.visible('Operaciones de dosis') ?? true))
           _CalculationChoice(
-            icon: Icons.calculate_outlined,
+            icon: VetIcons.calculator,
             title: 'Otras operaciones de dosis',
             description:
                 'Regla de tres, concentración tras reconstitución, UI y conversión métrica con parámetros explícitos.',
@@ -205,7 +206,7 @@ class CalculationMenu extends StatelessWidget {
           ),
         if (canClinical)
           _CalculationChoice(
-            icon: Icons.monitor_heart_outlined,
+            icon: VetIcons.heartPulse,
             title: 'Cálculos clínicos',
             description:
                 'Fluidos, constantes, protocolos, peso metabólico, retiros y otras herramientas disponibles.',
@@ -255,7 +256,7 @@ class _CalculationChoice extends StatelessWidget {
                 ),
                 const Padding(
                   padding: EdgeInsets.only(top: 12),
-                  child: Icon(Icons.chevron_right, color: VetColors.muted),
+                  child: Icon(VetIcons.chevronRight, color: VetColors.muted),
                 ),
               ],
             ),

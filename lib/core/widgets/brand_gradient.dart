@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../vet_ui/vet_theme.dart';
 import 'contrast.dart';
+import 'workspace_panel.dart';
 
 /// Degradado de marca: el mismo recorrido turquesa → violeta del icono y del
 /// botón principal de acceso. Se define una sola vez para que cabecera, botón
@@ -20,7 +21,8 @@ const brandGradientColors = <Color>[
 /// recorrido turquesa → violeta → púrpura se mantiene en vez de sustituirse
 /// por colores fijos distintos para cada tema.
 List<Color> brandPaletteOn(Color fondo, {double objetivo = 3}) => [
-  for (final tono in brandGradientColors) readableOn(tono, fondo, objetivo: objetivo),
+  for (final tono in brandGradientColors)
+    readableOn(tono, fondo, objetivo: objetivo),
 ];
 
 /// El degradado de marca listo para usar, con la direccion que se le pida.
@@ -93,6 +95,66 @@ class BrandGradientIcon extends StatelessWidget {
       // El color blanco es solo la base que el degradado sustituye; sin él
       // ShaderMask tomaría el color del tema y apagaría los tonos.
       child: Icon(icon, size: size, color: Colors.white),
+    );
+  }
+}
+
+/// Banda de cabecera de las pantallas: el recorrido de marca, palido.
+///
+/// En las referencias de Ale cada pantalla abre con una franja aqua → lila y
+/// el contenido sube sobre ella como una hoja de esquinas redondeadas. Va de
+/// lado a lado, sin componente vertical, para que la barra y el tramo que
+/// asoma detras de la hoja casen sin costura aunque sean dos widgets.
+///
+/// Se mezcla con el lienzo en vez de pintarse a pleno: encima van el titulo
+/// y los botones de la barra, que necesitan seguir leyendose.
+LinearGradient screenHeaderGradient(ThemeData theme) {
+  final dark = theme.brightness == Brightness.dark;
+  final canvas = theme.scaffoldBackgroundColor;
+  return LinearGradient(
+    colors: [
+      for (final tono in brandGradientColors)
+        Color.lerp(canvas, tono, dark ? .30 : .58)!,
+    ],
+  );
+}
+
+/// Fondo de las pantallas de acceso en Neu: el lienzo con un velo de marca
+/// que baja de aqua, arriba a la izquierda, a lila, abajo a la derecha.
+///
+/// Es la pantalla «Iniciar sesion» de las referencias. Fuera de Neu no pinta
+/// nada y devuelve [child] tal cual, asi que el Clasico no cambia.
+///
+/// El [Scaffold] de dentro debe ir transparente, o tapa el velo.
+class AccessBackdrop extends StatelessWidget {
+  const AccessBackdrop({super.key, required this.child});
+  final Widget child;
+
+  /// Si [context] esta en Neu y por tanto el velo se pinta.
+  static bool appliesTo(BuildContext context) =>
+      Theme.of(context).extensions.values.any(
+        (e) => e is WorkspaceStyle && e.neumorphic,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    if (!appliesTo(context)) return child;
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final canvas = theme.scaffoldBackgroundColor;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(canvas, VetColors.brandAqua, dark ? .16 : .34)!,
+            canvas,
+            Color.lerp(canvas, VetColors.brandLilac, dark ? .18 : .36)!,
+          ],
+        ),
+      ),
+      child: child,
     );
   }
 }

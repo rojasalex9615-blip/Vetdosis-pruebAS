@@ -6,6 +6,7 @@ import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/hospital_models.dart';
 import '../domain/hospital_repository.dart';
 import 'hospital_weight_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 typedef HospitalWeightCalculation =
     Future<void> Function(
@@ -103,7 +104,7 @@ class _HospitalWeightScreenState extends State<HospitalWeightScreen> {
             onPressed: model.busy
                 ? null
                 : () => model.load(caseId: model.selectedCaseId),
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(VetIcons.refresh),
           ),
         ],
       ),

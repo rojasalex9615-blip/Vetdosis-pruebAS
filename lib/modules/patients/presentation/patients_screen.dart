@@ -24,6 +24,7 @@ import 'patient_form.dart';
 import 'event_form.dart';
 import 'signature_pad.dart';
 import 'weight_chart.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PatientsScreen extends StatefulWidget {
   const PatientsScreen({
@@ -274,7 +275,7 @@ class _PatientsScreenState extends State<PatientsScreen>
               if (model.access.createPatient)
                 FilledButton.icon(
                   onPressed: model.busy ? null : create,
-                  icon: const Icon(Icons.pets),
+                  icon: const Icon(VetIcons.paw),
                   label: const Text('Nuevo paciente'),
                 ),
               OutlinedButton.icon(
@@ -284,7 +285,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                         await model.load();
                         await activity?.load();
                       },
-                icon: const Icon(Icons.refresh),
+                icon: const Icon(VetIcons.refresh),
                 label: const Text('Actualizar'),
               ),
             ],
@@ -347,7 +348,7 @@ class _PatientsScreenState extends State<PatientsScreen>
             controller: search,
             decoration: const InputDecoration(
               labelText: 'Buscar paciente o especie',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(VetIcons.search),
             ),
             onChanged: (s) => setState(() => query = patientSearchText(s)),
           ),
@@ -433,7 +434,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                           widget.canOpenActivity?.call(item.destination) ==
                               false)
                       ? null
-                      : const Icon(Icons.open_in_new),
+                      : const Icon(VetIcons.externalLink),
                   onTap:
                       (widget.onOpenActivity == null ||
                           widget.canOpenActivity?.call(item.destination) ==
@@ -498,7 +499,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                   onPressed: model.busy
                       ? null
                       : () => add(EventKind.soap, history: true),
-                  icon: const Icon(Icons.history_edu),
+                  icon: const Icon(VetIcons.clipboardList),
                   label: const Text('Registrar historia clínica'),
                 ),
               for (final e in patientTimeline(model.events).where(
@@ -523,7 +524,7 @@ class _PatientsScreenState extends State<PatientsScreen>
               PreventiveBooklet(events: model.events),
               if (widget.repository is PreventiveRepository)
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.menu_book),
+                  icon: const Icon(VetIcons.book),
                   label: const Text(
                     'Abrir carnet · comprobantes y próximas citas',
                   ),
@@ -583,7 +584,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                 controller: historySearch,
                 decoration: const InputDecoration(
                   labelText: 'Buscar por motivo de consulta',
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: Icon(VetIcons.search),
                 ),
                 onChanged: (value) => setState(() => historyQuery = value),
               ),
@@ -703,7 +704,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                               if (owner != null)
                                 TextButton.icon(
                                   onPressed: () => reminder(owner!, event),
-                                  icon: const Icon(Icons.message_outlined),
+                                  icon: const Icon(VetIcons.chat),
                                   label: const Text(
                                     'Preparar recordatorio por WhatsApp',
                                   ),

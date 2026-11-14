@@ -6,6 +6,7 @@ import '../data/personal_dose_repository.dart';
 import '../domain/catalog.dart';
 import '../domain/dose_engine.dart';
 import 'dose_math_tools.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PersonalDoseScreen extends StatefulWidget {
   const PersonalDoseScreen({
@@ -223,7 +224,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
         const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: busy ? null : scanLabel,
-          icon: const Icon(Icons.document_scanner_outlined),
+          icon: const Icon(VetIcons.documentScan),
           label: const Text('Escanear etiqueta y crear borrador'),
         ),
         const Text(
@@ -264,7 +265,7 @@ class _PersonalDoseScreenState extends State<PersonalDoseScreen> {
               ),
             ),
           ),
-          icon: const Icon(Icons.calculate_outlined),
+          icon: const Icon(VetIcons.calculator),
           label: const Text('Abrir fórmula general y cálculos manuales'),
         ),
         for (final pair in <(String, String)>[

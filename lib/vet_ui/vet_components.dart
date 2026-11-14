@@ -1,7 +1,10 @@
 import '../core/widgets/accent_glow.dart';
+import '../core/widgets/neu_identity.dart';
+import '../core/widgets/workspace_panel.dart';
 import 'package:flutter/material.dart';
 
 import 'vet_theme.dart';
+import 'vet_icons.dart';
 
 enum VetActionStyle { primary, secondary, neutral, destructive }
 
@@ -33,16 +36,33 @@ class VetCard extends StatelessWidget {
     // de las curvas. El recorte sigue existiendo para que las ondas del
     // InkWell no se salgan, que es para lo que estaba.
     final forma = BorderRadius.circular(radius);
+    // VetCard no era neu, y es la tarjeta que mas se usa (16 sitios: las
+    // tarjetas de Secciones, Produccion, Porcinos, Agenda y Operaciones).
+    // Llevaba UNA sombra abajo a la derecha, que es la elevacion de Material,
+    // y encima un borde visible. Resultado: se dibujaba con un trazo y una
+    // sombra plana en medio de una pantalla que se levanta con relieve, y por
+    // eso se veia como de otro sistema.
+    //
+    // En neu pasa al par de sombras del sistema y pierde el trazo. El borde no
+    // se quita, se vuelve transparente: ocupa 1 px y de el salia el padding
+    // efectivo de 17 en vez de 16, asi que borrarlo moveria el contenido de
+    // las 16 tarjetas y las pruebas de ancho que ya existen.
+    //
+    // El clasico se queda exactamente como estaba: es otro estilo, no una
+    // version a medias de este.
+    final neu = theme.extension<WorkspaceStyle>()?.neumorphic == true;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: forma,
-        boxShadow: [
-          BoxShadow(
-            color: dark ? Colors.black26 : VetColors.softShadow,
-            offset: const Offset(3, 4),
-            blurRadius: 10,
-          ),
-        ],
+        boxShadow: neu
+            ? neuShadows(dark)
+            : [
+                BoxShadow(
+                  color: dark ? Colors.black26 : VetColors.softShadow,
+                  offset: const Offset(3, 4),
+                  blurRadius: 10,
+                ),
+              ],
       ),
       // La superficie va en el propio Material, no en un Container de dentro.
       // ListTile pinta su fondo y sus ondas sobre el Material mas cercano, asi
@@ -58,7 +78,9 @@ class VetCard extends StatelessWidget {
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: forma,
-            border: Border.all(color: theme.colorScheme.outlineVariant),
+            border: Border.all(
+              color: neu ? Colors.transparent : theme.colorScheme.outlineVariant,
+            ),
           ),
           child: child,
         ),
@@ -101,6 +123,7 @@ class VetActionButton extends StatelessWidget {
         onPressed: loading ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: background,
+          backgroundBuilder: plainButtonLayer,
           elevation: 0,
           shadowColor: Colors.transparent,
           foregroundColor: foreground,
@@ -245,9 +268,9 @@ class VetPracticeSelector extends StatelessWidget {
   final ValueChanged<int> onChanged;
   static const labels = ['Pequeñas especies', 'Exóticos', 'Producción'];
   static const icons = [
-    Icons.pets_outlined,
-    Icons.cruelty_free_outlined,
-    Icons.agriculture_outlined,
+    VetIcons.paw,
+    VetIcons.rabbit,
+    VetIcons.tractor,
   ];
   @override
   Widget build(BuildContext context) => Row(
@@ -369,37 +392,134 @@ class VetIconBox extends StatelessWidget {
 }
 
 /// Título de pantalla o de bloque con una línea de apoyo opcional.
+/// Con [icon] el encabezado lleva delante un cuadro tintado, que es lo que
+/// permite encontrar donde empieza cada bloque sin leerlo. En una pantalla
+/// larga —Caja, Formatos— el ojo salta de cuadro en cuadro; sin el hay que
+/// recorrer el texto para saber si una linea es titulo o parrafo.
+///
+/// [step] pinta el numero dentro del cuadro en lugar del icono, para las
+/// pantallas que van por pasos numerados.
 class VetSectionHeader extends StatelessWidget {
   const VetSectionHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.large = false,
-  });
+    this.icon,
+    this.step,
+    this.accent,
+  }) : assert(
+         icon == null || step == null,
+         'El cuadro pinta el numero o el icono, no los dos.',
+       );
   final String title;
   final String? subtitle;
   final bool large;
+
+  /// Icono del cuadro tintado que abre el bloque.
+  final IconData? icon;
+
+  /// Numero del paso, si el bloque es un paso de un recorrido.
+  final int? step;
+
+  /// Tono del cuadro. Por omision el primario del tema.
+  final Color? accent;
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    // El apoyo no lleva el gris fijo de antes: sobre el fondo oscuro
+    // #201F25 ese gris queda en 3.6:1, por debajo del minimo de texto. El del
+    // esquema se adapta a los dos modos.
+    final supportColor = theme.colorScheme.onSurfaceVariant;
+    final boxAccent = accent ?? theme.colorScheme.primary;
+    final titleStyle = large ? textTheme.headlineSmall : textTheme.titleMedium;
+    final texts = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(title, style: titleStyle),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
+          // La indicacion va chica y en otro tono, no solo en otra linea.
+          // Con el mismo cuerpo y el mismo gris que el resto, el titulo y su
+          // explicacion se leian como un bloque y no como dos cosas.
+          Text(
+            subtitle!,
+            style: textTheme.bodySmall?.copyWith(color: supportColor),
+          ),
+        ],
+      ],
+    );
+    final boxSize = large ? 44.0 : 36.0;
+    final Widget? box = switch ((icon, step)) {
+      (final IconData i, _) => VetIconBox(
+        icon: i,
+        accent: boxAccent,
+        size: boxSize,
+      ),
+      (_, final int n) => Container(
+        width: boxSize,
+        height: boxSize,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: boxAccent.withValues(alpha: .15),
+          borderRadius: BorderRadius.circular(boxSize * .32),
+        ),
+        child: Text(
+          '$n',
+          style: textTheme.titleMedium?.copyWith(color: boxAccent),
+        ),
+      ),
+      _ => null,
+    };
+    // Un paso numerado en Neu es una tarjeta, como en las referencias de
+    // Ale: el cuadro y el titulo arriba, y la explicacion debajo a todo el
+    // ancho en vez de apretada junto al cuadro. Los bloques sin numero
+    // siguen siendo un titulo suelto.
+    if (step != null &&
+        box != null &&
+        theme.extension<WorkspaceStyle>()?.neumorphic == true) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: VetCard(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  box,
+                  const SizedBox(width: 14),
+                  Expanded(child: Text(title, style: textTheme.titleLarge)),
+                ],
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  subtitle!,
+                  style: textTheme.bodyMedium?.copyWith(color: supportColor),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: large ? textTheme.headlineSmall : textTheme.titleMedium,
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: textTheme.bodyMedium?.copyWith(color: VetColors.muted),
+      child: box == null
+          ? texts
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                box,
+                const SizedBox(width: 12),
+                Expanded(child: texts),
+              ],
             ),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -409,7 +529,7 @@ class VetNotice extends StatelessWidget {
   const VetNotice({
     super.key,
     required this.text,
-    this.icon = Icons.info_outline,
+    this.icon = VetIcons.info,
     this.kind = VetBadgeKind.information,
   });
   final String text;

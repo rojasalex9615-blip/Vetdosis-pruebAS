@@ -9,6 +9,7 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/operations_repository.dart';
 import '../domain/weekly_task_draft.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class WeeklyPlanTasksScreen extends StatefulWidget {
   const WeeklyPlanTasksScreen({
@@ -293,12 +294,12 @@ class _WeeklyPlanTasksScreenState extends State<WeeklyPlanTasksScreen> {
               if (widget.ai != null)
                 OutlinedButton.icon(
                   onPressed: busy ? null : propose,
-                  icon: const Icon(Icons.auto_awesome),
+                  icon: const Icon(VetIcons.sparkles),
                   label: const Text('Proponer tareas con IA'),
                 ),
               OutlinedButton.icon(
                 onPressed: busy ? null : () => editTask(),
-                icon: const Icon(Icons.add),
+                icon: const Icon(VetIcons.add),
                 label: const Text('Agregar tarea manual'),
               ),
             ],

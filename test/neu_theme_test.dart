@@ -30,6 +30,55 @@ void main() {
       model.dispose();
     },
   );
+  // El defecto que esto cubre: el estilo neu sembraba el ColorScheme con un
+  // color fijo y encima machacaba primary, secondary y tertiary a mano, asi
+  // que el selector de «Elige tu tema» de Ajustes guardaba el indice y no
+  // cambiaba ni un pixel. Y como visualStyle viene en 'neu' de fabrica, no
+  // cambiaba para nadie.
+  //
+  // Se comprueba en los DOS estilos y en los DOS brillos, porque el clasico
+  // siempre funciono y el fallo estaba solo en el neu: medir solo uno es lo
+  // que dejo pasar el defecto.
+  for (final style in ['neu', 'standard']) {
+    for (final brightness in Brightness.values) {
+      test('Cada tono de Ajustes pinta distinto en $style ${brightness.name}', () {
+        final primarios = <Color>{};
+        for (var palette = 0; palette < paletteColors.length; palette++) {
+          final theme = VetDosisApp(
+            model: CoreViewModel(
+              SettingsRepository(),
+              AppSettings(palette: palette, visualStyle: style),
+            ),
+          ).theme(brightness);
+          primarios.add(theme.colorScheme.primary);
+        }
+        expect(
+          primarios,
+          hasLength(paletteColors.length),
+          reason: 'cada tono debe dar su propio primary, no el mismo repetido',
+        );
+      });
+    }
+  }
+
+  test('El neu conserva sus superficies aunque cambie el tono', () {
+    // La contraparte: el acento manda, el estilo no. Si al arreglar la paleta
+    // se hubiera dejado que la semilla arrastrase tambien el fondo y la placa,
+    // elegir tono habria repintado la app entera y roto las maquetas.
+    final fondos = <Color>{};
+    for (var palette = 0; palette < paletteColors.length; palette++) {
+      fondos.add(
+        VetDosisApp(
+          model: CoreViewModel(
+            SettingsRepository(),
+            AppSettings(palette: palette, visualStyle: 'neu'),
+          ),
+        ).theme(Brightness.light).scaffoldBackgroundColor,
+      );
+    }
+    expect(fondos, hasLength(1));
+  });
+
   for (final mode in ['light', 'dark']) {
     testWidgets('Neu cards fit mobile and large text in $mode', (tester) async {
       tester.view.physicalSize = const Size(390, 844);

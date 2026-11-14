@@ -30,6 +30,21 @@ class LibraryFixture implements ReferenceLibraryRepository {
 }
 
 void main() {
+  testWidgets('El panel incrustado muestra las constantes guardadas sin pestañas', (tester) async {
+    final fixture = LibraryFixture();
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: SingleChildScrollView(
+      child: ReferenceLibraryPanel(
+        repository: fixture, clinicId: 'synthetic-clinic', showSections: false,
+      ),
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Temperatura rectal'), findsOneWidget);
+    expect(find.text('1 referencias encontradas'), findsOneWidget);
+    expect(find.text('Laboratorio'), findsNothing);
+    expect(fixture.sections, ['fisiologia']);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Shows sourced alternatives without automatic patient classification', (tester) async {
     final fixture = LibraryFixture();
     await tester.pumpWidget(MaterialApp(home: ReferenceLibraryScreen(

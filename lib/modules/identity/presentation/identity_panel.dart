@@ -1,3 +1,5 @@
+import '../../../core/widgets/brand_gradient.dart';
+import '../../../core/widgets/neu_identity.dart';
 import 'identity_events.dart';
 import '../domain/identity_repository.dart';
 import 'dart:convert';
@@ -9,21 +11,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../forms/domain/form_repository.dart';
 import '../../forms/presentation/branding_editor.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 final identityChanges = ValueNotifier<int>(0);
 const profileIcons = [
-  Icons.person,
-  Icons.pets,
-  Icons.local_hospital,
-  Icons.science,
-  Icons.agriculture,
+  VetIcons.user,
+  VetIcons.paw,
+  VetIcons.hospital,
+  VetIcons.flask,
+  VetIcons.tractor,
 ];
 
 /// Private account identity with a scoped local fallback and explicit upload retry.
 class AccountAvatar extends StatelessWidget {
-  const AccountAvatar({super.key, required this.userId, this.repository});
+  const AccountAvatar({
+    super.key,
+    required this.userId,
+    this.repository,
+    this.size = 40,
+  });
   final String userId;
   final IdentityRepository? repository;
+
+  /// Diametro del avatar. 40 en la barra; mayor en la cabecera de perfil.
+  final double size;
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<int>(
     valueListenable: identityChanges,
@@ -34,21 +45,23 @@ class AccountAvatar extends StatelessWidget {
         final index = snapshot.data?.icon ?? 0;
         final photoBytes = snapshot.data?.photo;
         return CircleAvatar(
+          radius: size / 2,
           backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
           child: photoBytes != null
               ? ClipOval(
                   child: Image.memory(
                     photoBytes,
-                    width: 40,
-                    height: 40,
+                    width: size,
+                    height: size,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const Icon(Icons.person),
+                    errorBuilder: (_, _, _) => const Icon(VetIcons.user),
                   ),
                 )
               : Icon(
                   profileIcons[index >= 0 && index < profileIcons.length
                       ? index
                       : 0],
+                  size: size * .6,
                 ),
         );
       },
@@ -166,21 +179,21 @@ class _ClinicIdentityState extends State<ClinicIdentity> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: bytes == null
-                ? const Icon(Icons.business, size: 40)
+                ? const Icon(VetIcons.clinic, size: 40)
                 : Image.memory(
                     bytes,
                     width: 48,
                     height: 48,
                     fit: BoxFit.contain,
                     errorBuilder: (_, _, _) =>
-                        const Icon(Icons.business, size: 40),
+                        const Icon(VetIcons.clinic, size: 40),
                   ),
-            title: Text(widget.member.clinicName),
+            title: Text(widget.member.displayName),
             subtitle: Text(
               snapshot.hasError
                   ? 'Logo no disponible · revisa conexión y acceso'
                   : widget.member.isPersonal
-                  ? 'Espacio personal'
+                  ? 'Pacientes y dosis propios, sin equipo'
                   : 'Clínica activa',
             ),
           ),
@@ -189,13 +202,93 @@ class _ClinicIdentityState extends State<ClinicIdentity> {
               widget.repository != null)
             OutlinedButton.icon(
               onPressed: edit,
-              icon: const Icon(Icons.edit_outlined),
+              icon: const Icon(VetIcons.pencil),
               label: const Text('Logo y membrete de la clínica'),
             ),
         ],
       );
     },
   );
+}
+
+/// Cabecera de «Mi cuenta» segun la maqueta de perfil: banda de marca, la
+/// foto o el icono elegido montado sobre ella, y debajo el espacio activo y
+/// el rol de quien entra.
+///
+/// Solo muestra lo que la cuenta ya tiene. Telefono, correo, cedula u
+/// horario no se pintan porque esta pantalla no los recibe.
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({
+    super.key,
+    required this.userId,
+    this.repository,
+    this.title,
+    this.subtitle,
+  });
+  final String userId;
+  final IdentityRepository? repository;
+  final String? title, subtitle;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 150,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    gradient: screenHeaderGradient(theme),
+                  ),
+                ),
+                Positioned(
+                  top: 42,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.scaffoldBackgroundColor,
+                      boxShadow: neuShadows(
+                        theme.brightness == Brightness.dark,
+                      ),
+                    ),
+                    child: AccountAvatar(
+                      userId: userId,
+                      repository: repository,
+                      size: 96,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (title != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                title!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall,
+              ),
+            ),
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class ProfileAppearance extends StatefulWidget {
@@ -349,7 +442,7 @@ class _ProfileAppearanceState extends State<ProfileAppearance> {
         ),
       TextButton.icon(
         onPressed: busy ? null : () => save(null),
-        icon: const Icon(Icons.add_photo_alternate_outlined),
+        icon: const Icon(VetIcons.image),
         label: const Text('Subir foto de perfil'),
       ),
       Wrap(

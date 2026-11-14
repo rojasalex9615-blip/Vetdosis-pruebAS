@@ -17,6 +17,7 @@ import '../domain/form_models.dart';
 import '../domain/form_repository.dart';
 import 'form_pdf_screen.dart';
 import 'form_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class DocumentEditor extends StatefulWidget {
   const DocumentEditor({
@@ -561,7 +562,7 @@ class _DocumentEditorState extends State<DocumentEditor> {
             ].where((value) => value != null && '$value'.isNotEmpty).join(' · ')
           : '${ownerData['name'] ?? 'Sin propietario registrado'}';
       return ListTile(
-        leading: const Icon(Icons.link),
+        leading: const Icon(VetIcons.link),
         title: Text(f['label']),
         subtitle: Text(linkedValue),
       );
@@ -749,13 +750,13 @@ class _DocumentEditorState extends State<DocumentEditor> {
                     IconButton(
                       onPressed: busy ? null : () => dictateField(id, label),
                       tooltip: 'Dictar texto',
-                      icon: const Icon(Icons.mic),
+                      icon: const Icon(VetIcons.mic),
                     ),
                     if (widget.ai != null && aiTextAllowed(f))
                       IconButton(
                         onPressed: busy ? null : () => assistText(id, label),
                         tooltip: 'Ayuda para redactar',
-                        icon: const Icon(Icons.auto_awesome),
+                        icon: const Icon(VetIcons.sparkles),
                       ),
                   ],
                 )
@@ -949,7 +950,7 @@ class _DocumentEditorState extends State<DocumentEditor> {
                 (document == null || document!.state == 'draft'))
               OutlinedButton.icon(
                 onPressed: busy ? null : prepareClinicalDocument,
-                icon: const Icon(Icons.auto_awesome),
+                icon: const Icon(VetIcons.sparkles),
                 label: const Text('Preparar notas, indicaciones o alta con IA'),
               ),
             for (final f in (schema['fields'] as List).cast<Map>())

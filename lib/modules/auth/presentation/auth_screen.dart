@@ -1,4 +1,5 @@
 import 'team_duty_screen.dart';
+import '../../../core/widgets/brand_gradient.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/google_mark.dart';
 import '../../permissions/domain/permission_repository.dart';
@@ -8,6 +9,7 @@ import 'team_screen.dart';
 import 'package:flutter/material.dart';
 import '../domain/clinic_membership.dart';
 import 'auth_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, required this.model, this.configured = true, this.initialRegister = false});
@@ -38,8 +40,18 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final model = widget.model;
-    return Scaffold(
-      appBar: AppBar(title: const Text('VetDosis Pro')),
+    // Sin sesion, la pantalla sigue la referencia de «Iniciar sesion»: velo
+    // de marca al fondo, titulo centrado y campos con su icono.
+    final veiled = AccessBackdrop.appliesTo(context);
+    final entering = model?.signedIn != true;
+    return AccessBackdrop(
+      child: Scaffold(
+      backgroundColor: veiled ? Colors.transparent : null,
+      appBar: AppBar(
+        title: const Text('VetDosis Pro'),
+        backgroundColor: veiled ? Colors.transparent : null,
+        scrolledUnderElevation: veiled ? 0 : null,
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -58,6 +70,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       : _register
                       ? 'Registro de usuario'
                       : 'Inicio de sesión',
+                  textAlign: veiled && entering ? TextAlign.center : null,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 12),
@@ -119,6 +132,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ] else if (!model.signedIn) ...[
                   Text(
                     'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
+                    textAlign: veiled ? TextAlign.center : null,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).hintColor,
                     ),
@@ -134,6 +148,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           autofillHints: const [AutofillHints.email],
                           decoration: const InputDecoration(
                             labelText: 'Correo electrónico',
+                            prefixIcon: Icon(VetIcons.mail),
                           ),
                           validator: (value) =>
                               value != null &&
@@ -151,6 +166,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             autofillHints: const [AutofillHints.password],
                             decoration: InputDecoration(
                               labelText: 'Contraseña',
+                              prefixIcon: const Icon(VetIcons.lock),
                               suffixIcon: IconButton(
                                 tooltip: _showPassword
                                     ? 'Ocultar contraseña'
@@ -160,8 +176,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ),
                                 icon: Icon(
                                   _showPassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
+                                      ? VetIcons.eye
+                                      : VetIcons.eyeOff,
                                 ),
                               ),
                             ),
@@ -210,6 +226,19 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 14),
                     OutlinedButton(
                       onPressed: model.busy ? null : model.googleSignIn,
+                      // En Neu el acceso con Google va en placa oscura, como
+                      // en la referencia: es el unico boton de la pantalla
+                      // que no es de la marca y asi no compite con «Ingresar».
+                      style: veiled
+                          ? OutlinedButton.styleFrom(
+                              backgroundBuilder: plainButtonLayer,
+                              backgroundColor: const Color(0xFF2B2B31),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(0x662B2B31),
+                              side: BorderSide.none,
+                              minimumSize: const Size(0, 48),
+                            )
+                          : null,
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -258,8 +287,8 @@ class _AuthScreenState extends State<AuthScreen> {
                         onPressed: model.busy
                             ? null
                             : model.createPersonalWorkspace,
-                        icon: const Icon(Icons.person_outline),
-                        label: const Text('Usar mi espacio personal'),
+                        icon: const Icon(VetIcons.user),
+                        label: const Text('Usar mi área de trabajo personal'),
                       ),
                     const Text(
                       'Crea una clínica o ingresa el código que te compartió su administrador.',
@@ -328,6 +357,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 }
@@ -337,8 +367,13 @@ class ClinicAccountScreen extends StatefulWidget {
     super.key,
     required this.model,
     this.identityBuilder,
+    this.personalSpaceBuilder,
   });
   final Widget Function(BuildContext context)? identityBuilder;
+
+  /// Abre «Mi espacio personal» (notas, horarios, ficha de emergencia).
+  /// Es de la persona: no cambia la clinica activa.
+  final Widget Function(BuildContext context)? personalSpaceBuilder;
   final AuthViewModel model;
   @override
   State<ClinicAccountScreen> createState() => _ClinicAccountScreenState();
@@ -367,22 +402,61 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
         body: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            // Todo el panel iba sin separacion: campo, selector y boton
+            // pegados, y en el telefono la etiqueta flotante del selector de
+            // rol se montaba sobre el campo del correo. La separacion la pone
+            // la columna, una sola vez, en vez de un SizedBox entre cada par
+            // que el proximo control agregado volveria a olvidar.
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 12,
+              children: [
             if (widget.identityBuilder != null)
               widget.identityBuilder!(context),
-            if (model.personalAvailable)
+            // Antes habia dos «Mi espacio personal»: este boton y la fila del
+            // area de trabajo personal (que el servidor llama asi). Los dos
+            // solo cambiaban de area de trabajo y dejaban a la persona en
+            // Inicio o Produccion. Ahora el espacio personal es una pantalla
+            // propia y el area de trabajo se nombra como tal.
+            if (widget.personalSpaceBuilder != null)
+              Card(
+                child: ListTile(
+                  leading: const Icon(VetIcons.userCircle),
+                  title: const Text('Mi espacio personal'),
+                  subtitle: const Text(
+                    'Notas, recordatorios, horarios y ficha de emergencia',
+                  ),
+                  trailing: const Icon(VetIcons.chevronRight),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: widget.personalSpaceBuilder!,
+                    ),
+                  ),
+                ),
+              ),
+            if (model.memberships.isNotEmpty)
+              Text(
+                'Áreas de trabajo',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            if (model.personalAvailable &&
+                !model.memberships.any((m) => m.isPersonal))
               TextButton.icon(
                 onPressed: model.busy ? null : model.createPersonalWorkspace,
-                icon: const Icon(Icons.person_outline),
-                label: const Text('Abrir mi espacio personal'),
+                icon: const Icon(VetIcons.user),
+                label: const Text('Crear mi área de trabajo personal'),
               ),
             for (final member in model.memberships)
               ListTile(
-                title: Text(member.clinicName),
+                title: Text(member.displayName),
                 subtitle: Text(
-                  member.isPersonal ? 'Espacio personal' : member.role.label,
+                  member.isPersonal
+                      ? 'Pacientes y dosis propios, sin equipo'
+                      : member.role.label,
                 ),
                 trailing: model.active == member
-                    ? const Icon(Icons.check_circle_outline)
+                    ? const Icon(VetIcons.checkCircle)
                     : null,
                 onTap: model.busy ? null : () => model.selectClinic(member),
               ),
@@ -401,7 +475,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                           ),
                         ),
                       ),
-                icon: const Icon(Icons.verified_user_outlined),
+                icon: const Icon(VetIcons.shieldCheck),
                 label: const Text('Permisos y habilitación'),
               ),
             if (!model.offline &&
@@ -416,7 +490,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                         TeamDutyScreen(model: model, clinic: model.active!),
                   ),
                 ),
-                icon: const Icon(Icons.schedule),
+                icon: const Icon(VetIcons.clock),
                 label: const Text('Equipo: horarios y faltas'),
               ),
             if (!model.offline &&
@@ -435,7 +509,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                                 TeamScreen(model: model, clinic: model.active!),
                           ),
                         ),
-                  icon: const Icon(Icons.groups_outlined),
+                  icon: const Icon(VetIcons.usersGroup),
                   label: const Text('Administrar equipo e invitaciones'),
                 ),
               const Text('Invitar a una persona a esta clínica'),
@@ -487,6 +561,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
             if (!model.offline)
               ExpansionTile(
                 title: const Text('Agregar otra clínica'),
+                childrenPadding: const EdgeInsets.only(top: 4, bottom: 12),
                 children: [
                   TextField(
                     controller: _clinicName,
@@ -494,6 +569,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                       labelText: 'Nombre de la nueva clínica',
                     ),
                   ),
+                  const SizedBox(height: 12),
                   FilledButton(
                     onPressed: model.busy
                         ? null
@@ -505,6 +581,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                           },
                     child: const Text('Crear clínica'),
                   ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _inviteCode,
                     autocorrect: false,
@@ -512,6 +589,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                       labelText: 'Código de invitación',
                     ),
                   ),
+                  const SizedBox(height: 12),
                   OutlinedButton(
                     onPressed: model.busy
                         ? null
@@ -538,6 +616,8 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                       if (context.mounted) Navigator.pop(context);
                     },
               child: const Text('Cerrar sesión'),
+            ),
+              ],
             ),
           ],
         ),

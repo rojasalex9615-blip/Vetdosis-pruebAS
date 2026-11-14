@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../domain/manufacturer_catalog.dart';
 import 'commercial_package_dose_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ManufacturerEvidence extends StatelessWidget {
   const ManufacturerEvidence({super.key, required this.product});
@@ -121,7 +122,7 @@ class _ManufacturerCatalogScreenState extends State<ManufacturerCatalogScreen> {
                               ManufacturerEvidence(product: product),
                               if (widget.canCalculate)
                                 FilledButton.icon(
-                                  icon: const Icon(Icons.calculate),
+                                  icon: const Icon(VetIcons.calculator),
                                   label: const Text(
                                     'Calcular según el empaque',
                                   ),

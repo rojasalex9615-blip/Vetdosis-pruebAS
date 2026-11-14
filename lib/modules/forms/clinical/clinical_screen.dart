@@ -15,6 +15,7 @@ import 'clinical_vitals_screen.dart';
 import 'vitals_models.dart';
 import 'rapid_tests/rapid_test_repository.dart';
 import 'rapid_tests/rapid_test_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ClinicalScreen extends StatefulWidget {
   const ClinicalScreen({
@@ -482,13 +483,13 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
               onPressed: model.busy
                   ? null
                   : () => model.load(caseId: b?.caseData.id),
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(VetIcons.refresh),
               label: const Text('Actualizar'),
             ),
             if (model.canCreate)
               FilledButton.icon(
                 onPressed: registerCase,
-                icon: const Icon(Icons.add),
+                icon: const Icon(VetIcons.add),
                 label: const Text('Registrar caso sin PDF'),
               ),
             if (model.busy) const LinearProgressIndicator(),
@@ -550,7 +551,7 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
                     if (!model.permissionsKnown || model.can('observe'))
                       FilledButton.icon(
                         onPressed: model.busy ? null : openVitals,
-                        icon: const Icon(Icons.monitor_heart_outlined),
+                        icon: const Icon(VetIcons.heartPulse),
                         label: const Text('Registrar constantes'),
                       ),
                     if (!model.permissionsKnown || model.can('observe'))
@@ -583,7 +584,7 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
                             ),
                           ),
                         ),
-                  icon: const Icon(Icons.biotech_outlined),
+                  icon: const Icon(VetIcons.microscope),
                   label: const Text('Pruebas rápidas del caso'),
                 ),
               if (widget.prescribing != null)
@@ -629,7 +630,7 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
                 ),
               for (final v in b.vitals.reversed.take(10))
                 ListTile(
-                  leading: const Icon(Icons.monitor_heart_outlined),
+                  leading: const Icon(VetIcons.heartPulse),
                   title: Text(
                     [
                       if (v['fc'] != null) 'FC ${v['fc']} lpm',
@@ -733,7 +734,7 @@ class _ClinicalScreenState extends State<ClinicalScreen> {
                                         widget.member.userId)
                       ? IconButton(
                           onPressed: model.busy ? null : () => revoke(a),
-                          icon: const Icon(Icons.block),
+                          icon: const Icon(VetIcons.block),
                           tooltip: 'Revocar',
                         )
                       : null,

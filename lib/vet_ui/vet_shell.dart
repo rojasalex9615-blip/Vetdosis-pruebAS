@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'vet_theme.dart';
+import 'vet_icons.dart';
 
 /// Navegación únicamente visual; el proyecto anfitrión decide destinos y permisos.
 class VetBottomNav extends StatelessWidget {
@@ -16,26 +17,17 @@ class VetBottomNav extends StatelessWidget {
       height: 76,
       destinations: const [
         NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
+          icon: Icon(VetIcons.home),
+          selectedIcon: Icon(VetIcons.home),
           label: 'Inicio',
         ),
+        NavigationDestination(icon: Icon(VetIcons.calendar), label: 'Agenda'),
+        NavigationDestination(icon: Icon(VetIcons.paw), label: 'Registros'),
         NavigationDestination(
-          icon: Icon(Icons.calendar_today_outlined),
-          label: 'Agenda',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.pets_outlined),
-          label: 'Registros',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.calculate_outlined),
+          icon: Icon(VetIcons.calculator),
           label: 'Cálculos',
         ),
-        NavigationDestination(
-          icon: Icon(Icons.grid_view_rounded),
-          label: 'Más',
-        ),
+        NavigationDestination(icon: Icon(VetIcons.grid), label: 'Más'),
       ],
     ),
   );
@@ -99,7 +91,7 @@ class VetWorkspaceHeader extends StatelessWidget {
       IconButton(
         onPressed: onNotificationsTap,
         tooltip: 'Notificaciones',
-        icon: const Icon(Icons.notifications_none_rounded),
+        icon: const Icon(VetIcons.bell),
       ),
     ],
   );

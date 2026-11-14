@@ -7,6 +7,7 @@ class SupabaseOperationsRepository
     implements
         OperationsRepository,
         StaffMedicalRepository,
+        StaffMedicalSharingRepository,
         AppointmentPatientRepository,
         AppointmentLinksRepository,
         AppointmentCareRepository,
@@ -413,6 +414,60 @@ class SupabaseOperationsRepository
   Future<Map<String,dynamic>> staffMedicalDirectory(String clinic,String actor,{int offset=0}) async => Map<String,dynamic>.from(await client.rpc('ops_staff_medical_directory',params:{'p_clinic':clinic,'p_actor':actor,'p_offset':offset}) as Map);
   @override
   Future<Map<String,dynamic>> staffMedicalView(String clinic,String actor,String subject,String purpose) async => Map<String,dynamic>.from(await client.rpc('ops_staff_medical_view',params:{'p_clinic':clinic,'p_actor':actor,'p_subject':subject,'p_purpose':purpose}) as Map);
+  @override
+  Future<Map<String, dynamic>> staffMedicalDelegates(String clinic, String actor) async =>
+      Map<String, dynamic>.from(
+        await client.rpc(
+              'ops_staff_medical_delegates',
+              params: {'p_clinic': clinic, 'p_actor': actor},
+            )
+            as Map,
+      );
+  @override
+  Future<void> staffMedicalDelegateSet(
+    String clinic,
+    String actor,
+    String delegate,
+    bool enabled,
+  ) async {
+    await client.rpc(
+      'ops_staff_medical_delegate_set',
+      params: {
+        'p_clinic': clinic,
+        'p_actor': actor,
+        'p_delegate': delegate,
+        'p_enabled': enabled,
+      },
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> staffMedicalDelegateView(
+    String clinic,
+    String actor,
+    String subject,
+    String purpose,
+  ) async => Map<String, dynamic>.from(
+    await client.rpc(
+          'ops_staff_medical_delegate_view',
+          params: {
+            'p_clinic': clinic,
+            'p_subject': subject,
+            'p_purpose': purpose,
+            'p_actor': actor,
+          },
+        )
+        as Map,
+  );
+  @override
+  Future<Map<String, dynamic>> staffMedicalAccessLog(String clinic, String actor) async =>
+      Map<String, dynamic>.from(
+        await client.rpc(
+              'ops_staff_medical_access_log',
+              params: {'p_clinic': clinic, 'p_actor': actor},
+            )
+            as Map,
+      );
 
   @override
   Future<List<Map<String, dynamic>>> medical(

@@ -16,6 +16,7 @@ import '../domain/prescribing_repository.dart';
 import '../domain/prescribing_models.dart';
 import 'prescribing_view_model.dart';
 import 'rx_entry_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PrescribingScreen extends StatefulWidget {
   const PrescribingScreen({
@@ -318,7 +319,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
             'Emitida por ${e['recipient_id']} · ${e['created_at']}',
           ),
           trailing: e['reviewed'] == true
-              ? const Icon(Icons.check)
+              ? const Icon(VetIcons.check)
               : TextButton(
                   onPressed: model.busy ? null : () => postReview(e),
                   child: const Text('Revisar'),
@@ -1400,7 +1401,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
         ),
         OutlinedButton.icon(
           onPressed: model.busy ? null : () => model.load(),
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
           label: const Text('Actualizar'),
         ),
         DropdownButtonFormField<String>(
@@ -1423,7 +1424,7 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
         if (model.standingEvents.any((e) => e['reviewed'] != true))
           TextButton.icon(
             onPressed: () => setState(() => section = 'A cargo'),
-            icon: const Icon(Icons.notifications_active_outlined),
+            icon: const Icon(VetIcons.bell),
             label: Text(
               '${model.standingEvents.where((e) => e['reviewed'] != true).length} recetas pendientes de revisión posterior',
             ),

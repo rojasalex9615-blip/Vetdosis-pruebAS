@@ -9,6 +9,7 @@ import '../../incubation/presentation/incubation_screen.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/module_access.dart';
 import '../../core/domain/navigation_access.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 const productionSpecies = <String, List<String>>{
   'Bovinos': [
@@ -25,6 +26,8 @@ const productionSpecies = <String, List<String>>{
     'Reproducción y gestación',
     'Maternidad y destete',
     'Crecimiento y engorda',
+    'Bioseguridad y ambiente',
+    'Planeación financiera',
   ],
   'Equinos': ['Atención individual', 'Reproducción y crianza'],
 };
@@ -162,7 +165,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
     final activities = productionSpecies[species]!;
     const denied = VetNotice(
       text: 'Las calculadoras no están habilitadas para tu acceso actual.',
-      icon: Icons.lock_outline,
+      icon: VetIcons.lock,
       kind: VetBadgeKind.warning,
     );
     return [
@@ -173,7 +176,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             species = null;
             activity = null;
           }),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(VetIcons.arrowBack),
           label: const Text('Volver a especies'),
         ),
       ),
@@ -228,7 +231,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
           padding: EdgeInsets.only(top: 12),
           child: VetNotice(
             text: 'Elige una actividad para ver sus herramientas.',
-            icon: Icons.touch_app_outlined,
+            icon: VetIcons.tap,
           ),
         ),
       if (species == 'Aves' && activity != null) ...[
@@ -237,7 +240,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: VetActionButton(
-              icon: Icons.agriculture_outlined,
+              icon: VetIcons.stable,
               label: 'Capacidad e instalaciones avícolas',
               onPressed: () => open(const AvicultureScreen()),
             ),
@@ -247,7 +250,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: VetActionButton(
-              icon: Icons.egg_outlined,
+              icon: VetIcons.egg,
               label: 'Abrir herramientas de incubación',
               onPressed: () => open(const IncubationScreen()),
             ),
@@ -257,14 +260,14 @@ class _ProductionMenuState extends State<ProductionMenu> {
           const VetNotice(
             text:
                 'Las herramientas específicas de engorda están en preparación. Las tablas actuales de postura no se aplican automáticamente a engorda.',
-            icon: Icons.schedule,
+            icon: VetIcons.clock,
             kind: VetBadgeKind.warning,
           ),
         if (activity != 'Engorda')
           const VetNotice(
             text:
                 'Las herramientas conservan sus referencias y avisos de datos sin verificar.',
-            icon: Icons.fact_check_outlined,
+            icon: VetIcons.clipboardChecks,
           ),
       ],
       if (species == 'Peces' && activity == 'Tilapia') ...[
@@ -295,7 +298,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             radius: 18,
             child: ListTile(
               leading: VetIconBox(
-                icon: Icons.schedule,
+                icon: VetIcons.clock,
                 accent: accent,
                 size: 40,
               ),
@@ -317,9 +320,9 @@ class _ProductionMenuState extends State<ProductionMenu> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final (label, page, toolIcon) in [
-            ('Pacientes individuales', 'Pacientes', Icons.pets_outlined),
-            ('Agenda del espacio', 'Agenda', Icons.calendar_month_outlined),
-            ('Inventario del espacio', 'Inventario', Icons.inventory_2_outlined),
+            ('Pacientes individuales', 'Pacientes', VetIcons.paw),
+            ('Agenda del espacio', 'Agenda', VetIcons.calendar),
+            ('Inventario del espacio', 'Inventario', VetIcons.box),
           ])
             if (allowed(page))
               Expanded(
@@ -341,14 +344,14 @@ class _ProductionMenuState extends State<ProductionMenu> {
 
 /// Ícono y color de acento de cada especie, solo presentación.
 (IconData, Color) speciesVisual(String name) => switch (name) {
-  'Bovinos' => (Icons.grass, VetColors.turquoise),
-  'Ovinos / caprinos' => (Icons.landscape_outlined, VetColors.violet),
-  'Aves' => (Icons.egg_outlined, VetColors.warning),
-  'Peces' => (Icons.set_meal_outlined, VetColors.cyan),
-  'Abejas' => (Icons.hive_outlined, VetColors.warning),
-  'Porcinos' => (Icons.savings_outlined, VetColors.pink),
-  'Equinos' => (Icons.directions_run, VetColors.purpleDeep),
-  _ => (Icons.pets_outlined, VetColors.turquoise),
+  'Bovinos' => (VetIcons.cow, VetColors.turquoise),
+  'Ovinos / caprinos' => (VetIcons.sheep, VetColors.violet),
+  'Aves' => (VetIcons.chicken, VetColors.warning),
+  'Peces' => (VetIcons.fish, VetColors.cyan),
+  'Abejas' => (VetIcons.hive, VetColors.warning),
+  'Porcinos' => (VetIcons.pig, VetColors.pink),
+  'Equinos' => (VetIcons.horse, VetColors.purpleDeep),
+  _ => (VetIcons.paw, VetColors.turquoise),
 };
 
 class _SpeciesCard extends StatelessWidget {
@@ -390,7 +393,7 @@ class _SpeciesCard extends StatelessWidget {
               ),
               const Padding(
                 padding: EdgeInsets.only(top: 14),
-                child: Icon(Icons.chevron_right, color: VetColors.muted),
+                child: Icon(VetIcons.chevronRight, color: VetColors.muted),
               ),
             ],
           ),

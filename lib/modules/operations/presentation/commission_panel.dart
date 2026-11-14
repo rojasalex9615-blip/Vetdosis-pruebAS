@@ -3,6 +3,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../inventory/domain/inventory_models.dart';
 import '../domain/operations_repository.dart';
 import 'service_commission_panel.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class CommissionPanel extends StatefulWidget {
   const CommissionPanel({super.key, required this.repository, required this.member});
@@ -118,7 +119,7 @@ class _CommissionPanelState extends State<CommissionPanel> {
               );
               if (date != null && mounted) setState(() => payOn = date);
             },
-            icon: const Icon(Icons.event),
+            icon: const Icon(VetIcons.calendar),
             label: Text(payOn == null ? 'Elegir próximo día de pago' : '${payOn!.day}/${payOn!.month}/${payOn!.year}'),
           ),
           FilledButton(onPressed: busy || payOn == null ? null : saveSchedule, child: const Text('Guardar calendario')),
@@ -140,7 +141,7 @@ class _CommissionPanelState extends State<CommissionPanel> {
                 ),
               ),
             ),
-            icon: const Icon(Icons.receipt_long_outlined),
+            icon: const Icon(VetIcons.receipt),
             label: const Text('Liquidaciones individuales por servicio (beta)'),
           ),
         const Divider(),

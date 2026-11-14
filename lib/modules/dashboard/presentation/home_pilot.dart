@@ -5,10 +5,10 @@ import '../../../core/widgets/workspace_panel.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../core/presentation/core_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// Shared shell presentation. It never changes membership or access.
 ThemeData homePilotTheme(ThemeData base) {
-  final dark = base.brightness == Brightness.dark;
   // The functional home shell must preserve the selected Neu palette.
   if (base.extension<WorkspaceStyle>()?.neumorphic == true) {
     return base.copyWith(
@@ -18,9 +18,6 @@ ThemeData homePilotTheme(ThemeData base) {
       ),
       navigationBarTheme: base.navigationBarTheme.copyWith(
         backgroundColor: base.colorScheme.surface,
-        indicatorColor: base.colorScheme.primary.withValues(
-          alpha: dark ? 0.22 : 0.18,
-        ),
         surfaceTintColor: Colors.transparent,
       ),
       appBarTheme: base.appBarTheme.copyWith(
@@ -61,11 +58,15 @@ class HomeSurface extends StatelessWidget {
               ? theme.colorScheme.primary.withValues(alpha: .08)
               : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: selected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outlineVariant.withValues(alpha: .5),
-          ),
+          // En Neu solo la tarjeta elegida lleva trazo; las demas se
+          // distinguen por el relieve, como en las referencias.
+          border: selected
+              ? Border.all(color: theme.colorScheme.primary)
+              : theme.extension<WorkspaceStyle>()?.neumorphic == true
+              ? null
+              : Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: .5),
+                ),
           boxShadow: theme.extension<WorkspaceStyle>()?.neumorphic == true
               ? neuShadows(dark)
               : [
@@ -177,8 +178,8 @@ class HomePracticeSelector extends StatelessWidget {
           onPressed: () => onChanged(ClinicalBranch.management),
           icon: Icon(
             selected == ClinicalBranch.management
-                ? Icons.check_circle_outline
-                : Icons.business_outlined,
+                ? VetIcons.checkCircle
+                : VetIcons.clinic,
           ),
           label: const Text('Gestión clínica'),
         ),
@@ -193,8 +194,15 @@ class HomeModuleGrid extends StatelessWidget {
     super.key,
     required this.actions,
     required this.onNavigate,
+    this.details = const {},
   });
   final List<(String, String)> actions;
+
+  /// Linea de apoyo bajo el nombre de cada modulo, por pagina de destino.
+  ///
+  /// Solo se pinta la de los modulos que traen una: un dato consultado
+  /// («12 activos») o una pista de para que sirve. Nunca una cifra inventada.
+  final Map<String, String> details;
   final ValueChanged<String> onNavigate;
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -217,7 +225,7 @@ class HomeModuleGrid extends StatelessWidget {
                 child: InkWell(
                   onTap: () => onNavigate(actions[i].$2),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 124),
+                    constraints: const BoxConstraints(minHeight: 132),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -236,12 +244,25 @@ class HomeModuleGrid extends StatelessWidget {
                               return AccentGlow(
                                 color: tono,
                                 radius: 16,
-                                emphasis: 1,
+                                emphasis: .35,
                                 child: Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: placa,
                                     borderRadius: BorderRadius.circular(16),
+                                    // La placa se levanta un punto sobre la
+                                    // tarjeta, como en las referencias.
+                                    boxShadow:
+                                        Theme.of(context)
+                                                .extension<WorkspaceStyle>()
+                                                ?.neumorphic ==
+                                            true
+                                        ? neuShadows(
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark,
+                                            depth: .45,
+                                          )
+                                        : null,
                                   ),
                                   // Los tonos de marca son claros: sobre su
                                   // propia placa el glifo se oscurece lo justo
@@ -259,8 +280,30 @@ class HomeModuleGrid extends StatelessWidget {
                             actions[i].$1,
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(fontSize: 12, letterSpacing: 0),
+                                ?.copyWith(
+                                  fontSize: 13,
+                                  letterSpacing: 0,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
+                          if (details[actions[i].$2] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                details[actions[i].$2]!,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      fontSize: 11,
+                                      letterSpacing: 0,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -288,6 +331,7 @@ Color _placa(BuildContext context, Color color) => composite(
 /// que el icono se distinga sobre su propia tarjeta tenida.
 class HomeSummary extends StatelessWidget {
   const HomeSummary({super.key, required this.metrics, this.activity});
+
   /// Cada tarjeta del resumen: etiqueta, valor, icono y color de identidad.
   ///
   /// El color tine la tarjeta y pinta el glifo; el tono que acaba en pantalla
@@ -423,24 +467,57 @@ class HomeSummary extends StatelessWidget {
                                   style: Theme.of(context).textTheme.labelSmall,
                                 ),
                                 const SizedBox(height: 4),
+                                // Barra ancha y redondeada con el
+                                // recorrido de marca; el dia de mas citas va
+                                // a pleno y el resto algo mas tenue. Los dias
+                                // sin citas dejan solo una marca palida.
                                 Container(
-                                  width: 12,
+                                  width: 18,
                                   height: day.$2 == 0
-                                      ? 2
-                                      : 12 + 60 * day.$2 / max,
+                                      ? 8
+                                      : 18 + 78 * day.$2 / max,
                                   decoration: BoxDecoration(
                                     color: day.$2 == 0
-                                        ? Theme.of(
-                                            context,
-                                          ).colorScheme.outlineVariant
-                                        : Theme.of(context).colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(8),
+                                        ? Theme.of(context)
+                                              .colorScheme
+                                              .outlineVariant
+                                              .withValues(alpha: .55)
+                                        : null,
+                                    gradient: day.$2 == 0
+                                        ? null
+                                        : LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              for (final tono in const [
+                                                VetColors.violet,
+                                                VetColors.brandSky,
+                                                VetColors.turquoise,
+                                              ])
+                                                tono.withValues(
+                                                  alpha: day.$2 == max
+                                                      ? 1
+                                                      : .72,
+                                                ),
+                                            ],
+                                          ),
+                                    borderRadius: BorderRadius.circular(9),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   day.$1,
-                                  style: Theme.of(context).textTheme.labelSmall,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        fontWeight: day.$2 == max && max > 0
+                                            ? FontWeight.w800
+                                            : null,
+                                        color: day.$2 == max && max > 0
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.primary
+                                            : null,
+                                      ),
                                 ),
                               ],
                             ),
@@ -455,4 +532,111 @@ class HomeSummary extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Renglon de una cita dentro de un apartado del Inicio.
+///
+/// Sigue la referencia de «Proximas citas»: una tarjeta baja con una barra
+/// de color a la izquierda, el paciente y su detalle, y a la derecha una
+/// etiqueta corta (la hora o el estado). Los textos los decide quien llama;
+/// aqui solo se les da forma.
+class HomeAppointmentRow extends StatelessWidget {
+  const HomeAppointmentRow({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    this.tag,
+    this.onTap,
+  });
+  final String title, subtitle;
+  final String? tag;
+  final Color color;
+  final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final neu = theme.extension<WorkspaceStyle>()?.neumorphic == true;
+    final surface = theme.colorScheme.surface;
+    final chip = composite(color, dark ? .22 : .16, surface);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: neu ? neuShadows(dark, depth: .6) : null,
+        ),
+        child: Material(
+          color: surface,
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: readableOn(color, surface),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (tag != null) ...[
+                      const SizedBox(width: 8),
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: chip,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            tag!,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: inkOn(chip),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

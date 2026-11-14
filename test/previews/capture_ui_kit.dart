@@ -29,6 +29,9 @@ void main() {
         ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
       await textFont.load();
       await icons.load();
+      await (FontLoader(
+        'VetIcons',
+      )..addFont(rootBundle.load('assets/fonts/VetIcons.ttf'))).load();
       final core = CoreViewModel(
         SettingsRepository(),
         AppSettings(visualStyle: 'neu', brightness: dark ? 'dark' : 'light'),

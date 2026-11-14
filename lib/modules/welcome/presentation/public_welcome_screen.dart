@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/widgets/neu_identity.dart';
+import '../../../core/widgets/brand_gradient.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_theme.dart';
 import '../../auth/presentation/auth_screen.dart';
 import '../../auth/presentation/auth_view_model.dart';
+import 'clinic_highlights.dart';
+import 'welcome_intro_video.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// Public product entry shown before authentication.
 ///
@@ -55,10 +60,14 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget slide(List<Widget> children) => ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       children: children,
     );
-    return Scaffold(
+    return AccessBackdrop(
+      child: Scaffold(
+      backgroundColor: AccessBackdrop.appliesTo(context)
+          ? Colors.transparent
+          : null,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -100,7 +109,7 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 3),
                                 child: Icon(
-                                  Icons.circle,
+                                  VetIcons.dot,
                                   size: i == _page ? 10 : 8,
                                   color: i == _page
                                       ? theme.colorScheme.primary
@@ -137,31 +146,34 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
+  // La animación ya trae el logotipo y el lema, así que aquí no se repite la
+  // marca estática: debajo va el titular, que es lo que lee el lector de
+  // pantalla, y enseguida los dos accesos.
   List<Widget> _welcomeChildren(ThemeData theme) => [
-    const SizedBox(height: 8),
-    const VetDosisBrand(large: true),
-    const SizedBox(height: 14),
+    const WelcomeIntroVideo(),
+    const SizedBox(height: 18),
     Text(
       'Bienvenido a VetDosis',
       textAlign: TextAlign.center,
-      style: theme.textTheme.headlineLarge,
+      style: theme.textTheme.headlineMedium,
     ),
-    const SizedBox(height: 12),
+    const SizedBox(height: 10),
     Text(
       'Dosis, expedientes y equipo de tu clínica, en un solo lugar.',
       textAlign: TextAlign.center,
-      style: theme.textTheme.titleMedium,
+      style: theme.textTheme.titleMedium?.copyWith(color: VetColors.muted),
     ),
-    const SizedBox(height: 20),
+    const SizedBox(height: 22),
     FilledButton.icon(
       onPressed: () => _openAccess(context),
-      icon: const Icon(Icons.login),
+      icon: const Icon(VetIcons.login),
       label: const Text('Iniciar sesión'),
     ),
-    const SizedBox(height: 8),
+    const SizedBox(height: 10),
     OutlinedButton(
       onPressed: widget.auth == null
           ? null
@@ -172,112 +184,262 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
   ];
 
   List<Widget> _descriptionChildren(ThemeData theme) => [
-    Text('Qué incluye VetDosis Pro', style: theme.textTheme.headlineSmall),
-    const SizedBox(height: 16),
-    Text('Especies', style: theme.textTheme.titleLarge),
+    const VetSectionHeader(
+      title: 'Qué incluye VetDosis Pro',
+      subtitle: 'Lo que ya puedes usar en la beta cerrada.',
+      large: true,
+    ),
+    const _GroupLabel('Especies'),
+    const _FeatureCard(
+      icon: VetIcons.paw,
+      accent: VetColors.turquoise,
+      title: 'Pequeñas especies',
+      description: 'Perro y gato, con dosis por peso y por especie.',
+    ),
+    const _FeatureCard(
+      icon: VetIcons.tractor,
+      accent: VetColors.mint,
+      title: 'Producción animal',
+      description: 'Avicultura e incubación. Bovinos, ovinos y cerdos '
+          'próximamente.',
+    ),
+    const _FeatureCard(
+      icon: VetIcons.leaf,
+      accent: VetColors.cyan,
+      title: 'Exóticos',
+      description: 'Próximamente.',
+    ),
+    const SizedBox(height: 18),
+    const _GroupLabel('Administración clínica'),
+    const ClinicHighlights(),
     const SizedBox(height: 4),
-    const _Numbered(1, 'Pequeñas especies', ''),
-    const _Numbered(
-      2,
-      'Producción animal',
-      'Avicultura e incubación. Bovinos, ovinos y cerdos próximamente.',
-    ),
-    const _Numbered(3, 'Exóticos', 'Próximamente.'),
-    const SizedBox(height: 16),
-    Text('Administración clínica', style: theme.textTheme.titleLarge),
-    const SizedBox(height: 4),
-    const _Numbered(
-      1,
-      'Cálculos con criterio',
-      'Dosis por especie y por kg, fluidoterapia y productos comerciales. '
-          'Vademécum con fuentes. Tú validas, la app te ahorra el error.',
-    ),
-    const _Numbered(
-      2,
-      'Pacientes y hospitalización',
-      'Expedientes, agenda, recetas y consentimientos en PDF. '
-          'Seguimiento de hospitalizados con recordatorios.',
-    ),
-    const _Numbered(
-      3,
-      'Inventario y caja',
-      'Escáner de códigos y lectura de etiquetas. Ventas, crédito, abonos y '
-          'promociones.',
-    ),
-    const _Numbered(
-      4,
-      'Tu clínica como negocio',
-      'Dashboard, planeación financiera en pesos, punto de equilibrio. Equipo '
-          'con permisos, asistencia, horarios, mensajes, avisos, tablón de '
-          'notas y comisiones.',
-    ),
-    const _Numbered(
-      5,
-      'IA que asiste, no decide',
-      'Borradores, dictado por voz y lectura de etiquetas. Siempre con tu '
-          'revisión profesional.',
-    ),
-    const SizedBox(height: 16),
-    Text('Próximamente', style: theme.textTheme.titleLarge),
-    const SizedBox(height: 4),
-    const _Soon('Trabajo sin conexión'),
-    const _Soon('Alarmas con la app cerrada'),
-    const _Soon('WhatsApp Business y pagos en línea'),
-    const _Soon('Libro de control de medicamentos controlados'),
+    const _GroupLabel('Próximamente'),
+    const _SoonList([
+      'Trabajo sin conexión',
+      'Alarmas con la app cerrada',
+      'WhatsApp Business y pagos en línea',
+      'Libro de control de medicamentos controlados',
+    ]),
     const SizedBox(height: 16),
   ];
 
   List<Widget> _plansChildren(ThemeData theme) => [
-    Text('Planes', style: theme.textTheme.headlineSmall),
-    const SizedBox(height: 8),
-    const _Plan('Gratis', 'Para empezar.'),
-    const _Plan('Individual', 'Para el MVZ independiente.'),
-    const _Plan('Clínica', 'Para todo tu equipo.'),
-    const SizedBox(height: 12),
-    const Text('Beta cerrada. Planes y precios por anunciar.'),
+    const VetSectionHeader(
+      title: 'Planes',
+      subtitle: 'Elige el alcance cuando abramos las altas.',
+      large: true,
+    ),
+    const _Plan(
+      icon: VetIcons.playCircle,
+      accent: VetColors.turquoise,
+      name: 'Gratis',
+      description: 'Para empezar.',
+    ),
+    const _Plan(
+      icon: VetIcons.user,
+      accent: VetColors.violet,
+      name: 'Individual',
+      description: 'Para el MVZ independiente.',
+    ),
+    const _Plan(
+      icon: VetIcons.usersGroup,
+      accent: VetColors.purple,
+      name: 'Clínica',
+      description: 'Para todo tu equipo.',
+    ),
+    const SizedBox(height: 10),
+    const VetNotice(
+      text: 'Beta cerrada. Planes y precios por anunciar.',
+      icon: VetIcons.lock,
+    ),
+    const SizedBox(height: 22),
+    const _GroupLabel('Administración clínica'),
+    const ClinicHighlights(),
     const SizedBox(height: 16),
   ];
 }
 
-class _Numbered extends StatelessWidget {
-  const _Numbered(this.number, this.title, this.description);
-
-  final int number;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    minLeadingWidth: 24,
-    leading: Text('$number', style: Theme.of(context).textTheme.titleMedium),
-    title: Text(title),
-    subtitle: description.isEmpty ? null : Text(description),
-  );
-}
-
-class _Soon extends StatelessWidget {
-  const _Soon(this.text);
+/// Rótulo que abre un grupo de tarjetas dentro de una lámina.
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.text);
 
   final String text;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    minLeadingWidth: 24,
-    leading: const Icon(Icons.schedule_rounded, size: 20),
-    title: Text(text),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text(
+      text.toUpperCase(),
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: VetColors.muted,
+        letterSpacing: 1.1,
+      ),
+    ),
   );
 }
 
-class _Plan extends StatelessWidget {
-  const _Plan(this.name, this.description);
+/// Tarjeta de una capacidad: cuadro de ícono tintado, título y apoyo.
+class _FeatureCard extends StatelessWidget {
+  const _FeatureCard({
+    required this.icon,
+    required this.accent,
+    required this.title,
+    required this.description,
+  });
 
-  final String name;
+  final IconData icon;
+  final Color accent;
+  final String title;
   final String description;
 
   @override
-  Widget build(BuildContext context) => Card(
-    child: ListTile(title: Text(name), subtitle: Text(description)),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: VetCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            VetIconBox(icon: icon, accent: accent),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: VetColors.muted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Lista de lo que aún no está, en una sola tarjeta para no competir en peso
+/// visual con las capacidades que ya se pueden usar.
+class _SoonList extends StatelessWidget {
+  const _SoonList(this.items);
+
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return VetCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Column(
+        children: [
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(
+                    VetIcons.clock,
+                    size: 20,
+                    color: VetColors.muted,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(item, style: theme.textTheme.bodyMedium),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Plan extends StatelessWidget {
+  const _Plan({
+    required this.icon,
+    required this.accent,
+    required this.name,
+    required this.description,
+  });
+
+  final IconData icon;
+  final Color accent;
+  final String name;
+  final String description;
+
+  static const double _radius = 24;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      // Cada plan lleva el contorno y un halo leve de su propio color, segun
+      // la referencia de Ale: asi los tres se distinguen de un vistazo y la
+      // lamina de precios no es una pila de tarjetas iguales. El contorno va
+      // en primer plano para no mover el contenido de la tarjeta.
+      child: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(_radius),
+          border: Border.all(color: accent.withValues(alpha: .7), width: 1.4),
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(_radius),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: .34),
+                blurRadius: 18,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: VetCard(
+        radius: _radius,
+        child: Row(
+          children: [
+            VetIconBox(icon: icon, accent: accent),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: VetColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+        ),
+      ),
+    );
+  }
 }

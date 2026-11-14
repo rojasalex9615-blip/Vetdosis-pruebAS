@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../domain/patient_contacts.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 const patientContactChannel = MethodChannel('vetdosis/contact_actions');
 
@@ -103,14 +104,14 @@ class ContactActions extends StatelessWidget {
               runSpacing: 4,
               children: [
                 TextButton.icon(
-                  icon: const Icon(Icons.call_outlined),
+                  icon: const Icon(VetIcons.phone),
                   label: const Text('Llamar'),
                   onPressed: contactCall(row.$2) == null
                       ? null
                       : () => open(context, contactCall(row.$2)!),
                 ),
                 TextButton.icon(
-                  icon: const Icon(Icons.message_outlined),
+                  icon: const Icon(VetIcons.chat),
                   label: const Text('Preparar WhatsApp'),
                   onPressed: contactWhatsapp(row.$2, '') == null
                       ? null
@@ -139,7 +140,7 @@ class ContactActions extends StatelessWidget {
                 'query': address,
               }),
             ),
-            icon: const Icon(Icons.map_outlined),
+            icon: const Icon(VetIcons.mapPin),
             label: const Text('Abrir dirección en mapas'),
           ),
         ],
@@ -151,12 +152,12 @@ class ContactActions extends StatelessWidget {
                 onPressed: contactPhone(owner['phone'] as String? ?? '') == null
                     ? null
                     : () => phoneAgenda(context, insert: true),
-                icon: const Icon(Icons.person_add_alt),
+                icon: const Icon(VetIcons.userPlus),
                 label: const Text('Guardar contacto en teléfono'),
               ),
               TextButton.icon(
                 onPressed: () => phoneAgenda(context, insert: false),
-                icon: const Icon(Icons.contacts_outlined),
+                icon: const Icon(VetIcons.phonebook),
                 label: const Text('Abrir agenda telefónica'),
               ),
             ],

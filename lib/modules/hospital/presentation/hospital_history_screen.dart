@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../domain/hospital_history.dart';
 import 'hospital_history_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class HospitalHistoryScreen extends StatefulWidget {
   const HospitalHistoryScreen({
@@ -193,7 +194,7 @@ class _HospitalHistoryScreenState extends State<HospitalHistoryScreen> {
                       subtitle: Text(
                         'Alta: ${instant(s['discharged_at'])}\nÚltima jaula: ${cage(s['cage'])}',
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: const Icon(VetIcons.chevronRight),
                       onTap: () => model.load(stay: s['id'] as String),
                     ),
                   ),

@@ -28,7 +28,7 @@ void main() {
                     children: [
                       VetActionButton(
                         label: 'Agendar cita',
-                        icon: Icons.add,
+                        icon: VetIcons.add,
                         onPressed: () => taps++,
                       ),
                       const VetActionButton(
@@ -51,7 +51,7 @@ void main() {
                       const VetKpiCard(
                         label: 'Sin registros',
                         value: '—',
-                        icon: Icons.calendar_month,
+                        icon: VetIcons.calendar,
                       ),
                     ],
                   ),

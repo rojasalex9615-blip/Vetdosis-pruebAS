@@ -4,6 +4,7 @@ import '../../forms/clinical/clinical_repository.dart';
 import '../domain/hospital_models.dart';
 import '../domain/hospital_repository.dart';
 import 'hospital_weight_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// Selects an accessible active stay, then reuses the persisted-weight workflow.
 class HospitalDosePatientScreen extends StatefulWidget {
@@ -172,13 +173,13 @@ class _HospitalDosePatientScreenState extends State<HospitalDosePatientScreen>
           controller: search,
           decoration: const InputDecoration(
             labelText: 'Buscar paciente',
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: Icon(VetIcons.search),
           ),
           onChanged: (v) => setState(() => query = v),
         ),
         TextButton.icon(
           onPressed: loading ? null : load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
           label: const Text('Actualizar pacientes'),
         ),
         if (loading) const LinearProgressIndicator(),
@@ -197,7 +198,7 @@ class _HospitalDosePatientScreenState extends State<HospitalDosePatientScreen>
               child: ListTile(
                 title: Text(stay.patientName),
                 subtitle: Text('${stay.species} · ${stay.cageLabel}'),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: const Icon(VetIcons.chevronRight),
                 onTap: () => select(stay),
               ),
             ),

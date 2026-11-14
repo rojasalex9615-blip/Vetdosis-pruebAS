@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import '../domain/form_models.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class FormPdfScreen extends StatefulWidget {
   const FormPdfScreen({
@@ -80,7 +81,7 @@ class _FormPdfScreenState extends State<FormPdfScreen> {
                 bytes: widget.pdf.bytes,
                 filename: 'VetDosis-documento.pdf',
               ),
-              icon: const Icon(Icons.share_outlined),
+              icon: const Icon(VetIcons.share),
               label: const Text('Enviar PDF por correo o WhatsApp'),
             ),
           )),

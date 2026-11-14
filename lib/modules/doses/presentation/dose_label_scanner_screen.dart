@@ -8,6 +8,7 @@ import '../data/catalog_repository.dart';
 import '../data/personal_dose_repository.dart';
 import '../domain/catalog.dart';
 import 'dose_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 /// OCR is only a search aid. Neither a dose nor a product concentration is
 /// inferred from an untrusted photo; the clinician must choose a known record.
@@ -220,14 +221,14 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
               onPressed: busy || !supportsCamera
                   ? null
                   : () => capture(ImageSource.camera),
-              icon: const Icon(Icons.camera_alt_outlined),
+              icon: const Icon(VetIcons.camera),
               label: const Text('Tomar foto de etiqueta'),
             ),
             OutlinedButton.icon(
               onPressed: busy || !supportsCamera
                   ? null
                   : () => capture(ImageSource.gallery),
-              icon: const Icon(Icons.photo_library_outlined),
+              icon: const Icon(VetIcons.image),
               label: const Text('Elegir imagen'),
             ),
           ],
@@ -249,7 +250,7 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
           controller: search,
           decoration: const InputDecoration(
             labelText: 'Buscar fármaco o marca en el catálogo',
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: Icon(VetIcons.search),
             border: OutlineInputBorder(),
           ),
           onChanged: (_) => setState(() {}),
@@ -271,7 +272,7 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
               subtitle: Text('${item.species} · '
                   '${item.evidence.verified ? 'Fuente verificada' : 'Sin verificar'}'
                   ' · ${item.presentations.map((e) => e.brand).join(', ')}'),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const Icon(VetIcons.chevronRight),
               onTap: () => choose(item),
             ),
         ],

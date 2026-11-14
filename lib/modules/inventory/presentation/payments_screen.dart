@@ -10,6 +10,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../backup/domain/backup_archive.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/inventory_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({
@@ -251,7 +252,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
               IconButton(
                 onPressed: busy ? null : load,
-                icon: const Icon(Icons.refresh),
+                icon: const Icon(VetIcons.refresh),
               ),
             ],
           ),
@@ -276,7 +277,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 ),
                 trailing: model.canReconcile(admin)
                     ? IconButton(
-                        icon: const Icon(Icons.fact_check_outlined),
+                        icon: const Icon(VetIcons.clipboardChecks),
                         onPressed: busy ? null : () => reconcile(t),
                       )
                     : null,

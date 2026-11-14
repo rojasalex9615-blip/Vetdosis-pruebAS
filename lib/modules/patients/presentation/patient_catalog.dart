@@ -2,6 +2,7 @@ import '../../../core/widgets/neu_header_card.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../domain/patient_models.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 String patientSearchText(String text) {
   var value = text.toLowerCase().trim();
@@ -31,14 +32,14 @@ class PatientCatalogTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => NeuHeaderCard(
     title: patient.name,
-    icon: Icons.pets_outlined,
+    icon: VetIcons.paw,
     color: const Color(0xFF61C7BA),
     onTap: onTap,
     child: ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       selected: selected,
       leading: Icon(
-        Icons.pets_outlined,
+        VetIcons.paw,
         color: selected ? Theme.of(context).colorScheme.primary : null,
       ),
       subtitle: Text(
@@ -47,9 +48,7 @@ class PatientCatalogTile extends StatelessWidget {
           if (patient.breed.isNotEmpty) patient.breed,
         ].join(' · '),
       ),
-      trailing: Icon(
-        selected ? Icons.check_circle_outline : Icons.chevron_right,
-      ),
+      trailing: Icon(selected ? VetIcons.checkCircle : VetIcons.chevronRight),
       onTap: onTap,
     ),
   );

@@ -10,6 +10,7 @@ import '../domain/preventive_coverage.dart';
 import '../application/voice_dictation.dart';
 import 'signature_pad.dart';
 import 'patient_view_model.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class EventForm extends StatefulWidget {
   const EventForm({
@@ -366,7 +367,7 @@ class _EventFormState extends State<EventForm> {
               ),
               OutlinedButton.icon(
                 onPressed: busy ? null : toggleVoice,
-                icon: Icon(listening ? Icons.stop : Icons.mic_none),
+                icon: Icon(listening ? VetIcons.stop : VetIcons.mic),
                 label: Text(
                   listening ? 'Detener dictado' : 'Dictar en español',
                 ),
@@ -374,7 +375,7 @@ class _EventFormState extends State<EventForm> {
               if (widget.ai != null && widget.member != null)
                 OutlinedButton.icon(
                   onPressed: busy || listening ? null : prepareWithAi,
-                  icon: const Icon(Icons.auto_awesome),
+                  icon: const Icon(VetIcons.sparkles),
                   label: const Text(
                     'Ordenar notas o preparar indicaciones con IA',
                   ),

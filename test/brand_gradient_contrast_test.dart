@@ -4,6 +4,7 @@ import 'package:vetdosis_pro/core/widgets/brand_gradient.dart';
 import 'package:vetdosis_pro/core/widgets/contrast.dart';
 import 'package:vetdosis_pro/core/widgets/neu_identity.dart';
 import 'package:vetdosis_pro/vet_ui/vet_theme.dart';
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 /// El degradado de marca se usa de dos maneras distintas y cada una tiene su
 /// propia trampa:
@@ -46,7 +47,7 @@ void main() {
                   Builder(
                     builder: (context) {
                       contextoDelIcono = context;
-                      return const BrandGradientIcon(Icons.auto_awesome);
+                      return const BrandGradientIcon(VetIcons.sparkles);
                     },
                   ),
                 ],
@@ -141,7 +142,7 @@ void main() {
                 foregroundColor: inkOnGradient(brandGradientColors),
                 elevation: 0,
                 onPressed: () {},
-                child: const Icon(Icons.document_scanner_outlined),
+                child: const Icon(VetIcons.documentScan),
               ),
             ),
           ),

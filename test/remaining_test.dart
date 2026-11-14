@@ -13,6 +13,7 @@ import 'package:vetdosis_pro/modules/operations/presentation/operations_screen.d
 import 'package:vetdosis_pro/modules/attendance/domain/attendance_repository.dart';
 import 'package:vetdosis_pro/modules/attendance/presentation/attendance_view_model.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 class FakeBackup implements BackupRepository {
   String path = 'clinic/photo.png';
@@ -424,7 +425,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.textContaining('pendiente_revision'), findsOneWidget);
-      expect(find.byIcon(Icons.fact_check_outlined), findsNothing);
+      expect(find.byIcon(VetIcons.clipboardChecks), findsNothing);
       expect(
         find.textContaining('Cobrar desde esta app requiere'),
         findsOneWidget,

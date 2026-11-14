@@ -5,6 +5,7 @@ import '../../ai/domain/assisted_drafts.dart';
 import '../../ai/presentation/request_ai_draft.dart';
 import '../../ai/presentation/dictation_field.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ClinicalDraftScreen extends StatefulWidget {
   const ClinicalDraftScreen({
@@ -195,7 +196,7 @@ class _ClinicalDraftScreenState extends State<ClinicalDraftScreen> {
         ),
         FilledButton.icon(
           onPressed: listening ? null : prepare,
-          icon: const Icon(Icons.auto_awesome),
+          icon: const Icon(VetIcons.sparkles),
           label: const Text('Preparar borrador con IA'),
         ),
         if (error != null)
@@ -205,7 +206,7 @@ class _ClinicalDraftScreenState extends State<ClinicalDraftScreen> {
           ),
         for (final item in missing)
           ListTile(
-            leading: const Icon(Icons.edit_note),
+            leading: const Icon(VetIcons.noteEdit),
             title: Text('Por completar: $item'),
           ),
         for (final field in output.entries)

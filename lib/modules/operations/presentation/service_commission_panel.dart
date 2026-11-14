@@ -4,6 +4,7 @@ import '../../inventory/domain/inventory_models.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/operations_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ServiceCommissionPanel extends StatefulWidget {
   const ServiceCommissionPanel({
@@ -502,7 +503,7 @@ class _ServiceCommissionPanelState extends State<ServiceCommissionPanel> {
             ],
             TextButton.icon(
               onPressed: busy ? null : load,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(VetIcons.refresh),
               label: const Text('Actualizar comisiones'),
             ),
           ],

@@ -4,6 +4,7 @@ import '../../ai/domain/ai_repository.dart';
 import '../../ai/presentation/request_ai_draft.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../domain/inventory_repository.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class InventoryInsightsScreen extends StatefulWidget {
   const InventoryInsightsScreen({
@@ -105,7 +106,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
       actions: [
         IconButton(
           onPressed: busy ? null : load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
         ),
       ],
     ),
@@ -123,7 +124,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
           if (widget.ai != null)
             FilledButton.icon(
               onPressed: busy ? null : suggest,
-              icon: const Icon(Icons.auto_awesome),
+              icon: const Icon(VetIcons.sparkles),
               label: const Text('Proponer compras u ofertas con IA'),
             ),
           const Text(

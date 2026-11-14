@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PromotionImageScreen extends StatefulWidget {
   const PromotionImageScreen({super.key, required this.clinicName, required this.promotion});
@@ -96,7 +97,7 @@ class _PromotionImageScreenState extends State<PromotionImageScreen> {
         Center(child: RepaintBoundary(key: imageKey, child: SizedBox(width: 360, height: 450,
           child: DecoratedBox(decoration: BoxDecoration(color: colors.$2), child: Padding(
             padding: const EdgeInsets.all(28), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [Icon(Icons.pets, color: colors.$1), const SizedBox(width: 8),
+              Row(children: [Icon(VetIcons.paw, color: colors.$1), const SizedBox(width: 8),
                 Expanded(child: Text(footer.text.trim().isEmpty ? widget.clinicName : footer.text.trim(),
                   maxLines: 2, overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: colors.$3, fontSize: 16, fontWeight: FontWeight.bold)))]),
@@ -124,7 +125,7 @@ class _PromotionImageScreenState extends State<PromotionImageScreen> {
         const SizedBox(height: 12),
         if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
         FilledButton.icon(onPressed: exporting ? null : shareImage,
-          icon: const Icon(Icons.ios_share), label: Text(exporting ? 'Creando PNG…' : 'Compartir o guardar PNG')),
+          icon: const Icon(VetIcons.share), label: Text(exporting ? 'Creando PNG…' : 'Compartir o guardar PNG')),
       ])),
     );
   }

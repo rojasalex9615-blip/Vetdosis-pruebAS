@@ -5,6 +5,7 @@ import '../../../prescribing/presentation/rx_entry_screen.dart';
 import '../clinical_models.dart';
 import 'rapid_test_repository.dart';
 import 'rapid_test_view_model.dart';
+import '../../../../vet_ui/vet_icons.dart';
 
 class RapidTestScreen extends StatefulWidget {
   const RapidTestScreen({
@@ -228,7 +229,7 @@ class _RapidTestScreenState extends State<RapidTestScreen> {
           if (model.can('record'))
             FilledButton.icon(
               onPressed: opening ? null : entry,
-              icon: const Icon(Icons.add),
+              icon: const Icon(VetIcons.add),
               label: const Text('Registrar prueba rápida'),
             ),
           if (!model.busy && model.error == null && model.records.isEmpty)

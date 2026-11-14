@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class DripMetronome extends StatefulWidget {
   const DripMetronome({super.key, required this.dropsPerMinute});
@@ -73,7 +74,7 @@ class _DripMetronomeState extends State<DripMetronome>
         'Ayuda visual en primer plano; cada cambio de color representa una gota. No mide ni controla la infusión. Verifica el equipo y el goteo real.',
       ),
       Icon(
-        Icons.water_drop,
+        VetIcons.drop,
         size: 36,
         color: pulse
             ? Theme.of(context).colorScheme.primary

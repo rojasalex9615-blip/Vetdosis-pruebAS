@@ -3,6 +3,7 @@ import '../../prescribing/presentation/rx_entry_screen.dart';
 import '../domain/form_models.dart';
 import '../domain/form_repository.dart';
 import 'form_pdf_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 // Only server-reported actions are displayed. No job/role fallback.
 class DocumentFlowScreen extends StatefulWidget {
@@ -326,7 +327,7 @@ class _DocumentFlowScreenState extends State<DocumentFlowScreen> {
       actions: [
         IconButton(
           onPressed: busy ? null : load,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(VetIcons.refresh),
         ),
       ],
     ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/core/widgets/screen_title.dart';
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 /// Los titulos llegaban cortados al telefono: «Produccion y g...», «Calculos
 /// clinic...».
@@ -41,11 +42,11 @@ void main() {
             title: ScreenTitle(screen: titulo, clinic: 'vet prueba1'),
             actions: [
               IconButton(
-                icon: const Icon(Icons.person_outline),
+                icon: const Icon(VetIcons.user),
                 onPressed: () {},
               ),
               IconButton(
-                icon: const Icon(Icons.auto_awesome),
+                icon: const Icon(VetIcons.sparkles),
                 onPressed: () {},
               ),
             ],
@@ -64,7 +65,7 @@ void main() {
         await montar(tester, titulo, ancho);
         final texto = tester.getRect(find.text(titulo));
         final primerBoton = tester.getRect(
-          find.byIcon(Icons.person_outline),
+          find.byIcon(VetIcons.user),
         );
 
         // No se mete debajo de los botones de la derecha.
@@ -181,11 +182,11 @@ void main() {
                 title: ScreenTitle(screen: titulo, clinic: 'vet prueba1'),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.person_outline),
+                    icon: const Icon(VetIcons.user),
                     onPressed: () {},
                   ),
                   IconButton(
-                    icon: const Icon(Icons.auto_awesome),
+                    icon: const Icon(VetIcons.sparkles),
                     onPressed: () {},
                   ),
                 ],
@@ -236,7 +237,7 @@ void main() {
                 actions: [
                   for (var i = 0; i < acciones; i++)
                     IconButton(
-                      icon: const Icon(Icons.person_outline),
+                      icon: const Icon(VetIcons.user),
                       onPressed: () {},
                     ),
                 ],

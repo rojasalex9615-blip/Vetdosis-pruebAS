@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../data/settings_repository.dart';
 import '../../offline/application/sync_engine.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 enum ClinicalBranch {
-  small('Pequeñas especies', Icons.pets_outlined),
-  exotic('Exóticos / Silvestres', Icons.forest_outlined),
-  production('Producción y grandes especies', Icons.agriculture_outlined),
-  management('Gestión clínica', Icons.business_outlined);
+  small('Pequeñas especies', VetIcons.paw),
+  exotic('Exóticos / Silvestres', VetIcons.rabbit),
+  production('Producción y grandes especies', VetIcons.tractor),
+  management('Gestión clínica', VetIcons.clinic);
 
   const ClinicalBranch(this.label, this.icon);
   final String label;

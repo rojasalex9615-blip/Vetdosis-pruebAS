@@ -6,6 +6,7 @@ import '../../patients/presentation/signature_pad.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/prescribing_models.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class RxField {
   const RxField(
@@ -158,7 +159,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
           TextField(
             decoration: InputDecoration(
               labelText: f.label,
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: const Icon(VetIcons.search),
             ),
             onChanged: (value) => setState(() => optionQueries[f.key] = value),
           ),
@@ -202,7 +203,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
           enabled: !busy,
           decoration: InputDecoration(
             labelText: f.label,
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: const Icon(VetIcons.search),
           ),
           onChanged: (_) => data.remove(f.key),
         ),
@@ -250,7 +251,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
               ? 'Selecciona fecha'
               : '${selected.day.toString().padLeft(2, '0')}/${selected.month.toString().padLeft(2, '0')}/${selected.year}',
         ),
-        trailing: const Icon(Icons.calendar_month),
+        trailing: const Icon(VetIcons.calendar),
         onTap: busy
             ? null
             : () async {
@@ -280,7 +281,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
                 ? 'Selecciona fecha y hora local'
                 : '${instant.day.toString().padLeft(2, '0')}/${instant.month.toString().padLeft(2, '0')}/${instant.year} · ${instant.hour.toString().padLeft(2, '0')}:${instant.minute.toString().padLeft(2, '0')}',
           ),
-          trailing: const Icon(Icons.calendar_month),
+          trailing: const Icon(VetIcons.calendar),
           onTap: busy
               ? null
               : () async {

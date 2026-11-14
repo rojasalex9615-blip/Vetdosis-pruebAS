@@ -4,6 +4,7 @@ import '../../../core/widgets/neu_header_card.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import 'package:flutter/material.dart';
 import '../domain/quantity.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 enum DoseMathMode {
   concentration('Volumen desde dosis y concentración'),
@@ -250,7 +251,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(Icons.arrow_forward),
+            child: Icon(VetIcons.arrowForward),
           ),
           Expanded(
             child: _unitPicker(
@@ -369,7 +370,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.person_search_outlined, size: 20),
+                Icon(VetIcons.userSearch, size: 20),
                 SizedBox(width: 10),
                 Flexible(
                   child: Text(
@@ -383,7 +384,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         else
           OutlinedButton.icon(
             onPressed: widget.onChoosePatient,
-            icon: const Icon(Icons.person_search_outlined),
+            icon: const Icon(VetIcons.userSearch),
             label: const Text('Elegir paciente, peso y fármaco'),
           ),
         if (referenceStyle) const SizedBox(height: 16),
@@ -391,7 +392,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       if (referenceStyle)
         NeuHeaderCard(
           title: 'Datos del cálculo',
-          icon: Icons.tune_rounded,
+          icon: VetIcons.sliders,
           color: calculatorIdentity(mode.name).color,
           soft: true,
           child: Padding(
@@ -409,7 +410,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.calculate_outlined, size: 21),
+              const Icon(VetIcons.calculator, size: 21),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -425,7 +426,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       else
         FilledButton.icon(
           onPressed: calculate,
-          icon: const Icon(Icons.calculate_outlined),
+          icon: const Icon(VetIcons.calculator),
           label: const Text('Calcular'),
         ),
       if (error case final message?)

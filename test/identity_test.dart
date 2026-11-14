@@ -8,6 +8,7 @@ import 'package:vetdosis_pro/core/app.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
 import 'package:vetdosis_pro/modules/identity/presentation/identity_panel.dart';
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 class BrandingFake implements FormRepository {
   final requests = <String>[];
@@ -69,15 +70,15 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.pets), findsOneWidget);
+      expect(find.byIcon(VetIcons.paw), findsOneWidget);
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(body: AccountAvatar(userId: 'account-b')),
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.pets), findsNothing);
-      expect(find.byIcon(Icons.person), findsOneWidget);
+      expect(find.byIcon(VetIcons.paw), findsNothing);
+      expect(find.byIcon(VetIcons.user), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

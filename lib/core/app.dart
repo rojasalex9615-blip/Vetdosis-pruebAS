@@ -9,6 +9,8 @@ import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
 import '../modules/clinic_experience/presentation/clinic_experience_boundary.dart';
 import '../modules/clinic_experience/presentation/clinic_experience_screen.dart';
 import '../modules/auth/presentation/team_duty_screen.dart';
+import '../modules/notifications/data/inbox_source.dart';
+import '../modules/notifications/presentation/notification_bell_menu.dart';
 import '../modules/review/domain/review_catalog_repository.dart';
 import '../modules/review/presentation/review_catalog_screen.dart';
 import '../modules/auth/domain/auth_repository.dart';
@@ -45,6 +47,8 @@ import '../modules/ai/presentation/ai_screen.dart';
 import '../modules/subscriptions/domain/subscription_repository.dart';
 import '../modules/subscriptions/presentation/subscription_screen.dart';
 import '../modules/operations/domain/operations_repository.dart';
+import '../modules/personal_space/domain/personal_space.dart';
+import '../modules/personal_space/presentation/personal_space_screen.dart';
 import '../modules/operations/presentation/operations_screen.dart';
 import '../modules/operations/presentation/contact_directory_screen.dart';
 import '../modules/operations/presentation/promotions_screen.dart';
@@ -87,20 +91,139 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../modules/core/presentation/core_view_model.dart';
 import '../modules/auth/presentation/auth_view_model.dart';
 import '../modules/auth/presentation/auth_screen.dart';
+import '../modules/ai/presentation/starter_help_panel.dart';
+import '../vet_ui/vet_icons.dart';
 
-// El tema por omision deja de ser el verde esmeralda y pasa a ser el morado
-// brillante de la marca (VetColors.purple, el mismo del logotipo y del
-// degradado de «Iniciar sesion»). Siguen siendo cinco: la semilla verde no se
-// borra, se sustituye por una de la gama propia de la app, asi que quien
-// tuviera elegido el tema 0 ve morado sin que se le mueva la seleccion.
-const paletteNames = ['Amatista', 'Océano', 'Índigo', 'Ámbar', 'Obsidiana'];
+/// Linea de un control de seleccion en estilo neumorfico.
+///
+/// Solo hay linea cuando el control esta elegido —o mientras se pulsa o
+/// tiene el foco, que es cuando conviene senalarlo—, y es la del primario.
+/// En reposo no lleva ninguna: lo que lo separa del fondo es el relieve.
+BorderSide? Function(Set<WidgetState>) _neuSide(Color primary) =>
+    (states) =>
+        states.contains(WidgetState.disabled)
+        ? BorderSide.none
+        : states.contains(WidgetState.selected) ||
+              states.contains(WidgetState.pressed) ||
+              states.contains(WidgetState.focused)
+        ? BorderSide(color: primary, width: 1.5)
+        : BorderSide.none;
+
+/// Relieve del control: levantado en reposo, hundido al pulsar, plano si
+/// esta deshabilitado, que es como se comporta una tecla de verdad.
+double _neuElevation(Set<WidgetState> states) =>
+    states.contains(WidgetState.disabled)
+    ? 0
+    : states.contains(WidgetState.pressed)
+    ? 1
+    : 2;
+
+/// Sombra del relieve, en el mismo tono que usan las tarjetas.
+Color _neuShadow(bool dark) =>
+    dark ? const Color(0x59000000) : const Color(0x47B8BDCE);
+
+/// Los cinco temas del selector de Ajustes, con nombre y semilla.
+///
+/// El indice 0 es el verdeazulado, que es el tema por omision: Ale lo pidio
+/// asi el 11 de noviembre, viendo el morado ya aplicado.
+///
+/// Conviene saber que esto revierte lo VISIBLE de 54bddae, que habia pasado
+/// el primario de verde a morado y esta fusionado en main. No se revierte el
+/// commit: el morado no se pierde, baja a ser el segundo tono y se puede
+/// elegir en Ajustes. Lo que cambia es cual sale sin tocar nada.
+///
+/// Los otros cuatro eran colores de catalogo (oceano, indigo, ambar,
+/// obsidiana) ajenos a la familia, asi que al elegir uno la app dejaba de
+/// parecerse a si misma; pasan a [VetColors].
+///
+/// Son SEMILLAS, no colores finales. Material 3 deriva de cada una un
+/// `primary` y un `onPrimary` que contrastan entre si, que es lo que exige
+/// `platform_review_test` a las cinco paletas en los dos brillos. Por eso ya
+/// no hace falta elegir a mano un morado claro para oscuro y otro para claro.
+const paletteNames = ['Turquesa', 'Amatista', 'Cielo', 'Lila', 'Menta'];
 const paletteColors = [
+  Color(0xFF087F83),
   VetColors.purple,
-  Color(0xFF126AAB),
-  Color(0xFF6254AE),
-  Color(0xFF946000),
-  Color(0xFF52606D),
+  VetColors.brandSky,
+  VetColors.brandLilac,
+  VetColors.mint,
 ];
+
+/// Mantiene el Navigator estable, pero elimina las rutas privadas cuando
+/// cambia la identidad o el contexto de seguridad de la sesión.
+class SessionRouteGuard extends StatefulWidget {
+  const SessionRouteGuard({
+    super.key,
+    required this.auth,
+    required this.builder,
+  });
+
+  final AuthViewModel? auth;
+  final Widget Function(
+    BuildContext context,
+    GlobalKey<NavigatorState> navigatorKey,
+  ) builder;
+
+  @override
+  State<SessionRouteGuard> createState() => _SessionRouteGuardState();
+}
+
+class _SessionRouteGuardState extends State<SessionRouteGuard> {
+  final GlobalKey<NavigatorState> _navigatorKey =
+      GlobalKey<NavigatorState>();
+  String? _sessionFingerprint;
+
+  String _fingerprint(AuthViewModel? auth) {
+    if (auth == null) return 'no-auth';
+    final member = auth.active;
+    return [
+      auth.repository.userId ?? 'signed-out',
+      auth.signedIn,
+      auth.recoveringPassword,
+      auth.offline,
+      member?.userId ?? '',
+      member?.clinicId ?? '',
+      member?.role.name ?? '',
+    ].join('|');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionFingerprint = _fingerprint(widget.auth);
+    widget.auth?.addListener(_handleSessionChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant SessionRouteGuard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.auth != widget.auth) {
+      oldWidget.auth?.removeListener(_handleSessionChange);
+      _sessionFingerprint = _fingerprint(widget.auth);
+      widget.auth?.addListener(_handleSessionChange);
+    }
+  }
+
+  void _handleSessionChange() {
+    final next = _fingerprint(widget.auth);
+    if (next == _sessionFingerprint) return;
+    _sessionFingerprint = next;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.auth?.removeListener(_handleSessionChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      widget.builder(context, _navigatorKey);
+}
 
 /// Raiz de la aplicacion: arma el tema, decide si hay que autenticar y
 /// entrega los repositorios que cada modulo necesita.
@@ -123,6 +246,7 @@ class VetDosisApp extends StatelessWidget {
     this.referenceLibrary,
     this.inventory,
     this.operations,
+    this.personalSpace,
     this.attendance,
     this.backup,
     this.googleDriveBackup,
@@ -132,6 +256,7 @@ class VetDosisApp extends StatelessWidget {
     this.moduleAccess,
     this.experienceRepository,
     this.reviewCatalog,
+    this.inboxSeenStore,
   });
   final CoreViewModel model;
   final AuthViewModel? auth;
@@ -149,6 +274,7 @@ class VetDosisApp extends StatelessWidget {
   final ReferenceLibraryRepository? referenceLibrary;
   final InventoryRepository? inventory;
   final OperationsRepository? operations;
+  final PersonalSpaceRepository? personalSpace;
   final AttendanceRepository? attendance;
   final BackupRepository? backup;
   final drive_auth.DriveBackupClient? googleDriveBackup;
@@ -158,6 +284,10 @@ class VetDosisApp extends StatelessWidget {
   final ModuleAccessRepository? moduleAccess;
   final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
+
+  /// Donde se guarda hasta donde vio la persona la campana. Null usa el
+  /// almacen del telefono; las pruebas pasan uno en memoria.
+  final InboxSeenStore? inboxSeenStore;
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
@@ -172,45 +302,48 @@ class VetDosisApp extends StatelessWidget {
     final surface = dark
         ? VetColors.darkSurface
         : (neumorphic ? neuBackground : VetColors.surface);
-    // El primario deja de ser verde y pasa al morado brillante de la marca.
-    // El verde no se pierde: baja a secundario, que es donde estaba el
-    // lavanda, porque con un primario morado el lavanda ya no distinguia los
-    // dos papeles. Siguen siendo los mismos tres tonos por modo, solo cambian
-    // de puesto.
+    // El tono elegido en Ajustes es la semilla del esquema, TAMBIEN en neu.
     //
-    // En oscuro el morado va mas claro a proposito: #7C4DFF sobre el fondo
-    // #201F25 da 3.4:1, por debajo del minimo de texto; #B69BFF da 7.1:1.
-    // En claro, #7C4DFF da 4.8:1 con el blanco del boton y 4.1:1 sobre el
-    // fondo #EBECF2, lo mismo que daba el verde #087F83 (4.1:1), asi que no
-    // se pierde legibilidad respecto a lo que habia.
-    final primary = dark ? const Color(0xFFB69BFF) : VetColors.purple;
-    final secondary = dark
-        ? const Color(0xFF55E2D3)
-        : (neumorphic ? const Color(0xFF087F83) : VetColors.turquoise);
-    final tertiary = dark ? const Color(0xFFFF92C9) : VetColors.lavender;
+    // Antes el neu ignoraba por completo model.settings.palette: sembraba con
+    // un color fijo y encima machacaba primary, onPrimary, secondary y
+    // tertiary con constantes. El selector de «Elige tu tema» guardaba el
+    // indice, pintaba su chip como elegido y no cambiaba ni un pixel. Y como
+    // visualStyle viene en 'neu' de fabrica, no cambiaba para nadie.
+    //
+    // 54bddae cambio CUAL era ese color fijo (de verde a morado), que es lo
+    // que se ve hoy, pero el selector seguia muerto. Aqui se arregla lo otro:
+    // el tono elegido manda. El morado sigue siendo lo que se ve por omision
+    // porque es la semilla del indice 0.
+    //
+    // Fijar primary a mano era ademas lo que impedia que platform_review_test
+    // comprobara algo: recorre las cinco paletas exigiendo 4.5:1 entre primary
+    // y onPrimary, y las cinco le devolvian el mismo color. Al sembrar de
+    // verdad, esa prueba pasa a medir las cinco, y por eso ya no hace falta
+    // escoger a mano el #B69BFF de oscuro ni el #2A1055 de la tinta: M3 los
+    // deriva y la prueba los verifica.
+    //
+    // Lo que el neu si conserva son las SUPERFICIES. El fondo, la placa y la
+    // tinta son el ESTILO y salen de las maquetas de Ale; el acento es otra
+    // decision, y es la que el selector debe mandar.
     final scheme =
         ColorScheme.fromSeed(
-          seedColor: neumorphic
-              ? primary
-              : paletteColors[model.settings.palette],
+          seedColor: paletteColors[model.settings.palette],
           brightness: brightness,
         ).copyWith(
-          primary: neumorphic ? primary : null,
-          // Tinta sobre el primario. En oscuro el primario es claro, asi
-          // que la tinta va oscura y de la familia violeta, no el verde casi
-          // negro de antes: #2A1055 sobre #B69BFF da 7.0:1.
-          onPrimary: neumorphic
-              ? (dark ? const Color(0xFF2A1055) : Colors.white)
-              : null,
-          secondary: neumorphic ? secondary : null,
-          tertiary: neumorphic ? tertiary : null,
           surface: neumorphic ? surface : null,
           onSurface: neumorphic && !dark ? neuInk : null,
         );
+    final primary = scheme.primary;
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      // Hasta aqui el tema vivo no pasaba escala tipografica, asi que toda la
+      // app corria con la de Material 3, donde un titulo pesa lo mismo que su
+      // parrafo. Es la causa de que Caja y Formatos se lean como un muro de
+      // texto. La escala es la misma que usa VetTheme, en un solo sitio.
+      textTheme: VetTheme.textTheme(brightness, scheme),
+      fontFamily: VetTheme.fontFamily,
       scaffoldBackgroundColor: neumorphic ? background : null,
       appBarTheme: neumorphic
           ? AppBarTheme(
@@ -220,10 +353,20 @@ class VetDosisApp extends StatelessWidget {
             )
           : null,
       cardTheme: neumorphic
+          // Las tarjetas de Material quedaban del color exacto del lienzo
+          // y sin sombra, o sea invisibles: en Hospitalizacion, Vademecum
+          // y otras setenta llamadas el contenido flotaba sin caja. Pasan a
+          // placa levantada: un punto mas clara que el fondo y con sombra
+          // suave. De CardTheme solo sale la sombra de abajo; el par
+          // completo sigue siendo cosa de VetCard y WorkspacePanel.
           ? CardThemeData(
-              color: background,
+              color: neuRaised(dark, background),
               surfaceTintColor: Colors.transparent,
-              elevation: 0,
+              elevation: 3,
+              shadowColor: dark
+                  ? const Color(0x99000000)
+                  : const Color(0x73A9B0C4),
+              margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(22),
               ),
@@ -253,19 +396,77 @@ class VetDosisApp extends StatelessWidget {
               ),
             )
           : null,
+      // Relieve neu en los botones, desde el tema.
+      //
+      // Antes solo cuatro accesos de Inicio lo llevaban, puestos a mano con un
+      // DecoratedBox alrededor en 486b526. El resto de la app seguia con la
+      // elevacion de Material: una sombra sola hacia abajo, que no es relieve
+      // neu y encima competia con las placas que si lo son. Ahora el degradado
+      // entra por el tema y lo reciben los 155 FilledButton y los 123
+      // OutlinedButton sin tocar una sola llamada.
+      //
+      // Lo que NO puede dar el tema es la sombra exterior: ver neuButtonStyle.
+      //
+      // El OutlinedButton pierde el trazo y gana la placa, que es lo que Ale
+      // pidio para los cuatro accesos; el degradado sale de la superficie y no
+      // del primary porque un boton secundario no debe pesar como el primario.
+      //
+      // El TextButton se queda plano a proposito: es la accion de menor
+      // jerarquia y levantarlo lo igualaria con los otros dos.
       filledButtonTheme: neumorphic
           ? FilledButtonThemeData(
+              // El principal lleva el recorrido aqua → violeta de las
+              // referencias; el tono elegido en Ajustes sigue mandando en
+              // seleccion, foco, enlaces e iconos.
+              style: neuButtonStyle(
+                dark,
+                base: scheme.primary,
+                gradient: neuActionGradient(dark),
+                ink: neuActionInk(dark),
+                glow: neuGlow(dark),
+              ),
+            )
+          : null,
+      // Dos ramas llegaron aqui con una idea cada una y se quedan las dos
+      // mitades buenas.
+      //
+      // El relieve es el degradado (ver neuButtonStyle): la otra rama uso la
+      // elevacion de Material y su propio comentario lo admitia, «un
+      // neumorfismo a media voz», porque de ButtonStyle solo sale la sombra
+      // de abajo, no el brillo de arriba.
+      //
+      // La LINEA es de ella y se conserva: en reposo no hay ninguna, pero
+      // aparece al elegir, pulsar o enfocar. Sin eso, un boton sin borde y
+      // sin sombra exterior no acusa el foco, que es como se navega con
+      // teclado o con mando.
+      outlinedButtonTheme: neumorphic
+          ? OutlinedButtonThemeData(
+              style: neuButtonStyle(dark, base: neuRaised(dark, surface))
+                  .copyWith(
+                    side: WidgetStateProperty.resolveWith(_neuSide(primary)),
+                    backgroundColor: WidgetStatePropertyAll(
+                      neuRaised(dark, surface),
+                    ),
+                  ),
+            )
+          : null,
+      // Los botones de linea y los chips llevaban un borde gris fijo que los
+      // dejaba planos y con el contorno mas oscuro que su propio contenido:
+      // la linea pesaba mas que la palabra. La regla pasa a ser la misma
+      // para los tres controles de seleccion —linea solo cuando esta
+      // elegido, y del primario— y en reposo se levantan en relieve en vez
+      // de dibujarse con borde.
+      //
+      // El relieve que se puede pedir desde ButtonStyle es la sombra de
+      // abajo, no el brillo de arriba: un neumorfismo a media voz. El
+      // completo necesita pintar las dos sombras, que es lo que hace
+      // NeuInputBorder en los campos y queda pendiente para estos.
+      segmentedButtonTheme: neumorphic
+          ? SegmentedButtonThemeData(
               style: ButtonStyle(
-                shadowColor: WidgetStatePropertyAll(
-                  primary.withValues(alpha: .28),
-                ),
-                elevation: WidgetStateProperty.resolveWith(
-                  (states) => states.contains(WidgetState.disabled)
-                      ? 0
-                      : states.contains(WidgetState.pressed)
-                      ? 1
-                      : 2,
-                ),
+                side: WidgetStateProperty.resolveWith(_neuSide(primary)),
+                shadowColor: WidgetStatePropertyAll(_neuShadow(dark)),
+                elevation: WidgetStateProperty.resolveWith(_neuElevation),
               ),
             )
           : null,
@@ -274,16 +475,63 @@ class VetDosisApp extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              side: BorderSide(
-                color: dark ? VetColors.darkOutline : const Color(0xFFDDE7EF),
-              ),
+              side: WidgetStateBorderSide.resolveWith(_neuSide(primary)),
+              backgroundColor: surface,
+              selectedColor: primary.withValues(alpha: dark ? .22 : .15),
+              shadowColor: _neuShadow(dark),
+              elevation: 2,
+              pressElevation: 1,
             )
           : null,
       navigationBarTheme: neumorphic
+          // La pestana activa se rellena con el color de resalte en
+          // translucido y lleva un halo leve del mismo tono, segun la
+          // referencia de Ale. Antes era una placa clara casi del color de
+          // la barra: en el telefono costaba ver cual estaba elegida.
           ? NavigationBarThemeData(
               backgroundColor: surface,
-              indicatorColor: primary.withValues(alpha: dark ? 0.22 : 0.18),
+              indicatorColor: primary.withValues(alpha: dark ? .26 : .18),
+              indicatorShape: GlowRoundedBorder(
+                glow: primary.withValues(alpha: dark ? .42 : .34),
+                borderRadius: BorderRadius.circular(18),
+              ),
               elevation: 0,
+            )
+          : null,
+      // Calendario: el dia elegido es una pastilla con el color primario
+      // y el de hoy lleva solo el trazo, como en la maqueta de Agenda.
+      datePickerTheme: neumorphic
+          ? DatePickerThemeData(
+              backgroundColor: surface,
+              surfaceTintColor: Colors.transparent,
+              dayShape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              dayBackgroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? neuActionGradient(dark).first
+                    : null,
+              ),
+              dayForegroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? neuActionInk(dark)
+                    : states.contains(WidgetState.disabled)
+                    ? scheme.onSurface.withValues(alpha: .38)
+                    : scheme.onSurface,
+              ),
+              todayBackgroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? neuActionGradient(dark).first
+                    : Colors.transparent,
+              ),
+              todayForegroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.selected)
+                    ? neuActionInk(dark)
+                    : primary,
+              ),
+              todayBorder: BorderSide(color: primary),
             )
           : null,
       extensions: [
@@ -294,12 +542,16 @@ class VetDosisApp extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) => SessionRouteGuard(
+    auth: auth,
+    builder: (context, navigatorKey) => ListenableBuilder(
     listenable: Listenable.merge([model, ?auth]),
+    // Keep MaterialApp (and its Navigator/Element tree) stable across
+    // auth and clinic updates. Re-keying it here disposed and recreated the
+    // whole app subtree during ListenableBuilder notifications, which could
+    // invalidate inherited dependencies while Flutter was rebuilding.
     builder: (context, _) => MaterialApp(
-      key: ValueKey(
-        '${auth?.active?.userId}:${auth?.active?.clinicId}:${auth?.active?.role.name}:${auth?.signedIn}',
-      ),
+      navigatorKey: navigatorKey,
       title: 'VetDosis Pro',
       locale: const Locale('es', 'MX'),
       supportedLocales: const [Locale('es', 'MX')],
@@ -323,6 +575,7 @@ class VetDosisApp extends StatelessWidget {
             )
           : shell(context),
     ),
+  ),
   );
 
   Widget shell(BuildContext context) =>
@@ -349,6 +602,7 @@ class VetDosisApp extends StatelessWidget {
               moduleAccess: access,
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
+              inboxSeenStore: inboxSeenStore,
               personalDoses: personalDoses,
               patients: patients,
               hospital: hospital,
@@ -361,6 +615,7 @@ class VetDosisApp extends StatelessWidget {
               referenceLibrary: referenceLibrary,
               inventory: inventory,
               operations: operations,
+              personalSpace: personalSpace,
               attendance: attendance,
               backup: backup,
               googleDriveBackup: googleDriveBackup,
@@ -395,6 +650,7 @@ class CoreShell extends StatelessWidget {
     this.referenceLibrary,
     this.inventory,
     this.operations,
+    this.personalSpace,
     this.attendance,
     this.backup,
     this.googleDriveBackup,
@@ -408,6 +664,7 @@ class CoreShell extends StatelessWidget {
     this.experienceReady = false,
     this.onExperienceSaved,
     this.reviewCatalog,
+    this.inboxSeenStore,
   });
   final CoreViewModel model;
   final AuthViewModel? auth;
@@ -423,6 +680,7 @@ class CoreShell extends StatelessWidget {
   final ReferenceLibraryRepository? referenceLibrary;
   final InventoryRepository? inventory;
   final OperationsRepository? operations;
+  final PersonalSpaceRepository? personalSpace;
   final AttendanceRepository? attendance;
   final BackupRepository? backup;
   final drive_auth.DriveBackupClient? googleDriveBackup;
@@ -436,6 +694,10 @@ class CoreShell extends StatelessWidget {
   final bool experienceReady;
   final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
+
+  /// Donde se guarda hasta donde vio la persona la campana. Null usa el
+  /// almacen del telefono; las pruebas pasan uno en memoria.
+  final InboxSeenStore? inboxSeenStore;
 
   /// Whether [member] still matches an online session allowed hospital access.
   bool hospitalWeightContext(ClinicMembership member) =>
@@ -567,8 +829,22 @@ class CoreShell extends StatelessWidget {
       MaterialPageRoute<void>(
         builder: (_) => ClinicAccountScreen(
           model: auth!,
+          personalSpaceBuilder: (_) => PersonalSpaceScreen(
+            memberships: auth!.memberships,
+            repository: auth!.offline ? null : personalSpace,
+            medical: !auth!.offline && operations is StaffMedicalRepository
+                ? operations as StaffMedicalRepository
+                : null,
+          ),
           identityBuilder: (_) => Column(
             children: [
+              if (auth!.repository.userId != null)
+                ProfileHeader(
+                  userId: auth!.repository.userId!,
+                  repository: identity,
+                  title: auth!.active?.displayName,
+                  subtitle: auth!.active?.role.label,
+                ),
               if (auth!.repository.userId != null)
                 ProfileAppearance(
                   key: ValueKey(auth!.repository.userId),
@@ -594,11 +870,19 @@ class CoreShell extends StatelessWidget {
 
   Widget bottomNavigation(BuildContext context) {
     final destinations = <(String, IconData)>[
-      ('Inicio', Icons.home_outlined),
-      if (allowed('Agenda')) ('Agenda', Icons.calendar_month_outlined),
-      if (allowed('Pacientes')) ('Pacientes', Icons.pets_outlined),
-      if (allowed('Cálculos')) ('Cálculos', Icons.calculate_outlined),
-      ('Más', Icons.grid_view_outlined),
+      ('Inicio', VetIcons.home),
+      if (allowed('Agenda')) ('Agenda', VetIcons.calendar),
+      if (allowed('Pacientes')) ('Pacientes', VetIcons.paw),
+      if (allowed('Cálculos')) ('Cálculos', VetIcons.calculator),
+      // «Más» abria SectionMenu, el MISMO widget que el cajon lateral: el
+      // quinto hueco de la barra repetia lo que el boton de hamburguesa ya
+      // daba. Lo cede al asistente, que antes solo se alcanzaba por un icono
+      // pequeño de la cabecera. Si no hay asistente (sin repositorio de IA o
+      // sin permiso) el hueco vuelve a «Más» en vez de quedarse vacio.
+      if (showsAiAction)
+        ('Asistente IA', VetIcons.sparkles)
+      else
+        ('Más', VetIcons.grid),
     ];
     final page = switch (model.screen) {
       'Cálculo rápido' ||
@@ -609,8 +893,16 @@ class CoreShell extends StatelessWidget {
       _ => model.screen,
     };
     final selected = destinations.indexWhere((entry) => entry.$1 == page);
+    // Estar en una pantalla que no esta en la barra iluminaba el ULTIMO hueco,
+    // que era «Más» y resultaba honesto: ahi se encontraba. Ahora el ultimo es
+    // el asistente, y decir «estas en el asistente» cuando estas en
+    // Hospitalizacion seria mentira. Sin coincidencia se cae a Inicio, que es
+    // la raiz; a esas pantallas se llega por el cajon.
+    final respaldo = destinations.indexWhere((entry) => entry.$1 == 'Más');
     return NavigationBar(
-      selectedIndex: selected < 0 ? destinations.length - 1 : selected,
+      selectedIndex: selected >= 0
+          ? selected
+          : (respaldo >= 0 ? respaldo : 0),
       onDestinationSelected: (index) => model.navigate(destinations[index].$1),
       destinations: [
         for (final entry in destinations)
@@ -648,8 +940,36 @@ class CoreShell extends StatelessWidget {
   ///
   /// De aqui salen tanto el `actions` como el ancho que le queda al titulo,
   /// para que no se calculen por separado y acaben discrepando.
+  /// Si la barra lleva el boton de avisos.
+  bool get showsNoticesAction =>
+      auth?.active != null && allowed('Anuncios y avisos');
+
   int get barActions =>
-      (showsAccountAction ? 1 : 0) + (showsAiAction ? 1 : 0);
+      (showsAccountAction ? 1 : 0) + (showsNoticesAction ? 1 : 0);
+
+  static bool _neu(BuildContext context) =>
+      Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true;
+
+  /// La hoja del contenido: en Neu sube con esquinas redondeadas sobre la
+  /// banda de marca que continua la de la barra.
+  Widget _sheet(BuildContext context, Widget child) {
+    if (!_neu(context)) return child;
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(gradient: screenHeaderGradient(theme)),
+      // Material y no Container: los ListTile de dentro pintan su fondo y
+      // sus ondas sobre el Material mas cercano, y un color intermedio se
+      // los taparia.
+      child: Material(
+        color: theme.scaffoldBackgroundColor,
+        clipBehavior: Clip.antiAlias,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: child,
+      ),
+    );
+  }
 
   Widget _buildShell(BuildContext context) => PopScope(
     canPop: model.screen == 'Inicio',
@@ -658,6 +978,18 @@ class CoreShell extends StatelessWidget {
     },
     child: Scaffold(
       appBar: AppBar(
+        // En Neu la barra lleva la banda de marca y la hoja del contenido
+        // sube sobre ella; en Clasico se queda con el color del tema.
+        backgroundColor: _neu(context) ? Colors.transparent : null,
+        scrolledUnderElevation: _neu(context) ? 0 : null,
+        flexibleSpace: _neu(context)
+            ? DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: screenHeaderGradient(Theme.of(context)),
+                ),
+                child: const SizedBox.expand(),
+              )
+            : null,
         // El alto se calcula con la misma regla que usa ScreenTitle para
         // decidir si el nombre cabe en una linea o necesita dos. Si no, un
         // titulo de dos lineas se recorta contra una barra pensada para una.
@@ -727,11 +1059,59 @@ class CoreShell extends StatelessWidget {
               ),
               onPressed: () => openAccount(context),
             ),
-          if (showsAiAction)
-            IconButton(
-              tooltip: 'Asistente IA',
-              onPressed: () => model.navigate('Asistente IA'),
-              icon: BrandGradientIcon(Icons.auto_awesome),
+          // El asistente bajo a la barra inferior; este hueco es la campana.
+          // Despliega las notificaciones personales recientes (anuncios,
+          // mensajes, tareas asignadas y cambios a sus turnos) con un
+          // marcador de nuevas; «Anuncios y avisos» queda al pie del menu.
+          if (showsNoticesAction)
+            NotificationBellMenu(
+              key: ValueKey(
+                'bell:${auth!.active!.userId}:${auth!.active!.clinicId}',
+              ),
+              source: TeamInboxSource(
+                operations: operations,
+                duty: auth!.repository is TeamDutyRepository
+                    ? auth!.repository as TeamDutyRepository
+                    : null,
+              ),
+              seenStore: inboxSeenStore ?? const PrefsInboxSeenStore(),
+              clinicId: auth!.active!.clinicId,
+              userId: auth!.active!.userId,
+              refreshKey: model.screen,
+              onOpenAll: () => model.navigate('Anuncios y avisos'),
+              onOpenItem: (item) {
+                final route = item.route;
+                if (route != null) {
+                  model.navigate(route);
+                } else if (auth!.repository is TeamDutyRepository) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => TeamDutyScreen(
+                        model: auth!,
+                        clinic: auth!.active!,
+                      ),
+                    ),
+                  );
+                }
+              },
+              // Sobre la banda el degradado del icono se perderia: en Neu
+              // va dentro de una placa del color del lienzo, como los
+              // botones de cabecera de las referencias.
+              iconBuilder: (context, _) => _neu(context)
+                  ? Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: neuShadows(
+                          Theme.of(context).brightness == Brightness.dark,
+                          depth: .5,
+                        ),
+                      ),
+                      child: BrandGradientIcon(VetIcons.bell),
+                    )
+                  : BrandGradientIcon(VetIcons.bell),
             ),
         ],
       ),
@@ -739,11 +1119,28 @@ class CoreShell extends StatelessWidget {
         child: SafeArea(
           child: ListView(
             children: [
-              const ListTile(
-                title: Text('VetDosis Pro'),
-                subtitle: Text('Tu espacio veterinario'),
-              ),
-              const Divider(),
+              // En Neu el cajon abre con la misma banda de marca que la
+              // barra, con el logotipo dentro; en Clasico sigue el renglon.
+              if (_neu(context))
+                Container(
+                  margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: screenHeaderGradient(Theme.of(context)),
+                  ),
+                  child: const Align(
+                    alignment: Alignment.centerLeft,
+                    child: VetDosisBrand(),
+                  ),
+                )
+              else ...[
+                const ListTile(
+                  title: Text('VetDosis Pro'),
+                  subtitle: Text('Tu espacio veterinario'),
+                ),
+                const Divider(),
+              ],
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Text('Área de trabajo'),
@@ -762,7 +1159,7 @@ class CoreShell extends StatelessWidget {
                 ),
               const Divider(),
               ListTile(
-                leading: const Icon(Icons.business_outlined),
+                leading: const Icon(VetIcons.clinic),
                 title: const Text('Gestión clínica'),
                 onTap: () {
                   Navigator.pop(context);
@@ -819,12 +1216,14 @@ class CoreShell extends StatelessWidget {
                   highlightElevation: 0,
                   onPressed: () =>
                       model.navigate('Escanear etiqueta para dosis'),
-                  child: const Icon(Icons.document_scanner_outlined),
+                  child: const Icon(VetIcons.documentScan),
                 ),
               ),
             )
           : null,
-      body: SafeArea(
+      body: _sheet(
+        context,
+        SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1100),
@@ -1226,6 +1625,11 @@ class CoreShell extends StatelessWidget {
                       ? QuickScanScreen(
                           repository: inventory!,
                           member: auth!.active!,
+                          onOpenLabelScanner: allowed('Cálculo rápido')
+                              ? () => model.navigate(
+                                  'Escanear etiqueta para dosis',
+                                )
+                              : null,
                         )
                       : const Text(
                           'Conecta tu cuenta y verifica el acceso a inventario para escanear productos.',
@@ -1438,12 +1842,7 @@ class CoreShell extends StatelessWidget {
                     scope: '${auth?.active?.userId}:${auth?.active?.clinicId}',
                     onNavigate: (page) {
                       if (page == 'Mi cuenta' && auth != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => AuthScreen(model: auth),
-                          ),
-                        );
+                        openAccount(context);
                       } else {
                         model.navigate(page);
                       }
@@ -1456,6 +1855,14 @@ class CoreShell extends StatelessWidget {
                       ? SupportScreen(
                           repository: support!,
                           member: auth!.active!,
+                          helpPanel:
+                              ai is StarterAiRepository && ai != null
+                              ? StarterHelpPanel(
+                                  repository: ai as StarterAiRepository,
+                                  chats: ai!,
+                                  clinic: auth!.active!.clinicId,
+                                )
+                              : null,
                           onAi: ai == null
                               ? null
                               : (draft) async {
@@ -1490,6 +1897,7 @@ class CoreShell extends StatelessWidget {
             ),
           ),
         ),
+        ),
       ),
     ),
   );
@@ -1497,7 +1905,7 @@ class CoreShell extends StatelessWidget {
   List<Widget> home(BuildContext context) => [
     if (auth?.active?.role == ClinicRole.revisor)
       ListTile(
-        leading: const Icon(Icons.rate_review_outlined),
+        leading: const Icon(VetIcons.clipboardChecks),
         title: const Text('Modo revisión de catálogos'),
         subtitle: const Text(
           'Datos sin verificar; comenta los errores por fila.',
@@ -1631,19 +2039,18 @@ class CoreShell extends StatelessWidget {
     Text('Cuenta y espacio', style: Theme.of(context).textTheme.titleLarge),
     if (auth != null)
       ListTile(
-        leading: const Icon(Icons.account_circle_outlined),
+        leading: const Icon(VetIcons.userCircle),
         title: const Text('Mi cuenta y clínicas'),
-        subtitle: const Text('Espacio personal, clínica e invitaciones'),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => AuthScreen(model: auth)),
-        ),
+        subtitle: const Text('Mi espacio personal, clínicas e invitaciones'),
+        // Ya con sesion, la pantalla de cuenta (no la de alta, que ofrecia
+        // un segundo «Usar mi espacio personal»).
+        onTap: () => openAccount(context),
       ),
     if (operations is CommissionRepository &&
         auth?.active != null &&
         auth?.offline != true)
       ListTile(
-        leading: const Icon(Icons.payments_outlined),
+        leading: const Icon(VetIcons.coins),
         title: const Text('Mis comisiones'),
         subtitle: const Text('Saldo, próximo pago e historial'),
         onTap: () => Navigator.push(
@@ -1664,7 +2071,7 @@ class CoreShell extends StatelessWidget {
       ),
     if (auth?.active != null)
       ListTile(
-        leading: const Icon(Icons.tune_outlined),
+        leading: const Icon(VetIcons.sliders),
         title: const Text('Perfil, módulos y flujos de la clínica'),
         subtitle: Text(
           !experienceReady
@@ -1742,7 +2149,7 @@ class CoreShell extends StatelessWidget {
           leading: Icon(sectionIcon(option.$3)),
           title: Text(option.$1),
           subtitle: Text(option.$2),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(VetIcons.chevronRight),
           onTap: () {
             if (option.$1 == 'Proveedor de IA y privacidad') {
               if (ai == null || auth?.active == null || auth?.offline == true) {
@@ -1804,7 +2211,7 @@ class CoreShell extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: FilledButton.icon(
         onPressed: () => model.navigate('Inicio'),
-        icon: const Icon(Icons.home_outlined),
+        icon: const Icon(VetIcons.home),
         label: const Text('Volver al inicio'),
       ),
     ),
@@ -1835,18 +2242,9 @@ class SoftPanel extends StatelessWidget {
         border: Border.all(
           color: dark ? VetColors.darkBorder : const Color(0xFFE4EDF3),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: dark ? const Color(0x99000000) : const Color(0xFFD5E0E7),
-            offset: const Offset(7, 8),
-            blurRadius: 18,
-          ),
-          BoxShadow(
-            color: dark ? const Color(0x182DE6D1) : const Color(0xFFFFFFFF),
-            offset: const Offset(-6, -6),
-            blurRadius: 16,
-          ),
-        ],
+        // El par del sistema. Ver la nota de clinical_vitals_screen: estos
+        // eran los valores duros de antes del relieve suave.
+        boxShadow: neuShadows(dark, depth: 1.2),
       ),
       foregroundDecoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -1935,7 +2333,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
       children: [
         TextField(
           decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: Icon(VetIcons.search),
             labelText: 'Buscar apartados y herramientas',
           ),
           onChanged: (value) => setState(() => query = value),

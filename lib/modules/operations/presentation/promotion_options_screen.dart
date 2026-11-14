@@ -4,6 +4,7 @@ import '../../ai/domain/ai_repository.dart';
 import '../../ai/domain/assisted_drafts.dart';
 import '../../ai/presentation/request_ai_draft.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class PromotionOptionsScreen extends StatefulWidget {
   const PromotionOptionsScreen({
@@ -154,7 +155,7 @@ class _PromotionOptionsScreenState extends State<PromotionOptionsScreen> {
         ),
         FilledButton.icon(
           onPressed: suggest,
-          icon: const Icon(Icons.auto_awesome),
+          icon: const Icon(VetIcons.sparkles),
           label: const Text('Generar tres opciones'),
         ),
         if (error != null)

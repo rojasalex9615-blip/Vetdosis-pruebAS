@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetdosis_pro/modules/identity/domain/identity_repository.dart';
 import 'package:vetdosis_pro/modules/identity/presentation/identity_panel.dart';
+import 'package:vetdosis_pro/vet_ui/vet_icons.dart';
 
 class IdentityFake implements IdentityRepository {
   AccountIdentity value = const AccountIdentity(icon: 3);
@@ -45,7 +46,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.pets), findsOneWidget);
+      expect(find.byIcon(VetIcons.paw), findsOneWidget);
       expect(repository.writes, 0);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getInt('profile.icon.owner'), 1);
@@ -64,7 +65,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.science), findsOneWidget);
+      expect(find.byIcon(VetIcons.flask), findsOneWidget);
       expect(repository.writes, 0);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getInt('profile.icon.owner'), 3);

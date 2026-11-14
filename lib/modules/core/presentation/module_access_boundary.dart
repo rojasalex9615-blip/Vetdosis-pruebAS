@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../domain/module_access.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class ModuleAccessBoundary extends StatefulWidget {
   const ModuleAccessBoundary({
@@ -93,7 +94,7 @@ class _ModuleAccessBoundaryState extends State<ModuleAccessBoundary> {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline),
+                  const Icon(VetIcons.info),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
