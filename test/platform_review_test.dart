@@ -24,22 +24,6 @@ class LongChatFake extends AiFake {
   }
 }
 
-/// Solo sirve para devolver la respuesta del chat que la ayuda acaba de
-/// crear. La ayuda ya no lleva al usuario al Asistente: la enseña ella misma.
-class ChatsFake implements AiRepository {
-  String? leido;
-  @override
-  Future<List<Map<String, dynamic>>> messages(String chat) async {
-    leido = chat;
-    return [
-      {'role': 'user', 'body': 'Primeros pasos'},
-      {'role': 'assistant', 'body': 'Empieza por registrar tu clínica.'},
-    ];
-  }
-  @override
-  noSuchMethod(Invocation i) => super.noSuchMethod(i);
-}
-
 class StarterFake implements StarterAiRepository {
   int calls = 0;
   bool enabled = true;
@@ -60,6 +44,19 @@ class StarterFake implements StarterAiRepository {
     calls++;
     expect(starterTopics.containsKey(topic), isTrue);
     return 'new-private-chat';
+  }
+}
+
+/// Devuelve la respuesta que la ayuda incluida muestra en su propio panel.
+class StarterChatsFake extends AiFake {
+  String? read;
+  @override
+  Future<List<Map<String, dynamic>>> messages(String chat) async {
+    read = chat;
+    return [
+      {'role': 'user', 'body': 'tema enviado'},
+      {'role': 'assistant', 'body': 'Respuesta de la guía de uso'},
+    ];
   }
 }
 
@@ -174,10 +171,10 @@ void main() {
     },
   );
   testWidgets(
-    'Included help requires consent and has no arbitrary message field',
+    'Included help requires consent and shows its answer in place',
     (tester) async {
       final r = StarterFake();
-      final chats = ChatsFake();
+      final chats = StarterChatsFake();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -206,13 +203,10 @@ void main() {
       await tester.tap(find.text('Consultar ayuda incluida'));
       await tester.pumpAndSettle();
       expect(r.calls, 1);
-      // La respuesta se muestra en la propia ayuda. Antes esto comprobaba que
-      // se entregara un id de chat para que el Asistente lo abriera, que es
-      // justo lo que mezclaba el historial de dudas de uso con el de las
-      // conversaciones.
-      expect(chats.leido, 'new-private-chat');
-      expect(find.text('Empieza por registrar tu clínica.'), findsOneWidget);
-      expect(find.text('Respuesta de la guía'), findsOneWidget);
+      // La respuesta se ve en el propio panel y no se entrega ningún id de chat
+      // que abra el Asistente.
+      expect(chats.read, 'new-private-chat');
+      expect(find.text('Respuesta de la guía de uso'), findsOneWidget);
     },
   );
   testWidgets(
@@ -225,7 +219,7 @@ void main() {
             body: SingleChildScrollView(
               child: StarterHelpPanel(
                 repository: r,
-                chats: ChatsFake(),
+                chats: StarterChatsFake(),
                 clinic: 'c',
               ),
             ),

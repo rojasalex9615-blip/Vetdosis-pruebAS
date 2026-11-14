@@ -7,6 +7,7 @@ import '../domain/porcino_capacity.dart';
 import '../domain/porcino_reference.dart';
 import 'growth_panel.dart';
 import '../../../vet_ui/vet_icons.dart';
+import 'porcino_semen_panel.dart';
 
 /// Paneles del módulo Porcinos para cada actividad. Cálculos de sesión: no
 /// guardan registros de granja ni consultan Supabase.
@@ -20,6 +21,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
     'Reproducción y gestación' => [
       notice,
       const PorcinoFlowPanel(),
+      const _Gap(),
+      const PorcinoSemenPanel(),
       const _Gap(),
       const PorcinoInverseCapacityPanel(),
       const _Gap(),

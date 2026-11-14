@@ -4,6 +4,19 @@ Entrada única: [GitHub issue #31](https://github.com/rojasalex9615-blip/Vetdosi
 Se reutilizó el tablón existente, conservando su historial. La división anterior
 por tres frentes queda como historia, conforme a la indicación actual de Ale.
 
+## Espejo en GitLab (2026-11-13)
+
+El tablón de GitLab vive en
+[issue #1](https://gitlab.com/rojasalex9615/vetdosispro/-/work_items/1) del repo
+de código. Se abrió porque desde los contenedores de trabajo **no hay escritura
+en GitHub** (sin `GITHUB_TOKEN`), mientras que en GitLab sí hay acceso real. No
+sustituye al tablón de GitHub: es un espejo para no perder novedades. Si vuelve
+el acceso a GitHub, la novedad se replica allí. Ninguno de los dos tablones
+concede por sí solo autorización para fusionar, desplegar ni activar reglas
+regulatorias. El CI de GitLab es **manual** (`workflow.rules`: solo `web`/`api`);
+un push no lanza pipeline.
+
+
 El issue contiene tareas, autor/responsable, estado, rama, SHA/PR, bloqueos y
 siguiente acción. Leerlo junto con sus comentarios antes de trabajar; volver a
 leer antes de modificar contratos compartidos. Los participantes confirman su

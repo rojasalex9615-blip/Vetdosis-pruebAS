@@ -46,6 +46,7 @@ import '../modules/welcome/presentation/public_welcome_screen.dart';
 import '../modules/welcome/presentation/guided_start_screen.dart';
 import '../modules/ai/domain/ai_repository.dart';
 import '../modules/ai/presentation/ai_screen.dart';
+import '../modules/ai/presentation/starter_help_panel.dart';
 import '../modules/subscriptions/domain/subscription_repository.dart';
 import '../modules/subscriptions/presentation/subscription_screen.dart';
 import '../modules/operations/domain/operations_repository.dart';

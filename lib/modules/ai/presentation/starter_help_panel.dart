@@ -16,19 +16,19 @@ const starterTopics = <String, String>{
 /// La ayuda de la app, que por dentro usa IA.
 ///
 /// Vive en «Ayuda y soporte», no en el Asistente. Antes estaba apilada encima
-/// del chat en la misma pantalla y las dos se leian como una sola cosa: Ale
-/// lo noto en el APK. Son dos productos distintos. Esto responde dudas de USO
-/// DE LA APP a partir de la guia publica; el Asistente es una conversacion
-/// abierta con la clave del usuario.
+/// del chat en la misma pantalla y las dos se leían como una sola cosa: Ale lo
+/// notó en el APK. Son dos productos distintos. Esto responde dudas de USO DE LA
+/// APP a partir de la guía pública; el Asistente es una conversación abierta con
+/// la clave del usuario.
 ///
-/// La respuesta se muestra AQUI. Antes el panel entregaba un id de chat y la
-/// pantalla de IA lo abria, que es lo que mezclaba el historial de dudas de
-/// uso con el de las conversaciones.
+/// La respuesta se muestra AQUÍ. Antes el panel entregaba un id de chat y la
+/// pantalla de IA lo abría, que es lo que mezclaba el historial de dudas de uso
+/// con el de las conversaciones.
 ///
-/// Aviso de lo que esto NO arregla: `starterHelp` crea el chat en el
-/// servidor y devuelve su id, asi que el registro sigue existiendo aunque el
-/// usuario ya no acabe dentro del Asistente. Quitarlo de su historial, o
-/// borrarlo, es decision aparte y toca el backend.
+/// Aviso de lo que esto NO arregla: `starterHelp` crea el chat en el servidor y
+/// devuelve su id, así que el registro sigue existiendo aunque el usuario ya no
+/// acabe dentro del Asistente. Quitarlo de su historial, o borrarlo, es decisión
+/// aparte y toca el backend.
 class StarterHelpPanel extends StatefulWidget {
   const StarterHelpPanel({
     super.key,
@@ -38,7 +38,7 @@ class StarterHelpPanel extends StatefulWidget {
   });
   final StarterAiRepository repository;
 
-  /// Solo para leer la respuesta recien creada con [AiRepository.messages].
+  /// Solo para leer la respuesta recién creada con [AiRepository.messages].
   final AiRepository chats;
   final String clinic;
   @override
@@ -92,8 +92,9 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
       if (!mounted) return;
       operation = newOperationId();
       consent = false;
-      // Se lee la respuesta y se muestra aqui. El usuario pregunto por la app,
-      // no abrio una conversacion: no tiene por que acabar en otra pantalla.
+      // Se lee la respuesta y se muestra aquí. El usuario preguntó por la app,
+      // no abrió una conversación: no tiene por qué acabar en otra pantalla ni
+      // en el historial de chats del Asistente.
       final mensajes = await widget.chats.messages(id);
       if (!mounted) return;
       final ultima = mensajes.where((m) => m['role'] == 'assistant').toList();
@@ -179,9 +180,9 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
             const SizedBox(height: 8),
             SelectableText(respuesta!),
             const SizedBox(height: 8),
-            // El mismo limite que ya declara el Asistente, repetido aqui
-            // porque aqui ya no se pasa por el: quien lea esto puede no haber
-            // visto nunca esa pantalla.
+            // El mismo límite que ya declara el Asistente, repetido aquí porque
+            // aquí ya no se pasa por él: quien lea esto puede no haber visto
+            // nunca esa pantalla.
             Text(
               'Orientación sobre el uso de la app. No es asesoría clínica ni '
               'sustituye las fuentes verificadas ni el motor de cálculo.',

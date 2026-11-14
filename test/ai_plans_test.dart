@@ -88,6 +88,49 @@ class AiFake implements AiRepository {
   ) async {}
 }
 
+/// Two chats so the lateral history rail has something to switch between.
+class TwoChatFake extends AiFake {
+  String? opened;
+  @override
+  Future<Map<String, dynamic>> dashboard(String clinic) async {
+    final d = await super.dashboard(clinic);
+    d['chats'] = [
+      {
+        'id': 'chat-private',
+        'owner_id': 'user-a',
+        'title': 'Chat privado',
+        'visibility': 'private',
+        'context_mode': 'none',
+        'version': 1,
+        'audience': [],
+      },
+      {
+        'id': 'chat-shared',
+        'owner_id': 'user-b',
+        'title': 'Chat compartido',
+        'visibility': 'clinic',
+        'context_mode': 'none',
+        'version': 1,
+        'audience': [],
+      },
+    ];
+    return d;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> messages(String chat) async {
+    opened = chat;
+    return [
+      {
+        'role': 'assistant',
+        'body': chat == 'chat-shared'
+            ? 'Mensaje del chat compartido'
+            : 'Mensaje del chat privado',
+      },
+    ];
+  }
+}
+
 class PlanFake implements SubscriptionRepository {
   int requests = 0;
   @override
@@ -223,6 +266,10 @@ void main() {
   testWidgets(
     'Personal AI shows privacy controls but does not offer shared context',
     (tester) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -232,9 +279,6 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
-      final dropdown = find.byType(DropdownButtonFormField<String>).first;
-      await tester.tap(dropdown);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Mi chat · Solo yo').last);
       await tester.pumpAndSettle();
@@ -248,6 +292,65 @@ void main() {
         find.widgetWithText(FilledButton, 'Solicitar respuesta'),
       );
       expect(button.onPressed, isNull);
+    },
+  );
+
+  testWidgets(
+    'Wide layout shows the history as a lateral rail and switching chats loads its messages',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repository = TwoChatFake();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiScreen(repository: repository, member: personal),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Historial'), findsOneWidget);
+      expect(find.text('Chat privado'), findsOneWidget);
+      expect(find.text('Chat compartido'), findsOneWidget);
+      // The narrow-mode chip row is not used when the rail is visible.
+      expect(find.byType(ChoiceChip), findsNothing);
+      await tester.tap(find.text('Chat compartido'));
+      await tester.pumpAndSettle();
+      expect(repository.opened, 'chat-shared');
+      expect(find.text('Mensaje del chat compartido'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'A support/draft query does not share the app chat history',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiScreen(
+                repository: TwoChatFake(),
+                member: personal,
+                initialDraft: 'Ayúdame con un problema de uso de VetDosis Pro.',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Historial'), findsNothing);
+      expect(find.text('Nuevo chat'), findsNothing);
+      expect(find.byType(ChoiceChip), findsNothing);
+      expect(find.text('Chat privado'), findsNothing);
+      expect(find.text('Chat compartido'), findsNothing);
     },
   );
 }
