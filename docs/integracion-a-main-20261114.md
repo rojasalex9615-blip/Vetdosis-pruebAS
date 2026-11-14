@@ -88,3 +88,44 @@ exagerarla en ningún sentido.
 
 Nota de método: mi búsqueda previa no lo halló porque busqué el texto literal
 «no dejar integrar a Ale», que el comentario no contiene. Queda corregido aquí.
+
+## 4. Integración de las ramas — conflicto semántico de tema (2026-11-14)
+
+Al fusionar todas las ramas en una sola (`integracion/rc-20261114`, base
+`2beae7b`, sin tocar `main`) apareció un conflicto que Git **no** marcó como tal,
+porque los bloques no se solapaban textualmente. Es el tipo de fallo que solo
+sale al ejecutar las pruebas.
+
+- La rama `tema/morado-primario-20261108` (11-nov 01:16) añade la prueba
+  `Dark purple primary text maintains WCAG AA contrast`, que fija el primario por
+  defecto a `#B69BFF`. Esa prueba se escribió contra el diseño de `main`, que
+  **forzaba `primary` a mano** (`dark ? #B69BFF : VetColors.purple`).
+- El commit `bca56d8` —«Ajustes: el tono por omisión vuelve al verdeazulado»
+  (11-nov 07:27, autor Alex, «Ale lo pidió así viendo el morado ya aplicado»)—
+  es **posterior** y está en la columna vertebral (13-nov). Ahí se **elimina** el
+  forzado de `primary` y el esquema pasa a `ColorScheme.fromSeed`, con la paleta
+  «Turquesa» en el índice 0. El comentario del propio `theme()` lo dice literal:
+  «ya no hace falta escoger a mano el #B69BFF de oscuro ni el #2A1055».
+- La prueba `Dark purple…` **no existe** en `main`, ni en `apk/beta-20261108`, ni
+  en la columna vertebral: solo en `tema/morado`. Afirma un comportamiento que el
+  trabajo posterior eliminó.
+
+Resolución: se conserva el código posterior (semilla → `ColorScheme.fromSeed`) y
+la prueba pasa a comprobar lo que sigue siendo cierto —el tema oscuro por defecto
+mantiene 4.5:1 entre `primary` y `onPrimary`— sin fijar un color concreto. El
+contraste de las cinco paletas en los dos brillos ya lo cubre `platform_review_test`.
+
+Además se corrigió un **import duplicado** en `lib/core/app.dart`
+(`starter_help_panel.dart`, líneas 49 y 97) que la fusión introdujo y que
+`flutter analyze` marcaba como warning.
+
+Segundo fallo real del merge: `pubspec.lock` quedó con bloques duplicados
+(archivo generado). Se restauró a la versión de `apk/beta-20261108`, que es la
+que usa el CI (Flutter 3.47.6).
+
+Verificación (Flutter 3.47.6, la del CI; el local 3.50.0 rompe el paquete
+`image` y produce 68 fallos de compilación ajenos al código):
+
+- `flutter analyze`: **No issues found**.
+- `flutter test`: **882 pruebas pasan, 1 omitida, 0 fallos**.
+

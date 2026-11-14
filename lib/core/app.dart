@@ -94,7 +94,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../modules/core/presentation/core_view_model.dart';
 import '../modules/auth/presentation/auth_view_model.dart';
 import '../modules/auth/presentation/auth_screen.dart';
-import '../modules/ai/presentation/starter_help_panel.dart';
 import '../vet_ui/vet_icons.dart';
 
 /// Linea de un control de seleccion en estilo neumorfico.

@@ -35,15 +35,18 @@ Future<void> host(WidgetTester tester, Widget child) async {
 }
 
 void main() {
-  test('Dark purple primary text maintains WCAG AA contrast', () {
+  // El tema oscuro por omision (palette 0) mantiene legible su tinta sobre el
+  // primario. No se fija el color: el primario sale de la semilla elegida en
+  // Ajustes (ColorScheme.fromSeed), asi que el tono por omision es una
+  // decision de producto y no un contrato de esta prueba. El contraste de las
+  // cinco paletas en los dos brillos lo cubre platform_review_test.
+  test('Default dark theme keeps primary text at WCAG AA contrast', () {
     final core = CoreViewModel(
       SettingsRepository(),
       const AppSettings(visualStyle: 'neu'),
     );
     addTearDown(core.dispose);
     final scheme = VetDosisApp(model: core).theme(Brightness.dark).colorScheme;
-    expect(scheme.primary, const Color(0xFFB69BFF));
-    expect(scheme.onPrimary, const Color(0xFF2A1055));
     expect(
       contrastRatio(scheme.primary, scheme.onPrimary),
       greaterThanOrEqualTo(4.5),
