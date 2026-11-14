@@ -1,6 +1,6 @@
 # Traduccion de .github/workflows/build-debug-apk.yml a GitLab CI.
 #
-# GitHub Actions no corre en GitLab: los 52 workflows de .github/ viajaron con
+# GitHub Actions no corre en GitLab: los 51 workflows de .github/ viajaron con
 # el repositorio pero estan inertes. Este es el primero traducido, y es el que
 # no necesita ningun secreto de firma: solo la clave publicable del proyecto de
 # pruebas. Es el camino mas corto a un APK instalable en el telefono.
@@ -26,9 +26,10 @@
 #    al servidor antes de compilar, para no entregar un APK que no puede
 #    autenticar.
 #
-# NO EJECUTADO. No hay runner de GitLab ni Docker en el entorno donde se
-# escribio, asi que la primera ejecucion real es la primera prueba de verdad.
-# Lo comprobado sin runner queda anotado en el commit.
+# Runner de GitLab validado el 10-nov-2026 con pipelines manuales. Este job
+# analiza y prueba Flutter y compila un APK debug beta; no firma un release.
+# La compilacion siempre pasa GOOGLE_DRIVE_WEB_CLIENT_ID como dart-define;
+# si la variable CI no existe, su valor se pasa como cadena vacia.
 
 stages:
   - build
@@ -103,6 +104,7 @@ apk-depuracion:
       flutter build apk --debug --flavor beta
       --target-platform android-arm64
       --dart-define=APP_CHANNEL=beta
+      --dart-define=GOOGLE_DRIVE_WEB_CLIENT_ID="${GOOGLE_DRIVE_WEB_CLIENT_ID:-}"
       --dart-define-from-file=supabase/config.test.local.json
   after_script:
     # El archivo lleva la clave: no debe sobrevivir al trabajo ni viajar en el
