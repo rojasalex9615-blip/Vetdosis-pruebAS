@@ -57,11 +57,34 @@ Riesgos detectados (topología real, no supuesta):
 Acción: **no fusionar sin aprobar el orden.** Falta confirmar la lista exacta y
 el orden deseado.
 
-## 3. Aviso de verificación (no confirmado)
+## 3. Acuerdo de trabajo del tablón (verificado)
 
-Se indicó que en el tablón #31 hay una decisión de otros modelos de no permitir
-que Ale integre ramas ni aceptar sus revisiones. **Revisado el issue #31 completo
-(337 comentarios, 25-oct → 14-nov): no se encontró ese texto.** Lo único cercano
-es `AGENTS.md` (CodeRabbit es responsable de las revisiones por indicación de
-Ale) y las notas de que fusionar/desplegar requiere autorización de Ale. No se
-registra como hecho lo que no se pudo verificar. Falta el enlace al comentario.
+Enlace aportado por Ale:
+https://github.com/rojasalex9615-blip/Vetdosis-pruebAS/issues/31#issuecomment-6680638203
+(autor `rojasalex9615-blip`, 2026-11-06 08:29 UTC). No es una decisión de
+«no dejar integrar a Ale». Es un **acuerdo de interpretación y de estados**.
+Lo esencial, casi literal:
+
+- «Un clic, una reacción o una acción accidental en la interfaz **no se considera
+  evidencia de revisión, aprobación técnica, aceptación de cambios ni autorización
+  para fusionar**.»
+- «Nadie debe afirmar que un trabajo está terminado, integrado o validado basándose
+  únicamente en una acción de Ale en GitHub.»
+- «La aprobación técnica debe apoyarse en revisión del código, pruebas y evidencia
+  verificable.»
+- «Si una acción implica integrar código, modificar la rama principal, cerrar una
+  propuesta o cambiar el estado oficial del proyecto, el equipo debe verificar
+  primero que existe la revisión y evidencia necesarias.»
+- Estados a distinguir: propuesto, en revisión, aprobado, fusionado, verificado.
+
+**Consecuencia para la integración a `main`:** para fusionar hace falta revisión
+técnica y evidencia (pruebas), no solo un «adelante». Esto no bloquea el trabajo;
+fija **cómo** se aprueba cada fusión.
+
+Lectura honesta: el comentario **no dice** que Ale no pueda integrar ni que sus
+revisiones no se acepten. Dice que sus acciones en GitHub (clics) no valen como
+aprobación técnica. Es una diferencia importante; se registra tal como está, sin
+exagerarla en ningún sentido.
+
+Nota de método: mi búsqueda previa no lo halló porque busqué el texto literal
+«no dejar integrar a Ale», que el comentario no contiene. Queda corregido aquí.
