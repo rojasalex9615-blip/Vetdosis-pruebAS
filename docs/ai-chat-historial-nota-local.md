@@ -31,8 +31,13 @@ Publicación: rama `integracion/rc-20261114` (no `main`), commits `6940377`
 (IA) y `2354c4d` (porcino reubicado), subidos a GitLab. Nota en el issue #1
 de GitLab (id 4235789345).
 
-Límites: no probado en teléfono físico ni desplegado. `GITHUB_TOKEN` ausente:
-el tablón de GitHub #31 sigue sin actualizar.
+Límites: no probado en teléfono físico ni desplegado.
+
+Actualización 2026-11-14 (tercera sesión): **sí hay acceso de escritura a
+GitHub** en esta sesión (el token autentica como `rojasalex9615-blip` con
+`admin`/`push` en `rojasalex9615-blip/Vetdosis-pruebAS`). Queda corregido el
+límite anterior: la novedad se publicó en el tablón de GitHub #31
+(comentario id 6882067738) y ya no está solo en el espejo de GitLab.
 
 ---
 
