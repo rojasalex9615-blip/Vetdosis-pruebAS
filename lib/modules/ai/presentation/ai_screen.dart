@@ -1,6 +1,7 @@
 import '../../../core/widgets/accent_glow.dart';
 import 'ai_labels.dart';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -85,6 +86,7 @@ class _AiScreenState extends State<AiScreen> {
         widget.member.clinicId,
         widget.draftTitle,
         newOperationId(),
+        kind: AiChatKind.support,
       );
       await vm.load(chat: id);
     });
@@ -119,9 +121,50 @@ class _AiScreenState extends State<AiScreen> {
     }
   }
 
-  Map<String, dynamic>? get current =>
-      vm.rows('chats').where((c) => c['id'] == vm.selected).firstOrNull;
+  Map<String, dynamic>? get current => vm.chatById(vm.selected);
   bool get own => current?['owner_id'] == widget.member.userId;
+
+  void selectChat(String id) {
+    composer.clear();
+    consent = false;
+    operation = newOperationId();
+    vm.load(chat: id);
+  }
+
+  /// Historial lateral deslizante para pantallas angostas. Es el mismo contrato
+  /// del riel ancho, abierto como panel para no robar ancho al chat.
+  Future<void> openHistoryPanel() async {
+    final id = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      constraints: BoxConstraints(
+        maxWidth: math.min(MediaQuery.sizeOf(context).width, 420),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          child: SingleChildScrollView(
+            child: _AiHistoryRail(
+              chats: vm.history,
+              selected: vm.selected,
+              working: working,
+              onSelect: (id) => Navigator.pop(context, id),
+              onNew: () => Navigator.pop(context, '__new__'),
+              onRefresh: vm.load,
+            ),
+          ),
+        ),
+      ),
+    );
+    if (!mounted || id == null) return;
+    if (id == '__new__') {
+      await newChat();
+    } else {
+      selectChat(id);
+    }
+  }
+
   Future<void> newChat() async {
     final text = TextEditingController();
     try {
@@ -508,34 +551,16 @@ class _AiScreenState extends State<AiScreen> {
             ),
           ],
         ),
-        if (!wide && !draftMode && vm.rows('chats').isNotEmpty) ...[
-          Text(
-            'Historial · propio y chats compartidos autorizados',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final c in vm.rows('chats'))
-                ChoiceChip(
-                  selected: c['id'] == vm.selected,
-                  onSelected: working || c['id'] == vm.selected
-                      ? null
-                      : (_) {
-                          composer.clear();
-                          consent = false;
-                          operation = newOperationId();
-                          vm.load(chat: c['id'] as String);
-                        },
-                  label: Text(
-                    '${c['title']} · ${aiVisibilityLabel(c['visibility'])}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
+        // En pantalla angosta el historial no cabe al costado; se abre en un
+        // panel lateral deslizante desde el mismo contrato del riel ancho.
+        if (!wide && !draftMode && vm.history.isNotEmpty) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: working ? null : openHistoryPanel,
+              icon: const Icon(Icons.history, size: 18),
+              label: const Text('Historial'),
+            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -742,15 +767,10 @@ class _AiScreenState extends State<AiScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(right: 12),
               child: _AiHistoryRail(
-                chats: vm.rows('chats'),
+                chats: vm.history,
                 selected: vm.selected,
                 working: working,
-                onSelect: (id) {
-                  composer.clear();
-                  consent = false;
-                  operation = newOperationId();
-                  vm.load(chat: id);
-                },
+                onSelect: selectChat,
                 onNew: newChat,
                 onRefresh: vm.load,
               ),

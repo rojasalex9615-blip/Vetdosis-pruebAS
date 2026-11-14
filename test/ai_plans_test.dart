@@ -49,8 +49,12 @@ class AiFake implements AiRepository {
     {'role': 'user', 'body': 'Privado'},
   ];
   @override
-  Future<String> create(String clinic, String title, String operation) async =>
-      'chat';
+  Future<String> create(
+    String clinic,
+    String title,
+    String operation, {
+    String kind = AiChatKind.assistant,
+  }) async => 'chat';
   @override
   Future<void> policy(
     String chat,
@@ -127,6 +131,73 @@ class TwoChatFake extends AiFake {
             ? 'Mensaje del chat compartido'
             : 'Mensaje del chat privado',
       },
+    ];
+  }
+}
+
+/// Records the kind used when the screen creates a chat.
+class RecordingCreateFake extends AiFake {
+  String? lastKind;
+  @override
+  Future<String> create(
+    String clinic,
+    String title,
+    String operation, {
+    String kind = AiChatKind.assistant,
+  }) async {
+    lastKind = kind;
+    return 'created';
+  }
+}
+
+/// Every chat arrives in `chats` with its kind, as `ai_dashboard` returns it
+/// after the split: one assistant chat, plus an included-help chat and a
+/// support draft that must stay out of the assistant history.
+class MixedChatsFake extends AiFake {
+  String? opened;
+  @override
+  Future<Map<String, dynamic>> dashboard(String clinic) async {
+    final d = await super.dashboard(clinic);
+    d['chats'] = [
+      {
+        'id': 'chat-real',
+        'owner_id': 'user-a',
+        'title': 'Chat del asistente',
+        'visibility': 'private',
+        'context_mode': 'none',
+        'version': 1,
+        'audience': [],
+        'kind': 'assistant',
+      },
+      {
+        'id': 'chat-help',
+        'owner_id': 'user-a',
+        'title': 'Ayuda incluida · Primeros pasos',
+        'visibility': 'private',
+        'context_mode': 'none',
+        'version': 1,
+        'audience': [],
+        'kind': 'help',
+      },
+      {
+        'id': 'chat-support',
+        'owner_id': 'user-a',
+        'title': 'Ayuda de soporte',
+        'visibility': 'private',
+        'context_mode': 'none',
+        'version': 1,
+        'audience': [],
+        'kind': 'support',
+      },
+    ];
+    return d;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> messages(String chat) async {
+    opened = chat;
+    return [
+      {'role': 'user', 'body': 'Mensaje de $chat'},
     ];
   }
 }
@@ -280,7 +351,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Mi chat · Solo yo').last);
+      // El historial vive en el panel lateral deslizante en pantalla angosta.
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Historial'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mi chat'));
       await tester.pumpAndSettle();
       expect(find.text('Privado'), findsOneWidget);
       expect(
@@ -353,4 +427,97 @@ void main() {
       expect(find.text('Chat compartido'), findsNothing);
     },
   );
+
+  testWidgets(
+    'Assistant history leaves out the included help and support drafts',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repository = MixedChatsFake();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiScreen(repository: repository, member: personal),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Chat del asistente'), findsOneWidget);
+      expect(find.text('Ayuda incluida · Primeros pasos'), findsNothing);
+      expect(find.text('Ayuda de soporte'), findsNothing);
+      // The rail lists assistant chats only.
+      expect(find.byType(ListTile), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'A support draft is created with its own kind and stays out of the history',
+    (tester) async {
+      final repository = RecordingCreateFake();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiScreen(
+                repository: repository,
+                member: personal,
+                initialDraft: 'Ayúdame con un problema de uso de VetDosis Pro.',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.lastKind, AiChatKind.support);
+      expect(find.text('Historial'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'On a phone the history opens as a sliding side panel',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repository = TwoChatFake();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiScreen(repository: repository, member: personal),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Narrow mode does not show the rail inline; the chips are gone too.
+      expect(find.byType(ChoiceChip), findsNothing);
+      expect(find.byType(ListTile), findsNothing);
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Historial'));
+      await tester.pumpAndSettle();
+      // The panel lists the assistant history.
+      expect(find.byType(ListTile), findsNWidgets(2));
+      await tester.tap(find.text('Chat compartido'));
+      await tester.pumpAndSettle();
+      expect(repository.opened, 'chat-shared');
+      expect(find.text('Mensaje del chat compartido'), findsOneWidget);
+    },
+  );
+
+  test('Opening a direct chat resolves it without adding it to the history', () async {
+    final vm = AiViewModel(MixedChatsFake(), 'personal');
+    await vm.load(chat: 'chat-support');
+    expect(vm.selected, 'chat-support');
+    expect(vm.chatById('chat-support')?['title'], 'Ayuda de soporte');
+    expect(vm.history.map((c) => c['id']), isNot(contains('chat-support')));
+    expect(vm.history.map((c) => c['id']), isNot(contains('chat-help')));
+    expect(vm.history.map((c) => c['id']), contains('chat-real'));
+    vm.dispose();
+  });
 }

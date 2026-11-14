@@ -10,9 +10,33 @@ class AiViewModel extends ChangeNotifier {
   String? selected, error;
   bool busy = false, _disposed = false;
   int _generation = 0;
-  List<Map<String, dynamic>> rows(String key) => (data[key] as List? ?? [])
+  static List<Map<String, dynamic>> _rowsFrom(
+    Map<String, dynamic> source,
+    String key,
+  ) => (source[key] as List? ?? [])
       .map((e) => Map<String, dynamic>.from(e as Map))
       .toList();
+  List<Map<String, dynamic>> rows(String key) => _rowsFrom(data, key);
+
+  /// Todos los chats visibles, de cualquier tipo. El servidor devuelve el
+  /// historial completo en `chats`; [history] lo reduce al asistente.
+  List<Map<String, dynamic>> get allChats => rows('chats');
+
+  /// Historial del asistente: solo los chats de tipo asistente. Los de ayuda
+  /// incluida y de soporte comparten tabla, pero son otro producto y no deben
+  /// leerse como conversaciones del asistente.
+  List<Map<String, dynamic>> get history => allChats
+      .where(
+        (c) => (c['kind'] ?? AiChatKind.assistant) == AiChatKind.assistant,
+      )
+      .toList();
+
+  /// El chat abierto puede ser del historial o uno directo (borrador de
+  /// soporte o ayuda). Se resuelve por id sin meterlo en el historial.
+  Map<String, dynamic>? chatById(String? id) => id == null
+      ? null
+      : allChats.where((c) => c['id'] == id).firstOrNull;
+
   Future<void> load({String? chat}) async {
     final generation = ++_generation;
     busy = true;
@@ -20,9 +44,8 @@ class AiViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       final r = await repository.dashboard(clinic);
-      final chats = (r['chats'] as List? ?? []);
       final id = chat ?? selected;
-      final allowed = chats.any((c) => c['id'] == id);
+      final allowed = _rowsFrom(r, 'chats').any((c) => c['id'] == id);
       final m = allowed
           ? await repository.messages(id!)
           : <Map<String, dynamic>>[];

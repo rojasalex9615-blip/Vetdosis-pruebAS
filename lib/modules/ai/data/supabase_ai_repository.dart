@@ -49,13 +49,19 @@ class SupabaseAiRepository implements AiRepository, StarterAiRepository {
         await client.rpc('ai_dashboard', params: {'p_clinic': clinic}) as Map,
       );
   @override
-  Future<String> create(String clinic, String title, String operation) async =>
+  Future<String> create(
+    String clinic,
+    String title,
+    String operation, {
+    String kind = AiChatKind.assistant,
+  }) async =>
       await client.rpc(
             'ai_chat_create',
             params: {
               'p_clinic': clinic,
               'p_title': title,
               'p_operation': operation,
+              'p_kind': kind,
             },
           )
           as String;

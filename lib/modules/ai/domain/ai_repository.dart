@@ -1,6 +1,20 @@
+/// Chat kinds kept in `ai_chats.kind`. Only [assistant] chats belong to the
+/// assistant history; [help] and [support] are separate products that must not
+/// read as assistant conversations.
+abstract final class AiChatKind {
+  static const assistant = 'assistant';
+  static const help = 'help';
+  static const support = 'support';
+}
+
 abstract interface class AiRepository {
   Future<Map<String, dynamic>> dashboard(String clinic);
-  Future<String> create(String clinic, String title, String operation);
+  Future<String> create(
+    String clinic,
+    String title,
+    String operation, {
+    String kind = AiChatKind.assistant,
+  });
   Future<List<Map<String, dynamic>>> messages(String chat);
   Future<void> policy(
     String chat,
