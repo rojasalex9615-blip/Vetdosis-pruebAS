@@ -13,7 +13,8 @@ en GitHub** (sin `GITHUB_TOKEN`), mientras que en GitLab sí hay acceso real. No
 sustituye al tablón de GitHub: es un espejo para no perder novedades. Si vuelve
 el acceso a GitHub, la novedad se replica allí. Ninguno de los dos tablones
 concede por sí solo autorización para fusionar, desplegar ni activar reglas
-regulatorias.
+regulatorias. El CI de GitLab es **manual** (`workflow.rules`: solo `web`/`api`);
+un push no lanza pipeline.
 
 
 El issue contiene tareas, autor/responsable, estado, rama, SHA/PR, bloqueos y

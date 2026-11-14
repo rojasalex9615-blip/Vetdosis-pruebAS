@@ -114,10 +114,12 @@ historial lateral) y se añade el arreglo de la aserción. Commit de esta sesió
 
 ## Publicación
 
-Publicado el 2026-11-13 en el tablón de GitLab,
-[issue #1](https://gitlab.com/rojasalex9615/vetdosispro/-/work_items/1), con:
-autor/sesión, estado (las dos partes como ENTREGADAS PARA REVISIÓN, no
-fusionadas ni probadas en teléfono), rama y SHA (`apk/beta-20261108`, HEAD
-`3b8ab21`), archivos afectados, verificación (analyze + 816 pruebas, 1 saltada)
-y la siguiente acción. Falta replicar la novedad en el GitHub issue #31 cuando
-haya acceso de escritura.
+Publicado el 2026-11-13: código subido a `apk/beta-20261108` y MR abierto,
+[!13](https://gitlab.com/rojasalex9615/vetdosispro/-/merge_requests/13)
+(`apk/beta-20261108` → `main`, HEAD `a549d7b`). El tablón de GitLab,
+[issue #1](https://gitlab.com/rojasalex9615/vetdosispro/-/work_items/1), tiene la
+novedad con: autor/sesión, estado (las dos partes como ENTREGADAS PARA REVISIÓN,
+no fusionadas ni probadas en teléfono), rama y SHA, archivos afectados,
+verificación (analyze + 816 pruebas, 1 saltada) y la siguiente acción. El CI del
+repo es manual, así que el push no lanzó pipeline. Falta replicar la novedad en
+el GitHub issue #31 cuando haya acceso de escritura.
