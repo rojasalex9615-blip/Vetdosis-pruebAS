@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetdosis_pro/core/app.dart';
+import 'package:vetdosis_pro/core/widgets/contrast.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/auth/presentation/auth_view_model.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
@@ -34,6 +35,21 @@ Future<void> host(WidgetTester tester, Widget child) async {
 }
 
 void main() {
+  test('Dark purple primary text maintains WCAG AA contrast', () {
+    final core = CoreViewModel(
+      SettingsRepository(),
+      const AppSettings(visualStyle: 'neu'),
+    );
+    addTearDown(core.dispose);
+    final scheme = VetDosisApp(model: core).theme(Brightness.dark).colorScheme;
+    expect(scheme.primary, const Color(0xFFB69BFF));
+    expect(scheme.onPrimary, const Color(0xFF2A1055));
+    expect(
+      contrastRatio(scheme.primary, scheme.onPrimary),
+      greaterThanOrEqualTo(4.5),
+    );
+  });
+
   testWidgets('Drawer uses the shared palette and omits bottom shortcuts', (
     tester,
   ) async {
