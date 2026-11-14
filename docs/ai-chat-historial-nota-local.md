@@ -1,9 +1,13 @@
 # Chat de IA: historial lateral y separación de la IA de soporte
 
-Nota local. GitHub no está disponible en esta sesión (sin `GITHUB_TOKEN` ni
-sesión de `gh`), así que esto **no** se publicó en el tablero
-[issue #31](https://github.com/rojasalex9615-blip/Vetdosis-pruebAS/issues/31).
-Queda pendiente publicarlo cuando haya acceso. No se notificó a nadie.
+Estado: **publicado en GitLab** (2026-11-13). El tablero
+[GitHub issue #31](https://github.com/rojasalex9615-blip/Vetdosis-pruebAS/issues/31)
+sigue **sin** actualizarse: desde esta sesión no hay escritura en GitHub (sin
+`GITHUB_TOKEN`; el token disponible solo sirve para GitLab). La novedad se
+registró en el tablón de GitLab,
+[issue #1](https://gitlab.com/rojasalex9615/vetdosispro/-/work_items/1), y el
+código se subió a `apk/beta-20261108`. Falta replicar en GitHub cuando haya
+acceso. No se notificó a nadie por GitHub.
 
 ## Contexto
 
@@ -105,12 +109,15 @@ Nota de integración: la separación soporte ↔ app ya existía como commit
 `6531d1f` ("IA: separar la ayuda de la app del chat…") en la rama
 `integracion/apk-completo-20261111`, pero **no** estaba en `apk/beta-20261108`.
 En esta rama se porta ese enfoque sobre el árbol actual (que ya traía el
-historial lateral) y se añade el arreglo de la aserción. Commit local de esta
-sesión: el último commit local de la rama `apk/beta-20261108` (ver `git log -1`), sin publicar.
+historial lateral) y se añade el arreglo de la aserción. Commit de esta sesión:
+`1a4a1a1`, ya subido a `origin/apk/beta-20261108`.
 
-## Cómo publicar cuando haya acceso
+## Publicación
 
-Añadir en el issue #31 una novedad con: autor/sesión, estado (las dos partes como
-ENTREGADAS PARA REVISIÓN, no fusionadas ni probadas en teléfono), rama y SHA
-(`apk/beta-20261108`, último commit local), archivos afectados, verificación
-(analyze + 816 pruebas, 1 saltada) y la siguiente acción.
+Publicado el 2026-11-13 en el tablón de GitLab,
+[issue #1](https://gitlab.com/rojasalex9615/vetdosispro/-/work_items/1), con:
+autor/sesión, estado (las dos partes como ENTREGADAS PARA REVISIÓN, no
+fusionadas ni probadas en teléfono), rama y SHA (`apk/beta-20261108`, HEAD
+`3b8ab21`), archivos afectados, verificación (analyze + 816 pruebas, 1 saltada)
+y la siguiente acción. Falta replicar la novedad en el GitHub issue #31 cuando
+haya acceso de escritura.
