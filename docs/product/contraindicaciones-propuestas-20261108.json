@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "nota": "PROPUESTA. Todas las entradas están 'sin verificar' hasta que un MVZ las revise y las pase por el modo revisión de catálogos. Cada bloque va dentro de 'contraindicaciones' del fármaco que corresponda en el catálogo; el formato de cada elemento es el de docs/m3-dosis.md.",
+  "por_principio_activo": {
+    "ivermectina": [
+      {
+        "tipo": "raza",
+        "valor": ["Collie", "Pastor Australiano", "Border Collie", "Perro ganadero australiano", "Chinook", "Pastor inglés"],
+        "nota": "Mutación del gen MDR1 (ABCB1) con sensibilidad a la ivermectina y otros fármacos; puede causar signos neurológicos. Hay una prueba genética. Lista parcial: la prevalencia varía por raza y por línea; no equivale a descartar otras razas pastoras ni mestizos.",
+        "estado": "sin verificar",
+        "fuente": "Mealey KL. Therapeutic implications of the MDR1 gene. J Vet Pharmacol Ther 2004;27:257-264. Lista de razas: Embark, MDR1 Drug Sensitivity (embarkvet.com) y DogWellNet, fenotipo MDR1."
+      },
+      {
+        "tipo": "especie",
+        "valor": ["Tortugas y tortugas terrestres (quelonios)"],
+        "nota": "Contraindicada en quelonios, incluso en dosis bajas: se han descrito parálisis flácida y muertes. Otros reptiles (lagartos, serpientes) la reciben con cautela y dosis cuidadosa; los escincos y los cocodrilos tienen reportes de toxicidad.",
+        "estado": "sin verificar",
+        "fuente": "Teare JA, Bush M. Toxicity and efficacy of ivermectin in chelonians. J Am Vet Med Assoc 1983;183(11):1195-1197. Resumen divulgativo: Reptiles Magazine, 'Nematode parasites treatment: ivermectin'."
+      }
+    ],
+    "permetrina": [
+      {
+        "tipo": "especie",
+        "valor": ["Gato"],
+        "nota": "Los productos con permetrina de uso en perro (spot-on y baños concentrados) pueden causar temblores y convulsiones en gatos, incluso por contacto con un perro recién tratado.",
+        "estado": "sin verificar",
+        "fuente": "Merola V, Dunayer E. The 10 most common toxicoses in cats. Vet Med 2006;101(6):339-342. ANSES (Francia), 'Use the right antiparasitic product for your pet'."
+      }
+    ],
+    "fipronil": [
+      {
+        "tipo": "especie",
+        "valor": ["Conejo"],
+        "nota": "Los antiparasitarios con fipronil autorizados para perro o gato son tóxicos en conejos: anorexia, letargo, signos digestivos y neurológicos, a veces la muerte.",
+        "estado": "sin verificar",
+        "fuente": "ANSES (Francia), 'Antiparasitics containing fipronil are toxic to rabbits', 20 jun 2023."
+      }
+    ]
+  }
+}

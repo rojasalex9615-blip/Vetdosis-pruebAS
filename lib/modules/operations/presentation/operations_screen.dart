@@ -400,6 +400,7 @@ class _OperationsScreenState extends State<OperationsScreen>
             'hospital_visita': 'Visita de hospitalizado',
             'vacunacion': 'Vacunación / desparasitación',
             'entrega': 'Entrega / alta',
+            'visita_campo': 'Visita a campo o granja',
             'otro': 'Otro servicio',
           },
           required: true,

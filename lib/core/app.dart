@@ -40,6 +40,8 @@ import '../modules/inventory/presentation/quick_scan_screen.dart';
 import '../modules/support/domain/support_repository.dart';
 import '../modules/support/presentation/support_screen.dart';
 import '../modules/welcome/presentation/product_screen.dart';
+import '../modules/laboratory/domain/lab_repository.dart';
+import '../modules/laboratory/presentation/lab_screen.dart';
 import '../modules/welcome/presentation/public_welcome_screen.dart';
 import '../modules/welcome/presentation/guided_start_screen.dart';
 import '../modules/ai/domain/ai_repository.dart';
@@ -257,6 +259,7 @@ class VetDosisApp extends StatelessWidget {
     this.experienceRepository,
     this.reviewCatalog,
     this.inboxSeenStore,
+    this.laboratory,
   });
   final CoreViewModel model;
   final AuthViewModel? auth;
@@ -288,6 +291,9 @@ class VetDosisApp extends StatelessWidget {
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
   final InboxSeenStore? inboxSeenStore;
+  /// Nulo cuando no hay sesion de Supabase: sin el, el expediente no
+  /// ofrece las analiticas en vez de ofrecerlas y fallar al abrirlas.
+  final LabRepository? laboratory;
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
@@ -611,6 +617,7 @@ class VetDosisApp extends StatelessWidget {
               forms: forms,
               identity: identity,
               clinical: clinical,
+              laboratory: laboratory,
               prescribing: prescribing,
               referenceLibrary: referenceLibrary,
               inventory: inventory,
@@ -646,6 +653,7 @@ class CoreShell extends StatelessWidget {
     this.forms,
     this.identity,
     this.clinical,
+    this.laboratory,
     this.prescribing,
     this.referenceLibrary,
     this.inventory,
@@ -676,6 +684,10 @@ class CoreShell extends StatelessWidget {
   final FormRepository? forms;
   final IdentityRepository? identity;
   final ClinicalRepository? clinical;
+
+  /// Nulo sin sesion de Supabase: entonces el expediente no ofrece
+  /// las analiticas, en vez de ofrecerlas y fallar al abrirlas.
+  final LabRepository? laboratory;
   final PrescribingRepository? prescribing;
   final ReferenceLibraryRepository? referenceLibrary;
   final InventoryRepository? inventory;
@@ -1474,6 +1486,24 @@ class CoreShell extends StatelessWidget {
                                     );
                                   }
                                 },
+                                onOpenLab:
+                                    laboratory != null &&
+                                        allowed('Analíticas')
+                                    ? (patient) async {
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => LabScreen(
+                                              repository: laboratory!,
+                                              clinicId:
+                                                  auth!.active!.clinicId,
+                                              patientId: patient.id,
+                                              patientName: patient.name,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    : null,
                                 onOpenClinical:
                                     clinical != null && forms != null
                                     ? (patient) async {

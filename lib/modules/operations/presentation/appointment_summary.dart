@@ -11,6 +11,7 @@ String appointmentKindLabel(Object? kind) => switch (kind) {
   'hospital_visita' => 'Visita de hospitalizado',
   'vacunacion' => 'Vacunación / desparasitación',
   'entrega' => 'Entrega / alta',
+  'visita_campo' => 'Visita a campo o granja',
   'otro' => 'Otro servicio',
   _ => 'Cita',
 };

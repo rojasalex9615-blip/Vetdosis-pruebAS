@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'modules/laboratory/data/supabase_lab_repository.dart';
+import 'modules/laboratory/domain/lab_repository.dart';
 import 'modules/beta/domain/beta_repository.dart';
 import 'modules/beta/data/supabase_beta_repository.dart';
 import 'modules/identity/domain/identity_repository.dart';
@@ -91,6 +93,7 @@ Future<void> main() async {
   FormRepository? forms;
   IdentityRepository? identity;
   ClinicalRepository? clinical;
+  LabRepository? laboratory;
   PrescribingRepository? prescribing;
   ReferenceLibraryRepository? referenceLibrary;
   InventoryRepository? inventory;
@@ -120,6 +123,7 @@ Future<void> main() async {
     forms = SupabaseFormRepository(Supabase.instance.client);
     identity = SupabaseIdentityRepository(Supabase.instance.client);
     clinical = SupabaseClinicalRepository(Supabase.instance.client);
+    laboratory = SupabaseLabRepository(Supabase.instance.client);
     prescribing = SupabasePrescribingRepository(Supabase.instance.client);
     referenceLibrary = SupabaseReferenceLibraryRepository(Supabase.instance.client);
     inventory = SupabaseInventoryRepository(Supabase.instance.client);
@@ -214,6 +218,7 @@ Future<void> main() async {
       forms: forms,
       identity: identity,
       clinical: clinical,
+      laboratory: laboratory,
       prescribing: prescribing,
       referenceLibrary: referenceLibrary,
       inventory: inventory,

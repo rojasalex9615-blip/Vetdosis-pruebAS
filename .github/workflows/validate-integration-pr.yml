@@ -1,7 +1,13 @@
 name: Validación segura de integración VetDosis
 on:
+  # Sin filtro de rama base, a proposito. Este es el UNICO workflow que corre
+  # flutter analyze, las pruebas y el APK debug. Con el filtro anterior
+  # ([main, integration/...]) no corria en los PR apilados: el PR #8 del
+  # laboratorio llego a nueve commits con los checks de SQL en verde y el
+  # Dart sin compilar ni una vez, porque su base era otra rama de la pila.
+  # El filtro de rutas de abajo sigue evitando que corra por cambios que no
+  # tocan codigo.
   pull_request:
-    branches: [main, integration/vetdosis-unificada-20261030, integration/consolidacion-caja-20261103]
     paths:
       - 'lib/**'
       - 'assets/**'

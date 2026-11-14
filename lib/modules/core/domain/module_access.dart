@@ -101,6 +101,10 @@ bool moduleNavigationAllowed(
     'Caja' || 'Planeación financiera' => access.module('sales'),
     'Receta' => access.module('prescriptions'),
     'Formatos' => access.module('forms') || access.module('clinical'),
+    // Las analiticas son dato clinico del paciente: se abren con el mismo
+    // modulo que el resto del expediente clinico. Es una puerta de pantalla;
+    // quien autoriza de verdad es lab_workspace con sus permisos efectivos.
+    'Analíticas' => access.module('clinical'),
     'Estadísticas' => access.module('statistics'),
     'Respaldo' || 'Estadísticas y respaldo' => access.module('backup'),
     _ => true,
