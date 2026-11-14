@@ -171,7 +171,10 @@ void main() {
     expect(find.text('P-2026-01'), findsWidgets);
     expect(find.text('998'), findsOneWidget);
     expect(find.text('80.16 %'), findsOneWidget);
-    expect(find.text('Caseta 1'), findsWidgets);
+    // La tarjeta de la parvada compone casa y línea genética en un solo
+    // texto ('Caseta 1 · Lohmann Brown'); la sección Casetas queda fuera
+    // del ListView y no se construye.
+    expect(find.textContaining('Caseta 1'), findsWidgets);
   });
 
   testWidgets('el registro diario abre con la parvada elegida', (
