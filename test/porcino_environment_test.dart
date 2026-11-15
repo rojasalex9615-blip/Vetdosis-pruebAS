@@ -41,4 +41,16 @@ void main() {
     }
     expect(porcinoEnvironmentSource, contains('SEMARNAT'));
   });
+
+  test('El catálogo es extensible por región y Yucatán es el primer estudio', () {
+    expect(porcinoEnvironmentStudies, isNotEmpty);
+    final yucatan = porcinoEnvironmentStudy('yucatan');
+    expect(yucatan, isNotNull);
+    expect(yucatan!.region, 'Yucatán');
+    expect(yucatan.refs, hasLength(14));
+    expect(yucatan.municipal, isNotNull);
+    expect(yucatan.pageRange, '84-86');
+    // Un id inexistente no inventa estudio.
+    expect(porcinoEnvironmentStudy('no_existe'), isNull);
+  });
 }

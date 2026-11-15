@@ -178,3 +178,64 @@ class PorcinoMunicipalNca {
 
   int get total => critical + urgent + sustainable;
 }
+
+/// Un estudio ambiental por región (estado). Agrupa las filas publicadas de un
+/// dictamen concreto y, si lo trae, el reparto de municipios por NCA.
+///
+/// Es la unidad que hace extensible el catálogo: para sumar otro estado se
+/// añade un estudio nuevo a [porcinoEnvironmentStudies] con su propia fuente,
+/// sin tocar el panel ni el estudio de Yucatán.
+class PorcinoEnvironmentStudy {
+  const PorcinoEnvironmentStudy({
+    required this.id,
+    required this.region,
+    required this.title,
+    required this.source,
+    required this.refs,
+    this.municipal,
+    this.pageRange = '',
+  });
+
+  /// Clave corta y estable (minúsculas) del estudio.
+  final String id;
+
+  /// Estado o región, para el selector del panel.
+  final String region;
+
+  /// Encabezado del estudio.
+  final String title;
+
+  /// Cita completa del dictamen de origen.
+  final String source;
+
+  /// Filas publicadas del dictamen.
+  final List<PorcinoEnvironmentRef> refs;
+
+  /// Reparto de municipios por NCA, si el dictamen lo trae.
+  final PorcinoMunicipalNca? municipal;
+
+  /// Rango de páginas citado (por ejemplo `84-86`).
+  final String pageRange;
+}
+
+/// Estudios ambientales disponibles, por región. Hoy solo Yucatán; añade aquí
+/// los de otros estados cuando estén.
+const porcinoEnvironmentStudies = <PorcinoEnvironmentStudy>[
+  PorcinoEnvironmentStudy(
+    id: 'yucatan',
+    region: 'Yucatán',
+    title: 'Dictamen ambiental (SEMARNAT, Yucatán)',
+    source: porcinoEnvironmentSource,
+    refs: porcinoEnvironmentRefs,
+    municipal: PorcinoMunicipalNca(),
+    pageRange: '84-86',
+  ),
+];
+
+/// Busca un estudio por su [id]. Null si no existe.
+PorcinoEnvironmentStudy? porcinoEnvironmentStudy(String id) {
+  for (final study in porcinoEnvironmentStudies) {
+    if (study.id == id) return study;
+  }
+  return null;
+}

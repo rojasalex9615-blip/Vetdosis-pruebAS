@@ -9,6 +9,7 @@ import '../domain/porcino_capacity.dart';
 import '../domain/porcino_facilities.dart';
 import '../domain/porcino_reference.dart';
 import '../domain/porcino_environment.dart';
+import '../domain/porcino_feeding.dart';
 import '../domain/porcino_repository.dart';
 import '../domain/porcino_upp.dart';
 import 'growth_panel.dart';
@@ -107,6 +108,8 @@ List<Widget> porcinoPanelsFor(
         title: 'Silo para desarrollo y finalización',
         phases: porcinoGrowingFeed,
       ),
+      const _Gap(),
+      const PorcinoFeedingSystemsPanel(),
       const _Gap(),
       const PorcinoStagePerformancePanel(),
       const _Gap(),
@@ -3075,36 +3078,61 @@ class _PorcinoYieldPanelState extends State<PorcinoYieldPanel> {
 }
 
 
-/// Panel del dictamen ambiental SEMARNAT (Yucatán): ecuaciones, parámetros y
-/// reparto de municipios por rango de NCA. Solo lectura: los datos ya están
-/// fijados en el dominio, el panel no recalcula nada.
-class PorcinoEnvironmentPanel extends StatelessWidget {
+/// Panel del catálogo ambiental: muestra los dictámenes por región. Con más de
+/// una región aparece un selector; hoy solo hay Yucatán. Solo lectura: los
+/// datos ya están fijados en el dominio, el panel no recalcula nada.
+class PorcinoEnvironmentPanel extends StatefulWidget {
   const PorcinoEnvironmentPanel({super.key});
+
+  @override
+  State<PorcinoEnvironmentPanel> createState() => _PorcinoEnvironmentPanelState();
+}
+
+class _PorcinoEnvironmentPanelState extends State<PorcinoEnvironmentPanel> {
+  String studyId = porcinoEnvironmentStudies.first.id;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final study = porcinoEnvironmentStudy(studyId) ??
+        porcinoEnvironmentStudies.first;
     final categories = <String, List<PorcinoEnvironmentRef>>{};
-    for (final ref in porcinoEnvironmentRefs) {
+    for (final ref in study.refs) {
       categories.putIfAbsent(ref.category, () => []).add(ref);
     }
-    const municipal = PorcinoMunicipalNca();
+    final municipal = study.municipal;
     return VetCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _PanelHeader(
+          _PanelHeader(
             icon: VetIcons.leaf,
-            title: 'Dictamen ambiental (SEMARNAT, Yucatán)',
+            title: study.title,
             subtitle:
                 'Nivel de contaminación del agua (NCA) y huella hídrica gris '
-                'del sector porcícola en Yucatán.',
+                'del sector porcícola en ${study.region}.',
           ),
-          const VetNotice(
+          if (porcinoEnvironmentStudies.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final s in porcinoEnvironmentStudies)
+                    ChoiceChip(
+                      label: Text(s.region),
+                      selected: s.id == study.id,
+                      onSelected: (_) => setState(() => studyId = s.id),
+                    ),
+                ],
+              ),
+            ),
+          VetNotice(
             text:
-                'Valores publicados del dictamen (marzo 2023) para Yucatán. No '
-                'son mediciones de esta granja ni límites aplicables a otra '
-                'región. Para otro estado cambia los parámetros.',
+                'Valores publicados del dictamen para ${study.region}. No son '
+                'mediciones de esta granja ni límites aplicables a otra región. '
+                'Para otro estado, elige su dictamen cuando esté cargado.',
             icon: VetIcons.pin,
           ),
           for (final entry in categories.entries) ...[
@@ -3141,24 +3169,175 @@ class PorcinoEnvironmentPanel extends StatelessWidget {
                 ),
               ),
           ],
-          const SizedBox(height: 14),
-          Text(
-            'Reparto de municipios con actividad porcícola (Cmax = 3.0 mg/L)',
-            style: textTheme.titleSmall,
-          ),
-          const SizedBox(height: 6),
-          _Results([
-            ('NCA > 2 (crítico)', '${municipal.critical} municipios'),
-            ('1 < NCA ≤ 2 (urgente)', '${municipal.urgent} municipios'),
-            ('NCA ≤ 1 (sustentable)', '${municipal.sustainable} municipios'),
-            ('Total', '${municipal.total} municipios'),
-          ]),
+          if (municipal != null) ...[
+            const SizedBox(height: 14),
+            Text(
+              'Reparto de municipios con actividad porcícola (Cmax = 3.0 mg/L)',
+              style: textTheme.titleSmall,
+            ),
+            const SizedBox(height: 6),
+            _Results([
+              ('NCA > 2 (crítico)', '${municipal.critical} municipios'),
+              ('1 < NCA ≤ 2 (urgente)', '${municipal.urgent} municipios'),
+              ('NCA ≤ 1 (sustentable)', '${municipal.sustainable} municipios'),
+              ('Total', '${municipal.total} municipios'),
+            ]),
+          ],
           const SizedBox(height: 10),
           Text(
-            'Fuente: $porcinoEnvironmentSource, p. 84-86. Método de Mekonnen y '
-            'Hoekstra (2016). El NCA compara el agua necesaria para diluir el '
-            'nitrógeno con la recarga del acuífero; confirma las cifras con el '
-            'dictamen antes de usarlas en un trámite.',
+            'Fuente: ${study.source}'
+            '${study.pageRange.isEmpty ? '' : ', p. ${study.pageRange}'}. '
+            'Método de Mekonnen y Hoekstra (2016). El NCA compara el agua '
+            'necesaria para diluir el nitrógeno con la recarga del acuífero; '
+            'confirma las cifras con el dictamen antes de usarlas en un trámite.',
+            style: textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sistemas de alimentación por etapas (Pork School): transporte de alimento,
+/// silos-tolva, tolva-báscula, manejo de comederos y tamaño de partícula.
+/// Solo lectura: los datos ya están fijados en el dominio. Incluye una
+/// calculadora de transporte (modelo de tubo) y de boca de salida del silo.
+class PorcinoFeedingSystemsPanel extends StatefulWidget {
+  const PorcinoFeedingSystemsPanel({super.key});
+
+  @override
+  State<PorcinoFeedingSystemsPanel> createState() =>
+      _PorcinoFeedingSystemsPanelState();
+}
+
+class _PorcinoFeedingSystemsPanelState
+    extends State<PorcinoFeedingSystemsPanel> {
+  int transport = 0;
+  final systems = TextEditingController();
+  String? outletError;
+
+  @override
+  void dispose() {
+    systems.dispose();
+    super.dispose();
+  }
+
+  void checkOutlet() {
+    setState(() {
+      outletError = null;
+      final raw = systems.text.trim();
+      if (raw.isEmpty) return;
+      final value = int.tryParse(raw);
+      if (value == null) {
+        outletError = 'Escribe un número entero de sistemas.';
+        return;
+      }
+      final inches = porcinoSiloOutletInches(value);
+      outletError = inches == null
+          ? 'El material solo cubre de 1 a 4 sistemas.'
+          : 'Boca de salida sugerida: $inches.';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final categories = <String, List<PorcinoFeedingRef>>{};
+    for (final ref in porcinoFeedingRefs) {
+      categories.putIfAbsent(ref.category, () => []).add(ref);
+    }
+    final t = porcinoFeedTransports[transport];
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.truck,
+            title: 'Sistemas de alimentación por etapas',
+            subtitle:
+                'Transporte de alimento, silos-tolva, tolva-báscula, manejo de '
+                'comederos y tamaño de partícula.',
+          ),
+          const VetNotice(
+            text:
+                'Referencias de material de clase (Pork School, ago-2026). Son '
+                'pautas de diseño, no metas de rendimiento ni límites '
+                'operativos. Confírmalas con tu proveedor.',
+            icon: VetIcons.clipboardChecks,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 14, bottom: 4),
+            child: Text('Sistema de transporte', style: textTheme.titleSmall),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (i, model) in porcinoFeedTransports.indexed)
+                ChoiceChip(
+                  label: Text('Mod. ${model.model}'),
+                  selected: transport == i,
+                  onSelected: (_) => setState(() => transport = i),
+                ),
+            ],
+          ),
+          _Results([
+            ('Diámetro', '${_fmt(t.diameterInches, 1)}"'),
+            ('Longitud máxima', '${_fmt(t.maxLengthM, 0)} m'),
+            ('Capacidad máxima', '${t.capacity} ${t.unit}'),
+          ]),
+          Padding(
+            padding: const EdgeInsets.only(top: 14, bottom: 4),
+            child: Text('Silo: boca de salida', style: textTheme.titleSmall),
+          ),
+          _Field(
+            controller: systems,
+            label: 'Número de sistemas (líneas)',
+            helper: '16" para 1-2 sistemas; 22" para 3-4 sistemas.',
+            onChanged: checkOutlet,
+          ),
+          if (outletError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(outletError!, style: textTheme.bodySmall),
+            ),
+          for (final entry in categories.entries) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 14, bottom: 4),
+              child: Text(entry.key, style: textTheme.titleSmall),
+            ),
+            for (final ref in entry.value)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(ref.dato, style: textTheme.bodyMedium),
+                          if (ref.nota.isNotEmpty)
+                            Text(ref.nota, style: textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (ref.valor.isNotEmpty)
+                      Text(
+                        ref.unidad.isEmpty
+                            ? ref.valor
+                            : '${ref.valor} ${ref.unidad}',
+                        textAlign: TextAlign.right,
+                        style: textTheme.titleSmall,
+                      ),
+                  ],
+                ),
+              ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            'Fuente: $porcinoFeedingSource',
             style: textTheme.bodySmall,
           ),
         ],
