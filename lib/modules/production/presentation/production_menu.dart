@@ -324,27 +324,28 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ],
       const SizedBox(height: 24),
       if (widget.units case final ProductionUnitRepository almacen)
-        if (widget.member case final ClinicMembership miembro) ...[
-          const VetSectionHeader(
-            title: 'Unidades de producción',
-            subtitle:
-                'El hato, lote, parvada o apiario del que cuelgan los demás registros. Se guarda en este dispositivo.',
-          ),
-          VetActionButton(
-            icon: VetIcons.clipboardList,
-            label: 'Abrir unidades',
-            onPressed: () => open(
-              ProductionUnitsScreen(
-                repository: almacen,
-                userId: miembro.userId,
-                clinicId: miembro.clinicId,
-                species: species!,
-                activity: activity!,
+        if (widget.member case final ClinicMembership miembro)
+          if (activity case final String elegida) ...[
+            const VetSectionHeader(
+              title: 'Unidades de producción',
+              subtitle:
+                  'El hato, lote, parvada o apiario del que cuelgan los demás registros. Se guarda en este dispositivo.',
+            ),
+            VetActionButton(
+              icon: VetIcons.clipboardList,
+              label: 'Abrir unidades',
+              onPressed: () => open(
+                ProductionUnitsScreen(
+                  repository: almacen,
+                  userId: miembro.userId,
+                  clinicId: miembro.clinicId,
+                  species: species!,
+                  activity: elegida,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 24),
+          ],
       const VetSectionHeader(
         title: 'Apartados previstos',
         subtitle:

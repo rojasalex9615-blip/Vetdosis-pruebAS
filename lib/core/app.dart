@@ -1997,10 +1997,9 @@ class CoreShell extends StatelessWidget {
           moduleAccess: moduleAccess,
         ),
         offline: auth?.offline ?? false,
-        // El Inicio piloto es una variante visual de prueba. Así se compila el
-        // Inicio clásico por defecto y solo se activa con
-        // --dart-define=HOME_PILOT=true.
-        homePilot: const bool.fromEnvironment('HOME_PILOT'),
+        // El Inicio Neu es el predeterminado de la linea nueva; el piloto
+        // sigue pudiendo apagarse con --dart-define=HOME_PILOT=false.
+        homePilot: const bool.fromEnvironment('HOME_PILOT', defaultValue: true),
         alerts: hospitalAlerts,
         isVisible: allowed,
         onNavigate: model.navigate,

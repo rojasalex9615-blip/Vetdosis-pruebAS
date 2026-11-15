@@ -3,7 +3,11 @@
     <!-- Android 12 y posteriores dibujan el arranque desde aquí. -->
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowSplashScreenBackground">#E1F8F3</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/vetdosis_splash</item>
+        <!-- El arte del splash es full-bleed (su logo ocupa ~84% del lienzo),
+             pero Android 12+ enmascara el icono en un circulo de 2/3: usarlo
+             tal cual lo recorta y lo agranda. Se usa el icono de la app, cuyo
+             contenido ya va centrado dentro de la zona segura. -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/vetdosis_app_icon</item>
         <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
