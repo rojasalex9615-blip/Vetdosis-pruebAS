@@ -3,7 +3,7 @@
 -- Catalogo de solo lectura para autenticados; mismas reglas que
 -- produccion_especies/produccion_metricas de 20261112000100_produccion_lotes.sql.
 --
--- ESTADO: CANDIDATO. No aplicado en Supabase Pruebas. Los datos del proyecto
+-- ESTADO: APLICADO en Supabase Pruebas el 2026-11-14 (autorizado por Ale). Los datos del proyecto
 -- 2022 son ilustrativos y sin confirmar con el productor.
 begin;
 

@@ -3,15 +3,14 @@
 -- Catalogo de solo lectura para autenticados: mismas reglas que
 -- produccion_especies/produccion_metricas de 20261112000100_produccion_lotes.sql.
 --
--- ESTADO: CANDIDATO. No aplicado en Supabase Pruebas; aplicar con DB URL (psql)
--- o desde el editor SQL.
+-- ESTADO: APLICADO en Supabase Pruebas el 2026-11-14 (autorizado por Ale).
 begin;
 
 create table if not exists public.produccion_bioseguridad_refs (
   id text primary key check (id ~ '^[a-z][a-z0-9_]{2,59}$'),
   categoria text not null check (char_length(btrim(categoria)) between 3 and 80),
   dato text not null check (char_length(btrim(dato)) between 1 and 120),
-  valor text not null check (char_length(btrim(valor)) between 1 and 200),
+  valor text not null default '' check (char_length(valor) <= 200),
   unidad text not null default '' check (char_length(unidad) <= 24),
   nota text not null default '' check (char_length(nota) <= 600),
   confianza text not null check (confianza in ('alta','media','baja')),
@@ -35,14 +34,14 @@ create policy produccion_bioseguridad_refs_read on public.produccion_biosegurida
 insert into public.produccion_bioseguridad_refs(id,categoria,dato,valor,unidad,nota,confianza,fuente,pagina_o_seccion,orden) values
  ('distancia_mismo_sitio_alto_riesgo','Distancias entre granjas','Mismo sitio o granja contigua','< 0.5','km','Mismo sitio o granja por alto riesgo de transmision (roedores, insectos, polvo, personas)','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva Distancia',1),
  ('distancia_riesgo_transmision_agentes','Distancias entre granjas','Riesgo por moscas, aerosol o polvo','< 3','km','PRRS a 2.4 km por moscas, M. hyopneumoniae a 3.2 km por aerosol y PEDV por polvo','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva Distancia',2),
- ('distancia_minima_PRRS_Mycoplasma','Distancias entre granjas','Distancia minima recomendada','> 10','km','Se minimiza el riesgo de PRRS (9.1 km) y Mycoplasma hyopneumoniae (9.2 km)','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva Distancia',3),
+ ('distancia_minima_prrs_mycoplasma','Distancias entre granjas','Distancia minima recomendada','> 10','km','Se minimiza el riesgo de PRRS (9.1 km) y Mycoplasma hyopneumoniae (9.2 km)','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva Distancia',3),
  ('distancia_referencia_8km','Distancias entre granjas','Referencia de la diapositiva previa','8','km','Aparece como valor de referencia, sin fijar umbral','media','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva previa a Distancia',4),
  ('distancia_referencia_80km','Distancias entre granjas','Referencia de la diapositiva previa','80','km','Aparece como valor de referencia, sin fijar umbral','media','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva previa a Distancia',5),
  ('impacto_1pct_mortalidad_destete_engorde','KPIs impacto economico','1 % de mortalidad en destete y engorde','0.44 o 0.88','EUR/cerdo','Dos escenarios en la diapositiva','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Indicadores de desempeno (KPIs) e impacto (EUR)',1),
  ('impacto_100g_conversion_alimenticia','KPIs impacto economico','100 g de conversion alimenticia','0.59 o 3.84','EUR/cerdo','Dos escenarios en la diapositiva','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Indicadores de desempeno (KPIs) e impacto (EUR)',2),
- ('impacto_1PSY','KPIs impacto economico','1 lechon destetado adicional (PSY)','1.4','EUR/lechon','Lechon destetado adicional por cerda al ano','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Indicadores de desempeno (KPIs) e impacto (EUR)',3),
- ('impacto_1DNP','KPIs impacto economico','1 dia no productivo','0.23','EUR/lechon','Dia no productivo','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Indicadores de desempeno (KPIs) e impacto (EUR)',4),
- ('probabilidad_brote_PRRS_post_filtros','Filtracion de aire','Probabilidad de brote de PRRS tras instalar filtros','8 veces menor','factor','Reduccion descrita en la diapositiva de filtracion','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva filtracion PRRS',1),
+ ('impacto_1psy','KPIs impacto economico','1 lechon destetado adicional (PSY)','1.4','EUR/lechon','Lechon destetado adicional por cerda al ano','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Indicadores de desempeno (KPIs) e impacto (EUR)',3),
+ ('impacto_1dnp','KPIs impacto economico','1 dia no productivo','0.23','EUR/lechon','Dia no productivo','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Indicadores de desempeno (KPIs) e impacto (EUR)',4),
+ ('probabilidad_brote_prrs_post_filtros','Filtracion de aire','Probabilidad de brote de PRRS tras instalar filtros','8 veces menor','factor','Reduccion descrita en la diapositiva de filtracion','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','Diapositiva filtracion PRRS',1),
  ('clave_diseno_1','7 claves diseno granjas bioseguras','Localizacion ideal','','','','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','7 claves para el diseno de granjas bioseguras',1),
  ('clave_diseno_2','7 claves diseno granjas bioseguras','Filtracion de aire (?)','','','Signo de interrogacion en el original','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','7 claves para el diseno de granjas bioseguras',2),
  ('clave_diseno_3','7 claves diseno granjas bioseguras','Flujo de reemplazo y lechones','','','','alta','Concepto manejo y diseno de Bioseguridad (Jean Paul Cano, Pork School ago-2026)','7 claves para el diseno de granjas bioseguras',3),

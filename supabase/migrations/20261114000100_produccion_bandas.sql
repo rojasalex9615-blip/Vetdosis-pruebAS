@@ -2,8 +2,7 @@
 -- Origen: hoja de clase Flujo_produccion_bandas.xlsx (550 vientres, banda de 14 dias).
 -- Multi-clinica, RLS por rol, escritura solo por RPC con recibo idempotente.
 --
--- ESTADO: CANDIDATO. No aplicado todavia en Supabase Pruebas; aplicar con DB URL
--- (psql) o desde el editor SQL. Mismo patron que 20261112000100_produccion_lotes.sql.
+-- ESTADO: APLICADO en Supabase Pruebas el 2026-11-14 (autorizado por Ale).
 begin;
 
 create table if not exists public.produccion_bandas_planes (
