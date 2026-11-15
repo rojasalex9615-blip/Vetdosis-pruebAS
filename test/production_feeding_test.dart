@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/production/domain/feeding_calculation.dart';
+import 'package:vetdosis_pro/modules/production/presentation/aquaculture_panels.dart';
 import 'package:vetdosis_pro/modules/production/presentation/feeding_panel.dart';
 import 'package:vetdosis_pro/modules/production/presentation/production_menu.dart';
 import 'package:vetdosis_pro/modules/production/presentation/growth_panel.dart';
@@ -93,10 +94,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tilapia'));
     await tester.pumpAndSettle();
-    expect(find.byType(FeedingPanel), findsOneWidget);
+    expect(find.byType(AquacultureSeedPanel), findsOneWidget);
     await tester.pumpWidget(app(member));
     await tester.pumpAndSettle();
-    expect(find.byType(FeedingPanel), findsNothing);
+    expect(find.byType(AquacultureSeedPanel), findsNothing);
     await tester.tap(find.text('Volver a especies'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Porcinos'));

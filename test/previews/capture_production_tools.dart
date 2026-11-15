@@ -5,7 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/home_pilot.dart';
-import 'package:vetdosis_pro/modules/production/presentation/feeding_panel.dart';
+import 'package:vetdosis_pro/modules/production/presentation/aquaculture_panels.dart';
 import 'package:vetdosis_pro/modules/production/presentation/growth_panel.dart';
 
 void main() {
@@ -41,29 +41,33 @@ void main() {
                     padding: const EdgeInsets.all(12),
                     child: growth
                         ? const GrowthPanel(showCosts: true)
-                        : const FeedingPanel(),
+                        : const AquacultureSeedPanel(),
                   ),
                 ),
               ),
             ),
           ),
         );
-        final values = growth
-            ? ['10', '100', '120', '856', '2320', '6032']
-            : ['1000', '200', '3', '4'];
-        for (final (i, value) in values.indexed) {
-          await tester.enterText(
-            find.byKey(ValueKey('${growth ? 'growth' : 'feeding'}-input-$i')),
-            value,
-          );
-        }
         if (growth) {
+          for (final (i, value) in [
+            '10',
+            '100',
+            '120',
+            '856',
+            '2320',
+            '6032',
+          ].indexed) {
+            await tester.enterText(
+              find.byKey(ValueKey('growth-input-$i')),
+              value,
+            );
+          }
           await tester.ensureVisible(find.byType(CheckboxListTile));
           await tester.tap(find.byType(CheckboxListTile));
           await tester.pump();
         }
         final action = find.text(
-          growth ? 'Calcular indicadores' : 'Calcular ración',
+          growth ? 'Calcular indicadores' : 'Calcular siembra',
         );
         await tester.ensureVisible(action);
         await tester.tap(action);

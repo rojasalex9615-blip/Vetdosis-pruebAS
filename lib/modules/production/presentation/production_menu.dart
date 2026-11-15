@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
 import 'porcino_panels.dart';
-import 'feeding_panel.dart';
+import 'aquaculture_panels.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
 import '../../aviculture/presentation/broiler_screen.dart';
 import '../../aviculture/presentation/layer_reference_screen.dart';
@@ -307,7 +307,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ],
       if (species == 'Peces' && activity == 'Tilapia') ...[
         const SizedBox(height: 16),
-        if (allowed('Cálculos clínicos')) const FeedingPanel() else denied,
+        if (allowed('Cálculos clínicos'))
+          ...aquaculturePanelsFor('Tilapia')
+        else
+          denied,
       ],
       if (species == 'Porcinos' && activity != null) ...[
         const SizedBox(height: 16),
