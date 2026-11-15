@@ -19,7 +19,15 @@ def _svc():
     from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
 
+    tok_file = os.environ.get(
+        "GDRIVE_TOKEN_FILE", os.path.expanduser("~/.config/gdrive/token.json")
+    )
     raw = os.environ.get("GDRIVE_SA_JSON")
+    if not raw and os.path.exists(tok_file):
+        tok = json.load(open(tok_file))
+        os.environ.setdefault("GDRIVE_CLIENT_ID", tok["client_id"])
+        os.environ.setdefault("GDRIVE_CLIENT_SECRET", tok["client_secret"])
+        os.environ.setdefault("GDRIVE_REFRESH_TOKEN", tok["refresh_token"])
     if raw:
         info = json.loads(raw) if raw.lstrip().startswith("{") else json.load(open(raw))
         creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)

@@ -74,3 +74,7 @@ supabase/config.*.local.json
 
 # Supabase CLI local runtime metadata
 supabase/.temp/
+
+# Credenciales de Google Drive / OAuth (nunca al repo: es publico)
+client_secret*.json
+token.json
