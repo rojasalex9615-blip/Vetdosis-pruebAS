@@ -14,6 +14,49 @@ El tablón compartido es el [issue #31](https://github.com/rojasalex9615-blip/Ve
 
 Las instrucciones actuales de Ale tienen prioridad sobre repartos históricos. El tablón no concede por sí solo autorización para fusionar, desplegar o activar reglas regulatorias.
 
+## Quién es quién y dónde se puede trabajar (verificado 2026-11-15)
+
+Contexto: la cuenta de GitHub estuvo bloqueada y el trabajo se mudó a GitLab; no todos los agentes alcanzan las dos plataformas, así que cada uno commitea **donde puede**. GitHub y GitLab se clonan mutuamente, pero **sus historias no están unificadas**: el `main` de GitHub (`cb7dae4`) no comparte ancestro con `integracion/rc-20261114` de GitLab. Por eso **no** se debe abrir un PR/MR cruzando historias entre plataformas; la integración real va contra `integracion/rc-20261114` en GitLab.
+
+**Identidades por firma de commit** (contadas en todo el repo). Las que **se firman** son distinguibles; GPT/Grok **no** se firman y commitean con el usuario de Ale, así que un commit a nombre de «Alex Rojas»/`rojasalex9615@gmail.com` puede ser de Ale **o** de GPT/Grok — **no es verificable** por el git:
+
+| Firma | Nombre | Commits | Quién |
+|---|---|---|---|
+| `noreply@anthropic.com` | Claude | 101 | Claude |
+| `openhands@all-hands.dev` | openhands | 51 | OpenHands (esta herramienta) |
+| `codex@users.noreply.github.com` | Codex | 5 | Codex |
+| `noreply@codebuff.com` | Codebuff | 6 | Codebuff |
+| `vibe@mistral.ai` | Vibe Nuage Agent | 4 | Mistral |
+| `*coderabbitai[bot]*` | coderabbitai[bot] | 1 | CodeRabbit (revisor) |
+| `rojasalex9615@gmail.com` | Alex Rojas | 64 | Ale **o** GPT/Grok (indistinguible) |
+| `SMILEALEX96@GMAIL.COM` / `smilealex96@gmail.com` | Alexcore123R / Alejandra Ivone Rojas Reyna / Alex | 432+ | Ale |
+| `347529827+rojasalex9615-blip@…` | rojasalex9615-blip | 11 | Ale (vía GitHub) |
+
+**Acceso a plataformas (comprobado desde el contenedor):** OpenHands tiene escritura en **ambas** — GitHub `rojasalex9615-blip/Vetdosis-pruebAS` (`push`/`admin` con `GITHUB_TOKEN`) y GitLab `rojasalex9615/vetdosispro` (helper de credenciales). Puede **espejar** entre las dos lo que un agente solo alcance en una.
+
+**Estado de integración (vs `integracion/rc-20261114`), 2026-11-15.** Pendientes (16) — las demás ya están integradas:
+
+| Rama | Commits | Autor dominante |
+|---|---|---|
+| `feature/postura-avicola-adicional-20261115` | 26 | openhands (**sin MR**) |
+| `feature/porcino-capacidad-20261114` | 22 | openhands (MR !14, draft) |
+| `audit/coordination-20261110` | 17 | Alex Rojas (MR !5, draft) |
+| `feature/notificaciones-personales-20261106` | 14 | Claude (PR #99 en GitHub) |
+| `feature/avicultura-postura-m15` | 10 | Alex Rojas (MR !10) |
+| `design/acceso-y-arranque-20261105` | 9 | Codebuff (PR #95 en GitHub) |
+| `recopilacion/github-neu-visual-20261111` | 5 | Alex Rojas (MR !9) |
+| `ccr-e3f37de5-wj9n98` | 3 | Claude |
+| `feature/small-animals-clinic-admin` | 2 | Alex Rojas (MR !8) |
+| `fix/lab-value-ceiling-20261110` | 2 | Alex Rojas |
+| `apk/beta-20261108` | 1 | openhands (MR !13) |
+| `feature/produccion-unidades-20261107` | 1 | Claude (PR #104 en GitHub) |
+| `claude/push-repo-new-account-cffzjp` | 1 | Alex Rojas |
+| `audit/integration-map-20261108` | 1 | Alex Rojas |
+| `ci/apk-instalable-y-google-20261105` | 1 | Codebuff (PR #93) |
+| `respaldo-licencia-inicial` | 1 | Alexcore123R |
+
+Solape a vigilar: `feature/avicultura-postura-m15` (**registros** de postura: catálogo, casetas, parvadas, RPC M15) y `feature/postura-avicola-adicional-20261115` (**referencias** de postura: luz, huevos, calidad) no duplican contenido, pero comparten 8 archivos de enganche (`AGENTS.md`, `lib/core/app.dart`, `lib/core/widgets/calculator_surface.dart`, `lib/main.dart`, `lib/modules/calculations/presentation/calculation_screen.dart`, `lib/modules/production/presentation/porcino_panels.dart`, `production_menu.dart`, `test/porcino_panels_test.dart`); al fusionar habrá que resolverlo a mano.
+
 ## Notas técnicas
 
 - Los `*Boundary` que envuelven el armazón (`ModuleAccessBoundary`, `ClinicExperienceBoundary`, `BetaBoundary`) **no** deben cambiar la forma de la raíz del árbol al alternar entre aviso y contenido: si el contenido pasa de raíz a `Expanded` (o al revés) se reparenta el subárbol y un elemento que aún depende de un `InheritedWidget` revienta con la aserción de `InheritedElement.notifyDependent` (`framework.dart:6430`), además de duplicar la pantalla. El contenido conserva puesto y clave; el aviso se añade o quita como hermano.
