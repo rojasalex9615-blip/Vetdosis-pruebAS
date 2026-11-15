@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evaluación seminal por especie</title>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--tx:#1d1d1b;--mut:#6b6a64;--ac:#0f6e56;--bd:#dcdad2;--warn:#a15c00;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181a;--card:#222426;--tx:#ececea;--mut:#a3a29b;--ac:#4fc3a1;--bd:#383a3d;--warn:#e0a44a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181a;--card:#222426;--tx:#ececea;--mut:#a3a29b;--ac:#4fc3a1;--bd:#383a3d;--warn:#e0a44a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,sans-serif;padding:16px;max-width:560px;margin-inline:auto}
+h1{font-size:20px;margin:4px 0 2px}h2{font-size:15px;margin:0 0 10px;color:var(--ac)}
+.sub{color:var(--mut);font-size:13px;margin:4px 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+input,select{width:100%;box-sizing:border-box;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-size:16px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.big{font-size:28px;font-weight:600;color:var(--ac)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--bd);font-size:15px}
+.kv:last-child{border:0}
+.warn{color:var(--warn);font-size:13px;margin-top:8px}
+ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<h1>Evaluación seminal</h1>
+<div class="card"><label>Especie</label>
+<select id="esp"><option value="cerdo">Cerdo</option><option value="perro">Perro</option><option value="caballo">Caballo</option></select>
+<div class="sub" id="fuente"></div></div>
+
+<div class="card"><h2>1. Macroscópico</h2>
+<div class="row"><div><label id="lvol">Volumen (ml)</label><input id="vol" type="number"></div>
+<div><label>Color / olor / aspecto</label><input id="aspecto" placeholder="blanquecino"></div></div></div>
+
+<div class="card"><h2>2. Concentración</h2>
+<label>Cómo la obtienes</label>
+<select id="modo"><option value="d">Lectura del analizador (×10⁶/ml)</option><option value="n">Conteo en cámara de Neubauer</option></select>
+<div id="bn">
+<div class="row"><div><label>Células contadas</label><input id="cont" type="number"></div>
+<div><label>Factor de dilución (1:X)</label><input id="dil" type="number"></div></div>
+<label>Área contada</label>
+<select id="area"><option value="50000">5 cuadros medianos (4 esquinas + centro)</option><option value="10000">1 cuadro grande de 1 mm²</option></select>
+<div class="warn">Atajo con 1:200 y 5 cuadros medianos: células contadas × 10 = millones/ml. Confirma la dilución con tu profe.</div></div>
+<div id="bd"><label>Concentración (×10⁶/ml)</label><input id="cd" type="number"></div>
+<div class="kv" style="margin-top:8px"><span>Concentración usada</span><b id="concout"></b></div></div>
+
+<div class="card"><h2>3. Calidad</h2>
+<div class="row"><div><label id="lmot">Motilidad (%)</label><input id="mot" type="number"></div>
+<div id="gmor"><label>Morfología normal (%)</label><input id="mor" type="number"></div></div>
+<div id="gprog"><label>Motilidad progresiva (%)</label><input id="prog" type="number"></div>
+<div id="gkin" class="row"><div><label>VSL (µm/s)</label><input id="vsl" type="number"></div>
+<div><label>STR, rectitud (%)</label><input id="str" type="number"></div></div>
+<div class="warn" id="apto"></div></div>
+
+<div class="card" id="cdosis"><h2>4. Dosis</h2>
+<label>Tipo de dosis</label><select id="tipo"></select>
+<div class="row"><div id="gvd"><label>Volumen por dosis (ml) <span id="rango"></span></label><input id="vd" type="number"></div>
+<div><label>Margen de pérdida (%)</label><input id="perd" type="number" value="0"></div></div>
+<div id="gdilu"><label>Diluyente</label>
+<select id="dilu"><option value="3">Corta duración (3–4 días)</option><option value="7">Media duración (7–10 días)</option><option value="14">Larga duración (14 días)</option></select>
+<label>Fecha de colecta</label><input id="fecha" type="date"></div></div>
+
+<div class="card"><h2>Umbrales editables</h2>
+<div class="row"><div><label>Motilidad mín. (%)</label><input id="t_mot" type="number"></div>
+<div id="gt_prog"><label>Progresiva mín. (%)</label><input id="t_prog" type="number"></div></div>
+<div id="gt_kin" class="row"><div><label>VSL mín. (µm/s)</label><input id="t_vsl" type="number"></div>
+<div><label>STR mín. (%)</label><input id="t_str" type="number"></div></div>
+<div class="row"><div id="gt_mor"><label>Morfología normal mín. (%)</label><input id="t_mor" type="number"></div>
+<div><label>Volumen mín. (ml)</label><input id="t_vol" type="number" step="0.1"></div></div>
+<label>Total de espermatozoides mín. (×10⁹)</label><input id="t_tot" type="number" step="0.1">
+<div class="warn">Los valores por defecto cambian con la especie y la fuente. Ajústalos según tu equipo.</div></div>
+
+<div class="card"><h2>Resultado</h2>
+<div class="big" id="ndosis">—</div><div class="sub" id="biglbl">dosis</div>
+<div class="kv"><span id="ltotal">Espermatozoides útiles totales</span><b id="total"></b></div>
+<div class="kv" id="r_vf"><span>Volumen final</span><b id="vf"></b></div>
+<div class="kv" id="r_vdil"><span>Diluyente a preparar</span><b id="vdil"></b></div>
+<div class="kv" id="r_cad"><span>Usar antes de</span><b id="cad"></b></div>
+<div class="kv" id="r_sob"><span>Sobrante sin completar dosis</span><b id="sob"></b></div>
+<div class="warn" id="alerta"></div></div>
+
+<div class="card" id="cproto"><h2>Protocolo (cerdo)</h2><ol>
+<li>Preparar el diluyente y atemperarlo.</li>
+<li>Mezclar semen y diluyente a temperatura ambiente (30 min a 1 h).</li>
+<li>Repartir en botes o bolsas del volumen por dosis.</li>
+<li>Media hora a temperatura ambiente y luego a 17 °C.</li>
+<li>Rotar las dosis de forma periódica (el esperma se asienta).</li>
+<li>Antes de inseminar, mover lento y atemperar.</li>
+<li>Inseminar al detectar el celo, de nuevo a las 12 h y a las 24 h.</li></ol></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const f=n=>n.toLocaleString('es-MX',{maximumFractionDigits:1});
+const show=(id,on)=>{$(id).style.display=on?'':'none'};
+$('fecha').valueAsDate=new Date();
+const E={
+cerdo:{f:"Fuentes: tu práctica con iSPERM y Rodríguez-Martínez (verraco).",modo:"d",vol:200,conc:380,mot:90,mor:88,prog:75,vsl:35,str:75,lvol:"Volumen del eyaculado (ml)",lmot:"Motilidad total (%)",
+ t:{mot:85,prog:70,vsl:30,str:70,mor:85,vol:50,tot:10},tipos:[["Cervical (3 × 10⁹)",3],["Poscervical (2 × 10⁹)",2]],tsel:1,vd:80,sh:{mor:1,prog:1,kin:1,vd:1,dilu:1}},
+perro:{f:"Fuente: Tittarelli, cap. 12 (fracción espermática). El capítulo no da dosis por inseminación, por eso aquí solo se evalúa el eyaculado.",modo:"n",cont:8,dil:200,vol:3,conc:80,mot:80,mor:80,lvol:"Volumen de la fracción espermática (ml)",lmot:"Motilidad progresiva (%)",
+ t:{mot:70,mor:70,vol:0.5,tot:0.2,prog:0,vsl:0,str:0},tipos:[],sh:{mor:1}},
+caballo:{f:"Fuente: Egyptien et al. 2023. El artículo da el criterio (300–500 × 10⁶ progresivos por dosis), el número de dosis es un cálculo derivado.",modo:"d",vol:50,conc:200,mot:75,prog:60,lvol:"Volumen (ml)",lmot:"Motilidad total (%)",
+ t:{mot:70,prog:50,vol:0,tot:4,mor:0,vsl:0,str:0},tipos:[["300 × 10⁶ progresivos",0.3],["400 × 10⁶ progresivos",0.4],["500 × 10⁶ progresivos",0.5]],tsel:2,sh:{prog:1}}
+};
+function setEsp(){
+  const c=E[$('esp').value];
+  $('fuente').textContent=c.f;$('modo').value=c.modo;$('vol').value=c.vol;$('cd').value=c.conc;
+  $('cont').value=c.cont||38;$('dil').value=c.dil||200;
+  $('mot').value=c.mot;$('mor').value=c.mor||'';$('prog').value=c.prog||'';$('vsl').value=c.vsl||'';$('str').value=c.str||'';
+  $('lmot').textContent=c.lmot;$('lvol').textContent=c.lvol;
+  for(const k in c.t)$('t_'+k).value=c.t[k];
+  $('vd').value=c.vd||'';
+  $('tipo').innerHTML=c.tipos.map((t,i)=>'<option value="'+t[1]+'"'+(i===c.tsel?' selected':'')+'>'+t[0]+'</option>').join('');
+  show('gmor',c.sh.mor);show('gt_mor',c.sh.mor);show('gprog',c.sh.prog);show('gt_prog',c.sh.prog);
+  show('gkin',c.sh.kin);show('gt_kin',c.sh.kin);show('gvd',c.sh.vd);show('gdilu',c.sh.dilu);
+  show('cdosis',c.tipos.length>0);show('cproto',$('esp').value==='cerdo');
+  calc();
+}
+function calc(){
+  const sp=$('esp').value,nm=$('modo').value==='n';
+  show('bn',nm);show('bd',!nm);
+  const conc=nm?(+$('cont').value*+$('dil').value*+$('area').value)/1e6:+$('cd').value;
+  $('concout').textContent=f(conc)+' ×10⁶/ml';
+  const vol=+$('vol').value,mot=+$('mot').value/100,mor=+$('mor').value/100,pr=+$('prog').value/100;
+  const tot=vol*conc*1e6,perd=1-(+$('perd').value/100);
+  const d=+$('tipo').value||0,vd=+$('vd').value;
+  let util=tot,n=0,vf=0;
+  if(sp==='cerdo'){util=mot*mor*tot*perd;n=d>0?Math.floor(util/(d*1e9)):0;vf=n*vd}
+  if(sp==='caballo'){util=pr*tot*perd;n=d>0?Math.floor(util/(d*1e9)):0}
+  const dosis=sp!=='perro';
+  $('ndosis').textContent=dosis?n:f(tot/1e6);
+  $('biglbl').textContent=dosis?'dosis':'millones de espermatozoides por eyaculado';
+  $('ltotal').textContent=sp==='cerdo'?'Espermatozoides útiles totales':sp==='caballo'?'Progresivos totales':'Espermatozoides totales';
+  $('total').textContent=f((dosis?util:tot)/1e9)+' ×10⁹';
+  show('r_vf',sp==='cerdo');show('r_vdil',sp==='cerdo');show('r_cad',sp==='cerdo');show('r_sob',dosis);
+  $('vf').textContent=f(vf)+' ml';$('vdil').textContent=f(Math.max(vf-vol,0))+' ml';
+  $('sob').textContent=f((util-n*d*1e9)/1e9)+' ×10⁹';
+  const dt=new Date($('fecha').value+'T12:00');dt.setDate(dt.getDate()+(+$('dilu').value));
+  $('cad').textContent=isNaN(dt)?'—':dt.toLocaleDateString('es-MX',{day:'numeric',month:'short'})+' (mínimo del rango)';
+  const rg=sp==='cerdo'?(d===3?[80,100]:[60,80]):null;
+  $('rango').textContent=rg?'(rango: '+rg[0]+'–'+rg[1]+')':'';
+  const al=[];
+  if(sp==='cerdo'&&vf<vol)al.push('El volumen final es menor al eyaculado: revisa el volumen por dosis.');
+  if(rg&&(vd<rg[0]||vd>rg[1]))al.push('Volumen por dosis fuera del rango de '+rg[0]+'–'+rg[1]+' ml.');
+  if(vol<+$('t_vol').value)al.push('Volumen menor a '+$('t_vol').value+' ml: posible colecta incompleta, repetir.');
+  if(tot/1e9<+$('t_tot').value)al.push('Menos de '+$('t_tot').value+' × 10⁹ espermatozoides en el eyaculado.');
+  $('alerta').textContent=al.join(' ');
+  const fl=[],g=k=>+$(k).value;
+  if(g('mot')<g('t_mot'))fl.push('motilidad <'+g('t_mot')+' %');
+  if(E[sp].sh.prog&&g('prog')<g('t_prog'))fl.push('progresiva <'+g('t_prog')+' %');
+  if(E[sp].sh.kin&&g('vsl')<g('t_vsl'))fl.push('VSL <'+g('t_vsl')+' µm/s');
+  if(E[sp].sh.kin&&g('str')<g('t_str'))fl.push('STR <'+g('t_str')+' %');
+  if(E[sp].sh.mor&&g('mor')<g('t_mor'))fl.push('morfología normal <'+g('t_mor')+' %');
+  $('apto').textContent=fl.length?'No cumple: '+fl.join(', ')+'.':'Cumple los mínimos de calidad.';
+}
+document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',e.id==='esp'?setEsp:calc));
+setEsp();
+</script>
+</body>
+</html>

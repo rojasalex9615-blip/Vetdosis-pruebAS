@@ -4,6 +4,7 @@ import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
 import 'porcino_panels.dart';
 import 'aquaculture_panels.dart';
+import 'semen_reference_screen.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
 import '../../aviculture/presentation/broiler_screen.dart';
 import '../../aviculture/presentation/layer_reference_screen.dart';
@@ -314,12 +315,36 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ],
       if (species == 'Porcinos' && activity != null) ...[
         const SizedBox(height: 16),
+        if (allowed('Cálculos clínicos') &&
+            activity == 'Reproducción y gestación')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.microscope,
+              label: 'Evaluación seminal por especie',
+              onPressed: () => open(const SemenReferenceScreen()),
+            ),
+          ),
         if (allowed('Cálculos clínicos'))
           ...porcinoPanelsFor(
             activity!,
             showCosts: allowed('Planeación financiera'),
             repository: widget.porcino,
             clinicId: widget.member?.clinicId,
+          )
+        else
+          denied,
+      ],
+      if (species == 'Equinos' && activity == 'Reproducción y crianza') ...[
+        const SizedBox(height: 16),
+        if (allowed('Cálculos clínicos'))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.microscope,
+              label: 'Evaluación seminal por especie',
+              onPressed: () => open(const SemenReferenceScreen()),
+            ),
           )
         else
           denied,
