@@ -113,7 +113,7 @@ void main() {
     }
   });
 
-  testWidgets('Biosecurity and environment activity shows its two panels', (
+  testWidgets('Biosecurity and environment activity shows its three panels', (
     tester,
   ) async {
     await tester.pumpWidget(app(admin));
@@ -124,8 +124,33 @@ void main() {
     await tester.tap(find.text('Bioseguridad y ambiente'));
     await tester.pumpAndSettle();
     expect(find.byType(PorcinoBiosecurityPanel), findsOneWidget);
+    expect(find.byType(PorcinoKpiImpactPanel), findsOneWidget);
     expect(find.byType(PorcinoNitrogenPanel), findsOneWidget);
     expect(find.text('0 de 20 revisados'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('KPI impact panel adds the low and high scenarios', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: PorcinoKpiImpactPanel()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Mortalidad destete–engorde (punto porcentual)'),
+      '1',
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Calcular impacto'));
+    await tester.tap(find.text('Calcular impacto'));
+    await tester.pumpAndSettle();
+    expect(find.text('0.44 €/cerdo'), findsOneWidget);
+    expect(find.text('0.88 €/cerdo'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

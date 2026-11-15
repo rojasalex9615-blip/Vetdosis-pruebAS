@@ -3,6 +3,7 @@ import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../finance/domain/investment_estimate.dart';
 import '../domain/porcino_bandas.dart';
+import '../domain/porcino_biosecurity.dart';
 import '../domain/porcino_calculators.dart';
 import '../domain/porcino_capacity.dart';
 import '../domain/porcino_facilities.dart';
@@ -117,6 +118,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
     'Bioseguridad y ambiente' => [
       notice,
       const PorcinoBiosecurityPanel(),
+      const _Gap(),
+      const PorcinoKpiImpactPanel(),
       const _Gap(),
       const PorcinoNitrogenPanel(),
     ],
@@ -1260,6 +1263,118 @@ class _PorcinoBiosecurityPanelState extends State<PorcinoBiosecurityPanel> {
             ),
           const SizedBox(height: 10),
           Text(biosecuritySource, style: textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+/// Impacto económico de los KPIs de bioseguridad (€/cerdo y €/lechón).
+///
+/// Los importes son de la diapositiva de clase: sirven para ordenar prioridades,
+/// no son cotizaciones ni un resultado contable.
+class PorcinoKpiImpactPanel extends StatefulWidget {
+  const PorcinoKpiImpactPanel({super.key});
+  @override
+  State<PorcinoKpiImpactPanel> createState() => _PorcinoKpiImpactPanelState();
+}
+
+class _PorcinoKpiImpactPanelState extends State<PorcinoKpiImpactPanel> {
+  final _controllers = <String, TextEditingController>{
+    for (final k in porcinoKpiImpacts) k.label: TextEditingController(),
+  };
+  PorcinoEconomicImpact? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        final changes = <String, double>{};
+        for (final k in porcinoKpiImpacts) {
+          final raw = _controllers[k.label]!.text.trim();
+          if (raw.isEmpty) continue;
+          changes[k.label] = _decimal(_controllers[k.label]!, k.label);
+        }
+        if (changes.isEmpty) {
+          throw const FormatException('Escribe al menos un cambio de KPI.');
+        }
+        result = PorcinoEconomicImpact(changes: changes);
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final textTheme = Theme.of(context).textTheme;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.coins,
+            title: 'Impacto económico de los KPIs',
+            subtitle:
+                'Cuánto vale cada punto de mortalidad, de conversión, cada '
+                'lechón destetado y cada día no productivo (importes en € de la '
+                'diapositiva).',
+          ),
+          for (final k in porcinoKpiImpacts)
+            _Field(
+              controller: _controllers[k.label]!,
+              label: '${k.label} (${k.unit})',
+              decimal: true,
+              helper:
+                  '${k.basis} Aporte de la fuente: '
+                  '${_fmt(k.perUnitLow, 2)}–${_fmt(k.perUnitHigh, 2)} €.',
+              onChanged: reset,
+            ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular impacto',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null)
+            _Results([
+              ('Impacto escenario bajo', '${_fmt(r.totalLowEur, 2)} €/cerdo'),
+              ('Impacto escenario alto', '${_fmt(r.totalHighEur, 2)} €/cerdo'),
+            ]),
+          const SizedBox(height: 10),
+          Text(
+            'Referencia de clase (Pork School, ago-2026): la instalación de '
+            'filtros de aire se asocia a ${porcinoPrrsFilterReductionFactor.toStringAsFixed(0)} veces menos '
+            'probabilidad de brote de PRRS. Las distancias de '
+            '${porcinoDistanceReferences.map((d) => '${d.toStringAsFixed(0)} km').join(' y ')} '
+            'aparecen como valores de referencia, sin fijar un umbral.',
+            style: textTheme.bodySmall,
+          ),
         ],
       ),
     );
