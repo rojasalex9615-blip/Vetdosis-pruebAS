@@ -6,6 +6,7 @@ import 'porcino_panels.dart';
 import 'feeding_panel.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
 import '../../aviculture/presentation/broiler_screen.dart';
+import '../../aviculture/presentation/layer_reference_screen.dart';
 import '../../aviculture/presentation/poultry_index_screen.dart';
 import '../../incubation/presentation/incubation_screen.dart';
 import '../../auth/domain/clinic_membership.dart';
@@ -250,6 +251,15 @@ class _ProductionMenuState extends State<ProductionMenu> {
               icon: VetIcons.stable,
               label: 'Capacidad e instalaciones avícolas',
               onPressed: () => open(const AvicultureScreen()),
+            ),
+          ),
+        if (allowed('Cálculos clínicos') && activity == 'Postura')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.egg,
+              label: 'Postura: luz, huevos y calidad del huevo',
+              onPressed: () => open(const LayerReferenceScreen()),
             ),
           ),
         if (allowed('Cálculos clínicos') &&

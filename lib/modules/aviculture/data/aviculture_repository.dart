@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../../doses/domain/quantity.dart';
 import '../domain/broiler_reference.dart';
+import '../domain/layer_reference.dart';
 import '../domain/poultry_formulas.dart';
 
 class AvicultureParameter {
@@ -70,6 +71,15 @@ class AvicultureRepository {
       'assets/clinical/aviculture/engorda_avicola.v1.csv',
     );
     return BroilerCatalog.parseCsv(csv);
+  }
+
+  /// Referencias adicionales de gallina de postura (plan de luz, huevos por
+  /// ave y año, ponedora eficiente, curva mensual y calidad del huevo).
+  Future<LayerCatalog> loadLayer() async {
+    final csv = await rootBundle.loadString(
+      'assets/clinical/aviculture/postura_avicola_adicional.v1.csv',
+    );
+    return LayerCatalog.parseCsv(csv);
   }
 
   /// Fórmulas de producción avícola (engorda y postura).

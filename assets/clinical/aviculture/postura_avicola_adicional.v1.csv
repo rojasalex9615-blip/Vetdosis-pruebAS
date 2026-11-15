@@ -1,0 +1,38 @@
+etapa,sem_desde,sem_hasta,sistema,parametro,min,max,unidad,fuente,estado
+postura,13,,jaula_bateria,espacio_por_ave_alternativa,400,400,cm2,Sistema intensivo de gallina de postura (pptx CUCBA); jaula 40x60 cm con 6 aves (otro profesor; principal: 450-550),alternativa
+desarrollo,17,18,ambos,inicio_estimulo_luz,17,18,semanas,Sistema intensivo de gallina de postura (pptx CUCBA); o al alcanzar peso corporal de la linea,sin_verificar
+desarrollo,,,ambos,aumento_inicial_luz_minimo,1,1,horas,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,incremento_luz,15,30,min_por_semana_o_cada_2_semanas,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,30,35,ambos,horas_luz_meta,16,16,horas,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,intensidad_luz_a_nivel_comedero,30,30,lux,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,18,35,ambos,crisis_18_35_semanas,,,alerta,"Sistema intensivo de gallina de postura (pptx CUCBA); causas: baja uniformidad, tracto GI poco desarrollado, granulometria inadecuada, bajo consumo, poca fibra en levante, alimento muy concentrado, pienso granulado hasta sem 18, sin plan de luz, despique incorrecto",sin_verificar
+postura,,,intensivo_jaula,huevos_por_ave_por_ano,300,300,huevos,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,semiintensivo_piso,huevos_por_ave_por_ano,150,150,huevos,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,extensivo_pastoreo,huevos_por_ave_por_ano,60,70,huevos,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,parametro_eficiente_periodo_puesta,18,90,semanas,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,parametro_eficiente_viabilidad,94,94,%,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,parametro_eficiente_peso_huevo_promedio,62,62,g,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,parametro_eficiente_huevos_por_ave_periodo,426,426,huevos,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,parametro_eficiente_masa_huevo_por_ave_periodo,26.4,26.4,kg,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+postura,,,ambos,parametro_eficiente_peso_corporal_ave,1.71,1.71,kg,Sistema intensivo de gallina de postura (pptx CUCBA),sin_verificar
+mes_1,,,ambos,huevos_por_ave_mes,10.4,10.4,huevos,Sistema intensivo de gallina de postura (pptx CUCBA); ciclo productivo,sin_verificar
+mes_1,,,ambos,peso_huevo,46.7,46.7,g,Sistema intensivo de gallina de postura (pptx CUCBA); ciclo productivo,sin_verificar
+mes_5,,,ambos,huevos_por_ave_mes,26.2,26.2,huevos,Sistema intensivo de gallina de postura (pptx CUCBA); ciclo productivo,sin_verificar
+mes_5,,,ambos,peso_huevo,60.9,60.9,g,Sistema intensivo de gallina de postura (pptx CUCBA); ciclo productivo,sin_verificar
+mes_12,,,ambos,huevos_por_ave_mes,23.1,23.1,huevos,Sistema intensivo de gallina de postura (pptx CUCBA); ciclo productivo,sin_verificar
+mes_12,,,ambos,peso_huevo,63.5,63.5,g,Sistema intensivo de gallina de postura (pptx CUCBA); ciclo productivo,sin_verificar
+promedio_ciclo,,,ambos,huevos_por_ave_mes,19.5,19.5,huevos,Sistema intensivo de gallina de postura (pptx CUCBA); tras pelecha (2 meses),sin_verificar
+promedio_ciclo,,,ambos,peso_huevo,63.7,63.7,g,Sistema intensivo de gallina de postura (pptx CUCBA); tras pelecha (2 meses),sin_verificar
+huevo,,,ambos,indice_forma,72,76,ancho/largo_x100,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+huevo,,,ambos,gravedad_especifica_cascara_buena,1.07,1.085,g/ml,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+huevo,,,ambos,grosor_cascara_medio,0.35,0.35,mm,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+huevo_fresco,,,ambos,altura_camara_aire,3,3,mm,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+huevo_1_a_4_semanas,,,ambos,altura_camara_aire,4,6,mm,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+huevo_6_semanas_a_4_meses,,,ambos,altura_camara_aire,11,18,mm,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+huevo_4_meses_o_mas,,,ambos,camara_aire_fraccion_del_huevo,0.33,0.33,fraccion,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+categoria_A,,,ambos,camara_aire_maxima,0,6,mm,Aves de postura (pdf exposicion CUCBA 2024) (tabla Periago Caston 2012),sin_verificar
+categoria_B,,,ambos,camara_aire_maxima,0,9,mm,Aves de postura (pdf exposicion CUCBA 2024) (tabla Periago Caston 2012),sin_verificar
+clase_peso,,,ambos,peso_huevo_XL_super_grande,73,,g,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+clase_peso,,,ambos,peso_huevo_L_grande,63,73,g,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+clase_peso,,,ambos,peso_huevo_M_mediano,53,63,g,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
+clase_peso,,,ambos,peso_huevo_S_pequeno,0,53,g,Aves de postura (pdf exposicion CUCBA 2024),sin_verificar
