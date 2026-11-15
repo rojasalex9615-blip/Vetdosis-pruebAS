@@ -8,6 +8,7 @@ import '../domain/porcino_calculators.dart';
 import '../domain/porcino_capacity.dart';
 import '../domain/porcino_facilities.dart';
 import '../domain/porcino_reference.dart';
+import '../domain/porcino_upp.dart';
 import 'growth_panel.dart';
 import '../../../vet_ui/vet_icons.dart';
 import 'porcino_semen_panel.dart';
@@ -120,6 +121,8 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
       const PorcinoBiosecurityPanel(),
       const _Gap(),
       const PorcinoKpiImpactPanel(),
+      const _Gap(),
+      const PorcinoUppPanel(),
       const _Gap(),
       const PorcinoNitrogenPanel(),
     ],
@@ -1373,6 +1376,141 @@ class _PorcinoKpiImpactPanelState extends State<PorcinoKpiImpactPanel> {
             'probabilidad de brote de PRRS. Las distancias de '
             '${porcinoDistanceReferences.map((d) => '${d.toStringAsFixed(0)} km').join(' y ')} '
             'aparecen como valores de referencia, sin fijar un umbral.',
+            style: textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// UPP de ejemplo (Rancho La Huamuchilera, proyecto 2022): alimento, agua,
+/// espacio, costo y balance de N y P por fase.
+///
+/// Inventario y repartos son del proyecto 2022 y **no están confirmados** con el
+/// productor; proteína y fósforo de la dieta son referencias típicas. El
+/// resultado es un orden de magnitud, no una medición.
+class PorcinoUppPanel extends StatefulWidget {
+  const PorcinoUppPanel({super.key});
+  @override
+  State<PorcinoUppPanel> createState() => _PorcinoUppPanelState();
+}
+
+class _PorcinoUppPanelState extends State<PorcinoUppPanel> {
+  static const _defaultAnimals = <String, int>{
+    'Gestación (cerda)': 87,
+    'Lactancia (cerda)': 13,
+    'Lechón predestete': 20,
+    'Destete / Posdestete': 0,
+    'Desarrollo / Crecimiento': 60,
+    'Finalización / Engorde': 60,
+    'Sementales': 20,
+  };
+
+  final _controllers = <String, TextEditingController>{
+    for (final p in porcinoUppPhases)
+      p.name: TextEditingController(
+        text: '${_defaultAnimals[p.name] ?? 0}',
+      ),
+  };
+  PorcinoUppBalance? result;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    calculate();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        final lines = <PorcinoUppLine>[];
+        for (final p in porcinoUppPhases) {
+          final animals = _whole(_controllers[p.name]!, p.name);
+          if (animals == 0) continue;
+          lines.add(PorcinoUppLine(phase: p, animals: animals));
+        }
+        if (lines.isEmpty) {
+          throw const FormatException('Escribe animales en al menos una fase.');
+        }
+        result = PorcinoUppBalance(lines: lines);
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final textTheme = Theme.of(context).textTheme;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.homePaw,
+            title: 'UPP de ejemplo: alimento, agua y balance de N y P',
+            subtitle:
+                'Tablas base del proyecto 2022 (Rancho La Huamuchilera). '
+                'Inventario y dieta sin confirmar: caso ilustrativo.',
+          ),
+          for (final p in porcinoUppPhases)
+            _Field(
+              controller: _controllers[p.name]!,
+              label: 'Animales en ${p.name}',
+              onChanged: () {},
+            ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular balance',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          if (r != null) ...[
+            _Results([
+              ('Animales', '${r.totalAnimals}'),
+              ('Alimento', '${_fmt(r.totalFeedPerDayKg)} kg/día'),
+              ('Alimento para completar fases', '${_int(r.totalFeedToCompletePhaseKg)} kg'),
+              ('Costo de alimento', '${_money((r.totalFeedCostPerDay * 100).round())}/día'),
+              ('Agua de bebida', '${_int(r.totalWaterPerDayL)} L/día'),
+              ('Superficie requerida', '${_int(r.totalAreaM2)} m²'),
+              ('Excreta fresca', '${_int(r.totalExcretaFreshKgDay)} kg/día'),
+              ('N excretado', '${_int(r.totalNExcretedKgYear)} kg/año'),
+              ('P excretado', '${_int(r.totalPExcretedKgYear)} kg/año'),
+              ('P2O5 excretado', '${_int(r.pExcretedAsP2O5KgYear)} kg/año'),
+              ('Efluente (excreta + agua + lavado)', '${_int(r.effluentM3Year)} m³/año'),
+              ('Superficie agrícola para el N', '${_fmt(r.agriculturalAreaHa)} ha'),
+              if (r.finishingPigNKgPhase != null)
+                ('N por cerdo de finalización (fase)', '${_fmt(r.finishingPigNKgPhase!, 3)} kg'),
+            ]),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            'Balance: excretado = ingerido − retenido. Proteína y fósforo de la '
+            'dieta son de dietas comerciales; con la mezcla de granos real el N '
+            'puede ser menor. La superficie agrícola usa el límite de '
+            '${_int(r?.assumptions.nLimitKgHaYear ?? 170)} kg N/ha/año.',
             style: textTheme.bodySmall,
           ),
         ],

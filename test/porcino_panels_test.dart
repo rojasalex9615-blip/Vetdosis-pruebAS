@@ -113,7 +113,7 @@ void main() {
     }
   });
 
-  testWidgets('Biosecurity and environment activity shows its three panels', (
+  testWidgets('Biosecurity and environment activity shows its four panels', (
     tester,
   ) async {
     await tester.pumpWidget(app(admin));
@@ -125,8 +125,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(PorcinoBiosecurityPanel), findsOneWidget);
     expect(find.byType(PorcinoKpiImpactPanel), findsOneWidget);
+    expect(find.byType(PorcinoUppPanel), findsOneWidget);
     expect(find.byType(PorcinoNitrogenPanel), findsOneWidget);
     expect(find.text('0 de 20 revisados'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('UPP panel reproduces the example totals', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: PorcinoUppPanel()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('260'), findsOneWidget);
+    expect(find.text('522.5 kg/día'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
