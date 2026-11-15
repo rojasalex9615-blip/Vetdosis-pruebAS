@@ -34,6 +34,11 @@ Contexto: la cuenta de GitHub estuvo bloqueada y el trabajo se mudó a GitLab; n
 
 **Acceso a plataformas (comprobado desde el contenedor):** OpenHands tiene escritura en **ambas** — GitHub `rojasalex9615-blip/Vetdosis-pruebAS` (`push`/`admin` con `GITHUB_TOKEN`) y GitLab `rojasalex9615/vetdosispro` (helper de credenciales). Puede **espejar** entre las dos lo que un agente solo alcance en una.
 
+**Repartos vigentes (2026-11-15, por indicación de Ale):**
+- **Mistral** trabaja **solo en GitHub**: **no** tiene acceso a GitLab. Lo que produzca hay que llevarlo a GitLab vía OpenHands (espejo) si la integración va contra `integracion/rc-20261114`.
+- **Claude coordina con OpenHands** (este servidor) para el trabajo compartido; Mistral y OpenHands no se coordinan directo.
+- Reparto del tema en curso: **Mistral** → texto/etiqueta flotante de las cajas (descriptor dentro de la caja en reposo, encima y en color de acento al enfocar); **OpenHands** → icono de arranque (hecho, `77b1d2b`) y, pendiente, el relieve neu de los chips del Inicio.
+
 **Estado de integración (vs `integracion/rc-20261114`), 2026-11-15.** Pendientes (16) — las demás ya están integradas:
 
 | Rama | Commits | Autor dominante |
