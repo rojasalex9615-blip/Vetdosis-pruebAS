@@ -16,59 +16,11 @@ import '../../core/domain/module_access.dart';
 import '../../core/domain/navigation_access.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../domain/porcino_repository.dart';
+import '../domain/production_catalog.dart';
+import '../domain/production_unit_repository.dart';
+import 'production_units_screen.dart';
 
-const productionSpecies = <String, List<String>>{
-  'Bovinos': [
-    'Leche',
-    'Carne y engorda',
-    'Doble propósito',
-    'Atención individual',
-  ],
-  'Ovinos / caprinos': ['Ovinos', 'Caprinos'],
-  'Aves': ['Postura', 'Engorda', 'Reproducción e incubación'],
-  'Peces': ['Tilapia'],
-  'Abejas': ['Apiarios y colmenas'],
-  'Porcinos': [
-    'Reproducción y gestación',
-    'Maternidad y destete',
-    'Crecimiento y engorda',
-    'Bioseguridad y ambiente',
-    'Planeación financiera',
-  ],
-  'Equinos': ['Atención individual', 'Reproducción y crianza'],
-};
-
-const plannedProductionAreas = <String, List<String>>{
-  'Bovinos': [
-    'Animales y hatos/lotes',
-    'Reproducción y alimentación',
-    'Indicadores por unidad',
-  ],
-  'Ovinos / caprinos': [
-    'Animales y rebaños',
-    'Carne, leche y fibra según actividad',
-    'Reproducción y alimentación',
-  ],
-  // Parvadas, casetas, registros productivos y eventos ya están disponibles en
-  // el módulo M15; quedan pendientes los indicadores exportables.
-  'Aves': ['Indicadores y reportes'],
-  'Peces': [
-    'Lotes y unidades de cultivo',
-    'Calidad del agua y alimentación',
-    'Biomasa y ciclos',
-  ],
-  'Abejas': [
-    'Apiarios y colmenas',
-    'Revisiones y sanidad',
-    'Cosechas y seguimiento',
-  ],
-  'Porcinos': [
-    'Reproductores y servicios',
-    'Camadas y alimentación',
-    'Engorda e indicadores',
-  ],
-  'Equinos': ['Atención y seguimiento individual', 'Reproducción y crianza'],
-};
+export '../domain/production_catalog.dart';
 
 /// Catalog and existing local tools only. No farm records or operating limits
 /// are created by selecting a species/activity.
@@ -79,11 +31,18 @@ class ProductionMenu extends StatefulWidget {
     this.member,
     this.access,
     this.porcino,
+    this.units,
   });
   final ValueChanged<String> onNavigate;
   final ClinicMembership? member;
   final ModuleAccess? access;
   final PorcinoRepository? porcino;
+
+  /// Donde se guardan las unidades de produccion.
+  ///
+  /// Opcional: sin almacen la seccion de unidades no aparece, igual que el
+  /// resto de la pantalla sigue funcionando sin sesion.
+  final ProductionUnitRepository? units;
   @override
   State<ProductionMenu> createState() => _ProductionMenuState();
 }
@@ -364,10 +323,32 @@ class _ProductionMenuState extends State<ProductionMenu> {
           denied,
       ],
       const SizedBox(height: 24),
+      if (widget.units case final ProductionUnitRepository almacen)
+        if (widget.member case final ClinicMembership miembro) ...[
+          const VetSectionHeader(
+            title: 'Unidades de producción',
+            subtitle:
+                'El hato, lote, parvada o apiario del que cuelgan los demás registros. Se guarda en este dispositivo.',
+          ),
+          VetActionButton(
+            icon: VetIcons.clipboardList,
+            label: 'Abrir unidades',
+            onPressed: () => open(
+              ProductionUnitsScreen(
+                repository: almacen,
+                userId: miembro.userId,
+                clinicId: miembro.clinicId,
+                species: species!,
+                activity: activity!,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
       const VetSectionHeader(
         title: 'Apartados previstos',
         subtitle:
-            'Estos registros específicos están en preparación; aún no permiten guardar datos de unidades o lotes.',
+            'Estos registros específicos están en preparación; las unidades de arriba sí se guardan.',
       ),
       for (final name in plannedProductionAreas[species]!)
         Padding(
