@@ -5,6 +5,8 @@ import '../../../vet_ui/vet_theme.dart';
 import 'porcino_panels.dart';
 import 'feeding_panel.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
+import '../../aviculture/presentation/broiler_screen.dart';
+import '../../aviculture/presentation/poultry_index_screen.dart';
 import '../../incubation/presentation/incubation_screen.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/module_access.dart';
@@ -260,13 +262,31 @@ class _ProductionMenuState extends State<ProductionMenu> {
               onPressed: () => open(const IncubationScreen()),
             ),
           ),
+        if (allowed('Cálculos clínicos') && activity == 'Engorda')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.bird,
+              label: 'Capacidad de pollo de engorda',
+              onPressed: () => open(const BroilerScreen()),
+            ),
+          ),
+        if (allowed('Cálculos clínicos') &&
+            (activity == 'Postura' || activity == 'Engorda'))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.chartGrowth,
+              label: 'Índices productivos (engorda y postura)',
+              onPressed: () => open(const PoultryIndexScreen()),
+            ),
+          ),
         if (!allowed('Cálculos clínicos')) denied,
         if (activity == 'Engorda')
           const VetNotice(
             text:
-                'Las herramientas específicas de engorda están en preparación. Las tablas actuales de postura no se aplican automáticamente a engorda.',
-            icon: VetIcons.clock,
-            kind: VetBadgeKind.warning,
+                'Las referencias de engorda son de clase (CUCBA; tabla Cobb) y están sin verificar. Las tablas de postura no se aplican a engorda.',
+            icon: VetIcons.clipboardChecks,
           ),
         if (activity != 'Engorda')
           const VetNotice(

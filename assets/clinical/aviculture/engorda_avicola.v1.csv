@@ -1,0 +1,52 @@
+etapa,sem_desde,sem_hasta,sistema,parametro,min,max,unidad,fuente,estado
+dias_1_3,,,piso,densidad,50,60,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+dias_4_6,,,piso,densidad,40,50,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+dias_7_9,,,piso,densidad,30,40,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+dias_10_12,,,piso,densidad,20,30,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+dias_13_15,,,piso,densidad,10,20,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+dias_16_19,,,piso,densidad,10,10,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+dias_21_adelante,,,piso,densidad,8,8,pollitos_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+engorde,,,lados_abiertos_ventilacion_natural,densidad_maxima_lote,30,30,kg_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+engorde,,,lados_abiertos_presion_positiva,densidad_maxima_lote,35,35,kg_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+engorde,,,paredes_solidas_ventilacion_cruzada,densidad_maxima_lote,35,35,kg_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+engorde,,,paredes_solidas_tunel_nebulizadores,densidad_maxima_lote,39,39,kg_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+engorde,,,paredes_solidas_tunel_enfriamiento_evaporativo,densidad_maxima_lote,42,42,kg_por_m2,Pollo de engorda (pptx CUCBA); tabla Cobb,sin_verificar
+preparacion_caseta,,,viruta_madera,cama_profundidad_minima,2.5,2.5,cm,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,aserrin_seco,cama_profundidad_minima,2.5,2.5,cm,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,cascarilla_arroz,cama_profundidad_minima,5,5,cm,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,cascarilla_girasol,cama_profundidad_minima,5,5,cm,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,paja,cama_cantidad_minima,1,1,kg_por_m2,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,piso,cama_profundidad_promedio,2.5,5,cm,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,piso,desinfeccion_cama_formol_antes_llegada,3,4,dias,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,galpon_hasta_12.8m,lineas_alimentacion,2,2,lineas,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,galpon_13_a_15m,lineas_alimentacion,3,3,lineas,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,galpon_16_a_20m,lineas_alimentacion,4,4,lineas,Pollo de engorda (pptx CUCBA),sin_verificar
+preparacion_caseta,,,galpon_21_a_25m,lineas_alimentacion,5,5,lineas,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,calidad_aire_oxigeno,19.6,,%_minimo,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,calidad_aire_co2,0,3000,ppm_(<0.3%),Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,calidad_aire_monoxido_carbono,0,10,ppm,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,calidad_aire_amoniaco,0,10,ppm,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,calidad_aire_humedad_relativa_guia_aire,45,65,%,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,calidad_aire_polvo_respirable,0,3.4,mg_por_m3,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,humedad_relativa_caseta,40,70,%,Pollo de engorda (pptx CUCBA),sin_verificar
+dia_1,,,todos,temperatura_caseta,33,33,C,Pollo de engorda (pptx CUCBA),sin_verificar
+semana_1_a_5,,,todos,reduccion_temperatura_por_semana,3,3,C,Pollo de engorda (pptx CUCBA),sin_verificar
+desde_semana_5,5,,todos,temperatura_caseta,18,21,C,Pollo de engorda (pptx CUCBA),sin_verificar
+recepcion,,,todos,temperatura_corporal_pollito_llegada,39,39,C,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,temperatura_corporal_ave,40.5,41.7,C,Pollo de engorda (pptx CUCBA),sin_verificar
+engorde,,,todos,zona_termoneutral,10,20,C,"Pollo de engorda (pptx CUCBA) (otra figura, Salvador 2017: 19-22 C: DISCREPANCIA)",sin_verificar
+engorde,,,todos,zona_termoneutral_alt_Salvador2017,19,22,C,Pollo de engorda (pptx CUCBA); fig. Salvador 2017,alternativa
+recepcion,,,todos,peso_pollito_100_aves_bascula,38,45,g,Pollo de engorda (pptx CUCBA),sin_verificar
+recepcion,,,todos,primer_alimento_tras_llegada,4,5,horas,Pollo de engorda (pptx CUCBA),sin_verificar
+preiniciador,0,1,todos,proteina_cruda_dieta,23,23,%,Pollo de engorda (pptx CUCBA),sin_verificar
+iniciador,1,3,todos,proteina_cruda_dieta,21,21,%,Pollo de engorda (pptx CUCBA),sin_verificar
+crecimiento,3,6,todos,proteina_cruda_dieta,19,19,%,Pollo de engorda (pptx CUCBA),sin_verificar
+finalizador,6,,todos,proteina_cruda_dieta,16,16,%,Pollo de engorda (pptx CUCBA),sin_verificar
+preinicio,,,todos,etapa_dias_post_nacimiento,0,8,dias,Pollo de engorda (pptx CUCBA); etapas DDN (distinta de fases por semana: revisar),sin_verificar
+inicio,,,todos,etapa_dias_post_nacimiento,8,19,dias,Pollo de engorda (pptx CUCBA); etapas DDN (distinta de fases por semana: revisar),sin_verificar
+desarrollo,,,todos,etapa_dias_post_nacimiento,19,29,dias,Pollo de engorda (pptx CUCBA); etapas DDN (distinta de fases por semana: revisar),sin_verificar
+engorde_finalizado,,,todos,etapa_dias_post_nacimiento,29,42,dias,Pollo de engorda (pptx CUCBA); etapas DDN (distinta de fases por semana: revisar),sin_verificar
+calendario,,,todos,cambio_a_pienso_inicio,2,2,dia,Pollo de engorda (pptx CUCBA),sin_verificar
+calendario,,,todos,cambio_a_pienso_engorde,10,10,dia,Pollo de engorda (pptx CUCBA),sin_verificar
+calendario,,,todos,cambio_a_pienso_final,25,25,dia,Pollo de engorda (pptx CUCBA),sin_verificar
+calendario,,,todos,transporte_matadero,42,42,dia,Pollo de engorda (pptx CUCBA),sin_verificar

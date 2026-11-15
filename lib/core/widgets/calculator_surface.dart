@@ -20,25 +20,21 @@ import '../../vet_ui/vet_icons.dart';
     color: const Color(0xFF8DADD8),
     icon: VetIcons.medicineBottle,
   ),
-  'aviculture' => (
-    color: const Color(0xFF7BCFEA),
-    icon: VetIcons.chicken,
-  ),
+  'aviculture' => (color: const Color(0xFF7BCFEA), icon: VetIcons.chicken),
   'incubation' => (color: const Color(0xFFAA94D1), icon: VetIcons.egg),
+  'broiler' => (color: const Color(0xFFE0A97B), icon: VetIcons.bird),
+  'poultryIndex' => (
+    color: const Color(0xFF7BCFEA),
+    icon: VetIcons.chartGrowth,
+  ),
   'fluids' => (color: const Color(0xFF7BD8EA), icon: VetIcons.drop),
   'cri' => (color: const Color(0xFFAC96CF), icon: VetIcons.gauge),
   'herd' => (color: const Color(0xFF979BCE), icon: VetIcons.cow),
   'water' => (color: const Color(0xFF7BE6EA), icon: VetIcons.waves),
   'feed' => (color: const Color(0xFFC0A1C4), icon: VetIcons.feedBag),
   'adjustment' => (color: const Color(0xFFCD8ADB), icon: VetIcons.sliders),
-  'vitals' => (
-    color: const Color(0xFF7BD3EA),
-    icon: VetIcons.heartPulse,
-  ),
-  'metabolic' => (
-    color: const Color(0xFFA098CD),
-    icon: VetIcons.scale,
-  ),
+  'vitals' => (color: const Color(0xFF7BD3EA), icon: VetIcons.heartPulse),
+  'metabolic' => (color: const Color(0xFFA098CD), icon: VetIcons.scale),
   'protocols' => (color: const Color(0xFF96A3CF), icon: VetIcons.checklist),
   'ruleOfThree' => (color: const Color(0xFF979BCE), icon: VetIcons.balance),
   'internationalUnits' => (
@@ -57,6 +53,8 @@ Color calculatorPastel(String id) => switch (id) {
   'manufacturer' => const Color(0xFFE1EBFB),
   'aviculture' => const Color(0xFFDDF1FC),
   'incubation' => const Color(0xFFECE0FA),
+  'broiler' => const Color(0xFFFBEBDD),
+  'poultryIndex' => const Color(0xFFDDF1FC),
   'fluids' => const Color(0xFFDDECF9),
   'cri' => const Color(0xFFECE2FA),
   'herd' => const Color(0xFFE1E4F8),
@@ -420,8 +418,10 @@ class CalculatorFieldLabel extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
         child: Text(
           label.replaceFirst(RegExp(r'\s*\([^)]+\)'), ''),
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       Semantics(label: label, child: child),

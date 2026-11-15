@@ -1,0 +1,13 @@
+id,titulo,formula,entradas,fuente,estado,nota
+ic_engorda,Conversion alimenticia (engorda),kg_alimento_consumido / (kg_carne_vendida - peso_pollito_llegada),"kg_alimento,kg_carne_vendida,peso_pollito",Pollo de engorda (pptx),sin_verificar,
+gdp_engorda,Ganancia diaria de peso,peso_promedio_ave / dias_a_venta,"peso_promedio,dias",Pollo de engorda (pptx),sin_verificar,
+viabilidad,Viabilidad %,existencia_actual*100 / existencia_inicial,"existencia_actual,existencia_inicial",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+mortalidad_dia,Mortalidad dia %,bajas*100 / existencia_actual,"bajas,existencia_actual",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+mortalidad_acum,Mortalidad acumulada %,suma_bajas*100 / aves_alojadas,"bajas,aves_alojadas",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+postura_pct,% postura (ave/dia),huevos*100 / existencia,"huevos,existencia",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,el pdf usa existencia inicial en el denominador
+peso_huevo,Peso de huevo g,kg_recolectados*1000 / huevos_pesados,"kg,n",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+consumo,Consumo g/ave/dia,alimento_ofrecido_kg*1000 / existencia,"kg,existencia",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+ic_postura,Conversion postura kg/kg,alimento_ofrecido_kg / kg_huevo_producido,"kg,kg",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+masa_huevo_ave_dia,Masa de huevo ave/dia g,postura_pct * peso_huevo / 100,"pct,g",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,
+indice_productividad,Indice de productividad (IP),(masa_huevo_ave_alojada_acum / dias_periodo_produccion / conversion) * 100,"masa,dias,ic",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,categorias: >300 excelente; 260-299 bueno; 200-259 regular; <200 malo
+indice_forma_huevo,Indice de forma,ancho/longitud*100,"mm,mm",Aves de postura (pdf exposicion CUCBA 2024),sin_verificar,72-76 optimo; <72 largo; >76 redondo

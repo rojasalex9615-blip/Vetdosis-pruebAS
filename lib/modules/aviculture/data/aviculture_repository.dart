@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../../doses/domain/quantity.dart';
+import '../domain/broiler_reference.dart';
+import '../domain/poultry_formulas.dart';
 
 class AvicultureParameter {
   AvicultureParameter(this.fields);
@@ -60,5 +62,21 @@ class AvicultureRepository {
       AvicultureCatalog.parseCsv(equipment),
       jsonDecode(extra) as Map<String, dynamic>,
     );
+  }
+
+  /// Referencias de pollo de engorda (CUCBA / Cobb).
+  Future<BroilerCatalog> loadBroiler() async {
+    final csv = await rootBundle.loadString(
+      'assets/clinical/aviculture/engorda_avicola.v1.csv',
+    );
+    return BroilerCatalog.parseCsv(csv);
+  }
+
+  /// Fórmulas de producción avícola (engorda y postura).
+  Future<PoultryFormulaCatalog> loadFormulas() async {
+    final csv = await rootBundle.loadString(
+      'assets/clinical/aviculture/formulas_avicola.v1.csv',
+    );
+    return PoultryFormulaCatalog.parseCsv(csv);
   }
 }

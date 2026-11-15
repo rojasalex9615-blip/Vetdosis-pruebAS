@@ -5,6 +5,8 @@ import '../../patients/domain/patient_repository.dart';
 import 'fluid_therapy_panel.dart';
 import '../../incubation/presentation/incubation_screen.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
+import '../../aviculture/presentation/broiler_screen.dart';
+import '../../aviculture/presentation/poultry_index_screen.dart';
 import 'package:flutter/material.dart';
 import '../../doses/data/catalog_repository.dart';
 import '../../doses/domain/quantity.dart';
@@ -189,6 +191,26 @@ class _CalculationScreenState extends State<CalculationScreen> {
               ),
               icon: const Icon(VetIcons.egg),
               label: const Text('Aves · Incubación'),
+            ),
+          if (widget.showAviculture)
+            OutlinedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(builder: (_) => const BroilerScreen()),
+              ),
+              icon: const Icon(VetIcons.bird),
+              label: const Text('Aves · Engorda'),
+            ),
+          if (widget.showAviculture)
+            OutlinedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const PoultryIndexScreen(),
+                ),
+              ),
+              icon: const Icon(VetIcons.chartGrowth),
+              label: const Text('Aves · Índices productivos'),
             ),
           const SizedBox(height: 12),
           if (widget.referenceLibrary != null && widget.clinicId != null) ...[
