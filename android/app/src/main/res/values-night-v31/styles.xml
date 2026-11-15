@@ -12,7 +12,7 @@
         <item name="android:windowSplashScreenBackground">#201F25</item>
         <!-- Igual que en values-v31: el arte full-bleed se recortaria en el
              circulo de Android 12+, asi que se usa el icono de la app. -->
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/vetdosis_app_icon</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/vetdosis_launcher</item>
         <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
