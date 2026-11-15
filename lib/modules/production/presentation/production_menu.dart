@@ -5,6 +5,7 @@ import '../../../vet_ui/vet_theme.dart';
 import 'porcino_panels.dart';
 import 'aquaculture_panels.dart';
 import 'semen_reference_screen.dart';
+import '../../aviculture/presentation/aviculture_records_screen.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
 import '../../aviculture/presentation/broiler_screen.dart';
 import '../../aviculture/presentation/layer_reference_screen.dart';
@@ -48,11 +49,9 @@ const plannedProductionAreas = <String, List<String>>{
     'Carne, leche y fibra según actividad',
     'Reproducción y alimentación',
   ],
-  'Aves': [
-    'Parvadas, casetas y ciclos',
-    'Registros productivos',
-    'Alimentación y seguimiento',
-  ],
+  // Parvadas, casetas, registros productivos y eventos ya están disponibles en
+  // el módulo M15; quedan pendientes los indicadores exportables.
+  'Aves': ['Indicadores y reportes'],
   'Peces': [
     'Lotes y unidades de cultivo',
     'Calidad del agua y alimentación',
@@ -154,6 +153,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
     'Aves' => const [
       VetStatusBadge(
         label: 'Capacidad e incubación según acceso',
+        kind: VetBadgeKind.success,
+      ),
+      VetStatusBadge(
+        label: 'Parvadas y producción',
         kind: VetBadgeKind.success,
       ),
     ],
@@ -261,6 +264,17 @@ class _ProductionMenuState extends State<ProductionMenu> {
               icon: VetIcons.egg,
               label: 'Postura: luz, huevos y calidad del huevo',
               onPressed: () => open(const LayerReferenceScreen()),
+            ),
+          ),
+        if (allowed('Cálculos clínicos') && activity == 'Postura')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.egg,
+              label: 'Parvadas, casetas y producción',
+              onPressed: () => open(
+                AvicultureRecordsScreen(clinicId: widget.member?.clinicId),
+              ),
             ),
           ),
         if (allowed('Cálculos clínicos') &&
