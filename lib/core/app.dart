@@ -23,6 +23,7 @@ import '../modules/operations/presentation/productivity_screen.dart';
 import '../modules/core/presentation/section_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/production/domain/porcino_repository.dart';
+import '../modules/production/domain/production_unit_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
 import 'widgets/neu_identity.dart';
@@ -260,6 +261,7 @@ class VetDosisApp extends StatelessWidget {
     this.experienceRepository,
     this.reviewCatalog,
     this.porcino,
+    this.units,
     this.inboxSeenStore,
     this.laboratory,
   });
@@ -290,6 +292,9 @@ class VetDosisApp extends StatelessWidget {
   final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Donde se guardan las unidades de produccion, si las hay.
+  final ProductionUnitRepository? units;
 
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
@@ -612,6 +617,7 @@ class VetDosisApp extends StatelessWidget {
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
               porcino: porcino,
+              units: units,
               inboxSeenStore: inboxSeenStore,
               personalDoses: personalDoses,
               patients: patients,
@@ -677,6 +683,7 @@ class CoreShell extends StatelessWidget {
     this.onExperienceSaved,
     this.reviewCatalog,
     this.porcino,
+    this.units,
     this.inboxSeenStore,
   });
   final CoreViewModel model;
@@ -712,6 +719,9 @@ class CoreShell extends StatelessWidget {
   final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Donde se guardan las unidades de produccion, si las hay.
+  final ProductionUnitRepository? units;
 
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
@@ -1369,6 +1379,7 @@ class CoreShell extends StatelessWidget {
                     access: moduleAccess,
                     onNavigate: model.navigate,
                     porcino: porcino,
+                    units: units,
                   )
                 else if (model.screen == 'Cálculo rápido')
                   auth == null ||
@@ -1986,7 +1997,9 @@ class CoreShell extends StatelessWidget {
           moduleAccess: moduleAccess,
         ),
         offline: auth?.offline ?? false,
-        homePilot: true,
+        // El Inicio Neu es el predeterminado de la linea nueva; el piloto
+        // sigue pudiendo apagarse con --dart-define=HOME_PILOT=false.
+        homePilot: const bool.fromEnvironment('HOME_PILOT', defaultValue: true),
         alerts: hospitalAlerts,
         isVisible: allowed,
         onNavigate: model.navigate,

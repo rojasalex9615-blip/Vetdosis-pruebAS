@@ -1,0 +1,81 @@
+import contextlib
+import io
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+import publish_beta_build as publish
+
+ROW = {
+    'version_code': 42,
+    'released_at': '2026-11-06T10:00:00+00:00',
+    'expires_at': '2027-02-04T10:00:00+00:00',
+}
+
+
+class PublishBetaBuild(unittest.TestCase):
+    def run_script(self, env, rows):
+        calls = []
+
+        def fake_query(sql):
+            calls.append(sql)
+            return rows if 'beta_builds' in sql else [{'beta_publish_build': None}]
+
+        out, err = io.StringIO(), io.StringIO()
+        with patch.dict(os.environ, env, clear=True), patch.object(publish, 'query', side_effect=fake_query), contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            status = None
+            try:
+                status = publish.main()
+            except SystemExit as exit_:
+                status = exit_.code
+        return status, calls, out.getvalue(), err.getvalue()
+
+    def test_missing_secret_never_registers(self):
+        status, calls, _, err = self.run_script({'BETA_VERSION_CODE': '42'}, [ROW])
+        self.assertEqual(status, 0)
+        self.assertEqual(calls, [])
+        self.assertIn('OMITIDO', err)
+
+    def test_missing_secret_notes_the_unregistered_apk_in_the_summary(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            summary = os.path.join(tmp, 'summary.md')
+            status, _, _, _ = self.run_script(
+                {
+                    'BETA_VERSION_CODE': '42',
+                    'GITHUB_STEP_SUMMARY': summary,
+                },
+                [ROW],
+            )
+            self.assertEqual(status, 0)
+            with open(summary) as written:
+                self.assertIn('APK beta 42 SIN REGISTRAR', written.read())
+
+    def test_registers_then_confirms_the_row(self):
+        status, calls, out, _ = self.run_script({'BETA_VERSION_CODE': '42', 'SUPABASE_ACCESS_TOKEN': 'secreto'}, [ROW])
+        self.assertEqual(status, 0)
+        self.assertEqual(len(calls), 2)
+        self.assertIn('beta_publish_build(42)', calls[0])
+        self.assertIn('where version_code = 42', calls[1])
+        self.assertIn('versionCode `42`', out)
+
+    def test_absent_row_fails_instead_of_publishing(self):
+        status, calls, _, _ = self.run_script({'BETA_VERSION_CODE': '42', 'SUPABASE_ACCESS_TOKEN': 'secreto'}, [])
+        self.assertNotEqual(status, 0)
+        self.assertEqual(len(calls), 2)
+
+    def test_workflow_registers_before_publishing_and_requires_the_token(self):
+        workflow = (Path(__file__).resolve().parents[2] / '.github/workflows/build-test-apk.yml').read_text()
+        register = workflow.index('Registrar publicación beta verificada')
+        publish = workflow.index('Publicar APK instalable')
+        self.assertLess(register, publish)
+        self.assertIn('SUPABASE_ACCESS_TOKEN:-', workflow[register:publish])
+
+    def test_out_of_range_never_registers(self):
+        status, calls, _, _ = self.run_script({'BETA_VERSION_CODE': '0', 'SUPABASE_ACCESS_TOKEN': 'secreto'}, [ROW])
+        self.assertNotEqual(status, 0)
+        self.assertEqual(calls, [])
+
+
+if __name__ == '__main__':
+    unittest.main()
