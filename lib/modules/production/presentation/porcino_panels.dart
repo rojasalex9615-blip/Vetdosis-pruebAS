@@ -8,14 +8,23 @@ import '../domain/porcino_calculators.dart';
 import '../domain/porcino_capacity.dart';
 import '../domain/porcino_facilities.dart';
 import '../domain/porcino_reference.dart';
+import '../domain/porcino_environment.dart';
+import '../domain/porcino_repository.dart';
 import '../domain/porcino_upp.dart';
 import 'growth_panel.dart';
 import '../../../vet_ui/vet_icons.dart';
+import '../../patients/presentation/patient_view_model.dart' show newOperationId;
 import 'porcino_semen_panel.dart';
 
-/// Paneles del módulo Porcinos para cada actividad. Cálculos de sesión: no
-/// guardan registros de granja ni consultan Supabase.
-List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
+/// Paneles del módulo Porcinos para cada actividad. Los cálculos son de sesión;
+/// si se pasa [repository] se ofrecen además los planes guardados y los
+/// catálogos remotos (bioseguridad). Nunca guarda datos clínicos.
+List<Widget> porcinoPanelsFor(
+  String activity, {
+  required bool showCosts,
+  PorcinoRepository? repository,
+  String? clinicId,
+}) {
   const notice = VetNotice(
     text:
         'Cálculos de sesión con valores de referencia de clase. No guardan registros de granja y no son metas de rendimiento.',
@@ -45,6 +54,10 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
         title: 'Referencias de reproducción',
         rows: porcinoReproductionReference,
       ),
+      if (repository != null) ...[
+        const _Gap(),
+        PorcinoBandPlanPanel(repository: repository, clinicId: clinicId!),
+      ],
     ],
     'Maternidad y destete' => [
       notice,
@@ -125,6 +138,12 @@ List<Widget> porcinoPanelsFor(String activity, {required bool showCosts}) {
       const PorcinoUppPanel(),
       const _Gap(),
       const PorcinoNitrogenPanel(),
+      const _Gap(),
+      const PorcinoEnvironmentPanel(),
+      if (repository != null) ...[
+        const _Gap(),
+        PorcinoBiosecurityRefsPanel(repository: repository),
+      ],
     ],
     _ => const <Widget>[],
   };
@@ -3055,3 +3074,396 @@ class _PorcinoYieldPanelState extends State<PorcinoYieldPanel> {
   }
 }
 
+
+/// Panel del dictamen ambiental SEMARNAT (Yucatán): ecuaciones, parámetros y
+/// reparto de municipios por rango de NCA. Solo lectura: los datos ya están
+/// fijados en el dominio, el panel no recalcula nada.
+class PorcinoEnvironmentPanel extends StatelessWidget {
+  const PorcinoEnvironmentPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final categories = <String, List<PorcinoEnvironmentRef>>{};
+    for (final ref in porcinoEnvironmentRefs) {
+      categories.putIfAbsent(ref.category, () => []).add(ref);
+    }
+    const municipal = PorcinoMunicipalNca();
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.leaf,
+            title: 'Dictamen ambiental (SEMARNAT, Yucatán)',
+            subtitle:
+                'Nivel de contaminación del agua (NCA) y huella hídrica gris '
+                'del sector porcícola en Yucatán.',
+          ),
+          const VetNotice(
+            text:
+                'Valores publicados del dictamen (marzo 2023) para Yucatán. No '
+                'son mediciones de esta granja ni límites aplicables a otra '
+                'región. Para otro estado cambia los parámetros.',
+            icon: VetIcons.pin,
+          ),
+          for (final entry in categories.entries) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 14, bottom: 4),
+              child: Text(entry.key, style: textTheme.titleSmall),
+            ),
+            for (final ref in entry.value)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(ref.dato, style: textTheme.bodyMedium),
+                          if (ref.nota.isNotEmpty)
+                            Text(ref.nota, style: textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if (ref.valor.isNotEmpty)
+                      Text(
+                        ref.unidad.isEmpty
+                            ? ref.valor
+                            : '${ref.valor} ${ref.unidad}',
+                        textAlign: TextAlign.right,
+                        style: textTheme.titleSmall,
+                      ),
+                  ],
+                ),
+              ),
+          ],
+          const SizedBox(height: 14),
+          Text(
+            'Reparto de municipios con actividad porcícola (Cmax = 3.0 mg/L)',
+            style: textTheme.titleSmall,
+          ),
+          const SizedBox(height: 6),
+          _Results([
+            ('NCA > 2 (crítico)', '${municipal.critical} municipios'),
+            ('1 < NCA ≤ 2 (urgente)', '${municipal.urgent} municipios'),
+            ('NCA ≤ 1 (sustentable)', '${municipal.sustainable} municipios'),
+            ('Total', '${municipal.total} municipios'),
+          ]),
+          const SizedBox(height: 10),
+          Text(
+            'Fuente: $porcinoEnvironmentSource, p. 84-86. Método de Mekonnen y '
+            'Hoekstra (2016). El NCA compara el agua necesaria para diluir el '
+            'nitrógeno con la recarga del acuífero; confirma las cifras con el '
+            'dictamen antes de usarlas en un trámite.',
+            style: textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Planes de flujo por bandas guardados en la clínica.
+///
+/// Lee los planes por RLS y guarda por el RPC idempotente
+/// `produccion_banda_guardar`; elimina con `produccion_banda_eliminar`. Las
+/// entradas se capturan como JSON: el panel no rehace el cálculo, conserva el
+/// contrato del servidor.
+class PorcinoBandPlanPanel extends StatefulWidget {
+  const PorcinoBandPlanPanel({
+    super.key,
+    required this.repository,
+    required this.clinicId,
+  });
+  final PorcinoRepository repository;
+  final String clinicId;
+
+  @override
+  State<PorcinoBandPlanPanel> createState() => _PorcinoBandPlanPanelState();
+}
+
+class _PorcinoBandPlanPanelState extends State<PorcinoBandPlanPanel> {
+  final name = TextEditingController();
+  final sows = TextEditingController(text: '550');
+  List<PorcinoBandPlan> plans = [];
+  bool busy = false;
+  String? error, status;
+
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    sows.dispose();
+    super.dispose();
+  }
+
+  Future<void> load() async {
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      final rows = await widget.repository.listBandPlans(widget.clinicId);
+      if (!mounted) return;
+      setState(() => plans = rows);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => error = 'No se pudieron leer los planes: $e');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> save() async {
+    final planName = name.text.trim();
+    if (planName.isEmpty) {
+      setState(() => error = 'Ponle un nombre al plan.');
+      return;
+    }
+    setState(() {
+      busy = true;
+      error = null;
+      status = null;
+    });
+    try {
+      final id = await widget.repository.saveBandPlan(
+        widget.clinicId,
+        {
+          'nombre': planName,
+          'especie': 'cerdo',
+          'entradas': {'vientres': int.tryParse(sows.text.trim()) ?? 0},
+          'resultados': <String, dynamic>{},
+        },
+        operation: newOperationId(),
+      );
+      if (!mounted) return;
+      setState(() => status = 'Plan guardado ($id).');
+      name.clear();
+      await load();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => error = 'No se pudo guardar: $e');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> remove(PorcinoBandPlan plan) async {
+    setState(() {
+      busy = true;
+      error = null;
+      status = null;
+    });
+    try {
+      final ok = await widget.repository.deleteBandPlan(
+        widget.clinicId,
+        plan.id,
+        operation: newOperationId(),
+      );
+      if (!mounted) return;
+      setState(() => status = ok ? 'Plan eliminado.' : 'No se eliminó.');
+      await load();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => error = 'No se pudo eliminar: $e');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.cloudUpload,
+            title: 'Planes guardados del flujo por bandas',
+            subtitle:
+                'Guarda en la clínica los planes de flujo. Se guardan por el '
+                'RPC idempotente; la tabla solo permite leer.',
+          ),
+          const VetNotice(
+            text:
+                'Estos planes son registros operativos de tu clínica, no datos '
+                'clínicos de pacientes. Se leen y escriben con tu sesión.',
+            icon: VetIcons.shieldCheck,
+          ),
+          const SizedBox(height: 8),
+          _Field(
+            controller: name,
+            label: 'Nombre del plan',
+            onChanged: () => setState(() => status = null),
+          ),
+          _Field(
+            controller: sows,
+            label: 'Vientres',
+            onChanged: () => setState(() => status = null),
+          ),
+          const SizedBox(height: 8),
+          VetActionButton(
+            icon: VetIcons.save,
+            label: 'Guardar plan',
+            onPressed: busy ? null : save,
+          ),
+          if (status != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(text: status!, icon: VetIcons.documentCheck),
+            ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            ),
+          const SizedBox(height: 12),
+          if (busy && plans.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (plans.isEmpty)
+            Text('Aún no hay planes guardados.', style: textTheme.bodySmall)
+          else
+            for (final plan in plans)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(plan.name),
+                subtitle: Text(
+                  '${plan.species} · v${plan.version} · '
+                  '${plan.inputs['vientres'] ?? '—'} vientres',
+                  style: textTheme.bodySmall,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(VetIcons.trash),
+                  tooltip: 'Eliminar plan',
+                  onPressed: busy ? null : () => remove(plan),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Catálogo remoto de referencias de bioseguridad (solo lectura).
+///
+/// Muestra las 33 filas aplicadas en `produccion_bioseguridad_refs`, agrupadas
+/// por categoría. No es un cálculo: es la fuente publicada, para consultarla.
+class PorcinoBiosecurityRefsPanel extends StatefulWidget {
+  const PorcinoBiosecurityRefsPanel({super.key, required this.repository});
+  final PorcinoRepository repository;
+
+  @override
+  State<PorcinoBiosecurityRefsPanel> createState() =>
+      _PorcinoBiosecurityRefsPanelState();
+}
+
+class _PorcinoBiosecurityRefsPanelState
+    extends State<PorcinoBiosecurityRefsPanel> {
+  List<Map<String, dynamic>> refs = [];
+  bool busy = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
+  Future<void> load() async {
+    setState(() {
+      busy = true;
+      error = null;
+    });
+    try {
+      final rows = await widget.repository.biosecurityRefs();
+      if (!mounted) return;
+      setState(() => refs = rows);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => error = 'No se pudo leer el catálogo: $e');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final grouped = <String, List<Map<String, dynamic>>>{};
+    for (final row in refs) {
+      grouped.putIfAbsent('${row['categoria']}', () => []).add(row);
+    }
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.clipboardChecks,
+            title: 'Catálogo de bioseguridad (en línea)',
+            subtitle:
+                'Referencias publicadas de bioseguridad porcina, agrupadas por '
+                'categoría. Solo lectura.',
+          ),
+          if (busy && refs.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          if (error != null)
+            VetNotice(
+              text: error!,
+              icon: VetIcons.alertOctagon,
+              kind: VetBadgeKind.danger,
+            ),
+          if (!busy && error == null && refs.isEmpty)
+            Text('El catálogo está vacío.', style: textTheme.bodySmall),
+          for (final entry in grouped.entries) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 14, bottom: 4),
+              child: Text(entry.key, style: textTheme.titleSmall),
+            ),
+            for (final row in entry.value)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${row['dato']}',
+                        style: textTheme.bodyMedium,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    if ('${row['valor']}'.isNotEmpty)
+                      Text(
+                        '${row['valor']} ${row['unidad']}'.trim(),
+                        textAlign: TextAlign.right,
+                        style: textTheme.titleSmall,
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}

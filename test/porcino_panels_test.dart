@@ -113,7 +113,7 @@ void main() {
     }
   });
 
-  testWidgets('Biosecurity and environment activity shows its four panels', (
+  testWidgets('Biosecurity and environment activity shows its five panels', (
     tester,
   ) async {
     await tester.pumpWidget(app(admin));
@@ -127,7 +127,10 @@ void main() {
     expect(find.byType(PorcinoKpiImpactPanel), findsOneWidget);
     expect(find.byType(PorcinoUppPanel), findsOneWidget);
     expect(find.byType(PorcinoNitrogenPanel), findsOneWidget);
+    expect(find.byType(PorcinoEnvironmentPanel), findsOneWidget);
     expect(find.text('0 de 20 revisados'), findsOneWidget);
+    // Sin repositorio no aparecen los paneles remotos.
+    expect(find.byType(PorcinoBiosecurityRefsPanel), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

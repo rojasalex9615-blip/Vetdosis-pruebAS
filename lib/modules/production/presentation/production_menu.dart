@@ -10,6 +10,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/module_access.dart';
 import '../../core/domain/navigation_access.dart';
 import '../../../vet_ui/vet_icons.dart';
+import '../domain/porcino_repository.dart';
 
 const productionSpecies = <String, List<String>>{
   'Bovinos': [
@@ -74,10 +75,12 @@ class ProductionMenu extends StatefulWidget {
     required this.onNavigate,
     this.member,
     this.access,
+    this.porcino,
   });
   final ValueChanged<String> onNavigate;
   final ClinicMembership? member;
   final ModuleAccess? access;
+  final PorcinoRepository? porcino;
   @override
   State<ProductionMenu> createState() => _ProductionMenuState();
 }
@@ -216,11 +219,13 @@ class _ProductionMenuState extends State<ProductionMenu> {
               runSpacing: 8,
               children: [
                 for (final name in activities)
-                  glowChip(ChoiceChip(
-                    label: Text(name),
-                    selected: activity == name,
-                    onSelected: (_) => setState(() => activity = name),
-                  )),
+                  glowChip(
+                    ChoiceChip(
+                      label: Text(name),
+                      selected: activity == name,
+                      onSelected: (_) => setState(() => activity = name),
+                    ),
+                  ),
               ],
             ),
           ],
@@ -280,6 +285,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
           ...porcinoPanelsFor(
             activity!,
             showCosts: allowed('Planeación financiera'),
+            repository: widget.porcino,
+            clinicId: widget.member?.clinicId,
           )
         else
           denied,

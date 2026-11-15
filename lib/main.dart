@@ -35,6 +35,8 @@ import 'modules/prescribing/domain/prescribing_repository.dart';
 import 'modules/prescribing/data/supabase_prescribing_repository.dart';
 import 'modules/review/domain/review_catalog_repository.dart';
 import 'modules/review/data/supabase_review_catalog_repository.dart';
+import 'modules/production/domain/porcino_repository.dart';
+import 'modules/production/data/supabase_porcino_repository.dart';
 import 'modules/calculations/data/reference_library_repository.dart';
 import 'modules/forms/clinical/clinical_repository.dart';
 import 'modules/forms/domain/form_repository.dart';
@@ -107,6 +109,7 @@ Future<void> main() async {
   ModuleAccessRepository? moduleAccess;
   ClinicExperienceRepository? experienceRepository;
   ReviewCatalogRepository? reviewCatalog;
+  PorcinoRepository? porcino;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
     await Supabase.initialize(
@@ -137,6 +140,7 @@ Future<void> main() async {
     moduleAccess = SupabaseModuleAccessRepository(Supabase.instance.client);
     experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
+    porcino = SupabasePorcinoRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     final authRepository = SupabaseAuthRepository(
       Supabase.instance.client,
@@ -233,6 +237,7 @@ Future<void> main() async {
       moduleAccess: moduleAccess,
       experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
+      porcino: porcino,
       hospitalAlerts: alerts,
       requireAuth: true,
     ),
