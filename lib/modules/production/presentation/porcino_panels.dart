@@ -8,6 +8,7 @@ import '../domain/porcino_calculators.dart';
 import '../domain/porcino_capacity.dart';
 import '../domain/porcino_facilities.dart';
 import '../domain/porcino_reference.dart';
+import '../domain/porcino_productive_models.dart';
 import '../domain/porcino_environment.dart';
 import '../domain/porcino_feeding.dart';
 import '../domain/porcino_repository.dart';
@@ -55,6 +56,8 @@ List<Widget> porcinoPanelsFor(
         title: 'Referencias de reproducción',
         rows: porcinoReproductionReference,
       ),
+      const _Gap(),
+      const PorcinoProductiveModelsPanel(),
       if (repository != null) ...[
         const _Gap(),
         PorcinoBandPlanPanel(repository: repository, clinicId: clinicId!),
@@ -3192,6 +3195,202 @@ class _PorcinoEnvironmentPanelState extends State<PorcinoEnvironmentPanel> {
             'confirma las cifras con el dictamen antes de usarlas en un trámite.',
             style: textTheme.bodySmall,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Modelos productivos (Pork School): el «Modelo 2400» en tres escenarios
+/// (promedio, Top 30 %, Top 10 %) y los KPIs históricos de los años 60 y antes.
+/// Solo lectura: los valores ya están fijados en el dominio.
+class PorcinoProductiveModelsPanel extends StatefulWidget {
+  const PorcinoProductiveModelsPanel({super.key});
+
+  @override
+  State<PorcinoProductiveModelsPanel> createState() =>
+      _PorcinoProductiveModelsPanelState();
+}
+
+class _PorcinoProductiveModelsPanelState
+    extends State<PorcinoProductiveModelsPanel> {
+  String scenarioName = porcinoModel2400Scenarios.first.name;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scenario = porcinoModel2400Scenarios.firstWhere(
+      (s) => s.name == scenarioName,
+      orElse: () => porcinoModel2400Scenarios.first,
+    );
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.barChart,
+            title: 'Modelos productivos: Modelo 2400',
+            subtitle:
+                'Tres escenarios de referencia de la clase. La misma granja '
+                '(2 400 vientres) con distinto nivel de manejo.',
+          ),
+          const VetNotice(
+            text:
+                'Valores de referencia de la clase (Pork School, ago-2026), no '
+                'metas de rendimiento ni límites de operación. Sin validación '
+                'externa.',
+            icon: VetIcons.clipboardChecks,
+          ),
+          const SizedBox(height: 10),
+          Text('Comparación de escenarios', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          _Model2400Table(),
+          const SizedBox(height: 14),
+          Text('Detalle del escenario', style: textTheme.titleSmall),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final s in porcinoModel2400Scenarios)
+                ChoiceChip(
+                  label: Text(s.name),
+                  selected: s.name == scenario.name,
+                  onSelected: (_) => setState(() => scenarioName = s.name),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _Results([
+            ('Partos por semana', _fmt(scenario.farrowingsPerWeek, 0)),
+            (
+              'Partos por hembra al año',
+              _fmt(scenario.farrowingsPerSowPerYear, 2),
+            ),
+            ('Tasa de fertilidad', '${_fmt(scenario.fertility * 100, 0)} %'),
+            ('Vientres productivos', _int(scenario.productiveSows)),
+            if (scenario.servicesPerWeek case final services?)
+              ('Servicios por semana', _fmt(services, 0)),
+            ('Destetados por parto', _fmt(scenario.weanedPerLitter, 1)),
+            (
+              'Destetados por hembra servida al año',
+              _fmt(scenario.weanedPigsPerServedSowPerYear, 1),
+            ),
+            (
+              'Lechones destetados por semana',
+              _fmt(scenario.weanedPigsPerWeek, 0),
+            ),
+            (
+              'Objetivo de sobreproducción',
+              '${_fmt(scenario.overproductionTargetPct, 0)} %',
+            ),
+          ]),
+          const SizedBox(height: 10),
+          Text(
+            'Comprobación: destetados/parto × partos/hembra/año = '
+            '${_fmt(scenario.weanedPigsPerServedSowPerYearComputed, 1)} '
+            'destetados/hembra servida/año'
+            '${scenario.farrowingsPerWeekComputed == null ? '' : '; servicios/semana × fertilidad = ${_fmt(scenario.farrowingsPerWeekComputed!, 1)} partos/semana'}. '
+            'Factor vientres ÷ partos/semana = '
+            '${_fmt(scenario.factorSowsPerFarrowing, 1)}.',
+            style: textTheme.bodySmall,
+          ),
+          const SizedBox(height: 14),
+          Text('Igual en los tres escenarios', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          _Results([
+            ('Vientres del modelo', _int(porcinoModel2400Sows.toDouble())),
+            ('Jaulas de maternidad', '$porcinoModel2400Crates (8 salas × 48)'),
+            ('Tasa de reemplazo', '$porcinoModel2400ReplacementPct %'),
+            ('Factor del sistema simple', '$porcinoModel2400Factor'),
+            (
+              'Semanas de proceso (nacimiento a 110 kg)',
+              '$porcinoModel2400ProcessWeeks (175 días)',
+            ),
+            ('Sistema de bandas', porcinoModel2400BandSystem),
+          ]),
+          const SizedBox(height: 14),
+          PorcinoReferenceCard(
+            title: 'KPIs históricos (años 60 y antes)',
+            rows: porcinoHistoricalKpiRows,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Fuente: $porcinoProductiveModelsSource',
+            style: textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tabla comparativa del Modelo 2400: una fila por indicador, una columna por
+/// escenario.
+class _Model2400Table extends StatelessWidget {
+  const _Model2400Table();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final rows = <(String, String Function(PorcinoModel2400Scenario))>[
+      ('Partos/semana', (s) => _fmt(s.farrowingsPerWeek, 0)),
+      ('Partos/hembra/año', (s) => _fmt(s.farrowingsPerSowPerYear, 2)),
+      ('Fertilidad', (s) => '${_fmt(s.fertility * 100, 0)} %'),
+      ('Vientres productivos', (s) => _int(s.productiveSows)),
+      ('Destetados/parto', (s) => _fmt(s.weanedPerLitter, 1)),
+      (
+        'Destetados/hembra servida/año',
+        (s) => _fmt(s.weanedPigsPerServedSowPerYear, 1),
+      ),
+      ('Sobreproducción', (s) => '${_fmt(s.overproductionTargetPct, 0)} %'),
+    ];
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: VetColors.recessed,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: VetColors.softShadow),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Expanded(flex: 3, child: SizedBox()),
+              for (final s in porcinoModel2400Scenarios)
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    s.name,
+                    textAlign: TextAlign.right,
+                    style: textTheme.titleSmall,
+                  ),
+                ),
+            ],
+          ),
+          for (final (label, valueOf) in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(label, style: textTheme.bodyMedium),
+                  ),
+                  for (final s in porcinoModel2400Scenarios)
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        valueOf(s),
+                        textAlign: TextAlign.right,
+                        style: textTheme.bodyMedium,
+                      ),
+                    ),
+                ],
+              ),
+            ),
         ],
       ),
     );

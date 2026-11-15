@@ -1,0 +1,33 @@
+dato,valor,unidad,categoria,fuente,pagina_o_seccion,confianza,nota
+modelo2400_jaulas_paricion_semana,96,jaulas/semana,Modelo 2400 - Parámetros reproductivos,"Modelos Productivos (Carlos Alberto Félix Rosas, Pork School ago-2026)",Tabla Modelo 2400,alta,Fijo en los 3 escenarios
+modelo2400_objetivo_sobreproduccion_promedio,10,%,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,Promedio
+modelo2400_objetivo_sobreproduccion_top30,5,%,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,Top 30%
+modelo2400_objetivo_sobreproduccion_top10,0,%,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,Top 10%
+modelo2400_partos_semana_promedio,107,partos/semana,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_partos_semana_top30,101,partos/semana,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_partos_semana_top10,96,partos/semana,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_partos_hembra_ano_promedio,2.3,partos/hembra/año,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_partos_hembra_ano_top30,2.35,partos/hembra/año,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_partos_hembra_ano_top10,2.4,partos/hembra/año,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_tasa_fertilidad_promedio,0.85,proporción,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_tasa_fertilidad_top10,0.87,proporción,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_vientres_productivos_promedio,2412,vientres,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_vientres_productivos_top30,2236,vientres,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_vientres_productivos_top10,2080,vientres,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_cuota_servicios_semana_promedio,125,servicios/semana,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_tasa_remplazo,45,%,Modelo 2400,Modelos Productivos...,Tabla Modelo 2400,alta,Igual en los 3 escenarios
+modelo2400_jaulas_maternidad,384,jaulas,Modelo 2400 - Espacios,Modelos Productivos...,Tabla Modelo 2400,alta,8 salas x 48 jaulas
+modelo2400_destetados_por_parto_promedio,9.0,lechones,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_destetados_por_parto_top30,9.5,lechones,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_destetados_por_parto_top10,10.0,lechones,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_lechones_dest_semana,960,lechones/semana,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,Fijo en el ejemplo
+modelo2400_lechones_hembra_servida_ano_promedio,20.7,lechones/hembra/año,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_lechones_hembra_servida_ano_top30,22.3,lechones/hembra/año,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_lechones_hembra_servida_ano_top10,24.0,lechones/hembra/año,Modelo 2400 - Producción,Modelos Productivos...,Tabla Modelo 2400,alta,
+modelo2400_factor_25,25,factor,Sistema Simple Factor 25,Modelos Productivos...,Sistema Simple: Factor 25,alta,Parideras semanales x 25 = vientres productivos. Factor 25 = hembras inventario requeridas x parto semanal (52/25=2.08)
+modelo2400_semanas_proceso_cerdo,25,semanas,Modelo 2400 / Portec,Modelos Productivos...,Modelo NC Portec,alta,175 días (110 kgs)
+modelo2400_sistema_4_8_16,4-8-16,,Sistema de bandas,Modelos Productivos...,Modelo NC Portec,alta,"3+1 Maternidad, 7+1 Destete, 15+1 Engorda"
+kpi_historico_60s_destetados_cama_mes,10,destetados/cama/mes,Historia 60s y antes,Modelos Productivos...,Breve Historia,alta,
+kpi_historico_60s_vendidos_vientre_mes,1.5,vendidos/vientre/mes,Historia 60s y antes,Modelos Productivos...,Breve Historia,alta,
+kpi_historico_60s_kgs_vendidos_hembra_ano,1800,kg/hembra/año,Historia 60s y antes,Modelos Productivos...,Breve Historia,alta,
+kpi_historico_60s_conversion,3.5:1,,Historia 60s y antes,Modelos Productivos...,Breve Historia,alta,

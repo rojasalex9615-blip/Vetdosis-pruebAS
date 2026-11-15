@@ -89,7 +89,9 @@ void main() {
     await tester.tap(find.text('Usar ejemplo Modelo 2400'));
     await tester.pumpAndSettle();
     expect(find.text('384'), findsOneWidget);
-    expect(find.text('96'), findsOneWidget);
+    // «96» sale en el flujo y, además, en la tabla de escenarios del panel de
+    // modelos productivos (Top 10 %: 96 partos/semana).
+    expect(find.text('96'), findsWidgets);
     expect(find.text('960'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
