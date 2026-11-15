@@ -36,8 +36,11 @@ Contexto: la cuenta de GitHub estuvo bloqueada y el trabajo se mudó a GitLab; n
 
 **Repartos vigentes (2026-11-15, por indicación de Ale):**
 - **Mistral** trabaja **solo en GitHub**: **no** tiene acceso a GitLab. Lo que produzca hay que llevarlo a GitLab vía OpenHands (espejo) si la integración va contra `integracion/rc-20261114`.
-- **Claude coordina con OpenHands** (este servidor) para el trabajo compartido; Mistral y OpenHands no se coordinan directo.
-- Reparto del tema en curso: **Mistral** → texto/etiqueta flotante de las cajas (descriptor dentro de la caja en reposo, encima y en color de acento al enfocar); **OpenHands** → icono de arranque (hecho, `77b1d2b`) y, pendiente, el relieve neu de los chips del Inicio.
+- **Claude coordina con OpenHands** (este servidor) para el trabajo compartido; Mistral y OpenHands no se coordinan directo. Aviso de Ale (2026-11-15): Claude puede **no terminar** su parte (cupo agotado; se restablece en ~2 h), así que la etiqueta flotante de las cajas puede recaer en OpenHands.
+- **Grok** es el encargado de **datos y tablas** (las crea y respalda en Drive), pero **no** alcanza **Supabase ni GitLab**; sí GitHub. Lo que necesite de esas dos, se lo espeja OpenHands.
+- Reparto del tema en curso: **Mistral** (o quien tome el relevo) → texto/etiqueta flotante de las cajas (descriptor dentro de la caja en reposo, encima y en color de acento al enfocar); **OpenHands** → icono de arranque (hecho, `77b1d2b`) y, pendiente, el relieve neu de los chips del Inicio.
+
+**Acceso a Google Drive desde OpenHands (2026-11-15).** El contenedor **no** trae `rclone`/`gcloud`/`gsutil` ni credencial de Google, pero **sí** tiene salida a Google y `pip`. Se instalaron `google-api-python-client` + `google-auth-oauthlib` y quedó un conector propio en `scripts/drive/` (sin secretos): `gdrive.py` (`check`/`list`/`put`/`get`) y `gdrive_auth.py` (flujo de dispositivo). Credencial por **secreto**, nunca en el repo (es **público**): cuenta de servicio → `GDRIVE_SA_JSON` (+ compartir la carpeta con el correo de la cuenta); o OAuth → `GDRIVE_CLIENT_ID`/`GDRIVE_CLIENT_SECRET`/`GDRIVE_REFRESH_TOKEN`. Ojo: una app OAuth en estado «Testing» emite refresh tokens que **caducan a los 7 días** (verificado en la doc de Google); para que dure, publicar la app.
 
 **Estado de integración (vs `integracion/rc-20261114`), 2026-11-15.** Pendientes (16) — las demás ya están integradas:
 
