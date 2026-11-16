@@ -25,7 +25,7 @@ Ale revisa individualmente cada valor marcado antes de entregar. Hoy lo que la p
 1. **Cuyo · Fósforo, 5,3 mg/dL** (p. 176, tabla 4.4 continuación): valor aislado publicado.
 2. **Cuyo · Potasio, 6,8–8,9 mEq/L** (p. 176, tabla 4.4 continuación): intervalo elevado.
 
-No se marca en pantalla, pero la hoja de origen lo trae con estado «CONFIRMAR taxonomía y pertinencia clínica»: las 58 filas de *Manejo y tratamiento de los animales exóticos* del «jerbo del libro A». Ale decidió tratar los nombres como los de la obra, así que no hay aviso; queda aquí por si quiere mirarlas.
+No se marca en pantalla, pero la hoja de origen lo trae con estado «CONFIRMAR taxonomía y pertinencia clínica»: las 29 filas del «jerbo del libro A» (*Manejo y tratamiento de los animales exóticos*). Ale decidió tratar los nombres como los de la obra, así que no hay aviso; queda aquí por si quiere mirarlas.
 
 Si se añade otra marca en el código, listarla aquí.
 
