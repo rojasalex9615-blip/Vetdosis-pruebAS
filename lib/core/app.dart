@@ -21,6 +21,7 @@ import 'widgets/app_version_label.dart';
 import '../modules/finance/presentation/financial_planning_panel.dart';
 import '../modules/operations/presentation/productivity_screen.dart';
 import '../modules/core/presentation/section_menu.dart';
+import '../modules/exotics/presentation/exotics_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
@@ -901,7 +902,7 @@ class CoreShell extends StatelessWidget {
       'Vademécum' ||
       'Operaciones de dosis' ||
       'Cálculos clínicos' => 'Cálculos',
-      'Producción y grandes especies' => 'Inicio',
+      'Producción y grandes especies' || 'Exóticos' => 'Inicio',
       _ => model.screen,
     };
     final selected = destinations.indexWhere((entry) => entry.$1 == page);
@@ -1271,6 +1272,7 @@ class CoreShell extends StatelessWidget {
                 else if (![
                   'Más',
                   'Producción y grandes especies',
+                  'Exóticos',
                 ].contains(model.screen))
                   DropdownButtonFormField<ClinicalBranch>(
                     initialValue: model.branch,
@@ -1363,6 +1365,8 @@ class CoreShell extends StatelessWidget {
                     access: moduleAccess,
                     onNavigate: model.navigate,
                   )
+                else if (model.screen == 'Exóticos')
+                  ExoticsMenu(allowed: allowed('Exóticos'))
                 else if (model.screen == 'Cálculo rápido')
                   auth == null ||
                           [
@@ -2316,6 +2320,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
     'Más',
     'Cálculos',
     'Producción y grandes especies',
+    'Exóticos',
     'Servicios',
     'Proveedores',
     'Agenda telefónica',

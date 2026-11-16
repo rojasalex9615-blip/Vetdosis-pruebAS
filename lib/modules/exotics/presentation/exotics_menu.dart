@@ -122,16 +122,37 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           child: VetCard(
             padding: EdgeInsets.zero,
             radius: 18,
-            child: ListTile(
-              leading: const VetIconBox(
-                icon: VetIcons.clock,
-                accent: VetColors.violet,
-                size: 40,
-              ),
-              title: Text(name),
-              trailing: const VetStatusBadge(
-                label: 'En preparación',
-                kind: VetBadgeKind.unverified,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const VetIconBox(
+                    icon: VetIcons.clock,
+                    accent: VetColors.violet,
+                    size: 40,
+                  ),
+                  const SizedBox(width: 14),
+                  // La etiqueta va debajo del nombre, no como `trailing`: a
+                  // 200% de texto un `ListTile` deja al `trailing` todo el
+                  // ancho de la fila y revienta el layout.
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name),
+                        const SizedBox(height: 6),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: VetStatusBadge(
+                            label: 'En preparación',
+                            kind: VetBadgeKind.unverified,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

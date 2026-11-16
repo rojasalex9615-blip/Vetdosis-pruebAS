@@ -428,4 +428,24 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  test('exotic references stay configurable and visible in every preset', () {
+    const page = 'Exóticos';
+    expect(sectionGroups.any((group) => group.pages.contains(page)), isTrue);
+    expect(configurableExperiencePages.contains(page), isTrue);
+    for (final preset in ClinicPreset.values) {
+      if (preset == ClinicPreset.custom) continue;
+      expect(
+        ClinicExperience.forPreset(preset).visible(page),
+        isTrue,
+        reason: 'La consulta de exóticos no debería quedar oculta por defecto.',
+      );
+    }
+    final hidden = ClinicExperience.defaults().withPage(page, false);
+    expect(hidden.visible(page), isFalse);
+    expect(
+      hidden.restoreModuleVisibility('Exóticos y silvestres').visible(page),
+      isTrue,
+    );
+  });
+
 }

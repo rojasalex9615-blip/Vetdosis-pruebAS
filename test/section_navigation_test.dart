@@ -11,6 +11,7 @@ import 'package:vetdosis_pro/modules/core/domain/navigation_access.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
 import 'package:vetdosis_pro/modules/core/presentation/section_menu.dart';
 import 'package:vetdosis_pro/modules/production/presentation/production_menu.dart';
+import 'package:vetdosis_pro/modules/exotics/presentation/exotics_menu.dart';
 import 'package:vetdosis_pro/modules/aviculture/presentation/aviculture_screen.dart';
 import 'package:vetdosis_pro/modules/incubation/presentation/incubation_screen.dart';
 import 'package:vetdosis_pro/modules/operations/presentation/operations_screen.dart';
@@ -327,7 +328,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     SharedPreferences.setMockInitialValues({});
     final core = CoreViewModel(SettingsRepository(), const AppSettings());
-    for (final page in ['Más', 'Producción y grandes especies']) {
+    for (final page in ['Más', 'Producción y grandes especies', 'Exóticos']) {
       core.navigate(page);
       await tester.pumpWidget(
         MaterialApp(
@@ -343,4 +344,29 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     core.dispose();
   });
+
+  testWidgets('Choosing the exotic branch opens the read-only references', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final core = CoreViewModel(SettingsRepository(), const AppSettings());
+    core.selectBranch(ClinicalBranch.exotic);
+    expect(core.screen, 'Exóticos');
+    await tester.pumpWidget(MaterialApp(home: CoreShell(model: core)));
+    await tester.pumpAndSettle();
+    expect(find.byType(ExoticsMenu), findsOneWidget);
+    expect(find.textContaining('Mamíferos pequeños'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  test(
+    'Exotic references are not gated by the clinical calculations permission',
+    () {
+      // Es consulta de libros de texto, no cálculo clínico: un auxiliar la ve.
+      expect(navigationAllowed('Exóticos', member), true);
+      expect(navigationAllowed('Cálculos clínicos', member), false);
+    },
+  );
 }
