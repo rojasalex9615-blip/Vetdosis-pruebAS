@@ -11,7 +11,7 @@ Uso:
 """
 import io, json, os, sys
 
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 
 def _svc():
