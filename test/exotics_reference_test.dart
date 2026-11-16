@@ -96,7 +96,11 @@ void main() {
     tester,
   ) async {
     await host(tester, const ExoticsMenu());
+    await tester.ensureVisible(find.text('Hámster'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Hámster'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Hematología'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Hematología'));
     await tester.pumpAndSettle();
@@ -111,16 +115,22 @@ void main() {
     tester,
   ) async {
     await host(tester, const ExoticsMenu());
+    await tester.ensureVisible(find.text('Cuyo'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Cuyo'));
     await tester.pumpAndSettle();
     expect(find.text('Ciclo estral'), findsOneWidget);
     expect(find.textContaining('tabla 4.2'), findsWidgets);
 
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Hematología'));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Hematología'));
     await tester.pumpAndSettle();
     expect(find.text('Hemoglobina · macho'), findsOneWidget);
     expect(find.text('Hemoglobina · hembra'), findsOneWidget);
 
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Bioquímica sérica'));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Bioquímica sérica'));
     await tester.pumpAndSettle();
     expect(find.text('Corroborar valor y unidad'), findsNWidgets(2));
@@ -128,7 +138,11 @@ void main() {
 
   testWidgets('back returns to the species list', (tester) async {
     await host(tester, const ExoticsMenu());
+    await tester.ensureVisible(find.text('Rata'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Rata'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Volver a especies'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Volver a especies'));
     await tester.pumpAndSettle();
