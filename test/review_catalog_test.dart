@@ -154,14 +154,18 @@ Future<void> pumpReviewScreen(
 }
 
 void main() {
-  test('el rol revisor solo navega a revisión y apartados generales', () {
+  test('el rol revisor navega a revisión, vademécum y apartados generales', () {
     expect(ClinicRole.parse('revisor'), ClinicRole.revisor);
     expect(navigationAllowed('Modo revisión', reviewer), isTrue);
+    // El revisor necesita la calculadora de dosis del empaque para comprobar
+    // que la pauta da el resultado correcto; sin ella no puede revisar.
+    expect(navigationAllowed('Vademécum', reviewer), isTrue);
     for (final page in [
       'Pacientes',
       'Hospitalización',
       'Receta',
       'Cálculo rápido',
+      'Cálculos clínicos',
       'Inventario',
       'Asistente IA',
     ]) {

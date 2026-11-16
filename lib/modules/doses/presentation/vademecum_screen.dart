@@ -13,11 +13,16 @@ import '../../../vet_ui/vet_icons.dart';
 class VademecumScreen extends StatefulWidget {
   const VademecumScreen({super.key, required this.catalog, this.personal,
     this.clinicId, this.userId, this.admin = false, this.canCalculate = false,
-    this.offline = false});
+    this.canCalculateManufacturer = false, this.offline = false});
   final CatalogRepository catalog;
   final PersonalDoseRepository? personal;
   final String? clinicId, userId;
   final bool admin, canCalculate, offline;
+
+  /// Calculadora aritmética de la dosis del empaque. La abre también el revisor
+  /// para comprobar la pauta; la dosis clínica por paciente sigue en
+  /// [canCalculate].
+  final bool canCalculateManufacturer;
   @override
   State<VademecumScreen> createState() => _VademecumScreenState();
 }
@@ -61,7 +66,9 @@ class _VademecumScreenState extends State<VademecumScreen> {
       OutlinedButton.icon(icon: const Icon(VetIcons.book),
         label: const Text('Catálogo comercial y dosis del fabricante'),
         onPressed: () => Navigator.push<void>(context, MaterialPageRoute(
-          builder: (_) => ManufacturerCatalogScreen(canCalculate: widget.canCalculate)))),
+          builder: (_) => ManufacturerCatalogScreen(
+            canCalculate:
+                widget.canCalculateManufacturer || widget.canCalculate)))),
       if (busy) const LinearProgressIndicator(),
       if (error != null) Text(error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
       TextField(decoration: const InputDecoration(labelText: 'Buscar fármaco o nombre comercial', prefixIcon: Icon(VetIcons.search)),

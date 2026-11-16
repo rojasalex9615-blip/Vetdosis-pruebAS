@@ -13,8 +13,17 @@ bool navigationAllowed(
   }
   final role = member.role;
   if (role == ClinicRole.revisor) {
-    return const {'Inicio', 'Modo revisión', 'Ajustes', 'Ayuda y soporte'}
-        .contains(page);
+    // El revisor abre el Vademécum para comprobar que la pauta da el resultado
+    // correcto. Sin la calculadora no puede revisar la calidad del dato. No se
+    // le abre la receta ni la dosis clínica por paciente: eso sigue siendo del
+    // MVZ.
+    return const {
+      'Inicio',
+      'Modo revisión',
+      'Vademécum',
+      'Ajustes',
+      'Ayuda y soporte',
+    }.contains(page);
   }
   return switch (page) {
     'Modo revisión' => role == ClinicRole.admin,

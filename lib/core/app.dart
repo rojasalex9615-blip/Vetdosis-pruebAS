@@ -1429,6 +1429,15 @@ class CoreShell extends StatelessWidget {
                           ClinicRole.admin,
                           ClinicRole.mvz,
                         ].contains(auth?.active?.role),
+                    // El revisor comprueba la pauta calculando la dosis del
+                    // empaque; no calcula la dosis clínica por paciente.
+                    canCalculateManufacturer:
+                        auth?.active == null ||
+                        [
+                          ClinicRole.admin,
+                          ClinicRole.mvz,
+                          ClinicRole.revisor,
+                        ].contains(auth?.active?.role),
                     offline: auth?.offline ?? false,
                   )
                 else if (model.screen == 'Operaciones de dosis')

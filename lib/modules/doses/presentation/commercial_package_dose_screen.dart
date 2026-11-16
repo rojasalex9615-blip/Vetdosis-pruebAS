@@ -8,7 +8,13 @@ import 'package:flutter/material.dart';
 import '../domain/commercial_package_dose.dart';
 import '../domain/manufacturer_pauta.dart';
 import '../domain/quantity.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
+
+/// Aviso fijo mientras la pauta del fabricante no tenga validación clínica del
+/// MVZ. El build de profesores puede calcular con ella, pero el resultado nunca
+/// debe confundirse con uno aprobado.
+const String unvalidatedPautaNotice = 'Dato en revisión, no usar en pacientes';
 
 /// Separate from generic pharmacological dosing.
 /// Until product labels have been verified and published as reviewed data,
@@ -304,6 +310,14 @@ class _CommercialPackageDoseScreenState
                 'Dosificar según el empaque',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
+              if (preloadedPauta != null) ...[
+                const SizedBox(height: 8),
+                const VetNotice(
+                  text: unvalidatedPautaNotice,
+                  icon: VetIcons.alertOctagon,
+                  kind: VetBadgeKind.danger,
+                ),
+              ],
               const SizedBox(height: 8),
               const Text(
                 'La pauta pertenece a la formulación y presentación específica '
@@ -503,6 +517,14 @@ class _CommercialPackageDoseScreenState
                           'Cantidad aritmética del producto',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        if (preloadedPauta != null) ...[
+                          const SizedBox(height: 8),
+                          const VetNotice(
+                            text: unvalidatedPautaNotice,
+                            icon: VetIcons.alertOctagon,
+                            kind: VetBadgeKind.danger,
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Text(
                           result!.quantityText,
