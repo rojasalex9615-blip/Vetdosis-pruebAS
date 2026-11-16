@@ -115,8 +115,8 @@ class ExoticReferenceRow {
   /// «Nombre en la obra (taxon) · obra, página, tabla».
   String get caption {
     final who = taxon == null ? sourceName : '$sourceName ($taxon)';
-    final as = publishedAs == null ? '' : ' · en la obra: $publishedAs';
-    return '$who$as · ${citation.text}';
+    final alias = publishedAs == null ? '' : ' · en la obra: $publishedAs';
+    return '$who$alias · ${citation.text}';
   }
 }
 
