@@ -53,6 +53,10 @@ class PautasIntakeGuards(unittest.TestCase):
             self.assertIn("'pending'", intake_sql)
             self.assertIn('on conflict (batch_id,row_key) do nothing', intake_sql)
             self.assertIn('create or replace function public.review_pauta_list', read_sql)
+            # 'interval' es palabra reservada de tipo en Postgres: no puede ser
+            # nombre de columna (ERROR 42601). Debe ir como dose_interval.
+            self.assertNotIn('\n  interval text', read_sql)
+            self.assertIn('dose_interval text', read_sql)
             # Nunca se activa una regla de cálculo desde la ingesta.
             self.assertNotIn('habilitado_en_app=true', intake_sql + read_sql)
 

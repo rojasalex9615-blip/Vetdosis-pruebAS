@@ -22,7 +22,7 @@ create or replace function public.review_pauta_list(
   source_key text, product_name text, manufacturer text, product_url text,
   presentation text, registro text, ingredients text, species text, route text,
   rule text, literal text, dose_amount text, dose_unit text, dose_reference text,
-  interval text, duration text, withdrawal text, contraindications text,
+  dose_interval text, duration text, withdrawal text, contraindications text,
   evidence_url text, state text, review_status text, enabled_in_app boolean,
   snapshot jsonb
 ) language plpgsql stable security definer set search_path = ''
