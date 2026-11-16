@@ -17,8 +17,9 @@ const plannedExoticAreas = <String>[
 /// Consulta de valores de referencia de mamíferos pequeños no convencionales.
 ///
 /// Solo lectura: no guarda registros, no calcula dosis y no se liga a un
-/// paciente. Cada grupo de datos muestra su fuente y su estado de revisión, y
-/// los valores que la fuente marca para corroborar llevan aviso propio.
+/// paciente. Cada valor cita su obra, página y tabla. Cuando dos obras dan
+/// rangos distintos se muestran ambos, uno bajo otro: son criterios de
+/// profesionales distintos y no se elige entre ellos.
 class ExoticsMenu extends StatefulWidget {
   const ExoticsMenu({super.key, this.allowed = true});
 
@@ -55,7 +56,7 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
       const VetSectionHeader(
         title: 'Exóticos',
         subtitle:
-            'Mamíferos pequeños de compañía. Son valores de referencia de una obra; ninguno está validado clínicamente todavía.',
+            'Mamíferos pequeños de compañía. Valores publicados en libros de texto: cada uno cita su obra y, si dos obras difieren, se muestran ambas.',
         large: true,
       ),
       for (final name in exoticSpecies)
@@ -92,9 +93,10 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
                             style: textTheme.bodySmall,
                           ),
                           const SizedBox(height: 10),
-                          const VetStatusBadge(
-                            label: 'Referencia sin validar',
-                            kind: VetBadgeKind.unverified,
+                          VetStatusBadge(
+                            label: exoticWorksFor(name) == 1
+                                ? '1 obra citada'
+                                : '${exoticWorksFor(name)} obras citadas',
                           ),
                         ],
                       ),
@@ -142,9 +144,16 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
     final groups = exoticGroupsFor(name);
     final current = group ?? groups.first;
     final rows = exoticRowsFor(name, current);
-    final source = exoticSources[current]!;
     final taxonNote = exoticTaxonNotes[name];
     final textTheme = Theme.of(context).textTheme;
+
+    // Un bloque por parámetro; dentro, una línea por obra que lo da.
+    final blocks = <String, List<ExoticReferenceRow>>{};
+    for (final r in rows) {
+      blocks.putIfAbsent(r.title, () => []).add(r);
+    }
+    final blockList = blocks.entries.toList();
+
     return [
       Align(
         alignment: Alignment.centerLeft,
@@ -174,7 +183,9 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
                   Text(name, style: textTheme.titleLarge),
                   const SizedBox(height: 2),
                   Text(
-                    exoticTaxon[name] ?? 'Especie no precisada en la fuente',
+                    exoticWorksFor(name) == 1
+                        ? '1 obra citada'
+                        : '${exoticWorksFor(name)} obras citadas',
                     style: textTheme.bodySmall,
                   ),
                 ],
@@ -208,11 +219,10 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
         ),
       ),
       const SizedBox(height: 12),
-      VetNotice(
+      const VetNotice(
         text:
-            'Fuente: ${source.work}, p. ${source.page}, tabla ${source.table}. ${source.status}.',
+            'Cada valor cita su obra, página y tabla. Cuando dos obras difieren se muestran ambas; no se elige una.',
         icon: VetIcons.clipboardChecks,
-        kind: VetBadgeKind.unverified,
       ),
       if (taxonNote != null)
         Padding(
@@ -228,7 +238,7 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           padding: EdgeInsets.only(top: 8),
           child: VetNotice(
             text:
-                'La transcripción marca algunos valores como altos: corrobóralos con laboratorio o fuente primaria antes de usarlos.',
+                'La transcripción marca algunos valores como altos: corrobora valor y unidad contra la página de la obra.',
             icon: VetIcons.clock,
             kind: VetBadgeKind.warning,
           ),
@@ -238,9 +248,12 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (var i = 0; i < rows.length; i++) ...[
+            for (var i = 0; i < blockList.length; i++) ...[
               if (i > 0) const Divider(height: 24),
-              _ReferenceRow(row: rows[i]),
+              _ReferenceBlock(
+                title: blockList[i].key,
+                entries: blockList[i].value,
+              ),
             ],
           ],
         ),
@@ -251,9 +264,10 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
   }
 }
 
-class _ReferenceRow extends StatelessWidget {
-  const _ReferenceRow({required this.row});
-  final ExoticReferenceRow row;
+class _ReferenceBlock extends StatelessWidget {
+  const _ReferenceBlock({required this.title, required this.entries});
+  final String title;
+  final List<ExoticReferenceRow> entries;
 
   @override
   Widget build(BuildContext context) {
@@ -262,21 +276,31 @@ class _ReferenceRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          row.title,
+          title,
           style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 4),
-        Text(row.range, style: textTheme.bodyLarge),
-        if (row.note != null) ...[
-          const SizedBox(height: 2),
-          Text(row.note!, style: textTheme.bodySmall),
-        ],
-        if (row.flagged)
-          const Padding(
-            padding: EdgeInsets.only(top: 6),
-            child: VetStatusBadge(
-              label: 'Corroborar valor y unidad',
-              kind: VetBadgeKind.warning,
+        for (final e in entries)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(e.range, style: textTheme.bodyLarge),
+                const SizedBox(height: 2),
+                Text(e.caption, style: textTheme.bodySmall),
+                if (e.note != null) ...[
+                  const SizedBox(height: 2),
+                  Text(e.note!, style: textTheme.bodySmall),
+                ],
+                if (e.flagged)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: VetStatusBadge(
+                      label: 'Corroborar valor y unidad',
+                      kind: VetBadgeKind.warning,
+                    ),
+                  ),
+              ],
             ),
           ),
       ],

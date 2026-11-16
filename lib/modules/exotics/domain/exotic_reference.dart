@@ -1,14 +1,19 @@
 /// Valores de referencia de mamíferos pequeños no convencionales.
 ///
-/// Transcripción del lote 2 de exóticos (Drive de Ale, `VetDosis_lote2_exoticos`)
-/// de «Clínica de Mascotas No Convencionales: Mamíferos», de Miguel Ángel de la
-/// Torre Suire. Es SOLO referencia: ningún dato está validado clínicamente, no
-/// hay cálculos ni dosis, y la propia fuente marca dos valores bioquímicos del
-/// cuyo para corroborar. Nada de aquí se guarda ni se aplica a un paciente.
+/// Cada valor sale de una obra publicada y lleva su cita (obra, página, tabla)
+/// y el nombre exacto con que esa obra llama a la especie. Cuando dos obras dan
+/// rangos distintos se muestran los dos: son criterios de profesionales
+/// distintos y aquí no se elige, promedia ni descarta ninguno.
+///
+/// Origen: filas de la hoja «Exóticos complementos» (lote 8) de
+/// `vetdosis_reference_staging.raw_intake_rows` en Supabase, copiadas tal cual.
+/// Es solo consulta: no hay cálculos ni dosis, y nada se guarda ni se aplica a
+/// un paciente.
 library;
 
 enum ExoticGroup {
-  reproduccion('Reproducción'),
+  fisiologia('Fisiología'),
+  reproduccion('Reproducción y manejo'),
   hematologia('Hematología'),
   bioquimica('Bioquímica sérica');
 
@@ -16,58 +21,41 @@ enum ExoticGroup {
   final String label;
 }
 
-/// De dónde sale un grupo de datos y en qué estado de revisión está.
-class ExoticSource {
-  const ExoticSource({
-    required this.work,
-    required this.page,
-    required this.table,
-    required this.status,
-  });
+/// Obra, página y tabla de donde se tomó un valor.
+class ExoticCitation {
+  const ExoticCitation(this.work, this.page, this.table);
   final String work;
-  final int page;
+  final String page;
   final String table;
-  final String status;
+
+  String get text => '$work, $page, tabla $table';
 }
 
-const _work =
-    'Clínica de Mascotas No Convencionales: Mamíferos (M. Á. de la Torre Suire)';
+const _torre =
+    'De la Torre Suire, Clínica de Mascotas No Convencionales: Mamíferos';
+const _manejo =
+    'Manejo y tratamiento de los animales exóticos (fragmento escaneado)';
 
-const exoticSources = <ExoticGroup, ExoticSource>{
-  ExoticGroup.reproduccion: ExoticSource(
-    work: _work,
-    page: 171,
-    table: '4.2',
-    status: 'Pendiente de revisión clínica',
-  ),
-  ExoticGroup.hematologia: ExoticSource(
-    work: _work,
-    page: 175,
-    table: '4.4',
-    status: 'Transcripción pendiente de revisión clínica',
-  ),
-  ExoticGroup.bioquimica: ExoticSource(
-    work: _work,
-    page: 176,
-    table: '4.4 (continuación)',
-    status: 'Pendiente de revisión clínica',
-  ),
+const exoticCitations = <String, ExoticCitation>{
+  'T171': ExoticCitation(_torre, 'p. 171', '4.2'),
+  'T175': ExoticCitation(_torre, 'p. 175', '4.4'),
+  'T176': ExoticCitation(_torre, 'p. 176', '4.4 (continuación)'),
+  'T190': ExoticCitation(_torre, 'p. 190', '4.5'),
+  'T194': ExoticCitation(_torre, 'p. 194', '4.7'),
+  'T205': ExoticCitation(_torre, 'p. 205', '4.10'),
+  'T206': ExoticCitation(_torre, 'p. 206', '4.10 (continuación)'),
+  'M1': ExoticCitation(_manejo, 'p. 1 del PDF', '2.1'),
+  'M2c': ExoticCitation(_manejo, 'p. 2 del PDF', '2.1 (continuación)'),
+  'M2': ExoticCitation(_manejo, 'p. 2 del PDF', '2.2'),
+  'M4': ExoticCitation(_manejo, 'p. 4 del PDF', '2.3'),
 };
 
-/// Nombre científico solo donde la fuente lo da.
-const exoticTaxon = <String, String>{
-  'Ratón': 'Mus musculus',
-  'Rata': 'Rattus norvegicus',
-  'Cuyo': 'Cavia porcellus',
-  'Chinchilla': 'Chinchilla lanigera',
-};
-
-/// Avisos de precisión taxonómica que la fuente deja abiertos.
+/// Avisos de nomenclatura que las propias obras dejan abiertos.
 const exoticTaxonNotes = <String, String>{
   'Hámster':
-      'La tabla agrupa varias especies de hámster; sirio, ruso y chino aparecen sin nombre científico confirmado.',
+      'Las obras no llaman igual al hámster: cada valor lleva el nombre exacto con que su obra lo cita (hámster dorado, sirio, ruso, chino, grupo o sin especie), sin homologarlos.',
   'Jerbo':
-      'La tabla no explicita género ni especie del jerbo; verifícalo antes de usar estos datos.',
+      'Las obras no llaman igual al jerbo: «jerbo mongol» (Meriones unguiculatus), «jerbo del libro A» (Jaculus jaculus, según la identificación de la p. 18 del fragmento) y «jerbo» sin especie. Meriones y Jaculus son géneros distintos; la transcripción pide confirmar la taxonomía del jerbo del libro A antes de usar esos valores.',
 };
 
 const exoticSpecies = <String>[
@@ -80,29 +68,42 @@ const exoticSpecies = <String>[
 ];
 
 class ExoticReferenceRow {
-  const ExoticReferenceRow(
-    this.species,
-    this.group,
-    this.parameter,
-    this.min,
-    this.max,
-    this.unit, {
+  const ExoticReferenceRow({
+    required this.species,
+    required this.group,
+    required this.parameter,
+    required this.min,
+    required this.max,
+    required this.unit,
+    required this.citation,
+    required this.sourceName,
+    this.publishedAs,
     this.qualifier,
+    this.taxon,
     this.note,
     this.flagged = false,
   });
 
+  /// Especie de la lista de la app (donde se agrupa).
   final String species;
   final ExoticGroup group;
   final String parameter;
   final double min, max;
   final String unit;
+  final ExoticCitation citation;
 
-  /// Sexo o variante a la que aplica (macho, hembra, sirio…).
+  /// Nombre de la especie tal como lo da la obra.
+  final String sourceName;
+
+  /// Nombre del parámetro en la obra, solo si se unificó con otro sinónimo.
+  final String? publishedAs;
+
+  /// Sexo al que aplica (macho, hembra).
   final String? qualifier;
+  final String? taxon;
   final String? note;
 
-  /// La transcripción marca este valor para corroborarlo (valor o unidad).
+  /// La transcripción marca este valor para corroborar valor y unidad.
   final bool flagged;
 
   String get title => qualifier == null ? parameter : '$parameter · $qualifier';
@@ -110,6 +111,13 @@ class ExoticReferenceRow {
   String get range => min == max
       ? '${_fmt(min)} $unit'
       : '${_fmt(min)}–${_fmt(max)} $unit';
+
+  /// «Nombre en la obra (taxon) · obra, página, tabla».
+  String get caption {
+    final who = taxon == null ? sourceName : '$sourceName ($taxon)';
+    final as = publishedAs == null ? '' : ' · en la obra: $publishedAs';
+    return '$who$as · ${citation.text}';
+  }
 }
 
 String _fmt(double v) => v == v.roundToDouble() ? v.toInt().toString() : '$v';
@@ -124,122 +132,242 @@ List<ExoticReferenceRow> exoticRowsFor(String species, ExoticGroup group) => [
     if (r.species == species && r.group == group) r,
 ];
 
-const _r = ExoticGroup.reproduccion;
-const _h = ExoticGroup.hematologia;
-const _b = ExoticGroup.bioquimica;
+/// Obras distintas que citan a una especie.
+int exoticWorksFor(String species) => {
+  for (final r in exoticReferences)
+    if (r.species == species) r.citation.work,
+}.length;
 
-const exoticReferences = <ExoticReferenceRow>[
-  // Reproducción · tabla 4.2, p. 171
-  ExoticReferenceRow('Ratón', _r, 'Pubertad', 30, 50, 'días'),
-  ExoticReferenceRow('Ratón', _r, 'Ciclo estral', 4, 5, 'días'),
-  ExoticReferenceRow('Ratón', _r, 'Duración del estro', 10, 20, 'horas'),
-  ExoticReferenceRow('Ratón', _r, 'Crías por camada', 5, 12, 'crías'),
-  ExoticReferenceRow('Ratón', _r, 'Destete', 21, 28, 'días'),
-  ExoticReferenceRow('Rata', _r, 'Pubertad', 65, 100, 'días'),
-  ExoticReferenceRow('Rata', _r, 'Ciclo estral', 4, 5, 'días'),
-  ExoticReferenceRow('Rata', _r, 'Duración del estro', 10, 20, 'horas'),
-  ExoticReferenceRow('Rata', _r, 'Crías por camada', 8, 18, 'crías'),
-  ExoticReferenceRow('Rata', _r, 'Destete', 21, 28, 'días'),
-  ExoticReferenceRow('Hámster', _r, 'Pubertad', 9, 13, 'semanas',
-      qualifier: 'macho'),
-  ExoticReferenceRow('Hámster', _r, 'Pubertad', 6, 10, 'semanas',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Hámster', _r, 'Ciclo estral', 4, 4, 'días'),
-  ExoticReferenceRow('Hámster', _r, 'Duración del estro', 8, 26, 'horas'),
-  ExoticReferenceRow('Hámster', _r, 'Gestación', 15, 18, 'días',
-      qualifier: 'sirio'),
-  ExoticReferenceRow('Hámster', _r, 'Gestación', 18, 21, 'días',
-      qualifier: 'ruso'),
-  ExoticReferenceRow('Hámster', _r, 'Gestación', 20, 22, 'días',
-      qualifier: 'chino'),
-  ExoticReferenceRow('Hámster', _r, 'Crías por camada', 5, 10, 'crías'),
-  ExoticReferenceRow('Hámster', _r, 'Destete', 20, 28, 'días'),
-  ExoticReferenceRow('Jerbo', _r, 'Pubertad', 70, 85, 'días',
-      qualifier: 'macho'),
-  ExoticReferenceRow('Jerbo', _r, 'Pubertad', 65, 85, 'días',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Jerbo', _r, 'Ciclo estral', 4, 7, 'días'),
-  ExoticReferenceRow('Jerbo', _r, 'Duración del estro', 12, 18, 'horas'),
-  ExoticReferenceRow('Jerbo', _r, 'Crías por camada', 3, 8, 'crías'),
-  ExoticReferenceRow('Jerbo', _r, 'Destete', 20, 30, 'días'),
-  ExoticReferenceRow('Cuyo', _r, 'Pubertad', 2, 2, 'meses',
-      qualifier: 'macho'),
-  ExoticReferenceRow('Cuyo', _r, 'Pubertad', 3, 3, 'meses',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Cuyo', _r, 'Ciclo estral', 15, 17, 'días'),
-  ExoticReferenceRow('Cuyo', _r, 'Duración del estro', 6, 11, 'horas'),
-  ExoticReferenceRow('Cuyo', _r, 'Crías por camada', 1, 6, 'crías'),
-  ExoticReferenceRow('Cuyo', _r, 'Destete', 14, 28, 'días'),
-  ExoticReferenceRow('Chinchilla', _r, 'Pubertad', 7, 10, 'meses'),
-  ExoticReferenceRow('Chinchilla', _r, 'Ciclo estral', 30, 50, 'días'),
-  ExoticReferenceRow('Chinchilla', _r, 'Duración del estro', 40, 40, 'horas'),
-  ExoticReferenceRow('Chinchilla', _r, 'Camadas por año', 2, 2, 'camadas/año'),
-  ExoticReferenceRow('Chinchilla', _r, 'Crías por camada', 2, 2, 'crías'),
-  ExoticReferenceRow('Chinchilla', _r, 'Destete', 36, 48, 'días'),
+const _groupCodes = <String, ExoticGroup>{
+  'F': ExoticGroup.fisiologia,
+  'R': ExoticGroup.reproduccion,
+  'H': ExoticGroup.hematologia,
+  'B': ExoticGroup.bioquimica,
+};
 
-  // Hematología del cuyo por sexo · tabla 4.4, p. 175
-  ExoticReferenceRow('Cuyo', _h, 'Hemoglobina', 11.6, 17.2, 'g/dL',
-      qualifier: 'macho'),
-  ExoticReferenceRow('Cuyo', _h, 'Hemoglobina', 11.4, 17.0, 'g/dL',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Cuyo', _h, 'Volumen corpuscular medio (VCM)', 71, 83, 'fL',
-      qualifier: 'macho'),
-  ExoticReferenceRow(
-      'Cuyo', _h, 'Volumen corpuscular medio (VCM)', 86.1, 95.9, 'fL',
-      qualifier: 'hembra'),
-  ExoticReferenceRow(
-      'Cuyo', _h, 'Hemoglobina corpuscular media (HCM)', 24.2, 27.2, 'pg',
-      qualifier: 'macho'),
-  ExoticReferenceRow(
-      'Cuyo', _h, 'Hemoglobina corpuscular media (HCM)', 23.1, 26.3, 'pg',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Cuyo', _h,
-      'Concentración de hemoglobina corpuscular media (CHCM)', 29.7, 38.9, 'g/dL',
-      qualifier: 'macho'),
-  ExoticReferenceRow('Cuyo', _h,
-      'Concentración de hemoglobina corpuscular media (CHCM)', 28.2, 34.4, 'g/dL',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Cuyo', _h, 'Plaquetas', 260, 740, '10^3/µL',
-      qualifier: 'macho'),
-  ExoticReferenceRow('Cuyo', _h, 'Plaquetas', 266, 634, '10^3/µL',
-      qualifier: 'hembra'),
-  ExoticReferenceRow('Cuyo', _h, 'Neutrófilos', 28, 56, '%',
-      qualifier: 'macho', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Neutrófilos', 20.3, 41.9, '%',
-      qualifier: 'hembra', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Linfocitos', 40, 62.5, '%',
-      qualifier: 'macho', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Linfocitos', 46.4, 80.4, '%',
-      qualifier: 'hembra', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Monocitos', 3.3, 5.3, '%',
-      qualifier: 'macho', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Monocitos', 1, 2.6, '%',
-      qualifier: 'hembra', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Eosinófilos', 1, 7, '%',
-      qualifier: 'macho', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Eosinófilos', 0, 7, '%',
-      qualifier: 'hembra', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Basófilos', 0, 1.7, '%',
-      qualifier: 'macho', note: 'Porcentaje diferencial, no recuento absoluto.'),
-  ExoticReferenceRow('Cuyo', _h, 'Basófilos', 0, 0.8, '%',
-      qualifier: 'hembra', note: 'Porcentaje diferencial, no recuento absoluto.'),
+/// Sinónimos de parámetro entre obras; el nombre original se conserva.
+const _aliases = <String, String>{
+  'Tamaño de camada': 'Crías por camada',
+  'Glóbulos rojos': 'Eritrocitos',
+  'Glóbulos blancos': 'Leucocitos totales',
+};
 
-  // Bioquímica sérica del cuyo · tabla 4.4 (continuación), p. 176
-  ExoticReferenceRow('Cuyo', _b, 'ALT', 10, 25, 'UI/L'),
-  ExoticReferenceRow('Cuyo', _b, 'Bilirrubina total', 0.3, 0.9, 'mg/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Colesterol', 20, 43, 'mg/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Triglicéridos', 0, 145, 'mg/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Proteínas totales', 4.6, 6.2, 'g/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Albúmina', 2.1, 3.9, 'g/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Globulinas', 1.7, 2.6, 'g/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Glucosa', 60, 125, 'mg/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Fósforo', 5.3, 5.3, 'mg/dL',
-      note: 'Valor aislado publicado.', flagged: true),
-  ExoticReferenceRow('Cuyo', _b, 'Potasio', 6.8, 8.9, 'mEq/L',
-      note: 'Intervalo elevado: confirmar con laboratorio o fuente primaria.',
-      flagged: true),
-  ExoticReferenceRow('Cuyo', _b, 'Calcio', 7.8, 10.5, 'mg/dL'),
-  ExoticReferenceRow('Cuyo', _b, 'Nitrógeno ureico (BUN)', 9, 32, 'mg/dL',
-      note: 'BUN: no convertir a urea sin una relación explícita.'),
-  ExoticReferenceRow('Cuyo', _b, 'Creatinina', 0.6, 2.2, 'mg/dL'),
-];
+const _differentials = <String>{
+  'Neutrófilos',
+  'Linfocitos',
+  'Monocitos',
+  'Eosinófilos',
+  'Basófilos',
+};
+
+final exoticReferences = _parse();
+
+List<ExoticReferenceRow> _parse() {
+  final rows = <ExoticReferenceRow>[];
+  for (final line in _data.split('\n')) {
+    if (line.trim().isEmpty) continue;
+    final f = line.split('|');
+    assert(f.length == 11, 'Fila mal formada: $line');
+    final published = f[2];
+    final parameter = _aliases[published] ?? published;
+    final group = _groupCodes[f[1]]!;
+    var note = f[10].isEmpty ? null : f[10];
+    final flagged = note != null && note.startsWith('!');
+    if (flagged) note = note.substring(1);
+    if (note == null &&
+        group == ExoticGroup.hematologia &&
+        _differentials.contains(parameter)) {
+      note = 'Porcentaje diferencial, no recuento absoluto.';
+    }
+    rows.add(
+      ExoticReferenceRow(
+        species: f[0],
+        group: group,
+        parameter: parameter,
+        publishedAs: parameter == published ? null : published,
+        qualifier: f[3].isEmpty ? null : f[3],
+        min: double.parse(f[4]),
+        max: double.parse(f[5]),
+        unit: f[6],
+        citation: exoticCitations[f[7]]!,
+        sourceName: f[8],
+        taxon: f[9].isEmpty ? null : f[9],
+        note: note,
+        flagged: flagged,
+      ),
+    );
+  }
+  return List.unmodifiable(rows);
+}
+
+// especie|grupo|parámetro|sexo|mín|máx|unidad|cita|nombre en la obra|taxon|nota
+// Grupo: F fisiología, R reproducción y manejo, H hematología, B bioquímica.
+// Nota que empieza con ! = la transcripción pide corroborar valor y unidad.
+const _data = '''
+Ratón|R|Pubertad||30|50|días|T171|Ratón|Mus musculus|
+Ratón|R|Ciclo estral||4|5|días|T171|Ratón|Mus musculus|
+Ratón|R|Duración del estro||10|20|horas|T171|Ratón|Mus musculus|
+Ratón|R|Crías por camada||5|12|crías|T171|Ratón|Mus musculus|
+Ratón|R|Destete||21|28|días|T171|Ratón|Mus musculus|
+Rata|R|Pubertad||65|100|días|T171|Rata|Rattus norvegicus|
+Rata|R|Ciclo estral||4|5|días|T171|Rata|Rattus norvegicus|
+Rata|R|Duración del estro||10|20|horas|T171|Rata|Rattus norvegicus|
+Rata|R|Crías por camada||8|18|crías|T171|Rata|Rattus norvegicus|
+Rata|R|Destete||21|28|días|T171|Rata|Rattus norvegicus|
+Hámster|R|Pubertad|macho|9|13|semanas|T171|Hámster (grupo)||
+Hámster|R|Pubertad|hembra|6|10|semanas|T171|Hámster (grupo)||
+Hámster|R|Ciclo estral||4|4|días|T171|Hámster (grupo)||
+Hámster|R|Duración del estro||8|26|horas|T171|Hámster (grupo)||
+Hámster|R|Gestación||15|18|días|T171|Hámster sirio||
+Hámster|R|Gestación||18|21|días|T171|Hámster ruso||
+Hámster|R|Gestación||20|22|días|T171|Hámster chino||
+Hámster|R|Crías por camada||5|10|crías|T171|Hámster (grupo)||
+Hámster|R|Destete||20|28|días|T171|Hámster (grupo)||
+Jerbo|R|Pubertad|macho|70|85|días|T171|Jerbo (de la obra)||
+Jerbo|R|Pubertad|hembra|65|85|días|T171|Jerbo (de la obra)||
+Jerbo|R|Ciclo estral||4|7|días|T171|Jerbo (de la obra)||
+Jerbo|R|Duración del estro||12|18|horas|T171|Jerbo (de la obra)||
+Jerbo|R|Crías por camada||3|8|crías|T171|Jerbo (de la obra)||
+Jerbo|R|Destete||20|30|días|T171|Jerbo (de la obra)||
+Cuyo|R|Pubertad|macho|2|2|meses|T171|Cuyo|Cavia porcellus|
+Cuyo|R|Pubertad|hembra|3|3|meses|T171|Cuyo|Cavia porcellus|
+Cuyo|R|Ciclo estral||15|17|días|T171|Cuyo|Cavia porcellus|
+Cuyo|R|Duración del estro||6|11|horas|T171|Cuyo|Cavia porcellus|
+Cuyo|R|Crías por camada||1|6|crías|T171|Cuyo|Cavia porcellus|
+Cuyo|R|Destete||14|28|días|T171|Cuyo|Cavia porcellus|
+Chinchilla|R|Pubertad||7|10|meses|T171|Chinchilla|Chinchilla lanigera|
+Chinchilla|R|Ciclo estral||30|50|días|T171|Chinchilla|Chinchilla lanigera|
+Chinchilla|R|Duración del estro||40|40|horas|T171|Chinchilla|Chinchilla lanigera|
+Chinchilla|R|Camadas por año||2|2|camadas/año|T171|Chinchilla|Chinchilla lanigera|
+Chinchilla|R|Crías por camada||2|2|crías|T171|Chinchilla|Chinchilla lanigera|
+Chinchilla|R|Destete||36|48|días|T171|Chinchilla|Chinchilla lanigera|
+Cuyo|H|Hemoglobina|macho|11.6|17.2|g/dL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Hemoglobina|hembra|11.4|17.0|g/dL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Volumen corpuscular medio (VCM)|macho|71|83|fL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Volumen corpuscular medio (VCM)|hembra|86.1|95.9|fL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Hemoglobina corpuscular media (HCM)|macho|24.2|27.2|pg|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Hemoglobina corpuscular media (HCM)|hembra|23.1|26.3|pg|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Concentración de hemoglobina corpuscular media (CHCM)|macho|29.7|38.9|g/dL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Concentración de hemoglobina corpuscular media (CHCM)|hembra|28.2|34.4|g/dL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Plaquetas|macho|260|740|10^3/µL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Plaquetas|hembra|266|634|10^3/µL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Neutrófilos|macho|28|56|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Neutrófilos|hembra|20.3|41.9|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Linfocitos|macho|40|62.5|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Linfocitos|hembra|46.4|80.4|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Monocitos|macho|3.3|5.3|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Monocitos|hembra|1|2.6|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Eosinófilos|macho|1|7|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Eosinófilos|hembra|0|7|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Basófilos|macho|0|1.7|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Basófilos|hembra|0|0.8|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Hematocrito|macho|37|47|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Hematocrito|hembra|40.9|49.9|%|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Eritrocitos|macho|4.36|6.84|10^6/µL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Eritrocitos|hembra|3.35|6.15|10^6/µL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Leucocitos totales|macho|5.5|17.5|10^3/µL|T175|Cuyo|Cavia porcellus|
+Cuyo|H|Leucocitos totales|hembra|5.2|16.4|10^3/µL|T175|Cuyo|Cavia porcellus|
+Cuyo|B|ALT||10|25|UI/L|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Bilirrubina total||0.3|0.9|mg/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Colesterol||20|43|mg/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Triglicéridos||0|145|mg/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Proteínas totales||4.6|6.2|g/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Albúmina||2.1|3.9|g/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Globulinas||1.7|2.6|g/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Glucosa||60|125|mg/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Fósforo||5.3|5.3|mg/dL|T176|Cuyo|Cavia porcellus|!Valor aislado publicado.
+Cuyo|B|Potasio||6.8|8.9|mEq/L|T176|Cuyo|Cavia porcellus|!Intervalo elevado: confirmar con laboratorio o fuente primaria.
+Cuyo|B|Calcio||7.8|10.5|mg/dL|T176|Cuyo|Cavia porcellus|
+Cuyo|B|Nitrógeno ureico (BUN)||9|32|mg/dL|T176|Cuyo|Cavia porcellus|BUN: no convertir a urea sin una relación explícita.
+Cuyo|B|Creatinina||0.6|2.2|mg/dL|T176|Cuyo|Cavia porcellus|
+Hámster|F|Temperatura rectal||37|38|°C|T190|Hámster dorado|Mesocricetus auratus|
+Hámster|F|Frecuencia cardíaca||250|500|lpm|T190|Hámster dorado|Mesocricetus auratus|
+Hámster|F|Frecuencia respiratoria||30|35|resp/min|T190|Hámster dorado|Mesocricetus auratus|
+Hámster|F|Peso adulto macho||85|130|g|T190|Hámster dorado|Mesocricetus auratus|
+Hámster|F|Peso adulto hembra||95|140|g|T190|Hámster dorado|Mesocricetus auratus|
+Hámster|H|Hematocrito||45|50|%|T205|Hámster dorado|Mesocricetus auratus|
+Hámster|H|Hemoglobina||16.6|18.6|g/dL|T205|Hámster dorado|Mesocricetus auratus|
+Hámster|H|Eritrocitos||7|8|10^6/µL|T205|Hámster dorado|Mesocricetus auratus|
+Hámster|H|Leucocitos totales||7|10|10^3/µL|T205|Hámster dorado|Mesocricetus auratus|
+Hámster|H|Neutrófilos||18|40|%|T205|Hámster dorado|Mesocricetus auratus|
+Hámster|H|Linfocitos||56|80|%|T205|Hámster dorado|Mesocricetus auratus|
+Hámster|B|Glucosa||37|196|mg/dL|T206|Hámster dorado|Mesocricetus auratus|
+Hámster|B|Colesterol||55|181|mg/dL|T206|Hámster dorado|Mesocricetus auratus|
+Hámster|B|Creatinina||0.4|1|mg/dL|T206|Hámster dorado|Mesocricetus auratus|
+Hámster|B|Proteínas totales||5.2|7|g/dL|T206|Hámster dorado|Mesocricetus auratus|
+Hámster|B|ALT||22|128|UI/L|T206|Hámster dorado|Mesocricetus auratus|
+Jerbo|F|Temperatura rectal||37|38.5|°C|T194|Jerbo mongol|Meriones unguiculatus|
+Jerbo|F|Frecuencia cardíaca||360|360|lpm|T194|Jerbo mongol|Meriones unguiculatus|
+Jerbo|F|Frecuencia respiratoria||90|90|resp/min|T194|Jerbo mongol|Meriones unguiculatus|
+Jerbo|F|Peso adulto macho||65|100|g|T194|Jerbo mongol|Meriones unguiculatus|
+Jerbo|F|Peso adulto hembra||55|85|g|T194|Jerbo mongol|Meriones unguiculatus|
+Jerbo|H|Hematocrito||35|45|%|T205|Jerbo mongol|Meriones unguiculatus|
+Jerbo|H|Hemoglobina||14|16|g/dL|T205|Jerbo mongol|Meriones unguiculatus|
+Jerbo|H|Eritrocitos||7|8|10^6/µL|T205|Jerbo mongol|Meriones unguiculatus|
+Jerbo|H|Leucocitos totales||7.5|10.9|10^3/µL|T205|Jerbo mongol|Meriones unguiculatus|
+Jerbo|H|Linfocitos||75|75|%|T205|Jerbo mongol|Meriones unguiculatus|
+Jerbo|B|Glucosa||50|135|mg/dL|T206|Jerbo mongol|Meriones unguiculatus|
+Jerbo|B|Colesterol||90|150|mg/dL|T206|Jerbo mongol|Meriones unguiculatus|
+Jerbo|B|Proteínas totales||4.3|12.5|g/dL|T206|Jerbo mongol|Meriones unguiculatus|
+Jerbo|B|Albúmina||1.8|5.5|g/dL|T206|Jerbo mongol|Meriones unguiculatus|
+Jerbo|B|Calcio||3.7|6.2|mg/dL|T206|Jerbo mongol|Meriones unguiculatus|
+Jerbo|B|Fósforo||3.7|7|mg/dL|T206|Jerbo mongol|Meriones unguiculatus|
+Hámster|F|Temperatura rectal||37.6|37.6|°C|M1|Hámster (especie no precisada)||
+Hámster|F|Frecuencia cardíaca||310|471|lpm|M1|Hámster (especie no precisada)||
+Hámster|F|Frecuencia respiratoria||38|110|resp/min|M1|Hámster (especie no precisada)||
+Hámster|F|Vida media||18|36|meses|M1|Hámster (especie no precisada)||
+Hámster|F|Peso adulto macho||87|130|g|M1|Hámster (especie no precisada)||
+Hámster|F|Peso adulto hembra||95|130|g|M1|Hámster (especie no precisada)||
+Hámster|R|Gestación||15|18|días|M2c|Hámster (especie no precisada)||
+Hámster|R|Tamaño de camada||5|10|crías|M2c|Hámster (especie no precisada)||
+Hámster|R|Peso al nacimiento||1.5|3|g|M2c|Hámster (especie no precisada)||
+Hámster|R|Apertura de ojos||12|14|días|M2c|Hámster (especie no precisada)||
+Hámster|R|Destete||19|28|días|M2c|Hámster (especie no precisada)||
+Hámster|R|Consumo diario de agua||9|12|mL/día|M2c|Hámster (especie no precisada)||
+Hámster|R|Temperatura ambiente recomendada||21|24|°C|M2c|Hámster (especie no precisada)||
+Hámster|H|Hematocrito||41|52|%|M2|Hámster (especie no precisada)||
+Hámster|H|Glóbulos rojos||5|9.2|10^6/µL|M2|Hámster (especie no precisada)||
+Hámster|H|Hemoglobina||14.6|20|g/dL|M2|Hámster (especie no precisada)||
+Hámster|H|Glóbulos blancos||3|11|10^3/µL|M2|Hámster (especie no precisada)||
+Hámster|H|Neutrófilos||10|42|%|M2|Hámster (especie no precisada)||
+Hámster|H|Linfocitos||50|95|%|M2|Hámster (especie no precisada)||
+Hámster|H|Plaquetas||200|570|10^3/µL|M2|Hámster (especie no precisada)||
+Hámster|B|Glucosa||65|73|mg/dL|M4|Hámster (especie no precisada)||
+Hámster|B|Urea||42|60|mg/dL|M4|Hámster (especie no precisada)||
+Hámster|B|Colesterol||182|237|mg/dL|M4|Hámster (especie no precisada)||
+Hámster|B|Proteínas totales||6.4|7.3|g/dL|M4|Hámster (especie no precisada)||
+Hámster|B|Albúmina||3.2|3.7|g/dL|M4|Hámster (especie no precisada)||
+Hámster|B|Sodio||128|145|mEq/L|M4|Hámster (especie no precisada)||
+Hámster|B|Potasio||4.9|5.1|mEq/L|M4|Hámster (especie no precisada)||
+Hámster|B|Fósforo||5.3|6.6|mg/dL|M4|Hámster (especie no precisada)||
+Hámster|B|Calcio||10.4|12.3|mg/dL|M4|Hámster (especie no precisada)||
+Jerbo|F|Temperatura rectal||38.2|38.2|°C|M1|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|F|Frecuencia cardíaca||260|300|lpm|M1|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|F|Frecuencia respiratoria||85|160|resp/min|M1|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|F|Vida media||24|39|meses|M1|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|F|Peso adulto macho||46|131|g|M1|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|F|Peso adulto hembra||50|55|g|M1|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Gestación||23|26|días|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Tamaño de camada||3|8|crías|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Peso al nacimiento||2.5|3.5|g|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Apertura de ojos||16|21|días|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Destete||21|28|días|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Consumo diario de agua||4|4|mL/día|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|R|Temperatura ambiente recomendada||18|22|°C|M2c|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Hematocrito||41|52|%|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Glóbulos rojos||7|10|10^6/µL|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Hemoglobina||12.1|16.9|g/dL|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Glóbulos blancos||4.3|21.6|10^3/µL|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Neutrófilos||5|34|%|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Linfocitos||60|95|%|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|H|Plaquetas||400|600|10^3/µL|M2|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Glucosa||47|137|mg/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Urea||17|30|mg/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Colesterol||90|141|mg/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Proteínas totales||4.6|14.7|g/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Albúmina||1.8|5.8|g/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Sodio||143|147|mEq/L|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Potasio||3.6|5.9|mEq/L|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Fósforo||3.7|11.2|mg/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+Jerbo|B|Calcio||3.7|6.1|mg/dL|M4|Jerbo del libro A|Jaculus jaculus (identificación de la p. 18)|
+''';
