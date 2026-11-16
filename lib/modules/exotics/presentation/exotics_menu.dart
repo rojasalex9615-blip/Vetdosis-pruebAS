@@ -229,8 +229,7 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           padding: const EdgeInsets.only(top: 8),
           child: VetNotice(
             text: taxonNote,
-            icon: VetIcons.clock,
-            kind: VetBadgeKind.warning,
+            icon: VetIcons.clipboardChecks,
           ),
         ),
       if (rows.any((r) => r.flagged))

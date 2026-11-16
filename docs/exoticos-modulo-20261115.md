@@ -14,10 +14,9 @@ Los valores salen de libros escritos o supervisados por profesionales, así que 
 - De la Torre Suire, *Clínica de Mascotas No Convencionales: Mamíferos* (pp. 171, 175, 176, 190, 194, 205, 206).
 - *Manejo y tratamiento de los animales exóticos* (fragmento escaneado; páginas 1, 2 y 4 del PDF).
 
-## Dos avisos que sí se conservan (y por qué)
-No dudan de las obras; marcan dudas de transcripción o de nomenclatura que la propia transcripción dejó abiertas:
-1. **Fósforo y potasio del cuyo** (p. 176): la transcripción los marca «corroborar valor y unidad». Se contrastan con la página del libro.
-2. **Nombres de hámster y jerbo:** las obras los llaman distinto (dorado, sirio, ruso, chino, grupo, sin especie; mongol, «del libro A», sin especie). Se muestra el nombre exacto de cada obra sin homologar. El «jerbo del libro A» figura como *Jaculus jaculus* (identificación de la p. 18 del fragmento), género distinto de *Meriones* (jerbo mongol); la transcripción pide confirmar su taxonomía.
+## Un aviso que se conserva y una nota de nombres
+1. **Fósforo y potasio del cuyo** (p. 176): la transcripción los marca «corroborar valor y unidad». No duda de la obra, sino de la transcripción; se contrasta con la página del libro.
+2. **Nombres de hámster y jerbo:** cada obra usa su nombre (dorado, sirio, ruso, chino, grupo, sin especie; mongol, «del libro A», sin especie). Pueden ser nombres comunes de la región del autor y no una especie exacta, así que se muestran tal cual, sin homologar y sin tratarlos como error. El nombre científico solo aparece donde la transcripción de esa obra lo registra; no es una identificación nuestra.
 
 Sinónimos de parámetro unificados para poder comparar (el nombre original se muestra): «Tamaño de camada» = crías por camada; «Glóbulos rojos» = eritrocitos; «Glóbulos blancos» = leucocitos totales. «Urea» y «BUN» **no** se unifican.
 

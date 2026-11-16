@@ -53,9 +53,9 @@ const exoticCitations = <String, ExoticCitation>{
 /// Avisos de nomenclatura que las propias obras dejan abiertos.
 const exoticTaxonNotes = <String, String>{
   'Hámster':
-      'Las obras no llaman igual al hámster: cada valor lleva el nombre exacto con que su obra lo cita (hámster dorado, sirio, ruso, chino, grupo o sin especie), sin homologarlos.',
+      'Los nombres son los que usa cada obra y pueden ser nombres comunes de la región del autor, no una especie exacta (hámster dorado, sirio, ruso, chino, grupo o sin especie). Se muestran tal cual, sin homologarlos.',
   'Jerbo':
-      'Las obras no llaman igual al jerbo: «jerbo mongol» (Meriones unguiculatus), «jerbo del libro A» (Jaculus jaculus, según la identificación de la p. 18 del fragmento) y «jerbo» sin especie. Meriones y Jaculus son géneros distintos; la transcripción pide confirmar la taxonomía del jerbo del libro A antes de usar esos valores.',
+      'Los nombres son los que usa cada obra y pueden ser nombres comunes de la región del autor, no una especie exacta (jerbo mongol, jerbo del libro A, jerbo sin especie). Se muestran tal cual, sin homologarlos; el nombre científico que aparece junto a algunos valores es el que registra la transcripción de esa obra.',
 };
 
 const exoticSpecies = <String>[
