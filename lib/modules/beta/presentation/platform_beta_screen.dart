@@ -1,3 +1,4 @@
+import 'platform_catalog_supervisor_screen.dart';
 import 'platform_professional_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -269,6 +270,24 @@ class _PlatformBetaScreenState extends State<PlatformBetaScreen> {
                           ),
                     icon: const Icon(VetIcons.shieldCheck),
                     label: const Text('Habilitaciones profesionales globales'),
+                  ),
+                if (widget.repository is PlatformCatalogSupervisorRepository)
+                  OutlinedButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  PlatformCatalogSupervisorScreen(
+                                    repository:
+                                        widget.repository
+                                            as PlatformCatalogSupervisorRepository,
+                                  ),
+                            ),
+                          ),
+                    icon: const Icon(VetIcons.verified),
+                    label: const Text('Supervisores del catálogo'),
                   ),
                 for (final section in [
                   'approvals',

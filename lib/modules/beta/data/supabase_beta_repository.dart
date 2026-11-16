@@ -2,7 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/beta_repository.dart';
 
 class SupabaseBetaRepository
-    implements BetaRepository, PlatformProfessionalRepository {
+    implements
+        BetaRepository,
+        PlatformProfessionalRepository,
+        PlatformCatalogSupervisorRepository {
   SupabaseBetaRepository(this.client, this.build);
   final SupabaseClient client;
   final int build;
@@ -123,6 +126,27 @@ class SupabaseBetaRepository
     await client.rpc(
       'platform_beta_professional_revoke',
       params: {'p_id': id, 'p_reason': reason},
+    );
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> catalogSupervisors() async =>
+      (await client.rpc('platform_catalog_supervisor_list') as List)
+          .map((row) => Map<String, dynamic>.from(row as Map))
+          .toList();
+  @override
+  Future<void> grantCatalogSupervisor(String email, String reason) async {
+    await client.rpc(
+      'platform_catalog_supervisor_grant',
+      params: {'p_email': email, 'p_reason': reason},
+    );
+  }
+
+  @override
+  Future<void> revokeCatalogSupervisor(String userId, String reason) async {
+    await client.rpc(
+      'platform_catalog_supervisor_revoke',
+      params: {'p_user_id': userId, 'p_reason': reason},
     );
   }
 }

@@ -55,3 +55,11 @@ abstract interface class PlatformProfessionalRepository {
   Future<List<Map<String, dynamic>>> globalProfessionalReviews();
   Future<void> revokeGlobalProfessionalReview(String id, String reason);
 }
+
+/// Naming the app catalog supervisors (secondary administrators). Only the
+/// separate platform administrator account may list, grant or revoke them.
+abstract interface class PlatformCatalogSupervisorRepository {
+  Future<List<Map<String, dynamic>>> catalogSupervisors();
+  Future<void> grantCatalogSupervisor(String email, String reason);
+  Future<void> revokeCatalogSupervisor(String userId, String reason);
+}
