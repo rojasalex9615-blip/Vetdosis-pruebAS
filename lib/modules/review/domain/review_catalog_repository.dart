@@ -12,6 +12,7 @@ class ReviewCatalogItem {
     this.presentation,
     this.source,
     this.page,
+    this.doseText,
   });
 
   final String key;
@@ -25,6 +26,7 @@ class ReviewCatalogItem {
   final String? presentation;
   final String? source;
   final int? page;
+  final String? doseText;
   final Map<String, dynamic> snapshot;
 
   factory ReviewCatalogItem.read(Map<String, dynamic> row) {
@@ -43,14 +45,23 @@ class ReviewCatalogItem {
       presentation: row['presentation'] as String?,
       source: row['source_document'] as String?,
       page: row['source_page'] as int?,
+      doseText: row['catalog_dose_text'] as String?,
       snapshot: snapshot,
     );
   }
 }
 
 abstract interface class ReviewCatalogRepository {
-  Future<List<ReviewCatalogItem>> list(String clinic, String search, int offset);
-  Future<Map<String, dynamic>> progress(String clinic);
+  Future<List<ReviewCatalogItem>> list(
+    String clinic,
+    String search,
+    int offset, {
+    String source = 'inventario_comercial',
+  });
+  Future<Map<String, dynamic>> progress(
+    String clinic, {
+    String source = 'inventario_comercial',
+  });
   Future<bool> isPlatformOwner();
   Future<void> setGlobalStatus(String sourceKey, String status);
   Future<void> setClinicStatus(String clinic, String sourceKey, String status);

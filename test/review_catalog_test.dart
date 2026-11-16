@@ -33,14 +33,34 @@ class FakeReviewRepository implements ReviewCatalogRepository {
   Future<List<ReviewCatalogItem>> list(
     String clinic,
     String search,
-    int offset,
-  ) async =>
-      [item];
+    int offset, {
+    String source = 'inventario_comercial',
+  }) async =>
+      source == 'grok_pautas'
+          ? [
+              ReviewCatalogItem(
+                key: 'grok_pautas:pautas_grok_1197_20261115:row:2',
+                version: 'pautas_grok_1197_20261115',
+                title: 'HEMOSTOP K (pauta)',
+                laboratory: 'Laboratorio ficticio',
+                status: clinicStatus,
+                globalStatus: globalStatus,
+                personalStatus: personalStatus,
+                source: 'Pautas_VetDosis_MAESTRO.csv',
+                doseText: '1 ml / 10 kg',
+                snapshot: const {'id_pauta': 'HEMOSTOPK-PERROS-GATOS'},
+              ),
+            ]
+          : [item];
 
   @override
-  Future<Map<String, dynamic>> progress(String clinic) async => {
-        'total': 1,
-        'sin_verificar': 1,
+  Future<Map<String, dynamic>> progress(
+    String clinic, {
+    String source = 'inventario_comercial',
+  }) async =>
+      {
+        'total': source == 'grok_pautas' ? 1197 : 1,
+        'sin_verificar': source == 'grok_pautas' ? 1197 : 1,
         'en_revision': 0,
         'global': {
           'total': 1,
@@ -278,5 +298,22 @@ void main() {
     );
     expect(find.text('Producto ficticio'), findsNothing);
     expect(find.textContaining('requiere conexión'), findsOneWidget);
+  });
+
+  testWidgets('cambiar a pautas de fabricante lista la fuente de pautas',
+      (tester) async {
+    final repository = FakeReviewRepository();
+    await pumpReviewScreen(tester, repository);
+    expect(find.text('Producto ficticio'), findsOneWidget);
+
+    await tester.tap(find.text('Catálogo comercial'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pautas de fabricante'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('HEMOSTOP K (pauta)'), findsOneWidget);
+    expect(find.text('Producto ficticio'), findsNothing);
+    expect(find.text('Posología documentada: 1 ml / 10 kg'), findsOneWidget);
+    expect(find.textContaining('Pautas: 1197'), findsOneWidget);
   });
 }

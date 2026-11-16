@@ -11,18 +11,29 @@ class SupabaseReviewCatalogRepository implements ReviewCatalogRepository {
   Future<List<ReviewCatalogItem>> list(
     String clinic,
     String search,
-    int offset,
-  ) async {
-    final rows = await client.rpc(
-      'review_catalog_list',
-      params: {
-        'p_clinic': clinic,
-        'p_status': null,
-        'p_search': search,
-        'p_limit': 50,
-        'p_offset': offset,
-      },
-    ) as List;
+    int offset, {
+    String source = 'inventario_comercial',
+  }) async {
+    final rows = source == 'grok_pautas'
+        ? await client.rpc(
+            'review_pauta_list',
+            params: {
+              'p_clinic': clinic,
+              'p_search': search,
+              'p_limit': 50,
+              'p_offset': offset,
+            },
+          ) as List
+        : await client.rpc(
+            'review_catalog_list',
+            params: {
+              'p_clinic': clinic,
+              'p_status': null,
+              'p_search': search,
+              'p_limit': 50,
+              'p_offset': offset,
+            },
+          ) as List;
     return rows
         .map((row) => ReviewCatalogItem.read(
               Map<String, dynamic>.from(row as Map),
@@ -31,10 +42,13 @@ class SupabaseReviewCatalogRepository implements ReviewCatalogRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> progress(String clinic) async {
+  Future<Map<String, dynamic>> progress(
+    String clinic, {
+    String source = 'inventario_comercial',
+  }) async {
     final result = await client.rpc(
       'review_catalog_progress',
-      params: {'p_clinic': clinic},
+      params: {'p_clinic': clinic, 'p_source': source},
     );
     return Map<String, dynamic>.from(result as Map);
   }
@@ -97,7 +111,9 @@ class SupabaseReviewCatalogRepository implements ReviewCatalogRepository {
     }
     await client.from('catalog_review_reports').insert({
       'clinic_id': clinic,
-      'source_catalog': 'inventario_comercial',
+      'source_catalog': item.key.startsWith('grok_pautas:')
+          ? 'grok_pautas'
+          : 'inventario_comercial',
       'source_key': item.key,
       'module': 'vademecum',
       'reviewer_id': reviewer,

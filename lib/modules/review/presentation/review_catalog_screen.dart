@@ -46,6 +46,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
   bool canManageGlobal = false;
   bool loading = false, more = true;
   String? error;
+  String source = 'inventario_comercial';
 
   @override
   void initState() {
@@ -113,6 +114,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     final request = ++generation;
     final clinic = widget.clinic;
     final user = widget.user;
+    final currentSource = source;
     setState(() {
       loading = true;
       error = null;
@@ -122,11 +124,16 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     });
     try {
       final results = await Future.wait<dynamic>([
-        widget.repository.list(clinic, search.text.trim(), 0),
-        widget.repository.progress(clinic),
+        widget.repository.list(
+          clinic,
+          search.text.trim(),
+          0,
+          source: currentSource,
+        ),
+        widget.repository.progress(clinic, source: currentSource),
       ]);
       if (!mounted || request != generation || widget.clinic != clinic ||
-          widget.user != user || widget.offline) {
+          widget.user != user || widget.offline || source != currentSource) {
         return;
       }
       setState(() {
@@ -147,16 +154,37 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     }
   }
 
+  void selectSource(String next) {
+    if (next == source) return;
+    generation++;
+    setState(() {
+      source = next;
+      items = [];
+      progress = null;
+      more = true;
+      error = null;
+      pickerRevision.clear();
+      search.clear();
+    });
+    reload();
+  }
+
   Future<void> nextPage() async {
     if (loading || !more || widget.offline) return;
     final request = ++generation;
     final clinic = widget.clinic, user = widget.user;
+    final currentSource = source;
     final offset = items.length;
     setState(() => loading = true);
     try {
-      final page = await widget.repository.list(clinic, search.text.trim(), offset);
+      final page = await widget.repository.list(
+        clinic,
+        search.text.trim(),
+        offset,
+        source: currentSource,
+      );
       if (!mounted || request != generation || widget.clinic != clinic ||
-          widget.user != user || widget.offline) {
+          widget.user != user || widget.offline || source != currentSource) {
         return;
       }
       setState(() {
@@ -306,8 +334,24 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
       if (widget.offline)
         const Text('El modo revisión requiere conexión y permisos vigentes.')
       else ...[
+        SegmentedButton<String>(
+          key: const ValueKey('review-source'),
+          segments: const [
+            ButtonSegment(
+              value: 'inventario_comercial',
+              label: Text('Catálogo comercial'),
+            ),
+            ButtonSegment(
+              value: 'grok_pautas',
+              label: Text('Pautas de fabricante'),
+            ),
+          ],
+          selected: {source},
+          onSelectionChanged: (selection) => selectSource(selection.first),
+        ),
         if (progress != null)
-          Text('Productos: ${progress!['total'] ?? 0} · Sin verificar: '
+          Text('${source == 'grok_pautas' ? 'Pautas' : 'Productos'}: '
+              '${progress!['total'] ?? 0} · Sin verificar: '
               '${progress!['sin_verificar'] ?? 0} · En revisión: '
               '${progress!['en_revision'] ?? 0}'),
         TextField(
@@ -364,6 +408,8 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                   scope: _ReviewScope.personal,
                 ),
               ),
+              if (item.doseText?.isNotEmpty == true)
+                Text('Posología documentada: ${item.doseText}'),
               if (item.ingredient?.isNotEmpty == true) Text('Ingrediente: ${item.ingredient}'),
               if (item.presentation?.isNotEmpty == true) Text('Presentación: ${item.presentation}'),
               Text('Fuente: ${item.source ?? 'No registrada'}'
