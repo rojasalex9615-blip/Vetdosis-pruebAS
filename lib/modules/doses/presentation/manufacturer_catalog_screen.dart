@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../domain/manufacturer_catalog.dart';
+import '../domain/manufacturer_pauta.dart';
 import 'commercial_package_dose_screen.dart';
+import 'manufacturer_pauta_section.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 class ManufacturerEvidence extends StatelessWidget {
@@ -54,9 +56,11 @@ class ManufacturerCatalogScreen extends StatefulWidget {
     this.selectOnly = false,
     this.canCalculate = false,
     this.catalog,
+    this.pautas,
   });
   final bool selectOnly, canCalculate;
   final ManufacturerCatalog? catalog;
+  final ManufacturerPautaCatalog? pautas;
   @override
   State<ManufacturerCatalogScreen> createState() =>
       _ManufacturerCatalogScreenState();
@@ -66,6 +70,10 @@ class _ManufacturerCatalogScreenState extends State<ManufacturerCatalogScreen> {
   late final Future<ManufacturerCatalog> loading = widget.catalog == null
       ? ManufacturerCatalog.load()
       : Future.value(widget.catalog!);
+  late final Future<ManufacturerPautaCatalog> pautaLoading =
+      widget.pautas == null
+      ? ManufacturerPautaCatalog.load()
+      : Future.value(widget.pautas!);
   String query = '';
   int limit = 20;
   @override
@@ -114,30 +122,10 @@ class _ManufacturerCatalogScreenState extends State<ManufacturerCatalogScreen> {
                     Navigator.push<void>(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => Scaffold(
-                          appBar: AppBar(title: Text(product.name)),
-                          body: ListView(
-                            padding: const EdgeInsets.all(16),
-                            children: [
-                              ManufacturerEvidence(product: product),
-                              if (widget.canCalculate)
-                                FilledButton.icon(
-                                  icon: const Icon(VetIcons.calculator),
-                                  label: const Text(
-                                    'Calcular según el empaque',
-                                  ),
-                                  onPressed: () => Navigator.push<void>(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          CommercialPackageDoseScreen(
-                                            initialProduct: product,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
+                        builder: (_) => _ManufacturerProductDetail(
+                          product: product,
+                          canCalculate: widget.canCalculate,
+                          pautas: pautaLoading,
                         ),
                       ),
                     );
@@ -153,6 +141,72 @@ class _ManufacturerCatalogScreenState extends State<ManufacturerCatalogScreen> {
               title: const Text('Historial de investigación'),
               children: [SelectableText(catalog.historyText)],
             ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+/// Detalle de una ficha comercial con sus pautas documentadas.
+///
+/// El nombre comercial y la posología del empaque pertenecen a la calculadora
+/// de empaque; por eso el botón solo aparece con una pauta proporcional al peso
+/// en unidad de empaque y sin avisos. La dosis en mg/kg se muestra y se marca
+/// para la calculadora por agente farmacéutico, que exige un fármaco verificado
+/// del catálogo general (hoy vacío): no se precarga desde aquí.
+class _ManufacturerProductDetail extends StatelessWidget {
+  const _ManufacturerProductDetail({
+    required this.product,
+    required this.canCalculate,
+    required this.pautas,
+  });
+  final ManufacturerProduct product;
+  final bool canCalculate;
+  final Future<ManufacturerPautaCatalog> pautas;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(product.name)),
+    body: FutureBuilder<ManufacturerPautaCatalog>(
+      future: pautas,
+      builder: (context, snapshot) {
+        final catalog = snapshot.data;
+        final delProducto = catalog?.forProduct(product.sourceUrl) ?? const [];
+        final deEmpaque = delProducto
+            .where(
+              (p) => p.canCalculate && p.calculator == PautaCalculator.package,
+            )
+            .toList();
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            ManufacturerEvidence(product: product),
+            const Divider(),
+            if (snapshot.hasError)
+              const Text(
+                'No se pudieron abrir las pautas. Usa la posología del empaque.',
+              )
+            else if (catalog == null)
+              const Center(child: CircularProgressIndicator())
+            else
+              ManufacturerPautaSection(pautas: delProducto),
+            if (canCalculate && deEmpaque.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              FilledButton.icon(
+                icon: const Icon(VetIcons.calculator),
+                label: const Text('Calcular según el empaque'),
+                onPressed: () => Navigator.push<void>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CommercialPackageDoseScreen(
+                      initialProduct: product,
+                      initialPauta: deEmpaque.first,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         );
       },

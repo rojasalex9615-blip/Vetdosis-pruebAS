@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/doses/domain/manufacturer_catalog.dart';
+import 'package:vetdosis_pro/modules/doses/domain/manufacturer_pauta.dart';
 import 'package:vetdosis_pro/modules/doses/presentation/manufacturer_catalog_screen.dart';
 import 'package:vetdosis_pro/modules/doses/presentation/commercial_package_dose_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ManufacturerCatalog source;
+  late ManufacturerPautaCatalog pautas;
   setUpAll(() async {
     source = await ManufacturerCatalog.load();
+    pautas = await ManufacturerPautaCatalog.load();
   });
 
   test(
@@ -63,7 +66,9 @@ void main() {
     'read-only catalog opens the evidence without offering calculation',
     (tester) async {
       await tester.pumpWidget(
-        MaterialApp(home: ManufacturerCatalogScreen(catalog: source)),
+        MaterialApp(
+          home: ManufacturerCatalogScreen(catalog: source, pautas: pautas),
+        ),
       );
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'FLORGEN 300');
@@ -72,6 +77,66 @@ void main() {
       await tester.tap(find.widgetWithText(ListTile, 'FLORGEN 300'));
       await tester.pumpAndSettle();
       expect(find.text('Abrir ficha original PLM'), findsOneWidget);
+      expect(find.text('Calcular según el empaque'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a product with a proportional pauta shows it and offers calculation',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final product = source.search('FLORGEN 300').single;
+      final suyas = pautas.forProduct(product.sourceUrl);
+      expect(suyas, isNotEmpty);
+      expect(suyas.every((p) => p.canCalculate), true);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ManufacturerCatalogScreen(
+            catalog: source,
+            pautas: pautas,
+            canCalculate: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'FLORGEN 300');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'FLORGEN 300'));
+      await tester.pumpAndSettle();
+      expect(find.text('Posología literal'), findsOneWidget);
+      expect(find.text('Calcular según el empaque'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'a non-proportional pauta is shown but never offered for calculation',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final product = source.search('AMOXI-30-PLUS').single;
+      final suyas = pautas.forProduct(product.sourceUrl);
+      expect(suyas, isNotEmpty);
+      expect(suyas.every((p) => !p.canCalculate), true);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ManufacturerCatalogScreen(
+            catalog: source,
+            pautas: pautas,
+            canCalculate: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'AMOXI-30-PLUS');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'AMOXI-30-PLUS'));
+      await tester.pumpAndSettle();
+      expect(find.text('Posología literal'), findsOneWidget);
       expect(find.text('Calcular según el empaque'), findsNothing);
       expect(tester.takeException(), isNull);
     },

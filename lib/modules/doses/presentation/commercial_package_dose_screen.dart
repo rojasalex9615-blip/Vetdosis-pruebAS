@@ -6,22 +6,28 @@ import 'manufacturer_catalog_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/commercial_package_dose.dart';
+import '../domain/manufacturer_pauta.dart';
 import '../domain/quantity.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 /// Separate from generic pharmacological dosing.
 /// Until product labels have been verified and published as reviewed data,
 /// the professional transcribes the actual package instruction manually.
+/// When [initialPauta] is a proportional-to-weight rule without integrity
+/// warnings, its literal wording and reference are preloaded; the professional
+/// still confirms before calculating.
 class CommercialPackageDoseScreen extends StatefulWidget {
   const CommercialPackageDoseScreen({
     super.key,
     this.initialProduct,
+    this.initialPauta,
     this.recordedWeight,
     this.validateRecordedWeight,
   });
   final RecordedPatientWeight? recordedWeight;
   final Future<bool> Function(RecordedPatientWeight)? validateRecordedWeight;
   final ManufacturerProduct? initialProduct;
+  final ManufacturerPauta? initialPauta;
 
   @override
   State<CommercialPackageDoseScreen> createState() =>
@@ -41,10 +47,24 @@ class _CommercialPackageDoseScreenState
   final perKg = TextEditingController();
 
   ManufacturerProduct? selectedProduct;
+  ManufacturerPauta? preloadedPauta;
   @override
   void initState() {
     super.initState();
     if (widget.initialProduct != null) selectProduct(widget.initialProduct);
+    final pauta = widget.initialPauta;
+    if (pauta != null && pauta.canCalculate) {
+      final ref = pauta.weightReference!;
+      preloadedPauta = pauta;
+      labelWording.text = pauta.literal;
+      presentation.text = pauta.presentation;
+      species.text = pauta.species;
+      route.text = pauta.route;
+      frequency.text = pauta.interval;
+      perKg.text = ref.kg;
+      labelAmount.text = ref.amount;
+      proportionalConfirmed = false;
+    }
   }
 
   void selectProduct(ManufacturerProduct? value) {
@@ -67,6 +87,7 @@ class _CommercialPackageDoseScreenState
     }
     product.text = value?.name ?? '';
     proportionalConfirmed = false;
+    preloadedPauta = null;
     tabletSplitAllowedByLabel = false;
     tabletParts = 2;
     unit = CommercialPackageUnit.ml;
@@ -304,6 +325,31 @@ class _CommercialPackageDoseScreenState
               ),
               if (selectedProduct != null) ...[
                 ManufacturerEvidence(product: selectedProduct!),
+                if (preloadedPauta case final pauta?) ...[
+                  const SizedBox(height: 8),
+                  Card(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Pauta precargada (${pauta.id})',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          SelectableText(pauta.literal),
+                          const Text(
+                            'Sin verificar en la clínica. Confirma la '
+                            'presentación, la especie y el peso antes de calcular.',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 const Text(
                   'Transcribe y confirma la pauta específica del fabricante. '
                   'La forma farmacéutica del índice no indica por sí sola la concentración ni la presentación.',
