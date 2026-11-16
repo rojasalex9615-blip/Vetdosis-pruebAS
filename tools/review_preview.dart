@@ -94,8 +94,12 @@ class AiFake implements AiRepository {
     {'role': 'user', 'body': 'Privado'},
   ];
   @override
-  Future<String> create(String clinic, String title, String operation) async =>
-      'chat';
+  Future<String> create(
+    String clinic,
+    String title,
+    String operation, {
+    String kind = AiChatKind.assistant,
+  }) async => 'chat';
   @override
   Future<void> policy(
     String chat,
