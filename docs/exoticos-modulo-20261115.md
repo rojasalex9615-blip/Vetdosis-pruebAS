@@ -20,6 +20,15 @@ Los valores salen de libros escritos o supervisados por profesionales, así que 
 
 Sinónimos de parámetro unificados para poder comparar (el nombre original se muestra): «Tamaño de camada» = crías por camada; «Glóbulos rojos» = eritrocitos; «Glóbulos blancos» = leucocitos totales. «Urea» y «BUN» **no** se unifican.
 
+## Marcado para revisión de Ale (fin de la beta, uno por uno)
+Ale revisa individualmente cada valor marcado antes de entregar. Hoy lo que la pantalla marca con «Corroborar valor y unidad» es solo esto:
+1. **Cuyo · Fósforo, 5,3 mg/dL** (p. 176, tabla 4.4 continuación): valor aislado publicado.
+2. **Cuyo · Potasio, 6,8–8,9 mEq/L** (p. 176, tabla 4.4 continuación): intervalo elevado.
+
+No se marca en pantalla, pero la hoja de origen lo trae con estado «CONFIRMAR taxonomía y pertinencia clínica»: las 58 filas de *Manejo y tratamiento de los animales exóticos* del «jerbo del libro A». Ale decidió tratar los nombres como los de la obra, así que no hay aviso; queda aquí por si quiere mirarlas.
+
+Si se añade otra marca en el código, listarla aquí.
+
 ## Qué NO hace
 - No guarda registros, no calcula dosis, no se liga a un paciente.
 - No agrega datos fuera de la hoja. Aves, reptiles, anfibios y peces ornamentales aparecen solo como «En preparación».
