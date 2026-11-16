@@ -1,0 +1,34 @@
+name: Pautas de Grok en Supabase de pruebas
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Inspeccionar o aplicar la ingesta de pautas
+        type: choice
+        options: [inspect, apply]
+        default: inspect
+        required: true
+      confirmation:
+        description: Para aplicar escribir ACTIVAR_PAUTAS_EN_PRUEBAS
+        type: string
+        default: ''
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: supabase-test-pautas-deployment
+  cancel-in-progress: false
+jobs:
+  pautas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probar protecciones del despliegue
+        run: python3 -m unittest discover -s scripts/supabase -p 'test_pautas_intake.py'
+      - name: Revisar o aplicar pautas en el proyecto de pruebas
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PAUTAS_ACTION: ${{ inputs.action }}
+          PAUTAS_CONFIRMATION: ${{ inputs.confirmation }}
+        run: python3 scripts/supabase/pautas_intake.py

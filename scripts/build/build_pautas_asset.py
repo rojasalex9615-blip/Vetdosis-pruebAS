@@ -189,7 +189,8 @@ select '{batch}', 'pautas_grok_1197_20261115:row:'||(e->>'_r'),
   nullif(left(e->>'id_pauta',400),''), e,
   encode(sha256(convert_to(e::text,'UTF8')),'hex'), 'pending',
   'Imported verbatim; not clinically validated'
-from jsonb_array_elements($vd${rows_json}$vd$::jsonb) e;
+from jsonb_array_elements($vd${rows_json}$vd$::jsonb) e
+on conflict (batch_id,row_key) do nothing;
 """
         open(dest, "w", encoding="utf-8").write(sql)
         print(f"SQL de ingesta escrito en {dest}")
