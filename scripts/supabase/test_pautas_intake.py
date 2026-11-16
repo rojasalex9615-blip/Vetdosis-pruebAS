@@ -57,5 +57,33 @@ class PautasIntakeGuards(unittest.TestCase):
             self.assertNotIn('habilitado_en_app=true', intake_sql + read_sql)
 
 
+class TokenSources(unittest.TestCase):
+    def test_token_file_takes_priority_over_env(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'access_token')
+            with open(path, 'w') as handle:
+                handle.write('sbp_desde_archivo\n')
+            with patch.dict(os.environ, {'SUPABASE_ACCESS_TOKEN': 'sbmc_viejo', 'SUPABASE_ACCESS_TOKEN_FILE': path}):
+                self.assertEqual(deploy.access_token(), 'sbp_desde_archivo')
+
+    def test_token_from_json_file(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'access_token.json')
+            with open(path, 'w') as handle:
+                handle.write('{"access_token": "sbp_json"}')
+            with patch.dict(os.environ, {'SUPABASE_ACCESS_TOKEN': '', 'SUPABASE_ACCESS_TOKEN_FILE': path}):
+                self.assertEqual(deploy.access_token(), 'sbp_json')
+
+    def test_missing_token_refuses(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, 'no_existe')
+            with patch.dict(os.environ, {'SUPABASE_ACCESS_TOKEN': '', 'SUPABASE_ACCESS_TOKEN_FILE': path}):
+                with self.assertRaises(SystemExit):
+                    deploy.access_token()
+
+
 if __name__ == '__main__':
     unittest.main()

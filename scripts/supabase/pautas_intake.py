@@ -1,8 +1,10 @@
 """Aplica la ingesta de pautas de Grok en el proyecto de pruebas fijo.
 
-Las credenciales se leen del entorno de GitHub, nunca de argumentos de línea de
-comandos. Por defecto solo inspecciona (lectura). No registra credenciales ni
-cuerpos de respuesta.
+La credencial de Management API se lee, por orden: la variable
+SUPABASE_ACCESS_TOKEN, o un archivo cuyo contenido sea el token (ruta en
+SUPABASE_ACCESS_TOKEN_FILE, o el archivo por defecto
+~/.config/supabase/access_token). Nunca se pasa por argumentos de línea de
+comandos ni se registra. Por defecto solo inspecciona (lectura).
 
 Aplica dos migraciones candidatas, ambas idempotentes:
   15P · ingesta verbatim de las 1197 pautas (review_state='pending')
@@ -22,6 +24,7 @@ BATCH = '7e4c1a92-3b5d-4f81-9a26-8c1d2e5f6a70'
 ENDPOINT = f'https://api.supabase.com/v1/projects/{PROJECT}/database/query'
 ROOT = Path(__file__).resolve().parents[2]
 CONFIRMATION = 'ACTIVAR_PAUTAS_EN_PRUEBAS'
+DEFAULT_TOKEN_FILE = Path(os.path.expanduser('~/.config/supabase/access_token'))
 PREFLIGHT = f"""select
  to_regclass('vetdosis_reference_staging.raw_intake_rows') is not null as staging_ready,
  to_regclass('vetdosis_reference_staging.import_batches') is not null as batches_ready,
@@ -32,10 +35,29 @@ PREFLIGHT = f"""select
    where source_filename='Pautas_VetDosis_MAESTRO.csv') as pauta_rows"""
 
 
-def query(sql):
+def access_token():
+    """Token de Management API: archivo o variable de entorno. No se registra.
+
+    El archivo tiene prioridad para poder usar un token subido a mano aunque el
+    entorno traiga uno caducado.
+    """
+    token_file = Path(os.environ.get('SUPABASE_ACCESS_TOKEN_FILE', DEFAULT_TOKEN_FILE))
+    if token_file.exists():
+        content = token_file.read_text(encoding='utf-8').strip()
+        if content.startswith('{'):
+            content = json.loads(content).get('access_token', '').strip()
+        if content:
+            return content
     token = os.environ.get('SUPABASE_ACCESS_TOKEN', '').strip()
-    if not token:
-        raise SystemExit('Falta SUPABASE_ACCESS_TOKEN en los secretos de GitHub.')
+    if token:
+        return token
+    raise SystemExit(
+        'Falta el token de Management API. Define SUPABASE_ACCESS_TOKEN, o deja '
+        f'el token en {token_file} (o en SUPABASE_ACCESS_TOKEN_FILE).')
+
+
+def query(sql):
+    token = access_token()
     request = urllib.request.Request(
         ENDPOINT,
         data=json.dumps({'query': sql}).encode(),
