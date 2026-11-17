@@ -7,13 +7,16 @@ import '../../doses/domain/quantity.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
+import '../../clinic_experience/domain/clinic_experience.dart';
 import '../../core/domain/navigation_access.dart';
 import '../../auth/domain/staff_labels.dart';
+import '../../identity/domain/identity_repository.dart';
 import '../../inventory/domain/inventory_models.dart';
 import '../../hospital/application/hospital_alerts.dart';
 import '../../prescribing/presentation/rx_entry_screen.dart';
 import 'dashboard_view_model.dart';
 import 'alert_preferences_panel.dart';
+import 'statistics_screen.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 /// Inicio: resumen del espacio, accesos a los modulos y proximas citas.
@@ -30,12 +33,16 @@ class DashboardScreen extends StatefulWidget {
     this.homePilot = false,
     this.alerts,
     this.isVisible,
+    this.identity,
+    this.experience,
   });
   final DashboardViewModel model;
   final ValueChanged<String> onNavigate;
   final bool offline, statisticsOnly, homePilot;
   final HospitalAlerts? alerts;
   final bool Function(String)? isVisible;
+  final IdentityRepository? identity;
+  final ClinicExperience? experience;
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -263,37 +270,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     listenable: Listenable.merge([model, ?widget.alerts]),
     builder: (context, _) {
       final m = model;
-      final stats = m.statistics;
       final totals = m.dayTotals;
       final statisticsPanel = panel('Estadísticas', 'Estadísticas', [
-        unavailable(
-          'Estadísticas',
-          stats != null,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Ventas mensuales netas de devoluciones · MXN. No representan utilidad neta.',
-              ),
-              for (final s
-                  in m
-                      .rows(stats, 'sales')
-                      .reversed
-                      .take(widget.statisticsOnly ? 12 : 3))
-                ListTile(
-                  title: Text('${s['month']}'),
-                  trailing: Text(money(s['amount'])),
-                ),
-              if (widget.statisticsOnly) ...[
-                const Text('Citas no canceladas del mes por especie'),
-                for (final s in m.rows(stats, 'species'))
-                  ListTile(
-                    title: Text('${s['species']}'),
-                    trailing: Text('${s['count']}'),
-                  ),
-              ],
-            ],
-          ),
+        StatisticsPanel(
+          model: model,
+          statisticsOnly: widget.statisticsOnly,
+          identity: widget.identity,
+          experience: widget.experience,
         ),
       ]);
       return Column(
