@@ -308,4 +308,77 @@ void main() {
     expect(find.text('450 kg'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Panel de FCA calcula y muestra la conversión', (tester) async {
+    tester.view.physicalSize = const Size(1200, 5000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: AquacultureFcrPanel()),
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.text('Calcular FCA y costo'));
+    await tester.tap(find.text('Calcular FCA y costo'));
+    await tester.pump();
+    expect(find.text('755 kg'), findsOneWidget);
+    expect(find.text('FCA aparente'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Panel de recambio calcula litros y recambios', (tester) async {
+    tester.view.physicalSize = const Size(1200, 5000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: AquacultureWaterExchangePanel()),
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.text('Calcular recambio'));
+    await tester.tap(find.text('Calcular recambio'));
+    await tester.pump();
+    expect(find.text('3750 L'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Panel de sal contra el nitrito calcula la sal', (tester) async {
+    tester.view.physicalSize = const Size(1200, 5000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: AquacultureNitriteSaltPanel()),
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.text('Calcular sal'));
+    await tester.tap(find.text('Calcular sal'));
+    await tester.pump();
+    expect(find.text('23.33 kg'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Panel de alimento medicado calcula el producto', (tester) async {
+    tester.view.physicalSize = const Size(1200, 5000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: AquacultureMedicatedFeedPanel()),
+        ),
+      ),
+    );
+    await tester.ensureVisible(find.text('Calcular alimento medicado'));
+    await tester.tap(find.text('Calcular alimento medicado'));
+    await tester.pump();
+    expect(find.text('40 g'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
