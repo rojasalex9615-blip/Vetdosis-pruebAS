@@ -101,6 +101,7 @@ IconData sectionIcon(String page) => switch (page) {
   'Vademécum' ||
   'Operaciones de dosis' => VetIcons.calculator,
   'Cálculos clínicos' => VetIcons.flask,
+  'Exóticos' => VetIcons.rabbit,
   'Escanear producto' => VetIcons.qrScan,
   'Hospitalización' => VetIcons.hospital,
   'Pacientes' => VetIcons.paw,

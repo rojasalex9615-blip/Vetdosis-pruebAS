@@ -91,18 +91,21 @@ class ClinicExperience {
     final enabledGroups = switch (preset) {
       ClinicPreset.smallAnimals => <String>{
         'Atención y expedientes', 'Medicamentos y herramientas',
+        'Exóticos y silvestres',
         'Administración y finanzas', 'Equipo y comunicación',
         'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
       },
       ClinicPreset.hospital => <String>{
         'Atención y expedientes', 'Medicamentos y herramientas',
+        'Exóticos y silvestres',
         'Administración y finanzas', 'Equipo y comunicación',
         'Estadísticas y reportes', 'Cuenta y ajustes', 'Asistente IA',
         'Revisión de catálogos',
       },
       ClinicPreset.production => <String>{
         'Atención y expedientes', 'Medicamentos y herramientas',
-        'Producción animal', 'Administración y finanzas',
+        'Producción animal', 'Exóticos y silvestres',
+        'Administración y finanzas',
         'Equipo y comunicación', 'Estadísticas y reportes',
         'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
       },

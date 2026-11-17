@@ -35,6 +35,7 @@ class CoreViewModel extends ChangeNotifier {
     branch = value;
     screen = switch (value) {
       ClinicalBranch.production => 'Producción y grandes especies',
+      ClinicalBranch.exotic => 'Exóticos',
       ClinicalBranch.management => 'Más',
       _ => 'Inicio',
     };
