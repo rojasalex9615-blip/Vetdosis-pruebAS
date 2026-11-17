@@ -139,7 +139,7 @@ abstract final class VetTheme {
         letterSpacing: .2,
       ),
       labelSmall: base.labelSmall?.copyWith(
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: FontWeight.w600,
         letterSpacing: .3,
         color: apoyo,
@@ -195,7 +195,7 @@ abstract final class VetTheme {
         backgroundColor: VetColors.raised,
         indicatorColor: VetColors.lavender.withValues(alpha: .35),
         labelTextStyle: const WidgetStatePropertyAll(
-          TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
       ),
     );
