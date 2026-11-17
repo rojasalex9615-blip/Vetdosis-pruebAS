@@ -1,0 +1,14 @@
+producto_cipa,peso_min_g,peso_max_g,t20C,t22C,t24C,t26C,t28C,t30C,unidad,fuente,ubicacion,estado
+Mojarra iniciacion 45% harina,0.1,0.5,4,5,6,7,7.5,8,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura (encabezado de 30 C parcialmente recortado)
+Mojarra iniciacion 45% extruido,0.5,5,3,4,4.5,5,5.5,6,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra prelevante 40%,5,10,2,3,3.5,4,4.5,5,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra levante 35%,10,20,1.8,2.7,3.1,3.6,4,4.5,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra levante 35%,20,50,1.6,2.2,2.7,3,3.4,4,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra levante 35%,50,75,1.4,1.9,2.2,2.4,2.9,3.1,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30%,75,110,1.3,1.6,1.9,2,2.3,3,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30%,110,150,1.1,1.4,1.6,1.8,2,2.3,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30% o 24%,150,200,0.9,1.2,1.4,1.6,1.8,2,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30% o 24%,200,250,0.85,1.15,1.35,1.55,1.7,1.9,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30% o 24%,250,325,0.8,1.1,1.3,1.5,1.65,1.8,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30% o 24%,325,400,0.75,1.05,1.25,1.45,1.6,1.7,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura
+Mojarra 30% o 24%,400,,0.7,1,1.2,1.4,1.5,1.6,% biomasa/dia,Cipa Acuavit tabla de racion tilapia,captura pagina 3 de 5,verificado en captura

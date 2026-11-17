@@ -1,0 +1,117 @@
+modulo,especie,parametro,valor_min,valor_max,unidad,condicion,fuente,ubicacion,estado
+aireacion,general,saturacion OD agua dulce 0 C,14.621,14.621,mg/L,1 atm S=0,Benson y Krause 1984,Tabla 7,verificado
+aireacion,general,saturacion OD agua dulce 20 C,9.092,9.092,mg/L,1 atm S=0,Benson y Krause 1984,Tabla 7,verificado
+aireacion,general,saturacion OD agua dulce 28 C,7.828,7.828,mg/L,1 atm S=0,Benson y Krause 1984,Tabla 7,verificado
+aireacion,general,saturacion OD agua dulce 40 C,6.412,6.412,mg/L,1 atm S=0,Benson y Krause 1984,Tabla 7,verificado
+aireacion,general,ecuacion saturacion mg/L,,,,"ln C*o = -139.34411 + 1.575701e5/T - 6.642308e7/T^2 + 1.243800e10/T^3 - 8.621949e11/T^4 - S(0.017674 - 10.754/T + 2140.7/T^2); T en K; valida 0-40 C y S 0-40",Benson y Krause 1984,Ec. 32 con constante -139.34411 para mg/L (texto tras Ec. 32),verificado contra Tabla 7 (diferencia max 0.001)
+aireacion,general,correccion por presion,,,,"Cp = C* x P x [(1-Pwv/P)(1-theta*P)] / [(1-Pwv)(1-theta)]; cerca del nivel del mar basta C* x P(atm) con error ~0.5%; corrige hasta 0.03%",Benson y Krause 1984,Ec. 24 y texto siguiente; Tabla 9,verificado
+aireacion,general,presion por altitud,,,,P(atm)=(1-2.25577e-5*h)^5.25588 (atmosfera estandar),Artemio Lab declara usar atmosfera estandar; formula es la ISA estandar,no esta en los PDFs,ASUNCION a revisar
+calidad_agua,general agua dulce,fraccion NH3 no ionizado,,,,"pKa=0.09018+2729.92/T(K); f=1/(10^(pKa-pH)+1)",Emerson et al. 1975 (formula); reproduce Boyd 2015 Tabla 11.3,Boyd 2015 p.236,verificado numericamente contra Tabla 11.3
+calidad_agua,general agua dulce,fraccion NH3 pH 7.0 30 C,0.008,0.008,fraccion,,Boyd 2015,Tabla 11.3 p.236,verificado
+calidad_agua,general agua dulce,fraccion NH3 pH 8.0 28 C,0.065,0.065,fraccion,,Boyd 2015,Tabla 11.3 p.236,verificado
+calidad_agua,general agua dulce,fraccion NH3 pH 9.0 30 C,0.448,0.448,fraccion,,Boyd 2015,Tabla 11.3 p.236,verificado
+calidad_agua,general,CL50 96h NH3-N peces,0.3,3.0,mg/L,rango entre especies; mas sensibles los de agua fria,Boyd 2015,p.239,verificado
+calidad_agua,peces agua fria,NH3-N sin efecto,0.005,0.01,mg/L,,Boyd 2015,pp.239-240,verificado
+calidad_agua,peces agua calida,NH3-N sin efecto,0.01,0.05,mg/L,,Boyd 2015,pp.239-240,verificado
+calidad_agua,trucha,NH3 sin ionizar efecto en crecimiento,0.03,,mg/L,exposicion continua reduce crecimiento,Shelton 1994 (UGA Aquaculture Technical Series),texto junto a Tabla 8,verificado
+calidad_agua,trucha,NH3 como fraccion de TAN pH 8.0 60 F,1.83,1.83,%,,Shelton 1994,Tabla 8,verificado
+calidad_agua,trucha,NH3 como fraccion de TAN pH 8.0 50 F,2.65,2.65,%,,Shelton 1994,Tabla 8,verificado
+calidad_agua,trucha,OD salida de raceway,6,,ppm,por debajo el raceway esta al maximo (indice de flujo); no dejar bajar de 4 ppm,Shelton 1994,seccion Food fish production,verificado
+calidad_agua,trucha,temperatura crecimiento optimo,55,65,F,,Shelton 1994,Pagina Feeding practices,verificado
+calidad_agua,trucha arcoiris,temperatura crecimiento optimo,50,55,F,,Shelton 1994 (cita Piper et al. 1982),Tabla 3,verificado
+calidad_agua,trucha arcoiris,temperatura supervivencia,33,78,F,,Shelton 1994 (cita Piper et al. 1982),Tabla 3,verificado
+calidad_agua,trucha,pH agua de criadero,6.5,8.5,,,Shelton 1994,Tabla 5,verificado
+calidad_agua,trucha,alcalinidad total,10,400,ppm CaCO3,,Shelton 1994,Tabla 5,verificado
+calidad_agua,trucha,CO2,,2.0,ppm,,Shelton 1994,Tabla 5,verificado
+calidad_agua,tilapia,temperatura optima,27,29,C,81-84 F,DeLong et al. 2009 SRAC 282,seccion Water quality requirements (Temperature),verificado
+calidad_agua,tilapia,temperatura aceptable,25,32,C,77-90 F,DeLong et al. 2009 SRAC 282,Water quality requirements (Temperature),verificado
+calidad_agua,tilapia,OD operacion,5.0,7.5,mg/L,,DeLong et al. 2009 SRAC 282,Water quality requirements (Dissolved oxygen),verificado
+calidad_agua,tilapia,OD umbral cronico crecimiento y FCA,3.5,,mg/L,por debajo de forma cronica afecta crecimiento y conversion,DeLong et al. 2009 SRAC 282,Water quality requirements (Dissolved oxygen),verificado
+calidad_agua,tilapia,OD exposicion corta (<10 min),0.8,,mg/L,supervivencia y recuperacion posibles,DeLong et al. 2009 SRAC 282,Water quality requirements (Dissolved oxygen),verificado
+calidad_agua,tilapia,OD durante cosecha,4.0,,mg/L,minimo mientras se drena y se agrupa,DeLong et al. 2009 SRAC 282,Harvesting and marketing,verificado
+calidad_agua,tilapia,pH buen crecimiento,6,9,,,DeLong et al. 2009 SRAC 282,Water quality requirements (pH),verificado
+calidad_agua,tilapia,pH supervivencia,5,10,,,DeLong et al. 2009 SRAC 282,Water quality requirements (pH),verificado
+calidad_agua,tilapia,pH minimo recirculacion,6.8,,,limite inferior para bacterias nitrificantes,DeLong et al. 2009 SRAC 282,Water quality requirements (pH),verificado
+calidad_agua,tilapia,NH3 no ionizado maximo,,1.0,mg/L,evitar concentraciones mayores,DeLong et al. 2009 SRAC 282,Water quality requirements (Ammonia),verificado
+calidad_agua,tilapia,NO2-N maximo si Cl bajo,,5,mg/L,solo cuando Cl- menor de 10 mg/L,DeLong et al. 2009 SRAC 282,Water quality requirements (Nitrite),verificado
+calidad_agua,tilapia,cloruro operacion normal,150,200,mg/L,"sal de roca; subir si el nitrito sube",DeLong et al. 2009 SRAC 282,Water quality requirements (Nitrite),verificado
+calidad_agua,tilapia,cloruro mantenimiento,100,300,mg/L,,DeLong et al. 2009 SRAC 282,Water quality requirements (Chloride),verificado (dos rangos en la misma obra; mostrar ambos)
+calidad_agua,tilapia,NO3-N toxicidad en reuso,300,400,mg/L,sistemas de reuso de agua,DeLong et al. 2009 SRAC 282,Water quality requirements (Nitrate),verificado
+calidad_agua,tilapia,CO2,,40,mg/L,mantener por debajo,DeLong et al. 2009 SRAC 282,Water quality requirements (CO2),verificado
+calidad_agua,tilapia,dureza calcica,50,100,mg/L,,DeLong et al. 2009 SRAC 282,Water quality requirements (Calcium hardness),verificado
+calidad_agua,tilapia,alcalinidad,100,250,mg/L,,DeLong et al. 2009 SRAC 282,Water quality requirements (Alkalinity),verificado
+nitrito,general agua dulce,relacion cloruro:nitrito que previene metahemoglobinemia,6,10,Cl:NO2,hasta al menos 5-10 mg/L de nitrito,Boyd 2015 (cita Boyd y Tucker 1998),p.240,verificado
+nitrito,bagre,relacion cloruro:nitrito minima,10,10,Cl:NO2,otras especies: asumir que el nitrito es un problema potencial,Durborow et al. 1997 SRAC 462,seccion Treatment and prevention,verificado (la obra la da para bagre; no la generaliza)
+nitrito,bagre,cloruro de seguro,100,,ppm,standard de la industria del bagre,Durborow et al. 1997 SRAC 462,Treatment and prevention; How to calculate,verificado
+nitrito,general,sal para subir cloruro,,,,"Cl a agregar (ppm) = relacion x NO2 - Cl actual; si <=0 no hace falta; libras de sal = acres x pies de profundidad x ppm x 4.5",Durborow et al. 1997 SRAC 462,Formulas 1 y 2,verificado (4.5 lb/acre-pie/ppm equivale a 1.65 g NaCl/m3/ppm Cl; comprobado)
+nitrito,general,TAN a nitrito,1,3,ppm TAN : ppm nitrito,1 ppm TAN puede convertirse en 3 ppm de nitrito en poco tiempo,Durborow et al. 1997 SRAC 462,seccion How to calculate,verificado
+nitrito,general,tiempo de alivio con sal,24,,h,,Durborow et al. 1997 SRAC 462,seccion Application of salt,verificado
+nitrito,general,frecuencia de medicion,,,,2-3 veces por semana en otono y primavera; al menos semanal el resto del ano; diaria en un episodio,Durborow et al. 1997 SRAC 462,Application of salt,verificado
+nitrito,general,CL50 96h nitrito agua dulce,0.66,200,mg/L NO2,peces y crustaceos de agua dulce,Boyd 2015 (cita Boyd 2014),p.240,verificado
+nitrito,general,nitrito seguro,0.05,0.05,x CL50,"aprox. 0.05 veces la CL50 96h de la especie (Artemio usaba 5-10 % y llamaba ""calculo propio"")",Boyd 2015,p.240,verificado
+nitrito,trucha y agua fria,sensibilidad,,,,sensibles a cantidades extremadamente pequenas,Durborow et al. 1997 SRAC 462,Susceptibility,verificado (sin cifra)
+nitrito,tilapia,sensibilidad,,,,bastante sensible,Durborow et al. 1997 SRAC 462,Susceptibility,verificado (sin cifra)
+densidad,tilapia,biomasa max sistema aireado sin O2 puro,30,30,kg/m3,0.25 lb/gal; regla general,DeLong et al. 2009 SRAC 282,System design,verificado
+densidad,tilapia,biomasa max sistema aireado (algunos operadores),60,72,kg/m3,0.5-0.6 lb/gal; solo aireacion,DeLong et al. 2009 SRAC 282,System design,verificado (Grok lo rotulo como con O2 suplementario: era al reves)
+densidad,tilapia,biomasa max con O2 suplementario,60,,kg/m3,"puede superar 0.50 lb/gal (60 kg/m3)",DeLong et al. 2009 SRAC 282,System design,verificado
+densidad,tilapia,biomasa max diseno con O2 (rutina),90,120,kg/m3,0.75-1.0 lb/gal,DeLong et al. 2009 SRAC 282,System design,verificado
+densidad,tilapia,racion maxima diaria a biomasa maxima,1.0,1.5,% biomasa,peces de mercado de 680 g,DeLong et al. 2009 SRAC 282,System design,verificado
+densidad,tilapia,renovacion flujo continuo,90,120,min,tiempo para renovar 100 % del agua del tanque,DeLong et al. 2009 SRAC 282,Flow-through tank systems,verificado
+densidad,trucha,indice de densidad D,0.4,1.0,lb/pie3 por pulgada,W=D x V(pie3) x L(pulgadas); D=0.5 da 1 lb/pie3 con 2 pulgadas,Shelton 1994,Food fish production; Tabla 7,verificado
+densidad,trucha,indice de flujo F,0.5,1.5,lb/(pulgada x gpm),W=F x L x I; F=W/(L x I); supone agua de entrada saturada de O2,Shelton 1994,Food fish production,verificado
+densidad,trucha,ejemplo indice de flujo,,,,600 lb de truchas de 4 pulg a 150 gpm -> F=1.0; 6 pulg -> 900 lb; 400 lb de 4 pulg -> 100 gpm,Shelton 1994,Food fish production,verificado (vector de prueba)
+racion,tilapia,tasa 0-0.5 g,15,20,% biomasa/dia,crumble 00/0/1,DeLong et al. 2009 SRAC 282,Tabla 1,verificado
+racion,tilapia,tasa 0.5-5 g,10,15,% biomasa/dia,crumble 2,DeLong et al. 2009 SRAC 282,Tabla 1,verificado
+racion,tilapia,tasa 5-18 g,5,10,% biomasa/dia,crumble 3,DeLong et al. 2009 SRAC 282,Tabla 1,verificado
+racion,tilapia,tasa 18-75 g,3,5,% biomasa/dia,crumble 4 (1 mm),DeLong et al. 2009 SRAC 282,Tabla 1,verificado
+racion,tilapia,tasa 75-150 g,1.5,3,% biomasa/dia,3 mm,DeLong et al. 2009 SRAC 282,Tabla 1,verificado
+racion,tilapia,tasa 150 g a mercado,1.5,3,% biomasa/dia,5 mm,DeLong et al. 2009 SRAC 282,Tabla 1,verificado
+racion,tilapia,racion fry recien nacido,20,20,% biomasa/dia,fry puede comer hasta 20 %,DeLong et al. 2009 SRAC 282,Feeds and feeding,verificado
+racion,tilapia,conversion alimenticia tanque,1.4,1.8,FCA,comun en tilapia en tanque,DeLong et al. 2009 SRAC 282,Feeds and feeding,verificado
+racion,tilapia,proteina alimento engorde en tanque,32,40,% proteina,mas alta que en estanque,DeLong et al. 2009 SRAC 282,Tank culture disadvantages,verificado
+racion,tilapia,ejemplo alimento semanal,,,,10000 peces x 5 g/dia x 7 d = 350 kg ganancia; FCA 1.7 -> 595 kg/semana (85 kg/dia),DeLong et al. 2009 SRAC 282,Feeds and feeding,verificado (vector de prueba)
+racion,tilapia,tamano mercado vivo,340,908,g,"habitual 680 g (1.5 lb); 0.75-2.0 lb",DeLong et al. 2009 SRAC 282,Harvesting and marketing,verificado
+racion,trucha,tasa a 55 F,6.1,3.2,% peso corporal/dia,columnas por peces/libra: 2500+ 6.1; 2500-800 5.2; 800-300 5.1; 300-100 4.2; 100-30 3.2,Shelton 1994 (cita Leitritz y Lewis 1980),Tabla 6,verificado visualmente en el PDF
+racion,trucha,tasa a 60 F,7.5,3.9,% peso corporal/dia,columnas: 7.5; 6.3; 6.1; 5.1; 3.9,Shelton 1994 (cita Leitritz y Lewis 1980),Tabla 6,verificado visualmente en el PDF
+racion,trucha,tasa a 65 F,9.0,4.9,% peso corporal/dia,"IMPRESO ASI: 9.0; 1.5; 1.2; 6.1; 4.9 (1.5 y 1.2 rompen la tendencia; posible errata de la obra por 7.5 y 7.2)",Shelton 1994 (cita Leitritz y Lewis 1980),Tabla 6,REQUIERE REVISION: errata probable en la fuente
+racion,trucha,tamano alimento y comidas por dia,,,,Starter 8; granulo 1 8; granulo 2 6; granulo 3 4; granulo 4 3,Shelton 1994 (cita Leitritz y Lewis 1980),Tabla 6,verificado visualmente en el PDF
+racion,trucha,dieta engorde,,,,40 % proteina y 10 % grasa,Shelton 1994,Feeding practices,verificado
+racion,trucha,dieta fry,48,50,% proteina,12-15 % grasa (el texto imprime 12-5),Shelton 1994,Fry rearing,verificado con errata de impresion en grasa
+racion,trucha,mantenimiento a 38 F o menos,0.5,1.8,% peso/dia,segun tamano,Shelton 1994,Feeding practices,verificado
+racion,trucha,conversion alimenticia,1.2,2.0,FCA,libras de alimento por libra de ganancia,Shelton 1994,Feeding practices,verificado
+racion,trucha,temperatura digestion ineficiente,68,,F,por encima se desperdicia nutriente,Shelton 1994,Feeding practices,verificado
+racion,trucha,ayuno antes de manejo,1,4,dias,24 h para clasificar; 3-4 dias para transporte,Shelton 1994,Feeding practices,verificado
+racion,trucha,peso por longitud,,,,3 pulg 98.0/lb; 4 39.8; 5 19.8; 6 11.2; 7 6.9; 8 4.5; 9 3.1; 10 2.2; 11 1.6; 12 1.2,Shelton 1994,Tabla 9,verificado (el PDF imprime 6 pulg = X9.2 libras por 1000 peces: leer 89.2)
+densidad,tilapia,biomasa a cosecha con aireacion 24 h segun recambio diario,7.5,30,kg/m3,"recambio 25-100 %/dia: 7.5; 15; 22.5; 30 kg/m3 (proporcional al recambio)",CONAPESCA 2025 Tilapia para todos,Tabla Con aireacion p.17,verificado (coincide con los 30 kg/m3 de DeLong 2009)
+densidad,tilapia,biomasa a cosecha sin aireacion segun recambio diario,0.75,3,kg/m3,"recambio 25-100 %/dia: 750; 1500; 2252; 3000 g/m3 (proporcional)",CONAPESCA 2025 Tilapia para todos,Tabla Sin aireacion p.17,verificado en gramos; los parentesis impresos (3.5 / 3 / 2.5 kg) contradicen los gramos: REQUIERE REVISION
+densidad,tilapia,aumento de densidad con aireacion,,30,%,hasta,Nicovita Manual de crianza de tilapia,seccion Aireacion,verificado
+densidad,tilapia,precria 1-5 g con aireacion,100,150,peces/m2,recambio 10-15 %/dia; estanques 350-800 m2,Nicovita Manual de crianza de tilapia,Siembra precria levante y engorde (PDF p.24),verificado
+densidad,tilapia,precria 1-5 g sin aireacion,50,60,peces/m2,con malla antipajaros,Nicovita Manual de crianza de tilapia,PDF p.24,verificado
+densidad,tilapia,levante 5-80 g,20,50,peces/m2,recambio 5-10 %/dia; estanques 450-1500 m2,Nicovita Manual de crianza de tilapia,PDF p.25,verificado
+densidad,tilapia,engorde 80 g a cosecha,1,30,peces/m2,sobre 12 peces/m2 hace falta aireacion o recambio de 40-50 %; estanques 1000-5000 m2,Nicovita Manual de crianza de tilapia,PDF p.25,verificado
+racion,tilapia,precria 1-5 g,10,12,% biomasa/dia,45 % proteina; 8-10 comidas/dia,Nicovita Manual de crianza de tilapia,PDF p.25,verificado
+racion,tilapia,levante 5-80 g,3,6,% biomasa/dia,30-32 % proteina; 4-6 comidas/dia,Nicovita Manual de crianza de tilapia,PDF p.25,verificado
+racion,tilapia,engorde 80 g a cosecha,1.2,3,% biomasa/dia,28-30 % proteina; 2-4 comidas/dia,Nicovita Manual de crianza de tilapia,PDF p.25,verificado
+racion,tilapia,comidas por dia y proteina por peso,,,,"1 g: 10 comidas 45 % harina; 10 g: 6 comidas 45 % pellet 0.6-0.8 mm; 20 g: 4 comidas 35 % 1.5-2.5 mm; 30-450 g: 3 comidas 32-35 % 3.5 mm; 450-1000 g: 3 comidas 28-32-35 % 4.5 mm",CONAPESCA 2025 Tilapia para todos,Recomendacion para formular raciones p.28,verificado visualmente
+racion,tilapia,frecuencia de biometria,14,14,dias,ganancia ideal mayor a 3 g/dia; muestra de unos 100 peces en ayunas,CONAPESCA 2025 Tilapia para todos,Biometrias p.25,verificado
+racion,tilapia roja,tasa por temperatura y peso,,,,ver docs/acuicultura-tilapia-racion-temperatura-20261116.csv,Cipa Acuavit,captura pagina 3 de 5,verificado en captura (producto comercial: no es literatura cientifica)
+racion,cachama,plan semanal de consumo 20 semanas,,,,ver docs/acuicultura-cachama-plan-semanal-20261116.csv; peso 0.5 g a 658 g; FCA implicito 0.9-1.22,Cipa Acuavit,captura pagina 1,verificado en captura (producto comercial)
+racion,trucha arcoiris,tasa de alimentacion observada,0.94,0.98,% biomasa/dia,peces de 332-397 g a 12.8-14.5 C alimentados lentamente en jaulas; promedio 0.96; los autores la consideran baja,Chaves-Rojas y Vargas-Cordero 2016 Nutr. Anim. Trop. 10(2):38-60,Cuadro 3 y p.52,verificado
+racion,trucha arcoiris,tasa de referencia mismo peso y temperatura,1.9,1.9,% biomasa/dia,,Rengifo 2005 (citado en Chaves-Rojas y Vargas-Cordero 2016),p.52,cita secundaria
+racion,trucha arcoiris,FCA observada en jaulas,2.16,2.51,FCA,por densidad 24-30 kg/m3; promedio 2.3; los autores la atribuyen a perdida de pellets,Chaves-Rojas y Vargas-Cordero 2016,Cuadro 3 y p.53,verificado
+racion,salmonidos,FCA normal,1.4,1.4,FCA,,Luchini y Panne 2008 (citado en Chaves-Rojas y Vargas-Cordero 2016),p.53,cita secundaria
+densidad,trucha arcoiris,biomasa en jaulas de 1 m3 dentro de raceway,26,30,kg/m3,mejor rango del ensayo (24 26 28 30 kg/m3; 41 dias; peces de 332-397 g; mejor crecimiento a 28),Chaves-Rojas y Vargas-Cordero 2016,Resumen y p.54,verificado
+densidad,trucha arcoiris,biomasa jaulas fase de engorde,25,30,kg/m3,,Guerrero 2006 (citado en Chaves-Rojas y Vargas-Cordero 2016),p.54,cita secundaria
+densidad,trucha arcoiris,biomasa cualquier fase,25,40,kg/m3,,Perdomo et al. 2011 (citado en Chaves-Rojas y Vargas-Cordero 2016),p.54,cita secundaria
+calidad_agua,trucha arcoiris,OD observado,5.74,6.66,mg/L,promedio por estanque a 12.8-14.5 C (a las 6:00 mas alto),Chaves-Rojas y Vargas-Cordero 2016,Cuadros 1 y 2,verificado
+calidad_agua,trucha arcoiris,OD optimo,7,9,mg/L,,Carrera 2010 (citado en Chaves-Rojas y Vargas-Cordero 2016),p.55,cita secundaria
+calidad_agua,trucha arcoiris,temperatura minima de mantenimiento,3.8,3.8,C,se usa para la temperatura efectiva del CTC,Elliott 1982 (citado en Chaves-Rojas y Vargas-Cordero 2016),p.46,cita secundaria
+calidad_agua,tilapia,OD deseable,4.5,,mg/L,3-4 mg/L sobreviven pero crecen lento; 0.3-2.0 letal en exposicion prolongada; medir en el desague,Nicovita Manual de crianza de tilapia,Tabla 1 (Condiciones y parametros),verificado (dos criterios: DeLong 5.0-7.5; mostrar ambos)
+calidad_agua,tilapia,temperatura optima,28,32,C,puede seguir hasta 5 C por debajo,Nicovita Manual de crianza de tilapia,Temperatura (PDF p.10),verificado (dos criterios: DeLong 27-29; mostrar ambos)
+calidad_agua,tilapia,amonio deseable,0.01,0.1,ppm,cercano a 2 critico; tolerancia de la tilapia 0.6-2.0 ppm,Nicovita Manual de crianza de tilapia,Amonio (PDF p.13),verificado (dos criterios: DeLong NH3 maximo 1.0 mg/L)
+calidad_agua,tilapia,nitrito,,0.1,ppm,mantener por debajo,Nicovita Manual de crianza de tilapia,Nitritos (PDF p.14),verificado (dos criterios: DeLong 5 mg/L NO2-N con Cl bajo)
+calidad_agua,tilapia,CO2,,20,ppm,por encima hay letargia e inapetencia,Nicovita Manual de crianza de tilapia,Dioxido de carbono,verificado (dos criterios: DeLong 40 mg/L)
+calidad_agua,tilapia,alcalinidad baja,,20,ppm,por debajo aplicar 200 g/m2 de carbonato de calcio 2-3 veces al ano,Nicovita Manual de crianza de tilapia,Alcalinidad,verificado
+formula,trucha y general,SGR,,,,SGR(%) = (ln Pfinal - ln Pinicial) / dias x 100,Chaves-Rojas y Vargas-Cordero 2016,p.45 ecuaciones,verificado
+formula,trucha,CTC coeficiente termico de crecimiento,,,,CTC = (Pfinal^(1/3) - Pinicial^(1/3)) / suma de grados C efectivos; C efectivo = temperatura media diaria - 3.8,Chaves-Rojas y Vargas-Cordero 2016,pp.45-46 ecuaciones,verificado (texto del PDF garbled; revisar la ecuacion en el original antes de programarla)
+formula,general,indice de conversion economico y margen,,,,ICE = precio del alimento x FCA; margen bruto = ingreso por ventas - costo de alimentacion; relacion margen/costo = margen bruto / costo de alimentacion,Chaves-Rojas y Vargas-Cordero 2016,pp.42 y 46,verificado
