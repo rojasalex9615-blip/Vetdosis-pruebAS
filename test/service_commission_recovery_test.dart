@@ -140,7 +140,7 @@ void main() {
       expect(repo.received, '10.50');
       expect(repo.recordedReason, 'Reintegro confirmado de prueba');
       expect(
-        find.textContaining('Reintegros recibidos: \$10,50'),
+        find.textContaining('Reintegros recibidos: \$10.50'),
         findsOneWidget,
       );
     },
@@ -246,7 +246,7 @@ void main() {
       await tester.tap(find.text('Registrar reintegro recibido'));
       await tester.pumpAndSettle();
       expect(
-        find.textContaining('Máximo sin registrar: \$5,00'),
+        find.textContaining('Máximo sin registrar: \$5.00'),
         findsOneWidget,
       );
       final amount = find.byWidgetPredicate(

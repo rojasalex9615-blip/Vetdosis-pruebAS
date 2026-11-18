@@ -312,7 +312,7 @@ void main() {
         find.textContaining('Ajuste proporcional de comisión:'),
       );
       expect(
-        find.text('Ajuste proporcional de comisión: \$12,50 MXN'),
+        find.text('Ajuste proporcional de comisión: \$12.50 MXN'),
         findsOneWidget,
       );
       final confirm = find.text(

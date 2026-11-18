@@ -73,6 +73,19 @@ class _AuthScreenState extends State<AuthScreen> {
                   textAlign: veiled && entering ? TextAlign.center : null,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  _reset || model?.recoveringPassword == true
+                      ? 'Escribe tu correo y te enviaremos un enlace.'
+                      : model?.signedIn == true
+                      ? 'Consulta y cambia la clínica con la que trabajas.'
+                      : _register
+                      ? 'Crea tu cuenta para empezar a usar VetDosis Pro.'
+                      : 'Entra con tu correo y contraseña para consultar tu clínica.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 if (!widget.configured) ...[
                   const Text(

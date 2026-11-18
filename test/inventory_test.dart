@@ -136,7 +136,7 @@ void main() {
     expect(Money.parse('0.10').times(Quantity.parse('3')).decimal, '0.30');
     expect(Money.parse('0.01').times(Quantity.parse('0.5')).decimal, '0.01');
     expect((Money.parse('1') - Money.parse('2')).decimal, '-1.00');
-    expect(Money.parse('-1.01', signed: true).display, '\$-1,01 MXN');
+    expect(Money.parse('-1.01', signed: true).display, '-\$1.01 MXN');
   });
   test('Money rejects ambiguous input and fractional cent prices', () {
     for (final v in ['1.234', '1,000.00', 'NaN', '1e2', '-1']) {
@@ -281,7 +281,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Total a pagar: \$0,00 MXN'), findsOneWidget);
+    expect(find.text('Total a pagar: \$0.00 MXN'), findsOneWidget);
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
     expect(repo.writes, isEmpty);
@@ -314,7 +314,7 @@ void main() {
     await tester.ensureVisible(find.text('Guardar'));
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
-    expect(find.text('Total a pagar: \$0,20 MXN'), findsOneWidget);
+    expect(find.text('Total a pagar: \$0.20 MXN'), findsOneWidget);
     await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
@@ -366,7 +366,7 @@ void main() {
       await tester.pump();
       await tester.tap(find.byIcon(VetIcons.add).first);
       await tester.pump();
-      expect(find.text('Total a pagar: \$30,00 MXN'), findsOneWidget);
+      expect(find.text('Total a pagar: \$30.00 MXN'), findsOneWidget);
       await tester.ensureVisible(find.byType(CheckboxListTile));
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pump();

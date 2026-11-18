@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../finance/domain/investment_estimate.dart';
 import '../domain/porcino_bandas.dart';
@@ -1721,12 +1722,7 @@ List<int> parseQuotedPrices(String raw) {
   return out;
 }
 
-String _money(int cents) {
-  final pesos = cents / 100;
-  final entero = _int(pesos.truncateToDouble());
-  final centavos = (cents.abs() % 100).toString().padLeft(2, '0');
-  return '$entero.$centavos MXN';
-}
+String _money(int cents) => VetFormat.moneyFromCents(cents, signed: true);
 
 /// Capacidad de corral: cuántos animales caben y qué superficie hace falta.
 ///

@@ -8,6 +8,7 @@ import '../data/catalog_repository.dart';
 import '../data/personal_dose_repository.dart';
 import '../domain/catalog.dart';
 import 'dose_screen.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 /// OCR is only a search aid. Neither a dose nor a product concentration is
@@ -192,27 +193,49 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
           'administrador.');
     }
     final matches = results;
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Escanear etiqueta para dosis',
-            style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 8),
-        const Text(
+        Text('Escanear etiqueta para dosis', style: theme.textTheme.headlineMedium),
+        const SizedBox(height: 6),
+        Text(
           'Fotografía el nombre del medicamento o selecciona una imagen. '
-          'El reconocimiento se hace en el dispositivo. No identifica por '
-          'código de barras ni calcula dosis directamente desde la foto.',
+          'El reconocimiento se hace en el dispositivo.',
+          style: theme.textTheme.bodySmall?.copyWith(color: muted),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'La lectura puede equivocarse. Comprueba fármaco, especie, '
-          'presentación, concentración, fuente y peso antes de calcular. '
-          'Ningún dato leído se considera una dosis verificada.',
+        const SizedBox(height: 16),
+        Text('Cómo funciona', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        const _ScannerStep(
+          number: 1,
+          text: 'Toma una foto del nombre del medicamento o elige una imagen.',
         ),
-        const SizedBox(height: 12),
+        const _ScannerStep(
+          number: 2,
+          text: 'Revisa el texto reconocido; puede equivocarse.',
+        ),
+        const _ScannerStep(
+          number: 3,
+          text: 'Confirma el fármaco en el catálogo antes de calcular la dosis.',
+        ),
+        const VetCallout(
+          text:
+              'La lectura no identifica por código de barras ni calcula dosis '
+              'desde la foto. Comprueba fármaco, especie, presentación, '
+              'concentración, fuente y peso antes de calcular. Ningún dato '
+              'leído se considera una dosis verificada.',
+          icon: VetIcons.alertOctagon,
+        ),
         if (!supportsCamera)
-          const Text('La lectura de imágenes requiere Android o iOS. '
-              'Puedes buscar manualmente en el catálogo.'),
+          const VetNote(
+            text:
+                'La lectura de imágenes requiere Android o iOS. Puedes buscar '
+                'manualmente en el catálogo.',
+            icon: VetIcons.info,
+          ),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 12,
           runSpacing: 8,
@@ -277,6 +300,54 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
             ),
         ],
       ],
+    );
+  }
+}
+
+/// Paso numerado de «Cómo funciona»: círculo con el número y el texto al lado.
+///
+/// Sin esto los tres pasos eran párrafos seguidos del mismo peso que la
+/// advertencia, y no se veía que fueran una secuencia.
+class _ScannerStep extends StatelessWidget {
+  const _ScannerStep({required this.number, required this.text});
+  final int number;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.colorScheme.primary.withValues(alpha: .12),
+            ),
+            child: Text(
+              '$number',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

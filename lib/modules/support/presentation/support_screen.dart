@@ -7,6 +7,8 @@ import '../../patients/presentation/patient_view_model.dart'
 import '../domain/support_repository.dart';
 import 'support_view_model.dart';
 import 'support_operator_screen.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({
@@ -146,11 +148,14 @@ class _SupportScreenState extends State<SupportScreen> {
           widget.helpPanel!,
           const SizedBox(height: 12),
         ],
-        const Text(
-          'Este canal guarda tu solicitud y permite seguimiento. La atención humana requiere activar el servicio de soporte; todavía no hay un tiempo de respuesta comprometido. No se envían correos ni mensajes externos automáticamente.',
+        const VetNote(
+          text:
+              'Este canal guarda tu solicitud y permite seguimiento. La atención humana requiere activar el servicio de soporte; todavía no hay un tiempo de respuesta comprometido. No se envían correos ni mensajes externos automáticamente.',
         ),
-        const Text(
-          'No adjuntes claves API, contraseñas, tarjetas ni datos clínicos identificables. Revisa y oculta información personal de capturas y documentos.',
+        const VetCallout(
+          text:
+              'No adjuntes claves API, contraseñas, tarjetas ni datos clínicos identificables. Revisa y oculta información personal de capturas y documentos.',
+          icon: VetIcons.alertOctagon,
         ),
         const SupportContactOptions(),
         if (widget.repository is SupportOperatorRepository)
@@ -224,8 +229,10 @@ class _SupportScreenState extends State<SupportScreen> {
               'Preparar consulta con IA (revisar antes de enviar)',
             ),
           ),
-        const Text(
-          'La IA usa tu conexión y cuota; sus respuestas no sustituyen al soporte. Los adjuntos no se envían a la IA. Puedes enviar el reporte directamente sin usarla.',
+        const VetNote(
+          text:
+              'La IA usa tu conexión y cuota; sus respuestas no sustituyen al soporte. Los adjuntos no se envían a la IA. Puedes enviar el reporte directamente sin usarla.',
+          icon: VetIcons.info,
         ),
         Text('Mis reportes', style: Theme.of(context).textTheme.titleLarge),
         for (final t in vm.tickets)

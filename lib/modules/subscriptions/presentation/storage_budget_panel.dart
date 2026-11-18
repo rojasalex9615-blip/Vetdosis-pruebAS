@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
+import '../../../vet_ui/vet_icons.dart';
 import '../domain/storage_budget.dart';
 
 class StorageBudgetPanel extends StatelessWidget {
@@ -38,34 +41,60 @@ class StorageBudgetPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Almacenamiento · ${budget.percent}% estimado',
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Almacenamiento',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                VetStatusBadge(
+                  label: '${budget.percent}% usado',
+                  kind: budget.level == StorageLevel.critical ||
+                          budget.level == StorageLevel.full
+                      ? VetBadgeKind.danger
+                      : budget.level == StorageLevel.warning
+                      ? VetBadgeKind.warning
+                      : VetBadgeKind.information,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             LinearProgressIndicator(
               value: budget.fraction,
               color: color,
               semanticsLabel: 'Almacenamiento estimado utilizado',
               semanticsValue: '${budget.percent}%',
             ),
-            const SizedBox(height: 12),
-            Text(message),
+            const SizedBox(height: 6),
             Text(
-              personal
-                  ? 'Límite propio de tu espacio individual.'
-                  : 'Límite compartido por todo el equipo de esta clínica.',
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'El presupuesto incluye datos y archivos contabilizados; las fotos de inventario reservan 4 MiB por foto.',
-            ),
-            if (budget.level != StorageLevel.normal) ...[
-              const SizedBox(height: 8),
-              const Text(
-                'Ampliación de almacenamiento: tarifa pendiente. No hay cobros automáticos por exceso de uso.',
+              VetFormat.joinDistinct([
+                '${VetFormat.size(used)} de ${VetFormat.size(limit)}',
+                personal ? 'espacio individual' : 'compartido por el equipo',
+              ]),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-            ],
+            ),
+            const SizedBox(height: 12),
+            VetNote(
+              text: message,
+              icon: budget.level == StorageLevel.normal
+                  ? VetIcons.info
+                  : VetIcons.alertOctagon,
+              color: color,
+            ),
+            const VetNote(
+              text:
+                  'El presupuesto incluye datos y archivos contabilizados; las fotos de inventario reservan 4 MiB por foto.',
+            ),
+            if (budget.level != StorageLevel.normal)
+              const VetNote(
+                text:
+                    'Ampliación de almacenamiento: tarifa pendiente. No hay cobros automáticos por exceso de uso.',
+                icon: VetIcons.alertOctagon,
+              ),
           ],
         ),
       ),

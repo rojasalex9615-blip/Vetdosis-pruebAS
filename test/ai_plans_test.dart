@@ -321,10 +321,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('199.00 MXN'), findsOneWidget);
+      expect(find.textContaining('\$199.00 MXN'), findsOneWidget);
+      await tester.ensureVisible(find.text('Anual'));
       await tester.tap(find.text('Anual'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('1990.00 MXN'), findsOneWidget);
+      expect(find.textContaining('\$1,990.00 MXN'), findsOneWidget);
       expect(find.textContaining('Abrir pago seguro'), findsNothing);
       await tester.ensureVisible(find.text('Registrar interés (sin cobro)'));
       await tester.pumpAndSettle();
