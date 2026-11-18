@@ -17,6 +17,7 @@ import '../../exports/presentation/branded_export_action.dart';
 import '../../hospital/domain/hospital_models.dart';
 import '../../identity/domain/identity_repository.dart';
 import '../../inventory/domain/inventory_models.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_icons.dart';
 import 'dashboard_view_model.dart';
 
@@ -183,10 +184,9 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
     }
   }
 
-  String shortDate(DateTime value) {
-    final d = m.localTime(value);
-    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-  }
+  /// Fecha visible en la zona de la clínica, en el formato único de la app
+  /// (`22 oct 2026`). Antes iba en barras y se leía distinto que en el resto.
+  String shortDate(DateTime value) => VetFormat.date(m.localTime(value));
 
   String fileDate(DateTime value) {
     final d = m.localTime(value);
@@ -231,7 +231,6 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
   }
 
   bool get _branchIsProduction => _branch == ClinicalBranch.production;
-  bool get _branchIsManagement => _branch == ClinicalBranch.management;
 
   /// Filtra por rama una fila con especie; sin filtro o sin especie
   /// reconocida, la fila pasa solo con «Todas las ramas».
@@ -894,7 +893,7 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
             const Text('Sin lotes próximos a caducar.')
           else
             for (final e in _nearExpiry.take(5))
-              _listTile('${e.$1}', expiryLabel(e.$2)),
+              _listTile(e.$1, expiryLabel(e.$2)),
           if (_expiredLots > 0) Text('Lotes caducados: $_expiredLots'),
         ],
         // 5. Producción M15.
