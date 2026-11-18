@@ -79,13 +79,12 @@ import '../modules/hospital/domain/hospital_history.dart';
 import '../modules/hospital/application/hospital_alerts.dart';
 import '../modules/hospital/application/hospital_push_service.dart';
 import '../modules/hospital/presentation/hospital_screen.dart';
-import '../modules/aviculture/data/supabase_aviculture_records_repository.dart';
+import '../modules/aviculture/domain/aviculture_records_repository.dart';
 import '../modules/patients/domain/patient_repository.dart';
 import '../modules/patients/domain/recorded_weight.dart';
 import '../modules/patients/presentation/patients_screen.dart';
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../modules/doses/presentation/dose_screen.dart';
 import '../modules/doses/presentation/dose_label_scanner_screen.dart';
@@ -266,6 +265,7 @@ class VetDosisApp extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.units,
+    this.aviculture,
     this.inboxSeenStore,
     this.laboratory,
   });
@@ -296,6 +296,10 @@ class VetDosisApp extends StatelessWidget {
   final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
+  /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
+  final AvicultureRecordsRepository? aviculture;
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
@@ -621,6 +625,7 @@ class VetDosisApp extends StatelessWidget {
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
               porcino: porcino,
+              aviculture: aviculture,
               units: units,
               inboxSeenStore: inboxSeenStore,
               personalDoses: personalDoses,
@@ -688,6 +693,7 @@ class CoreShell extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.units,
+    this.aviculture,
     this.inboxSeenStore,
   });
   final CoreViewModel model;
@@ -723,6 +729,10 @@ class CoreShell extends StatelessWidget {
   final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
+  /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
+  final AvicultureRecordsRepository? aviculture;
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
@@ -1766,10 +1776,7 @@ class CoreShell extends StatelessWidget {
                       attendance: attendance,
                       // M15 y altas: los datos ya existen en la app; aquí
                       // solo se cablean a la pantalla de Estadísticas.
-                      aviculture:
-                          SupabaseAvicultureRecordsRepository(
-                            Supabase.instance.client,
-                          ),
+                      aviculture: aviculture,
                       history: hospital is HospitalHistoryRepository
                           ? hospital as HospitalHistoryRepository
                           : null,
@@ -1929,9 +1936,7 @@ class CoreShell extends StatelessWidget {
           attendance: attendance,
           // Mismos datos que la pantalla de Estadísticas, para que el
           // desplegable «Ver estadísticas» del Inicio muestre lo mismo.
-          aviculture: SupabaseAvicultureRecordsRepository(
-            Supabase.instance.client,
-          ),
+          aviculture: aviculture,
           history: hospital is HospitalHistoryRepository
               ? hospital as HospitalHistoryRepository
               : null,

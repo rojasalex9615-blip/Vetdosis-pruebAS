@@ -39,6 +39,8 @@ import 'modules/production/domain/porcino_repository.dart';
 import 'modules/production/domain/production_unit_repository.dart';
 import 'modules/production/data/local_production_unit_store.dart';
 import 'modules/production/data/supabase_porcino_repository.dart';
+import 'modules/aviculture/domain/aviculture_records_repository.dart';
+import 'modules/aviculture/data/supabase_aviculture_records_repository.dart';
 import 'modules/calculations/data/reference_library_repository.dart';
 import 'modules/forms/clinical/clinical_repository.dart';
 import 'modules/forms/domain/form_repository.dart';
@@ -113,6 +115,7 @@ Future<void> main() async {
   ReviewCatalogRepository? reviewCatalog;
   PorcinoRepository? porcino;
   ProductionUnitRepository? productionUnits;
+  AvicultureRecordsRepository? aviculture;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
     await Supabase.initialize(
@@ -144,6 +147,7 @@ Future<void> main() async {
     experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     porcino = SupabasePorcinoRepository(Supabase.instance.client);
+    aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     // Las unidades de produccion viven en la misma base local que el resto del
     // modo sin conexion: no hace falta otro archivo para ellas.
@@ -244,6 +248,7 @@ Future<void> main() async {
       experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
       porcino: porcino,
+      aviculture: aviculture,
       units: productionUnits,
       hospitalAlerts: alerts,
       requireAuth: true,
