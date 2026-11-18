@@ -66,7 +66,7 @@ void main() {
       expect(find.byType(NeuKeypad), findsNothing);
 
       await _addTwoUnits(tester);
-      expect(find.text('Total a pagar: \$0,20 MXN'), findsOneWidget);
+      expect(find.text('Total a pagar: \$0.20 MXN'), findsOneWidget);
       expect(find.byType(NeuKeypad), findsOneWidget);
       expect(_text(tester, 'cambio'), 'Teclea lo que entrega el cliente.');
 
@@ -74,7 +74,7 @@ void main() {
       await _key(tester, '.');
       await _key(tester, '1');
       expect(_text(tester, 'efectivo-recibido'), 'MXN 0.1');
-      expect(_text(tester, 'cambio'), 'Faltan \$0,10 MXN');
+      expect(_text(tester, 'cambio'), 'Faltan \$0.10 MXN');
 
       // Borrar y teclear 5.5: sobran 5.30. Un segundo punto y un tercer
       // decimal se ignoran.
@@ -88,7 +88,7 @@ void main() {
       await _key(tester, '0');
       await _key(tester, '9');
       expect(_text(tester, 'efectivo-recibido'), 'MXN 5.50');
-      expect(_text(tester, 'cambio'), 'Cambio: \$5,30 MXN');
+      expect(_text(tester, 'cambio'), 'Cambio: \$5.30 MXN');
 
       if (_shot.isNotEmpty) {
         await tester.runAsync(() async {

@@ -221,12 +221,12 @@ void main() {
     // El renglon lleva el desglose completo y el total va solo con la cifra,
     // asi que find.text, que compara exacto, distingue uno de otro. Antes no:
     // con un concepto suelto los dos decian «4 800.00 MXN» y nada mas.
-    expect(find.textContaining('× 1 200.00 MXN = 4 800.00 MXN'), findsOneWidget);
-    expect(find.text('4 800.00 MXN'), findsOneWidget);
+    expect(find.textContaining('× \$1,200.00 MXN = \$4,800.00 MXN'), findsOneWidget);
+    expect(find.text('\$4,800.00 MXN'), findsOneWidget);
 
     // Un concepto sin precio no entra al total, y la pantalla lo dice.
     await agregar('Cielo-raso', '100', '');
-    expect(find.text('4 800.00 MXN'), findsOneWidget);
+    expect(find.text('\$4,800.00 MXN'), findsOneWidget);
     expect(find.textContaining('NO incluye 1 concepto'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

@@ -720,3 +720,315 @@ class VetReferenceCard extends StatelessWidget {
     );
   }
 }
+
+/// Fila de dato: etiqueta a la izquierda (gris medio, normal) y valor a la
+/// derecha (color fuerte, semibold).
+///
+/// Es el nivel 1 de la jerarquía visual de Ale. Antes cada pantalla ponía la
+/// etiqueta y el valor como dos `Text` seguidos del mismo tamaño y color, así
+/// que «Semana desde 2026-11-16» y una aclaración se leían igual. Aquí la
+/// separación la hace la alineación y el peso, no solo el texto.
+class VetDataRow extends StatelessWidget {
+  const VetDataRow({
+    super.key,
+    required this.label,
+    required this.value,
+    this.icon,
+    this.valueColor,
+    this.emphasized = false,
+  });
+  final String label;
+  final String value;
+
+  /// Ícono opcional delante de la etiqueta.
+  final IconData? icon;
+
+  /// Tono del valor, si el semántico importa (por ejemplo un stock en rojo).
+  final Color? valueColor;
+
+  /// El valor es la cifra importante: se pinta más grande.
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final valueStyle = (emphasized ? textTheme.titleLarge : textTheme.bodyMedium)
+        ?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: valueColor ?? theme.colorScheme.onSurface,
+        );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: muted),
+            const SizedBox(width: 6),
+          ],
+          Expanded(
+            child: Text(
+              label,
+              style: textTheme.bodyMedium?.copyWith(color: muted),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(value, textAlign: TextAlign.right, style: valueStyle),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Nota: aclaración o aviso que no es un dato.
+///
+/// Nivel 2. Va en letra chica y gris, separada del dato, con un ícono de
+/// información opcional. [divider] dibuja un separador fino por encima para
+/// despegarla de las filas de dato.
+class VetNote extends StatelessWidget {
+  const VetNote({
+    super.key,
+    required this.text,
+    this.icon = VetIcons.info,
+    this.divider = false,
+    this.color,
+  });
+  final String text;
+  final IconData? icon;
+  final bool divider;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = color ?? theme.colorScheme.onSurfaceVariant;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (divider) ...[
+          const SizedBox(height: 6),
+          Divider(height: 1, color: theme.colorScheme.outlineVariant),
+          const SizedBox(height: 8),
+        ] else
+          const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 15, color: muted),
+              const SizedBox(width: 6),
+            ],
+            Expanded(
+              child: Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(color: muted),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Estado vacío: centrado, chico y gris, con un link opcional debajo.
+///
+/// Ale pidió tratar «No hay dosis futuras…» como nota, no como dato. Si hay
+/// algo que el usuario pueda hacer, se añade [action].
+class VetEmptyState extends StatelessWidget {
+  const VetEmptyState({
+    super.key,
+    required this.text,
+    this.icon,
+    this.actionLabel,
+    this.onAction,
+  });
+  final String text;
+  final IconData? icon;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 28, color: muted),
+            const SizedBox(height: 8),
+          ],
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(color: muted),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 4),
+            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Caja de aviso destacada, para lo que no debe perderse entre el resto.
+///
+/// La advertencia «Ningún dato leído se considera una dosis verificada» y el
+/// «guardado MANUAL» del respaldo van aquí: fondo tintado, ícono y el texto en
+/// su propio bloque, en vez de un párrafo más de la lista.
+class VetCallout extends StatelessWidget {
+  const VetCallout({
+    super.key,
+    required this.text,
+    this.icon = VetIcons.alertOctagon,
+    this.kind = VetBadgeKind.warning,
+  });
+  final String text;
+  final IconData icon;
+  final VetBadgeKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _badgeColor(theme, kind);
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: .28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip seleccionable con borde, para opciones que hoy parecían texto apagado
+/// (por ejemplo «Tabla CSV / PDF / XLSX»).
+class VetChip extends StatelessWidget {
+  const VetChip({
+    super.key,
+    required this.label,
+    this.selected = false,
+    this.onSelected,
+    this.icon,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback? onSelected;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    return ChoiceChip(
+      label: Text(label),
+      avatar: icon == null ? null : Icon(icon, size: 18),
+      selected: selected,
+      onSelected: onSelected == null ? null : (_) => onSelected!(),
+      showCheckmark: false,
+      side: BorderSide(
+        color: selected ? accent : theme.colorScheme.outlineVariant,
+        width: selected ? 1.5 : 1,
+      ),
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: selected ? accent : theme.colorScheme.onSurfaceVariant,
+      ),
+      selectedColor: accent.withValues(alpha: .12),
+      backgroundColor: theme.colorScheme.surface,
+    );
+  }
+}
+
+/// Tarjeta de plan: nombre y precio como encabezado, filas de dato y notas.
+///
+/// La etiqueta «Tu plan» marca el activo. Reúne lo que antes eran líneas
+/// sueltas de texto del mismo peso.
+class VetPlanCard extends StatelessWidget {
+  const VetPlanCard({
+    super.key,
+    required this.name,
+    required this.price,
+    this.current = false,
+    this.rows = const [],
+    this.note,
+    this.footer,
+  });
+  final String name;
+  final String price;
+  final bool current;
+  final List<VetDataRow> rows;
+  final String? note;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(name, style: theme.textTheme.titleMedium),
+              ),
+              if (current) ...[
+                const SizedBox(width: 8),
+                VetStatusBadge(label: 'Tu plan', kind: VetBadgeKind.success),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(price, style: theme.textTheme.titleLarge),
+          if (rows.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Divider(height: 1, color: theme.colorScheme.outlineVariant),
+            const SizedBox(height: 6),
+            ...rows,
+          ],
+          if (note != null) VetNote(text: note!),
+          if (footer != null) ...[
+            const SizedBox(height: 8),
+            Align(alignment: Alignment.centerLeft, child: footer),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+Color _badgeColor(ThemeData theme, VetBadgeKind kind) => switch (kind) {
+  VetBadgeKind.information => theme.colorScheme.primary,
+  VetBadgeKind.success => VetColors.success,
+  VetBadgeKind.warning => VetColors.warning,
+  VetBadgeKind.danger => theme.colorScheme.error,
+  VetBadgeKind.unverified => theme.colorScheme.onSurfaceVariant,
+};

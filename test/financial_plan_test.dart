@@ -137,7 +137,7 @@ void main() {
       await tester.ensureVisible(find.text('Calcular escenario'));
       await tester.tap(find.text('Calcular escenario'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('-10000.00 MXN'), findsNWidgets(2));
+      expect(find.textContaining('-\$10,000.00 MXN'), findsNWidgets(2));
       await tester.enterText(find.byType(TextFormField).first, '30000');
       await tester.pump();
       expect(find.text('Resultado del escenario'), findsNothing);

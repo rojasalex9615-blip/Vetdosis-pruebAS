@@ -2,6 +2,7 @@ import '../../../core/widgets/contrast.dart';
 import '../../../core/widgets/neu_header_card.dart';
 import 'home_pilot.dart';
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../doses/domain/quantity.dart';
 import 'dart:async';
@@ -470,8 +471,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            '${m.overdue.length} dosis pendientes cuyo horario ya llegó.',
+                          VetDataRow(
+                            label: 'Dosis con horario cumplido',
+                            value: '${m.overdue.length}',
+                            icon: VetIcons.clock,
+                            valueColor: VetColors.danger,
+                            emphasized: true,
                           ),
                           for (final t in m.overdue.take(3))
                             ListTile(
@@ -493,8 +498,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            '${m.lowStock.length} productos con stock disponible bajo o igual al mínimo.',
+                          VetDataRow(
+                            label: 'Productos con stock en el mínimo',
+                            value: '${m.lowStock.length}',
+                            icon: VetIcons.box,
+                            valueColor: VetColors.warning,
+                            emphasized: true,
                           ),
                           for (final p in m.lowStock.take(3))
                             ListTile(
@@ -552,7 +561,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Text(
                   m.clinicTimezone == null
                       ? 'Día y horas del teléfono'
-                      : 'Zona de la clínica: ${m.clinicTimezone}',
+                      : VetFormat.timezone(m.clinicTimezone),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 unavailable(
                   'Agenda',
@@ -560,7 +572,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Column(
                     children: [
                       if (m.todayAppointments.isEmpty)
-                        const Text('No hay citas futuras agendadas para hoy.'),
+                        const VetEmptyState(
+                          text: 'No hay citas futuras agendadas para hoy.',
+                          icon: VetIcons.calendar,
+                        ),
                       for (final a in m.todayAppointments)
                         HomeAppointmentRow(
                           title: '${a['patient_name']}',
@@ -580,8 +595,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Column(
                     children: [
                       if (m.recent.isEmpty)
-                        const Text(
-                          'No hay citas recientes en los datos consultados.',
+                        const VetEmptyState(
+                          text: 'No hay citas recientes en los datos consultados.',
+                          icon: VetIcons.calendarClock,
                         ),
                       for (final a in m.recent.take(3))
                         HomeAppointmentRow(
@@ -774,8 +790,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Column(
                     children: [
                       if (m.nextDoses.isEmpty)
-                        const Text(
-                          'No hay dosis futuras pendientes en los datos consultados.',
+                        const VetEmptyState(
+                          text:
+                              'No hay dosis futuras pendientes en los datos consultados.',
+                          icon: VetIcons.pills,
                         ),
                       for (final t in m.nextDoses.take(5))
                         ListTile(
@@ -791,15 +809,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 m.commissions != null &&
                 routeVisible('Servicios'))
               panel('Mis comisiones', 'Servicios', [
-                Text(
-                  'Saldo de servicios cobrados pendiente de liquidar: ${money(m.ownCommission?['amount'] ?? '0')}',
+                VetDataRow(
+                  label: 'Saldo pendiente de liquidar',
+                  value: money(m.ownCommission?['amount'] ?? '0'),
+                  icon: VetIcons.coins,
+                  emphasized: true,
                 ),
                 if (m.commissions?['schedule'] is Map)
-                  Text(
-                    'Próximo pago: ${(m.commissions!['schedule'] as Map)['next_pay_on']}',
+                  VetDataRow(
+                    label: 'Próximo pago',
+                    value: VetFormat.dateFromIso(
+                      (m.commissions!['schedule'] as Map)['next_pay_on'],
+                    ),
+                    icon: VetIcons.calendar,
                   ),
-                const Text(
-                  'El porcentaje se configura por servicio. Solo cuentan ventas vigentes.',
+                const VetNote(
+                  text:
+                      'El porcentaje se configura por servicio. Solo cuentan ventas vigentes.',
+                  divider: true,
                 ),
               ]),
             if (m.member?.isPersonal == false &&
@@ -807,25 +834,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 routeVisible('Checado'))
               panel('Puntualidad y asistencia', 'Checado', [
                 if (m.attendanceWeek!['week_summary'] is Map) ...[
-                  Text(
-                    'Semana desde ${(m.attendanceWeek!['week_summary'] as Map)['week_start']}',
-                  ),
-                  Text(
-                    'Asistencias registradas: ${(m.attendanceWeek!['week_summary'] as Map)['attended']}',
-                  ),
-                  if ((m.attendanceWeek!['week_summary']
-                          as Map)['configured'] ==
-                      true)
-                    Text(
-                      'A tiempo: ${(m.attendanceWeek!['week_summary'] as Map)['on_time']} · Retrasos: ${(m.attendanceWeek!['week_summary'] as Map)['late']}',
-                    )
-                  else
-                    const Text(
-                      'La clínica aún no configuró un horario para medir retrasos.',
-                    ),
-                  const Text(
-                    'Administración ve el total del equipo; cada integrante ve sus propios registros.',
-                  ),
+                  () {
+                    final s = m.attendanceWeek!['week_summary'] as Map;
+                    final configured = s['configured'] == true;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        VetDataRow(
+                          label: 'Semana desde',
+                          value: VetFormat.dateFromIso(s['week_start']),
+                          icon: VetIcons.calendar,
+                        ),
+                        VetDataRow(
+                          label: 'Asistencias registradas',
+                          value: '${s['attended'] ?? 0}',
+                          icon: VetIcons.checkCircle,
+                          emphasized: true,
+                        ),
+                        if (configured) ...[
+                          VetDataRow(
+                            label: 'A tiempo',
+                            value: '${s['on_time'] ?? 0}',
+                            valueColor: VetColors.success,
+                          ),
+                          VetDataRow(
+                            label: 'Retrasos',
+                            value: '${s['late'] ?? 0}',
+                            valueColor: VetColors.warning,
+                          ),
+                        ] else
+                          const VetNote(
+                            text:
+                                'La clínica aún no configuró un horario para medir retrasos.',
+                          ),
+                        const VetNote(
+                          text:
+                              'Administración ve el total del equipo; cada integrante ve sus propios registros.',
+                          icon: VetIcons.info,
+                          divider: true,
+                        ),
+                      ],
+                    );
+                  }(),
                 ],
               ]),
             if (m.canShowTeamPanel('tasks') &&
@@ -838,7 +888,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (m.todayTasks.isEmpty)
-                        const Text('No hay tareas programadas para hoy.'),
+                        const VetEmptyState(
+                          text: 'No hay tareas programadas para hoy.',
+                          icon: VetIcons.clipboardList,
+                        ),
                       for (final t in m.todayTasks.take(4))
                         ListTile(
                           title: Text('${t['title']} · ${t['priority']}'),
@@ -870,7 +923,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (m.notices.isEmpty)
-                        const Text('No hay avisos recientes.'),
+                        const VetEmptyState(
+                          text: 'No hay avisos recientes.',
+                          icon: VetIcons.bell,
+                        ),
                       for (final msg in m.notices)
                         ListTile(
                           title: Text('${msg['category']} · ${msg['body']}'),

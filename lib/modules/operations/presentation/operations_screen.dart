@@ -9,6 +9,7 @@ import '../domain/appointment_care.dart';
 import 'appointment_summary.dart';
 import 'commission_panel.dart';
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../auth/domain/staff_labels.dart';
 import 'appointment_patient_picker.dart';
 import '../../backup/domain/backup_archive.dart';
@@ -828,7 +829,9 @@ class _OperationsScreenState extends State<OperationsScreen>
                                     serviceSubcategory(s) == sub,
                               ))
                         ListTile(
-                          title: Text('${row['name']} · \$${row['price']}'),
+                          title: Text(
+                            '${row['name']} · ${VetFormat.amount('${row['price']}')}',
+                          ),
                           subtitle: Text(
                             'Comisión: ${row['commission_kind']} ${row['commission_value']}',
                           ),
@@ -1244,9 +1247,9 @@ class _OperationsScreenState extends State<OperationsScreen>
           ),
           for (final a in periodActs)
             ListTile(
-              title: Text('${a['name']} · \$${a['price']}'),
+              title: Text('${a['name']} · ${VetFormat.amount('${a['price']}')}'),
               subtitle: Text(
-                '${a['professional_id'] is String ? person(a['professional_id'] as String) : 'Sin asignar'} · comisión \$${a['commission']} · ${a['paid'] == true ? 'Cobrado' : 'Pendiente de cobro'}',
+                '${a['professional_id'] is String ? person(a['professional_id'] as String) : 'Sin asignar'} · comisión ${VetFormat.amount('${a['commission']}')} · ${a['paid'] == true ? 'Cobrado' : 'Pendiente de cobro'}',
               ),
             ),
           if (!model.allowed('service.act.read') && model.explicitPermissions)

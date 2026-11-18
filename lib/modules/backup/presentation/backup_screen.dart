@@ -17,6 +17,7 @@ import '../../auth/domain/clinic_membership.dart';
 import '../domain/backup_repository.dart';
 import '../domain/backup_archive.dart';
 import 'backup_view_model.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 /// Reports what the platform picker returned, without claiming remote sync.
@@ -975,19 +976,25 @@ class _BackupScreenState extends State<BackupScreen> {
                     ),
                   const Divider(),
                 ],
-                const Text(
-                  'El respaldo de clínica incluye registros y PDF históricos. '
-                  'El personal incluye solo datos propios permitidos y nunca expedientes. '
-                  'En Android puedes escoger Google Drive en el selector «Guardar», '
-                  'si aparece como destino disponible. Es un guardado MANUAL, '
-                  'no una conexión automática de VetDosis con Drive ni un respaldo '
-                  'integral del servidor.',
+                const VetCallout(
+                  text:
+                      'En Android puedes escoger Google Drive en el selector '
+                      '«Guardar», si aparece como destino disponible. Es un '
+                      'guardado manual: no es una conexión automática de '
+                      'VetDosis con Drive ni un respaldo integral del servidor.',
+                  icon: VetIcons.alertOctagon,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Para comprobar tu copia, abre Google Drive y verifica el archivo. '
-                  'Luego regresa a «Revisar respaldo para recuperación» y selecciona '
-                  'ese mismo archivo. No desinstales la app ni borres datos durante la prueba.',
+                const VetNote(
+                  text:
+                      'El respaldo de clínica incluye registros y PDF históricos. '
+                      'El personal incluye solo datos propios permitidos y nunca expedientes.',
+                ),
+                const VetNote(
+                  text:
+                      'Para comprobar tu copia, abre Google Drive y verifica el archivo. '
+                      'Luego regresa a «Revisar respaldo para recuperación» y selecciona '
+                      'ese mismo archivo. No desinstales la app ni borres datos durante la prueba.',
+                  icon: VetIcons.info,
                 ),
                 if (access!.clinic && access!.personal)
                   SegmentedButton<BackupScope>(

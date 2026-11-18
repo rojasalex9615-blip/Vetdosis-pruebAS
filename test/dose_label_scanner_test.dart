@@ -58,7 +58,7 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    expect(find.textContaining('No identifica por'), findsOneWidget);
+    expect(find.textContaining('no identifica por'), findsOneWidget);
     expect(find.text('Calcular dosis de un producto'), findsNothing);
     await tester.tap(find.text('Tomar foto de etiqueta'));
     await tester.pumpAndSettle();

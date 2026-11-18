@@ -6,6 +6,8 @@ import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/subscription_repository.dart';
 import 'subscription_view_model.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -43,8 +45,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     super.dispose();
   }
 
-  String price(dynamic cents) =>
-      '\$${((cents as num) / 100).toStringAsFixed(2)} MXN';
+  String price(dynamic cents) => VetFormat.moneyFromCents(cents);
   Future<void> request(String code) async {
     if (saving) return;
     setState(() => saving = true);
@@ -140,22 +141,57 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           icon: const Icon(VetIcons.refresh),
         ),
         if (model.data['effective'] != null) ...[
-          Text(
-            'Plan efectivo: ${(model.data['effective'] as Map)['name']} · ${(model.data['workspace'] as Map)['kind'] == 'personal' ? 'espacio personal' : 'clínica'}',
+          VetCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${(model.data['effective'] as Map)['name']}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    VetStatusBadge(
+                      label: VetFormat.enumLabel(
+                        (model.data['workspace'] as Map)['kind'],
+                      ),
+                      kind: VetBadgeKind.information,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                VetDataRow(
+                  label: 'Pacientes',
+                  value:
+                      '${model.data['patients']} de ${(model.data['effective'] as Map)['patient_limit']}',
+                  icon: VetIcons.paw,
+                ),
+                VetDataRow(
+                  label: 'Almacenamiento',
+                  value:
+                      '${storageSize(model.data['usage_bytes'])} de ${storageSize((model.data['effective'] as Map)['storage_bytes'])}',
+                  icon: VetIcons.folder,
+                ),
+                VetDataRow(
+                  label: 'Consultas con clave propia por día',
+                  value: '${(model.data['effective'] as Map)['ai_daily']}',
+                  icon: VetIcons.robot,
+                ),
+                VetDataRow(
+                  label: 'Créditos de lealtad',
+                  value: '${model.data['reward_points']}',
+                  icon: VetIcons.gift,
+                ),
+              ],
+            ),
           ),
-          Text(
-            'Pacientes: ${model.data['patients']} · máximo ${(model.data['effective'] as Map)['patient_limit']}',
-          ),
-          Text(
-            'Uso estimado de datos: ${storageSize(model.data['usage_bytes'])} de ${storageSize((model.data['effective'] as Map)['storage_bytes'])}',
-          ),
+          const SizedBox(height: 12),
           StorageBudgetPanel(
             used: model.data['usage_bytes'],
             limit: (model.data['effective'] as Map)['storage_bytes'],
             personal: (model.data['workspace'] as Map)['kind'] == 'personal',
-          ),
-          Text(
-            'Consultas con clave propia por día: ${(model.data['effective'] as Map)['ai_daily']} · créditos de lealtad: ${model.data['reward_points']}',
           ),
         ],
         if (canManageWorkspace &&
@@ -176,37 +212,43 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           onSelectionChanged: (s) => setState(() => period = s.first),
         ),
         for (final p in model.data['plans'] as List? ?? [])
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${p['name']} · ${price(p[period == 'annual' ? 'annual_cents' : 'monthly_cents'])}',
-                  ),
-                  Text(
-                    '${p['patient_limit']} pacientes · ${storageSize(p['storage_bytes'])} de presupuesto · ${p['ai_daily']} consultas con clave propia/día',
-                  ),
-                  Text(
-                    p['team'] == true
-                        ? 'Todos los integrantes de la clínica; sin cobro por asiento.'
-                        : 'Inventario, ventas y corte manual propios; sin equipo compartido.',
-                  ),
-                  if (p['code'] != 'free' &&
-                      canManageWorkspace &&
-                      ((model.data['workspace'] as Map?)?['kind'] ==
-                              'personal') ==
-                          (p['code'] == 'individual'))
-                    TextButton(
-                      onPressed: saving
-                          ? null
-                          : () => request(p['code'] as String),
-                      child: const Text('Registrar interés (sin cobro)'),
-                    ),
-                ],
+          VetPlanCard(
+            name: '${p['name']}',
+            price: price(p[period == 'annual' ? 'annual_cents' : 'monthly_cents']),
+            current: (model.data['effective'] as Map?)?['code'] == p['code'],
+            rows: [
+              VetDataRow(
+                label: 'Pacientes',
+                value: '${p['patient_limit']}',
+                icon: VetIcons.paw,
               ),
-            ),
+              VetDataRow(
+                label: 'Almacenamiento',
+                value: storageSize(p['storage_bytes']),
+                icon: VetIcons.folder,
+              ),
+              VetDataRow(
+                label: 'Consultas con clave propia por día',
+                value: '${p['ai_daily']}',
+                icon: VetIcons.robot,
+              ),
+            ],
+            note: p['team'] == true
+                ? 'Todos los integrantes de la clínica; sin cobro por asiento.'
+                : 'Inventario, ventas y corte manual propios; sin equipo compartido.',
+            footer:
+                p['code'] != 'free' &&
+                    canManageWorkspace &&
+                    ((model.data['workspace'] as Map?)?['kind'] ==
+                            'personal') ==
+                        (p['code'] == 'individual')
+                ? TextButton(
+                    onPressed: saving
+                        ? null
+                        : () => request(p['code'] as String),
+                    child: const Text('Registrar interés (sin cobro)'),
+                  )
+                : null,
           ),
         if (model.data['reward_enabled'] == true &&
             canManageWorkspace)
@@ -224,8 +266,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 'Abrir pago seguro · ${r['plan_code']} ${r['period']}',
               ),
             ),
-        const Text(
-          'Los beneficios beta/regalo vencen en la fecha indicada. Un plan vencido conserva tus registros y permite exportar; no borra datos ni modifica tu rol.',
+        const VetNote(
+          text:
+              'Los beneficios beta/regalo vencen en la fecha indicada. Un plan vencido conserva tus registros y permite exportar; no borra datos ni modifica tu rol.',
+          icon: VetIcons.gift,
         ),
         for (final g in model.data['grants'] as List? ?? [])
           ListTile(
@@ -296,10 +340,4 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
   );
 }
 
-String storageSize(dynamic value) {
-  final bytes = num.tryParse('$value') ?? 0;
-  if (bytes >= 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GiB';
-  }
-  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MiB';
-}
+String storageSize(dynamic value) => VetFormat.size(value);

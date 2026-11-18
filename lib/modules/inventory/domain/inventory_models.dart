@@ -1,3 +1,4 @@
+import '../../../vet_ui/vet_format.dart';
 import '../../doses/domain/quantity.dart';
 import '../../prescribing/domain/prescribing_models.dart' show csvCell;
 
@@ -35,7 +36,9 @@ class Money {
     return '${cents.isNegative ? '-' : ''}${n ~/ BigInt.from(100)}.${(n % BigInt.from(100)).toString().padLeft(2, '0')}';
   }
 
-  String get display => '\$${decimal.replaceAll('.', ',')} MXN';
+  /// Formato único de la app: `$1,990.00 MXN`. Lo resuelve [VetFormat.money]
+  /// para que Inicio, Planes, Caja y reportes no se separen.
+  String get display => VetFormat.money(decimal);
 }
 
 String stockQuantity(String text, {bool zero = false}) {

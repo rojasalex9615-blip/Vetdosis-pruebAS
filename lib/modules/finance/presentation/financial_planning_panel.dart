@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../domain/financial_plan.dart';
 
 class FinancialPlanningPanel extends StatefulWidget {
@@ -29,7 +30,8 @@ class _FinancialPlanningPanelState extends State<FinancialPlanningPanel> {
     super.dispose();
   }
 
-  String money(num cents) => '${(cents / 100).toStringAsFixed(2)} MXN';
+  String money(num cents) =>
+      VetFormat.moneyFromCents(cents.round(), signed: true);
   void calculate() {
     if (!form.currentState!.validate()) return;
     final values = fields.map((f) => parsePlanAmount(f.text)!).toList();
