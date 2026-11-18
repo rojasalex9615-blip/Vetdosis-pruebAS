@@ -70,6 +70,7 @@ class _OperationsScreenState extends State<OperationsScreen>
       widget.repository is AppointmentCareRepository &&
       model.careWindow != null;
   String? appointmentState;
+  String? filterProfessional;
   List<Map<String, dynamic>> get visibleAppointments => model
       .rows('appointments')
       .where(
@@ -85,6 +86,8 @@ class _OperationsScreenState extends State<OperationsScreen>
             (widget.initialPatientId == null ||
                 a['patient_id'] == widget.initialPatientId) &&
             (appointmentState == null || a['state'] == appointmentState) &&
+            (filterProfessional == null ||
+                a['professional_id'] == filterProfessional) &&
             (calendarDay == null ||
                 DateUtils.isSameDay(
                   DateTime.parse(a['starts_at'] as String).toLocal(),
@@ -93,6 +96,40 @@ class _OperationsScreenState extends State<OperationsScreen>
       )
       .toList();
   bool get admin => widget.member.role == ClinicRole.admin;
+
+  // Filtro por responsable: solo aparece si hay 2 o más profesionales
+  // con citas. "Todos" no filtra.
+  Widget _professionalFilter() {
+    final ids = <String>{};
+    for (final a in model.rows('appointments')) {
+      final id = a['professional_id'];
+      if (id is String && id.isNotEmpty) ids.add(id);
+    }
+    if (ids.length < 2) return const SizedBox.shrink();
+    final options = {
+      ...ids,
+      if (filterProfessional != null) filterProfessional!,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: DropdownButtonFormField<String?>(
+        value: filterProfessional,
+        decoration: const InputDecoration(labelText: 'Responsable'),
+        items: [
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('Todos los responsables'),
+          ),
+          for (final id in options)
+            DropdownMenuItem<String?>(
+              value: id,
+              child: Text(responsibleName(id)),
+            ),
+        ],
+        onChanged: (value) => setState(() => filterProfessional = value),
+      ),
+    );
+  }
   int? supplierVisitDays(Map<String, dynamic> supplier) {
     final visit = DateTime.tryParse('${supplier['visit_on'] ?? ''}');
     if (visit == null) return null;
@@ -147,6 +184,16 @@ class _OperationsScreenState extends State<OperationsScreen>
       ? 'blocked'
       : section;
   String person(String id) => staffLabel(id, model.rows('people'));
+
+  // Nombre del responsable sin filtrar fragmentos de ID: si el
+  // profesional no está en las personas de la clínica, "Sin asignar".
+  String responsibleName(String? id) {
+    if (id == null || id.isEmpty) return 'Sin asignar';
+    if (!model.rows('people').any((p) => p['user_id'] == id)) {
+      return 'Sin asignar';
+    }
+    return person(id);
+  }
   @override
   void initState() {
     super.initState();
@@ -571,6 +618,7 @@ class _OperationsScreenState extends State<OperationsScreen>
               onStateChanged: (value) =>
                   setState(() => appointmentState = value),
             ),
+          if (!model.busy && model.error == null) _professionalFilter(),
           if (careEnabled) ...[
             glowChip(FilterChip(
               label: const Text('Atención del día y pendientes anteriores'),
@@ -638,7 +686,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                       ? () => openPatient(a['patient_id'] as String)
                       : null,
                   title: Text(
-                    '${a['patient_name']} · ${appointmentKindLabel(a['kind'])}${a['patient_id'] == null ? '' : ' · Vinculado al expediente'}',
+                    '${a['patient_name'] as String? ?? 'Sin nombre'} · ${appointmentKindLabel(a['kind'])}${a['patient_id'] == null ? '' : ' · Vinculado al expediente'}',
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,7 +696,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                         stateLabel: appointmentStateLabel(a['state'] as String),
                       ),
                       Text(
-                        'Responsable: ${a['professional_id'] is String ? person(a['professional_id'] as String) : 'Sin asignar'}',
+                        'Responsable: ${responsibleName(a['professional_id'] as String?)}',
                       ),
                       if (widget.repository is ServiceContactRepository)
                         TextButton.icon(
@@ -1234,7 +1282,7 @@ class _OperationsScreenState extends State<OperationsScreen>
             ),
           for (final e in performance.entries)
             ListTile(
-              title: Text(e.key.isEmpty ? 'Sin asignar' : person(e.key)),
+              title: Text(responsibleName(e.key.isEmpty ? null : e.key)),
               subtitle: Text(
                 'Comisión registrada: ${e.value[0].display} · cobrada: ${e.value[1].display}',
               ),
@@ -1244,9 +1292,11 @@ class _OperationsScreenState extends State<OperationsScreen>
           ),
           for (final a in periodActs)
             ListTile(
-              title: Text('${a['name']} · \$${a['price']}'),
+              title: Text(
+                '${a['name'] as String? ?? 'Sin nombre'} · ${a['price'] == null ? '—' : '\$${a['price']}'}',
+              ),
               subtitle: Text(
-                '${a['professional_id'] is String ? person(a['professional_id'] as String) : 'Sin asignar'} · comisión \$${a['commission']} · ${a['paid'] == true ? 'Cobrado' : 'Pendiente de cobro'}',
+                '${responsibleName(a['professional_id'] as String?)} · comisión ${a['commission'] == null ? '—' : '\$${a['commission']}'} · ${a['paid'] == true ? 'Cobrado' : 'Pendiente de cobro'}',
               ),
             ),
           if (!model.allowed('service.act.read') && model.explicitPermissions)
@@ -1273,6 +1323,9 @@ class _OperationsScreenState extends State<OperationsScreen>
             padding: EdgeInsets.all(16),
             child: Text('Sin registros visibles en esta sección.'),
           ),
+          // Espacio libre al final para que el botón flotante del
+          // escáner no tape el último elemento de la lista.
+          const SizedBox(height: 100),
       ],
     ),
   );
@@ -1307,9 +1360,9 @@ class _OperationsScreenState extends State<OperationsScreen>
         for (final act in model.rows('acts'))
           {
             ...act,
-            'professional_name': act['professional_id'] is String
-                ? person(act['professional_id'] as String)
-                : 'Sin asignar',
+            'professional_name': responsibleName(
+              act['professional_id'] as String?,
+            ),
           },
       ]);
       await FilePicker.saveFile(
