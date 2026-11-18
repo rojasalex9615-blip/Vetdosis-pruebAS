@@ -4,7 +4,10 @@ import '../../doses/domain/quantity.dart';
 import '../../inventory/domain/inventory_models.dart';
 import 'package:flutter/foundation.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../../aviculture/domain/aviculture_records.dart';
+import '../../aviculture/domain/aviculture_records_repository.dart';
 import '../../core/domain/navigation_access.dart';
+import '../../hospital/domain/hospital_history.dart';
 import '../../operations/domain/operations_repository.dart';
 import '../../inventory/domain/inventory_repository.dart';
 import '../../hospital/domain/hospital_repository.dart';
@@ -24,6 +27,8 @@ class DashboardViewModel extends ChangeNotifier {
     this.backup,
     this.moduleAccess,
     this.attendance,
+    this.aviculture,
+    this.history,
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
   final ClinicMembership? member;
@@ -34,6 +39,8 @@ class DashboardViewModel extends ChangeNotifier {
   final BackupRepository? backup;
   final ModuleAccess? moduleAccess;
   final AttendanceRepository? attendance;
+  final AvicultureRecordsRepository? aviculture;
+  final HospitalHistoryRepository? history;
   final DateTime Function() now;
   bool get canSeeClinicSales => moduleAccess == null
       ? member?.role == ClinicRole.admin
@@ -65,6 +72,8 @@ class DashboardViewModel extends ChangeNotifier {
   }
   Map<String, dynamic>? agenda, stock, statistics, commissions, attendanceWeek;
   HospitalSnapshot? ward;
+  AviWorkspace? avi;
+  HospitalHistoryPage? discharges;
   int? patientCount;
   bool busy = false, _disposed = false;
   DateTime? updated;
@@ -72,6 +81,8 @@ class DashboardViewModel extends ChangeNotifier {
     if (busy) return;
     agenda = stock = statistics = commissions = attendanceWeek = null;
     ward = null;
+    avi = null;
+    discharges = null;
     patientCount = null;
     updated = null;
     errors.clear();
@@ -124,6 +135,19 @@ class DashboardViewModel extends ChangeNotifier {
       if (backup != null && navigationAllowed('Estadísticas', m, moduleAccess))
         section('Estadísticas', () async {
           statistics = await backup!.statistics(m.clinicId);
+        }),
+      if (aviculture != null &&
+          navigationAllowed(
+            'Producción y grandes especies',
+            m,
+            moduleAccess,
+          ))
+        section('Producción M15', () async {
+          avi = await aviculture!.workspace(m.clinicId);
+        }),
+      if (history != null && canSummarize('hospital'))
+        section('Altas', () async {
+          discharges = await history!.closedHistory(m.clinicId, '', null);
         }),
     ]);
     if (_disposed) return;
