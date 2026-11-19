@@ -138,7 +138,36 @@ Dos fallos propios que se detectaron y corrigieron durante la prueba:
 «entre 1 y 3 veces» no se tocó (la regla exige unidad detrás), y cinco etiquetas
 que eran solo una unidad («mg», «mL») se habrían convertido en «Mg» y «ML».
 
-Queda pendiente convertir a número los patrones inequívocos («1 mL/50 kg»,
-«6 mg/kg»): son unas 447 filas de volumen y 324 de mg/kg, con solape posible.
-Lo demás no se puede convertir sin inventar.
+## 2 quinquies. Pauta distinta por especie (grupo 2)
+
+Setenta y cuatro productos traen varias pautas en un solo texto. Siete dan una
+pauta **distinta** por especie, y la vista repetía el mismo texto para todas.
+Eso era un error de dosis, no de formato:
+
+| Producto | Bovino | Ovino/caprino | Porcino |
+|---|---|---|---|
+| Endovet Inyectable | 1 mL/50 kg | 0,5 mL/25 kg | 1 mL/33 kg |
+| Endovet Polivitaminado | 1 mL/100 kg | 0,5 mL/50 kg | 1 mL/66 kg |
+| FASCIOLMED | 1 mL/10 kg | 1,25 mL/10 kg | — |
+| Vermivet Polivitaminado | 1 mL/15-20 kg | 1 mL/20 kg | 1 mL/30 kg |
+| ALBEN MIN | 5-10 mL/100 kg | 1 mL/10-20 kg | — |
+| Enroflox D | 1 mL/40 kg | — | — (canino 1 mL/20 kg) |
+
+`pauta_por_especie(texto)` parte el texto por `;` y asigna a cada especie la
+pauta del segmento donde aparece nombrada. La vista expone `pauta_cantidad`,
+`pauta_unidad` y `pauta_kg` ya resueltas por fila.
+
+Cuando el texto no permite decidir, no se asigna nada: mejor vacío que
+equivocado. Quedan 16 productos sin extracción, todos justificados: dosis por
+animal o por paciente (`100 mL/día`, `200-250 ml/paciente`), dosis por bandas de
+peso (`FASIMEC`, que además trae tabla y no una tasa única) o dos vías en el
+mismo segmento (`ANDOZINE 2%`: IV e IM con pautas distintas).
+
+Comprobado: **7/7** productos coinciden con el texto a mano, **0** especies
+inventadas (ninguna pauta aparece en una especie que el producto no declare),
+Virbac sigue con **64/64** dosis y las 12 prohibiciones siguen sin pauta.
+
+Trampa detectada al probar: **«Bovinos» contiene «ovinos»**. Sin límites de
+palabra, el ovino heredaba la dosis del bovino, que es justo el error que este
+trabajo debía evitar. Se comparan palabras completas.
 
