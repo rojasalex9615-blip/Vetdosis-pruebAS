@@ -103,7 +103,7 @@ class DashboardViewModel extends ChangeNotifier {
         }),
       if (attendance != null && !m.isPersonal &&
           (moduleAccess == null || moduleAccess!.module('agenda')))
-        section('Checado', () async {
+        section('Control de asistencia', () async {
           attendanceWeek = await attendance!.dashboard(m.clinicId);
         }),
       if (inventory != null && canSummarize('inventory'))

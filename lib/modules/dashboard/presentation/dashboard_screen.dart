@@ -363,6 +363,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ('Agenda', 'Agenda'),
                     ('Cálculo rápido', 'Cálculo rápido'),
                     ('Hospital', 'Hospitalización'),
+                    ('Caja', 'Caja'),
                   ])
                     if (routeVisible(action.$2)) action,
                 ],
@@ -384,6 +385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       m.ward == null || !m.canSummarize('hospital')
                       ? 'Pacientes internados'
                       : '${m.ward!.stays.length} internados',
+                  'Caja': 'Ventas y cierre del día',
                 },
                 onNavigate: openPage,
               ),
@@ -431,6 +433,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ('Cálculo rápido', 'Cálculo rápido'),
                     ('Cálculos clínicos', 'Cálculos clínicos'),
                     ('Escáner', 'Escanear producto'),
+                    ('Caja', 'Caja'),
                   ])
                     if (routeVisible(action.$2))
                       ConstrainedBox(
@@ -804,8 +807,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ]),
             if (m.member?.isPersonal == false &&
                 m.attendanceWeek != null &&
-                routeVisible('Checado'))
-              panel('Puntualidad y asistencia', 'Checado', [
+                routeVisible('Control de asistencia'))
+              panel('Puntualidad y asistencia', 'Control de asistencia', [
                 if (m.attendanceWeek!['week_summary'] is Map) ...[
                   Text(
                     'Semana desde ${(m.attendanceWeek!['week_summary'] as Map)['week_start']}',

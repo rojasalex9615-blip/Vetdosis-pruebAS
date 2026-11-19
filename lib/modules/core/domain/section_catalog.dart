@@ -37,7 +37,7 @@ const sectionGroups = [
     'Equipo y avisos',
     'Anuncios y avisos',
     'Pendientes del equipo',
-    'Checado',
+    'Control de asistencia',
   ]),
   SectionGroup('Estadísticas y reportes', ['Estadísticas']),
   SectionGroup('Asistente IA', ['Asistente IA']),
