@@ -24,17 +24,20 @@
 
 begin;
 
-drop view if exists vetdosis_reference_staging.vademecum_producto_comercial;
+drop view if exists vetdosis_reference_staging.vademecum_producto_comercial cascade;
 drop view if exists vetdosis_reference_staging.commercial_product_dose_unified;
 
 create view vetdosis_reference_staging.vademecum_producto_comercial as
 with inventario as (
   select
     i.nombre_comercial, i.laboratorio, i.principios_activos, i.concentracion,
-    i.presentacion, i.especies, i.via_administracion,
+    i.presentacion, i.especies, null::text categoria_animal, i.via_administracion,
     i.dosis_catalogo_texto dosis_texto,
     null::numeric dosis_cantidad, null::text dosis_unidad,
     null::numeric dosis_por_kg, null::text intervalo,
+    null::numeric cantidad_fija, null::text cantidad_fija_unidad,
+    null::numeric mezcla_valor, null::text mezcla_unidad,
+    null::numeric frecuencia_horas, null::text dosis_activos,
     null::text tiempo_retiro,
     i.indicaciones, i.registro, i.documento_origen, i.pagina_origen,
     'inventario_comercial'::text fuente
@@ -60,6 +63,7 @@ pautas as (
       limit 1) concentracion,
     r.original_payload->>'presentacion_exacta' presentacion,
     r.original_payload->>'especie' especies,
+    null::text categoria_animal,
     r.original_payload->>'via' via_administracion,
     r.original_payload->>'posologia_literal' dosis_texto,
     case when r.original_payload->>'cantidad_admin' ~ '^[0-9]+(\.[0-9]+)?$'
@@ -71,6 +75,9 @@ pautas as (
               / nullif((substring(coalesce(r.original_payload->>'referencia','') from '([0-9]+(\.[0-9]+)?)\s*kg'))::numeric, 0)
     end dosis_por_kg,
     nullif(r.original_payload->>'intervalo','') intervalo,
+    null::numeric cantidad_fija, null::text cantidad_fija_unidad,
+    null::numeric mezcla_valor, null::text mezcla_unidad,
+    null::numeric frecuencia_horas, null::text dosis_activos,
     nullif(r.original_payload->>'tiempo_retiro','') tiempo_retiro,
     r.original_payload->>'indicacion' indicaciones,
     r.original_payload->>'registro_sanitario' registro,
@@ -94,12 +101,22 @@ virbac as (
        from private.vetdosis_virbac_producto_activos a
       where a.producto_id = p.id) concentracion,
     p.presentaciones presentacion,
-    d.especie especies, d.via via_administracion,
+    d.especie especies, d.categoria_animal, d.via via_administracion,
     coalesce(d.nota, d.indicacion) dosis_texto,
     d.vol_cantidad dosis_cantidad, d.vol_unidad dosis_unidad,
     case when d.vol_peso_kg > 0 then d.vol_cantidad / d.vol_peso_kg end dosis_por_kg,
     case when d.frecuencia_horas is not null
          then 'cada ' || d.frecuencia_horas::text || ' h' end intervalo,
+    d.cantidad_fija, d.cantidad_fija_unidad,
+    d.mezcla_valor, d.mezcla_unidad,
+    d.frecuencia_horas,
+    (select string_agg(a.principio_activo || ' ' ||
+                       coalesce(a.valor_min::text,'') ||
+                       case when a.valor_max is not null and a.valor_max <> a.valor_min
+                            then '-' || a.valor_max::text else '' end ||
+                       ' ' || coalesce(a.unidad,''), '; ' order by a.principio_activo)
+       from private.vetdosis_virbac_producto_dosis_activos a
+      where a.dosis_id = d.id) dosis_activos,
     (select string_agg(t.especie || ' ' || t.matriz || ': ' ||
                        coalesce(t.valor::text || ' ' || t.unidad, 'no usar'), '; '
                        order by t.especie, t.matriz)

@@ -86,33 +86,35 @@ La vista buena es `vetdosis_reference_staging.vademecum_producto_comercial`:
 Ejemplo: PARAFEN SUSPENSIÓN 3 %, Aranda, ovinos y caprinos, 0,1667 mL/kg cada
 24 h, retiro de carne 15 días.
 
+## 2 ter. Especie separada de la dosis
+
+`vademecum_producto_comercial` guardaba la especie como texto libre y salían
+**553 etiquetas distintas** para las mismas especies: «Caninos y Felinos»,
+«Perros y Gatos», «Perros y gatos», «Cánidos y felinos»… Con eso no se podía
+filtrar. Y había dos trampas:
+
+- 12 filas donde `especies` no era una especie sino una **prohibición** («No
+  administrar a equinos destinados al consumo humano»). Un filtro a ciegas
+  habría mostrado una dosis justo donde la ficha la prohíbe.
+- 148 filas sin especie reconocible, que antes se habrían asumido canino.
+
+La vista `vademecum_producto_por_especie` da una fila por producto, especie
+canónica y categoría de animal:
+
+- **3.373 filas, 14 especies canónicas**, 12 prohibiciones aisladas, 148 sin
+  especificar (marcadas, no inventadas).
+- La especie se deduce del texto de la ficha con
+  `vetdosis_reference_staging.especies_canonicas()`, no del orden de las filas.
+- Las **64 dosis de Virbac entran íntegras y con su especie**, incluidas las que
+  se distinguen solo por categoría (Deltanil cordero <10 kg: 2,5 ml; ovino
+  adulto: 5 ml) y las que se distinguen por indicación (Diclovet cojera aguda:
+  1,15 mg/kg frente a 2,3 mg/kg estándar).
+- Los cuatro modos de dosis se exponen por separado: `dosis_por_kg`,
+  `cantidad_fija`, `mezcla_valor` y `dosis_activos` (µg/kg, mg/kg). Medesedan
+  solo tiene la última: detomidina 10-20 µg/kg para sedación leve.
+- Cuando la ficha prohíbe la especie, `dosis_prohibida = true` y la dosis sale
+  nula, para que no se pueda calcular.
+
 Queda pendiente conectar esta vista a la calculadora por nombre comercial. Los
-datos ya están unificados; falta la pantalla.
+datos ya están separados por especie; falta la pantalla.
 
-## 3. Lo que sí está conectado
-
-- `reference_review_list` alimenta «Constantes fisiológicas», «Laboratorio» y,
-  desde este cambio, «Vademécum por principio activo» (377 monografías).
-- `review_catalog_list` alimenta el catálogo comercial de 662 fichas.
-- `review_pauta_list` alimenta las 1 197 pautas, todas con
-  `enabled_in_app = false`: se consultan, no calculan.
-- `dose_personal_entries` alimenta la importación manual de farmacia, por
-  clínica y por usuario. Es independiente del catálogo de la app.
-
-## 4. Qué haría falta para cerrar cada hueco
-
-1. **Tiempos de retiro**: es el hueco más barato. Las 63 filas ya están
-   cargadas y limpias; solo falta una función de lectura con el mismo patrón de
-   permisos que `reference_review_list` y una pantalla que la muestre.
-2. **Protocolos por etapas y peso metabólico**: no hay tabla de origen. Hay que
-   decidir la fuente antes de cargar nada.
-3. **Dosis por principio activo en la calculadora**: las 377 monografías del
-   vademécum ya se consultan, pero no alimentan cálculo. Para eso hace falta
-   revisión MVZ que fije fármaco, especie, dosis, vía e intervalo. El
-   encabezado del fármaco no es recuperable del OCR en 359 de 377 monografías.
-
-## 5. Criterio
-
-Ninguna de estas tablas modifica el catálogo de cálculo ni emite recetas. Se
-muestran con su fuente para que el MVZ decida. Convertir una fila en regla de
-cálculo exige revisión explícita.
