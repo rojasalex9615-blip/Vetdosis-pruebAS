@@ -52,6 +52,30 @@ Ejemplo real de `vetdosis_virbac_producto_dosis`: Borgal, porcino, IM,
 1 ml / 16 kg, cada 24 h. Ejemplo de tiempos de espera: Borgal, bovino, carne,
 10 días.
 
+
+## 2 bis. Tabla unificada de fabricante por nombre comercial
+
+Ya existía `private.vetdosis_inventario_comercial_revision` (687 fichas de 12
+laboratorios) y es la que lee el catálogo comercial de la app. No hacía falta
+crear otra: el hueco era que las 34 fichas de Virbac salían **sin dosis**,
+mientras sus 64 dosis estructuradas dormían en `vetdosis_virbac_producto_dosis`.
+
+Se añade la vista `vetdosis_reference_staging.commercial_product_dose_unified`:
+
+- 717 filas: las 653 fichas del inventario que no son de Virbac, más las 64
+  dosis estructuradas de Virbac (una por especie y vía).
+- Virbac deja de salir duplicado: se excluye del inventario y entra por sus
+  tablas, que sí traen dosis por kg, vía, intervalo y principio activo.
+- 24 filas traen dosis por kg calculable. Ejemplo: Borgal, porcino, IM,
+  0,0625 ml/kg cada 24 h.
+- `seleccion_requerida` marca 39 filas de Virbac con más de una especie o vía,
+  para que la calculadora no elija una en silencio.
+- Todo sale con `habilitado_en_app = false` y `estado_revision =
+  'sin_verificar'`.
+
+Queda pendiente conectar esta vista a la calculadora por nombre comercial y
+añadir los 63 tiempos de espera, que siguen sin leerse.
+
 ## 3. Lo que sí está conectado
 
 - `reference_review_list` alimenta «Constantes fisiológicas», «Laboratorio» y,
