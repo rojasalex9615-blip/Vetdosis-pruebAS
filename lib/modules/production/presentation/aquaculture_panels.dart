@@ -4,43 +4,68 @@ import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../domain/aquaculture_reference.dart';
 import '../domain/aquaculture_management_reference.dart';
+import '../domain/aquaculture_species.dart';
 
-/// Paneles del módulo de acuicultura (tilapia): siembra y biomasa, ración
-/// diaria, indicadores y costos, y oxígeno / aireación. Cálculos de sesión;
-/// no guardan registros ni confirman que sea adecuado sembrar o alimentar.
-List<Widget> aquaculturePanelsFor(String activity) {
-  const notice = VetNotice(
-    text:
-        'Cálculos de sesión con referencias de clase para tilapia. No guardan '
-        'registros de granja y no confirman que sea adecuado sembrar o '
-        'alimentar.',
-    icon: VetIcons.clipboardChecks,
+/// Paneles del módulo de acuicultura, agrupados por calculadora.
+///
+/// La especie se elige con un botón dentro de cada calculadora, no antes: así
+/// se comparan especies sin salir del apartado. Cada calculadora solo se abre
+/// donde la fuente publica el dato de esa especie; donde no, dice por qué en
+/// vez de reutilizar la tabla de otra.
+///
+/// Cálculos de sesión; no guardan registros ni confirman que sea adecuado
+/// sembrar o alimentar.
+List<Widget> aquaculturePanelsFor(FishSpecies species) => [
+  AquacultureSpeciesPanel(species: species),
+  const _Gap(),
+  AquacultureSeedPanel(species: species),
+  const _Gap(),
+  AquacultureRationPanel(species: species),
+  const _Gap(),
+  AquacultureIndicatorsPanel(),
+  const _Gap(),
+  AquacultureFcrPanel(),
+  const _Gap(),
+  AquacultureOxygenDemandPanel(),
+  const _Gap(),
+  AquacultureAeratorPanel(),
+  const _Gap(),
+  AquacultureOxygenReservePanel(),
+  const _Gap(),
+  AquacultureWaterExchangePanel(),
+  const _Gap(),
+  AquacultureNitriteSaltPanel(species: species),
+  const _Gap(),
+  AquacultureMedicatedFeedPanel(),
+];
+
+/// Cabecera del apartado: recuerda de qué especie son los datos y qué falta.
+class AquacultureSpeciesPanel extends StatelessWidget {
+  const AquacultureSpeciesPanel({super.key, required this.species});
+  final FishSpecies species;
+
+  @override
+  Widget build(BuildContext context) => VetCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _PanelHeader(
+          icon: VetIcons.fish,
+          title: 'Calculadoras de peces',
+          subtitle:
+              'Cada calculadora elige su especie y solo usa los datos que la '
+              'fuente publica para ella.',
+        ),
+        VetNotice(
+          text:
+              'Datos de ${species.label}. Si cambias de especie en una '
+              'calculadora, sus números se recalculan con la tabla de esa '
+              'especie, nunca con la anterior.',
+          icon: VetIcons.clipboardChecks,
+        ),
+      ],
+    ),
   );
-  return switch (activity) {
-    'Tilapia' => const [
-      notice,
-      AquacultureSeedPanel(),
-      _Gap(),
-      AquacultureRationPanel(),
-      _Gap(),
-      AquacultureIndicatorsPanel(),
-      _Gap(),
-      AquacultureFcrPanel(),
-      _Gap(),
-      AquacultureOxygenDemandPanel(),
-      _Gap(),
-      AquacultureAeratorPanel(),
-      _Gap(),
-      AquacultureOxygenReservePanel(),
-      _Gap(),
-      AquacultureWaterExchangePanel(),
-      _Gap(),
-      AquacultureNitriteSaltPanel(),
-      _Gap(),
-      AquacultureMedicatedFeedPanel(),
-    ],
-    _ => const [],
-  };
 }
 
 // ----------------------------------------------------------- Utilidades
@@ -164,6 +189,45 @@ class _Dropdown<T> extends StatelessWidget {
   );
 }
 
+/// Botón de especie de una calculadora. Cada botón lleva su propia clave para
+/// que dos calculadoras no compartan estado al cambiar de especie.
+class _SpeciesButtons extends StatelessWidget {
+  const _SpeciesButtons({
+    required this.species,
+    required this.onChanged,
+    required this.keyPrefix,
+  });
+  final FishSpecies species;
+  final ValueChanged<FishSpecies> onChanged;
+  final String keyPrefix;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Especie', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final option in FishSpecies.values)
+              VetChip(
+                key: ValueKey('$keyPrefix-species-${option.name}'),
+                label: option.label,
+                icon: VetIcons.fish,
+                selected: option == species,
+                onSelected: () => onChanged(option),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
 class _Results extends StatelessWidget {
   const _Results(this.rows, {this.headline});
   final List<(String, String)> rows;
@@ -215,7 +279,8 @@ class _Results extends StatelessWidget {
 // ------------------------------------------------ Siembra y biomasa
 
 class AquacultureSeedPanel extends StatefulWidget {
-  const AquacultureSeedPanel({super.key});
+  const AquacultureSeedPanel({super.key, required this.species});
+  final FishSpecies species;
   @override
   State<AquacultureSeedPanel> createState() => _AquacultureSeedPanelState();
 }
@@ -225,10 +290,24 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
   final depth = TextEditingController(text: '1.2');
   final harvest = TextEditingController(text: '500');
   final survival = TextEditingController(text: '85');
+  late FishSpecies species = widget.species;
   int systemIndex = 0;
   int level = 1;
   SeedStockPlan? result;
   String? error;
+
+  /// Tabla de densidades de la especie elegida, o vacía si la fuente no la da.
+  List<AquacultureSystem> get systems => switch (species) {
+    FishSpecies.tilapia => aquacultureSystems,
+    FishSpecies.trucha => troutDensityRanges,
+    FishSpecies.cachama || FishSpecies.bagre => const [],
+  };
+
+  String get source => switch (species) {
+    FishSpecies.tilapia => aquacultureSeedSource,
+    FishSpecies.trucha => troutDensitySource,
+    _ => '',
+  };
 
   @override
   void dispose() {
@@ -239,6 +318,15 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
   }
 
   void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void changeSpecies(FishSpecies next) => setState(() {
+    species = next;
+    // El índice de sistema apunta a otra tabla; se vuelve al primero para no
+    // leer una densidad que pertenece a la especie anterior.
+    systemIndex = 0;
     result = null;
     error = null;
   });
@@ -255,6 +343,7 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
           harvestWeightG: _decimal(harvest, 'Peso de cosecha'),
           survivalPercent: _decimal(survival, 'Supervivencia'),
           level: level,
+          systems: systems,
         );
       } on FormatException catch (e) {
         error = e.message;
@@ -265,7 +354,10 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
   @override
   Widget build(BuildContext context) {
     final r = result;
-    final unit = aquacultureSystems[systemIndex].perVolume ? 'm³' : 'm²';
+    final table = systems;
+    final unit = table.isEmpty
+        ? 'm²'
+        : (table[systemIndex].perVolume ? 'm³' : 'm²');
     return VetCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -275,22 +367,34 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
             title: 'Siembra y biomasa máxima',
             subtitle:
                 'Cuántos alevinos sembrar según el sistema, con la densidad '
-                'máxima publicada para tilapia.',
+                'máxima que la fuente publica para la especie elegida.',
           ),
-          _Dropdown<int>(
-            key: const ValueKey('aqua-seed-system'),
-            value: systemIndex,
-            label: 'Sistema de cultivo',
-            items: [
-              for (var i = 0; i < aquacultureSystems.length; i++)
-                (i, '${aquacultureSystems[i].name} (${aquacultureSystems[i].range})'),
-            ],
-            onChanged: (v) => setState(() {
-              systemIndex = v;
-              result = null;
-              error = null;
-            }),
+          _SpeciesButtons(
+            keyPrefix: 'aqua-seed',
+            species: species,
+            onChanged: changeSpecies,
           ),
+          if (table.isEmpty)
+            VetNotice(
+              text: seedUnavailableReason(species),
+              icon: VetIcons.alertOctagon,
+              kind: VetBadgeKind.warning,
+            )
+          else ...[
+            _Dropdown<int>(
+              key: const ValueKey('aqua-seed-system'),
+              value: systemIndex,
+              label: 'Sistema de cultivo',
+              items: [
+                for (var i = 0; i < table.length; i++)
+                  (i, '${table[i].name} (${table[i].range})'),
+              ],
+              onChanged: (v) => setState(() {
+                systemIndex = v;
+                result = null;
+                error = null;
+              }),
+            ),
           _Field(
             controller: area,
             label: 'Área del espejo (m²)',
@@ -352,7 +456,8 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
               ('Volumen de agua', '${_fmt(r.volumeM3, 0)} m³'),
             ], headline: (_fmt(r.seedFish, 0), 'alevinos a sembrar')),
           const SizedBox(height: 12),
-          const Text(aquacultureSeedSource),
+          Text(source),
+          ],
         ],
       ),
     );
@@ -362,7 +467,8 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
 // ------------------------------------------------------ Ración diaria
 
 class AquacultureRationPanel extends StatefulWidget {
-  const AquacultureRationPanel({super.key});
+  const AquacultureRationPanel({super.key, required this.species});
+  final FishSpecies species;
   @override
   State<AquacultureRationPanel> createState() => _AquacultureRationPanelState();
 }
@@ -370,8 +476,14 @@ class AquacultureRationPanel extends StatefulWidget {
 class _AquacultureRationPanelState extends State<AquacultureRationPanel> {
   final weight = TextEditingController(text: '60');
   final count = TextEditingController(text: '1000');
+  late FishSpecies species = widget.species;
   String temperature = '24_32';
+  int troutRow = 0;
+  int troutSize = 0;
+  int cachamaWeek = 0;
   DailyRationPlan? result;
+  TroutRationPlan? troutResult;
+  CachamaRationPlan? cachamaResult;
   String? error;
 
   @override
@@ -383,19 +495,48 @@ class _AquacultureRationPanelState extends State<AquacultureRationPanel> {
 
   void reset() => setState(() {
     result = null;
+    troutResult = null;
+    cachamaResult = null;
+    error = null;
+  });
+
+  void changeSpecies(FishSpecies next) => setState(() {
+    species = next;
+    result = null;
+    troutResult = null;
+    cachamaResult = null;
     error = null;
   });
 
   void calculate() {
     setState(() {
       result = null;
+      troutResult = null;
+      cachamaResult = null;
       error = null;
       try {
-        result = DailyRationPlan(
-          averageGrams: _decimal(weight, 'Peso promedio'),
-          fishCount: _whole(count, 'Número de peces'),
-          temperatureFactor: senaTemperatureFactor(temperature),
-        );
+        switch (species) {
+          case FishSpecies.tilapia:
+            result = DailyRationPlan(
+              averageGrams: _decimal(weight, 'Peso promedio'),
+              fishCount: _whole(count, 'Número de peces'),
+              temperatureFactor: senaTemperatureFactor(temperature),
+            );
+          case FishSpecies.trucha:
+            troutResult = TroutRationPlan(
+              rowIndex: troutRow,
+              sizeIndex: troutSize,
+              averageGrams: _decimal(weight, 'Peso promedio'),
+              fishCount: _whole(count, 'Número de peces'),
+            );
+          case FishSpecies.cachama:
+            cachamaResult = CachamaRationPlan(
+              weekIndex: cachamaWeek,
+              fishCount: _whole(count, 'Número de peces'),
+            );
+          case FishSpecies.bagre:
+            error = rationUnavailableReason(species);
+        }
       } on FormatException catch (e) {
         error = e.message;
       }
@@ -405,6 +546,8 @@ class _AquacultureRationPanelState extends State<AquacultureRationPanel> {
   @override
   Widget build(BuildContext context) {
     final r = result;
+    final trout = troutResult;
+    final cachama = cachamaResult;
     return VetCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -413,65 +556,162 @@ class _AquacultureRationPanelState extends State<AquacultureRationPanel> {
             icon: VetIcons.trough,
             title: 'Ración diaria',
             subtitle:
-                'Tasa diaria de la tabla SENA (mojarra roja) por talla y '
-                'temperatura. Es una guía.',
+                'Cada especie usa su propia tabla: SENA para tilapia, Shelton '
+                'para trucha y el plan semanal de Cipa para cachama.',
           ),
-          _Field(
-            controller: weight,
-            label: 'Peso promedio (g)',
-            decimal: true,
-            onChanged: reset,
+          _SpeciesButtons(
+            keyPrefix: 'aqua-ration',
+            species: species,
+            onChanged: changeSpecies,
           ),
-          _Field(
-            controller: count,
-            label: 'Número de peces',
-            onChanged: reset,
-          ),
-          _Dropdown<String>(
-            key: const ValueKey('aqua-ration-temp'),
-            value: temperature,
-            label: 'Temperatura del agua',
-            items: const [
-              ('24_32', '24 a 32 °C'),
-              ('22_24', '22 a 24 °C'),
-              ('20_22', '20 a 22 °C'),
-              ('18_20', '18 a 20 °C'),
-            ],
-            onChanged: (v) => setState(() {
-              temperature = v;
-              result = null;
-              error = null;
-            }),
-          ),
-          VetActionButton(
-            icon: VetIcons.calculator,
-            label: 'Calcular ración',
-            onPressed: calculate,
-          ),
-          if (error != null)
+          if (species == FishSpecies.bagre)
             VetNotice(
-              text: error!,
+              text: rationUnavailableReason(species),
               icon: VetIcons.alertOctagon,
-              kind: VetBadgeKind.danger,
+              kind: VetBadgeKind.warning,
+            )
+          else ...[
+            _Field(
+              controller: weight,
+              label: 'Peso promedio (g)',
+              decimal: true,
+              helper: species == FishSpecies.cachama
+                  ? 'Solo informativo: el plan de cachama fija el peso por semana.'
+                  : null,
+              onChanged: reset,
             ),
-          if (r != null)
-            _Results([
-              ('Biomasa', '${_fmt(r.biomassKg, 1)} kg'),
-              (
-                '% de la biomasa',
-                '${_fmt(r.dailyPercent!, 1)} %'
-                    '${r.temperatureFactor < 1 ? ' × factor de temperatura' : ''}',
+            _Field(
+              controller: count,
+              label: 'Número de peces',
+              onChanged: reset,
+            ),
+            if (species == FishSpecies.tilapia)
+              _Dropdown<String>(
+                key: const ValueKey('aqua-ration-temp'),
+                value: temperature,
+                label: 'Temperatura del agua',
+                items: const [
+                  ('24_32', '24 a 32 °C'),
+                  ('22_24', '22 a 24 °C'),
+                  ('20_22', '20 a 22 °C'),
+                  ('18_20', '18 a 20 °C'),
+                ],
+                onChanged: (v) => setState(() {
+                  temperature = v;
+                  result = null;
+                  error = null;
+                }),
               ),
-            ], headline: (
-              '${_fmt(r.rationKg, 2)} kg',
-              'de alimento al día (repartidos en 3 o 4 raciones)',
-            )),
-          const SizedBox(height: 12),
-          const Text(
-            'Tabla SENA (mojarra roja). Es una guía: ajusta con muestreos cada '
-            '15 días y con el oxígeno disuelto. Solo cubre hasta 500 g de peso '
-            'promedio; por encima no se interpola.',
-          ),
+            if (species == FishSpecies.trucha) ...[
+              _Dropdown<int>(
+                key: const ValueKey('aqua-ration-trout-temp'),
+                value: troutRow,
+                label: 'Temperatura del agua',
+                items: [
+                  for (var i = 0; i < troutRationRows.length; i++)
+                    (i, troutRationRows[i].label),
+                ],
+                onChanged: (v) => setState(() {
+                  troutRow = v;
+                  troutResult = null;
+                  error = null;
+                }),
+              ),
+              _Dropdown<int>(
+                key: const ValueKey('aqua-ration-trout-size'),
+                value: troutSize,
+                label: 'Talla (peces por libra)',
+                items: [
+                  for (var i = 0; i < troutSizeClasses.length; i++)
+                    (i, troutSizeClasses[i]),
+                ],
+                helper: troutRationRows[troutRow].review,
+                onChanged: (v) => setState(() {
+                  troutSize = v;
+                  troutResult = null;
+                  error = null;
+                }),
+              ),
+            ],
+            if (species == FishSpecies.cachama)
+              _Dropdown<int>(
+                key: const ValueKey('aqua-ration-cachama-week'),
+                value: cachamaWeek,
+                label: 'Semana del plan',
+                items: [
+                  for (var i = 0; i < cachamaWeeks.length; i++)
+                    (
+                      i,
+                      'Semana ${cachamaWeeks[i].week} · '
+                          '${_fmt(cachamaWeeks[i].finalG, 0)} g',
+                    ),
+                ],
+                helper: 'Cipa Acuavit, 20 semanas.',
+                onChanged: (v) => setState(() {
+                  cachamaWeek = v;
+                  cachamaResult = null;
+                  error = null;
+                }),
+              ),
+            VetActionButton(
+              icon: VetIcons.calculator,
+              label: 'Calcular ración',
+              onPressed: calculate,
+            ),
+            if (error != null)
+              VetNotice(
+                text: error!,
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.danger,
+              ),
+            if (r != null)
+              _Results([
+                ('Biomasa', '${_fmt(r.biomassKg, 1)} kg'),
+                (
+                  '% de la biomasa',
+                  '${_fmt(r.dailyPercent!, 1)} %'
+                      '${r.temperatureFactor < 1 ? ' × factor de temperatura' : ''}',
+                ),
+              ], headline: (
+                '${_fmt(r.rationKg, 2)} kg',
+                'de alimento al día (repartidos en 3 o 4 raciones)',
+              )),
+            if (trout != null)
+              _Results([
+                ('Biomasa', '${_fmt(trout.biomassKg, 1)} kg'),
+                ('Tasa de la tabla', '${_fmt(trout.dailyPercent!, 1)} % del peso'),
+                ('Temperatura', trout.row.label),
+                ('Talla', troutSizeClasses[trout.sizeIndex]),
+              ], headline: (
+                '${_fmt(trout.rationKg, 2)} kg',
+                'de alimento al día',
+              )),
+            if (cachama != null)
+              _Results([
+                ('Peso al cierre de la semana', '${_fmt(cachama.week.finalG, 0)} g'),
+                ('Ganancia diaria', '${_fmt(cachama.week.gainPerDayG, 1)} g'),
+                ('Consumo por pez y día', '${_fmt(cachama.week.consumptionGPerFishDay, 2)} g'),
+                ('Producto de la fuente', cachama.week.feedProduct),
+                ('FCA de la fuente', _fmt(cachama.week.fcr, 2)),
+                ('Biomasa estimada', '${_fmt(cachama.biomassKg, 1)} kg'),
+              ], headline: (
+                '${_fmt(cachama.feedKgPerDay, 2)} kg',
+                'de alimento al día (${_fmt(cachama.feedKgPerWeek, 1)} kg por semana)',
+              )),
+            const SizedBox(height: 12),
+            Text(
+              switch (species) {
+                FishSpecies.tilapia =>
+                  'Tabla SENA (mojarra roja). Es una guía: ajusta con muestreos '
+                      'cada 15 días y con el oxígeno disuelto. Solo cubre hasta '
+                      '500 g de peso promedio; por encima no se interpola.',
+                FishSpecies.trucha =>
+                  '$troutRationSource\n\n$troutMaintenanceNote',
+                FishSpecies.cachama => cachamaRationSource,
+                FishSpecies.bagre => '',
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -1385,7 +1625,8 @@ class _AquacultureWaterExchangePanelState
 }
 
 class AquacultureNitriteSaltPanel extends StatefulWidget {
-  const AquacultureNitriteSaltPanel({super.key});
+  const AquacultureNitriteSaltPanel({super.key, required this.species});
+  final FishSpecies species;
   @override
   State<AquacultureNitriteSaltPanel> createState() =>
       _AquacultureNitriteSaltPanelState();
@@ -1399,6 +1640,7 @@ class _AquacultureNitriteSaltPanelState
   final ratio = TextEditingController(text: '20');
   final maintenance = TextEditingController(text: '150');
   final purity = TextEditingController(text: '99');
+  late FishSpecies species = widget.species;
   NitriteSaltPlan? result;
   String? error;
 
@@ -1413,6 +1655,21 @@ class _AquacultureNitriteSaltPanelState
   void reset() => setState(() {
     result = null;
     error = null;
+  });
+
+  /// La relación mínima y el cloruro de mantenimiento salen de la fuente de
+  /// cada especie; donde no hay dato se deja el valor que escriba el usuario.
+  void changeSpecies(FishSpecies next) => setState(() {
+    species = next;
+    result = null;
+    error = null;
+    if (next == FishSpecies.bagre) {
+      ratio.text = _fmt(bagreNitriteRatio, 0);
+      maintenance.text = _fmt(bagreSafeChlorideMgL, 0);
+    } else if (next == FishSpecies.tilapia) {
+      ratio.text = '20';
+      maintenance.text = '150';
+    }
   });
 
   void calculate() {
@@ -1448,11 +1705,26 @@ class _AquacultureNitriteSaltPanelState
                 'Cloruro objetivo por la relación Cl:NO₂-N, sal común sin yodo '
                 'necesaria para alcanzarlo.',
           ),
+          _SpeciesButtons(
+            keyPrefix: 'aqua-nitrite',
+            species: species,
+            onChanged: changeSpecies,
+          ),
           _Field(controller: volume, label: 'Volumen (m³)', decimal: true, onChanged: reset),
           _Field(controller: nitrite, label: 'Nitrito (NO₂-N) (mg/L)', decimal: true, onChanged: reset),
           _Field(controller: chloride, label: 'Cloruro actual (mg/L)', decimal: true, onChanged: reset),
           _Field(controller: ratio, label: 'Relación Cl:NO₂-N', decimal: true, helper: '20 recomendada, 10 mínima', onChanged: reset),
-          _Field(controller: maintenance, label: 'Cloruro de mantenimiento (mg/L)', decimal: true, helper: 'Tilapia 150–200', onChanged: reset),
+          _Field(
+            controller: maintenance,
+            label: 'Cloruro de mantenimiento (mg/L)',
+            decimal: true,
+            helper: switch (species) {
+              FishSpecies.tilapia => 'Tilapia 150–200',
+              FishSpecies.bagre => 'Bagre: cloruro de seguro 100 ppm',
+              _ => 'Sin valor publicado para esta especie: decide tú',
+            },
+            onChanged: reset,
+          ),
           _Field(controller: purity, label: 'Pureza de la sal (%)', decimal: true, onChanged: reset),
           VetActionButton(
             icon: VetIcons.calculator,

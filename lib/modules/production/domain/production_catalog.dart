@@ -14,7 +14,7 @@ const productionSpecies = <String, List<String>>{
   ],
   'Ovinos / caprinos': ['Ovinos', 'Caprinos'],
   'Aves': ['Postura', 'Engorda', 'Reproducción e incubación'],
-  'Peces': ['Tilapia'],
+  'Peces': ['Tilapia', 'Trucha', 'Cachama', 'Bagre'],
   'Abejas': ['Apiarios y colmenas'],
   'Porcinos': [
     'Reproducción y gestación',
