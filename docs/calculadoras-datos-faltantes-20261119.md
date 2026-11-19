@@ -55,26 +55,39 @@ Ejemplo real de `vetdosis_virbac_producto_dosis`: Borgal, porcino, IM,
 
 ## 2 bis. Tabla unificada de fabricante por nombre comercial
 
-Ya existía `private.vetdosis_inventario_comercial_revision` (687 fichas de 12
-laboratorios) y es la que lee el catálogo comercial de la app. No hacía falta
-crear otra: el hueco era que las 34 fichas de Virbac salían **sin dosis**,
-mientras sus 64 dosis estructuradas dormían en `vetdosis_virbac_producto_dosis`.
+Corrección de un error mío anterior: primero creé la vista
+`commercial_product_dose_unified` uniendo solo el inventario comercial y
+Virbac. Era una **tabla paralela**. Ya existían dos catálogos de fabricante que
+la app expone por separado:
 
-Se añade la vista `vetdosis_reference_staging.commercial_product_dose_unified`:
+| Fuente | Filas | Nombres | La lee |
+| --- | --- | --- | --- |
+| `private.vetdosis_inventario_comercial_revision` | 687 | 687 | `review_catalog_list` |
+| `raw_intake_rows`, hoja `Pautas` | 1.197 | 693 | `review_pauta_list` |
+| Tablas Virbac (5 tablas) | 34 productos / 64 dosis | 34 | ninguna función |
 
-- 717 filas: las 653 fichas del inventario que no son de Virbac, más las 64
-  dosis estructuradas de Virbac (una por especie y vía).
-- Virbac deja de salir duplicado: se excluye del inventario y entra por sus
-  tablas, que sí traen dosis por kg, vía, intervalo y principio activo.
-- 24 filas traen dosis por kg calculable. Ejemplo: Borgal, porcino, IM,
-  0,0625 ml/kg cada 24 h.
-- `seleccion_requerida` marca 39 filas de Virbac con más de una especie o vía,
-  para que la calculadora no elija una en silencio.
+Solo 81 nombres se solapan entre las dos primeras y Virbac no aparece en
+pautas: son fuentes casi disjuntas, no duplicados.
+
+La vista buena es `vetdosis_reference_staging.vademecum_producto_comercial`:
+
+- **1.833 filas, 1.297 nombres comerciales únicos, 91 laboratorios.**
+- 370 filas con dosis por kg calculable; 1.246 con tiempo de retiro.
+- Cuando un nombre está en inventario y en pauta, gana la pauta (trae especie,
+  dosis por kg e intervalo) y hereda la concentración del inventario. Por eso
+  el inventario aporta 572 fichas y no 653: **0 nombres duplicados entre
+  fuentes**.
+- Virbac entra por sus tablas estructuradas con sus 64 dosis y 49 tiempos de
+  retiro, que antes nadie leía.
+- `fuente` indica el origen de cada fila para poder rastrearla.
 - Todo sale con `habilitado_en_app = false` y `estado_revision =
   'sin_verificar'`.
 
-Queda pendiente conectar esta vista a la calculadora por nombre comercial y
-añadir los 63 tiempos de espera, que siguen sin leerse.
+Ejemplo: PARAFEN SUSPENSIÓN 3 %, Aranda, ovinos y caprinos, 0,1667 mL/kg cada
+24 h, retiro de carne 15 días.
+
+Queda pendiente conectar esta vista a la calculadora por nombre comercial. Los
+datos ya están unificados; falta la pantalla.
 
 ## 3. Lo que sí está conectado
 
