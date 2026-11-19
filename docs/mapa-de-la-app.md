@@ -60,13 +60,13 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Inicio | (vista `home()`) | Barra inferior | Cuadrícula de accesos directos, buscador, avisos. Sale a cualquier apartado de un toque. |
 | Más | `SectionMenu` | Barra inferior | Grupos de arriba con buscador. Sale a cada apartado autorizado. |
 | Cálculos | `CalculationMenu` | Barra inferior | Menú clínico. Sale a Cálculo rápido, Vademécum, Operaciones de dosis, Cálculos clínicos. |
-| Producción y grandes especies | `ProductionMenu` | Grupo Producción | Menú por especie. Sale a calculadoras de producción. |
-| Exóticos | `ExoticsMenu` | Grupo Exóticos | Catálogo de exóticos; respeta permiso. |
+| Producción y grandes especies | `ProductionMenu` | Grupo Producción | Menú por especie. Sale a las calculadoras de producción (por cabeza y lote, agua y alimento). |
+| Exóticos | `ExoticsMenu` | Grupo Exóticos | Catálogo de exóticos y la calculadora de peso metabólico; respeta permiso. |
 | Cálculo rápido | `DoseScreen` | Cálculos / Inicio | Dosis por paciente. Sale a elegir paciente o escanear etiqueta. |
 | Escanear etiqueta para dosis | `DoseLabelScannerScreen` | Cálculo rápido | Lee etiqueta y devuelve datos al cálculo. |
 | Vademécum | `VademecumScreen` | Cálculos / Inicio | Consulta de medicamentos. |
 | Operaciones de dosis | `DoseMathTools` | Cálculos / Inicio | Regla de tres y herramientas de dosis. |
-| Cálculos clínicos | `ClinicalCalculationsScreen` | Cálculos / Inicio | Calculadoras clínicas. |
+| Cálculos clínicos | `ClinicalCalculationsScreen` | Cálculos / Inicio | Calculadoras clínicas (fluidoterapia, CRI, ajuste de dosis, protocolos, constantes y retiros). |
 | Pacientes | `PatientsScreen` | Barra (Registros) / Atención | Expedientes. Sale a receta, formatos, hospitalización. |
 | Hospitalización | `HospitalScreen` | Grupo Atención | Cuidados diarios, peso, altas, envíos. |
 | Receta | `PrescribingScreen` | Grupo Atención / Paciente | Emisión de recetas; usa firma y plantillas. |
