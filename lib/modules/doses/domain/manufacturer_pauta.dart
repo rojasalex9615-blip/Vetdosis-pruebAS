@@ -154,11 +154,23 @@ class ManufacturerPauta {
     final amount = doseAmount.trim();
     final unit = doseUnit.trim();
     if (amount.isEmpty || unit.isEmpty) return null;
+    final normalized = doseReference.toLowerCase();
+    if (!normalized.contains('kg')) return null;
     final numbers = RegExp(
       r'\d+(?:[.,]\d+)?',
     ).allMatches(doseReference).map((m) => m.group(0)!).toList();
-    final normalized = doseReference.toLowerCase();
-    if (numbers.length != 1 || !normalized.contains('kg')) return null;
+    // 'por kg de peso vivo' no lleva cifra: la referencia es 1 kg, no un
+    // dato ambiguo. Los rangos ('por 20-40 kg') siguen descartados porque no
+    // tienen un unico peso de referencia.
+    if (numbers.isEmpty && RegExp(r'por\s+kg').hasMatch(normalized)) {
+      return PautaWeightReference(
+        amount: amount,
+        unit: unit,
+        kg: '1',
+        text: doseReference.trim(),
+      );
+    }
+    if (numbers.length != 1) return null;
     return PautaWeightReference(
       amount: amount,
       unit: unit,
