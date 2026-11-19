@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/dashboard/presentation/home_pilot.dart';
+import 'package:vetdosis_pro/modules/production/domain/aquaculture_species.dart';
 import 'package:vetdosis_pro/modules/production/presentation/aquaculture_panels.dart';
 import 'package:vetdosis_pro/modules/production/presentation/growth_panel.dart';
 
@@ -41,7 +42,9 @@ void main() {
                     padding: const EdgeInsets.all(12),
                     child: growth
                         ? const GrowthPanel(showCosts: true)
-                        : const AquacultureSeedPanel(),
+                        : const AquacultureSeedPanel(
+                            species: FishSpecies.tilapia,
+                          ),
                   ),
                 ),
               ),
