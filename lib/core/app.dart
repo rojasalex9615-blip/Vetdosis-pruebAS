@@ -181,11 +181,13 @@ class _SessionRouteGuardState extends State<SessionRouteGuard> {
   String _fingerprint(AuthViewModel? auth) {
     if (auth == null) return 'no-auth';
     final member = auth.active;
+    // `offline` no entra: un parpadeo de red lo cambia y no es un cambio de
+    // sesion. Incluirlo hacia que `popUntil` devolviera al inicio a media
+    // consulta cada vez que se perdia la conexion un momento.
     return [
       auth.repository.userId ?? 'signed-out',
       auth.signedIn,
       auth.recoveringPassword,
-      auth.offline,
       member?.userId ?? '',
       member?.clinicId ?? '',
       member?.role.name ?? '',

@@ -46,7 +46,11 @@ class AuthViewModel extends ChangeNotifier {
   bool get canManageActiveWorkspace =>
       active != null && canManageWorkspace(active!.clinicId);
   Future<void> start() async {
-    _subscription = repository.changes.listen((_) => refresh());
+    // Un evento de sesion (renovacion de token, retorno desde segundo plano)
+    // no debe vaciar la sesion activa: `refresh()` sin `background` pone
+    // `active = null` y el armazon entero se sustituye por la pantalla de
+    // acceso, con lo que se pierde el apartado y su desplazamiento.
+    _subscription = repository.changes.listen((_) => refresh(background: true));
     await refresh();
     if (refreshInterval != null) {
       _refreshTimer = Timer.periodic(refreshInterval!, (_) {
