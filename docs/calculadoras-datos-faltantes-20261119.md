@@ -115,6 +115,30 @@ canónica y categoría de animal:
 - Cuando la ficha prohíbe la especie, `dosis_prohibida = true` y la dosis sale
   nula, para que no se pueda calcular.
 
-Queda pendiente conectar esta vista a la calculadora por nombre comercial. Los
-datos ya están separados por especie; falta la pantalla.
+## 2 quater. Formato del texto de dosis
+
+El texto venía escrito de muchas formas para la misma idea: «1 ml / 10 kg» y
+«1 ml/10 kg», «cada 12 h» y «cada 12 horas», «mcg» y «µg», «cc» y «mL». Eso
+impide buscar y comparar. La función
+`vetdosis_reference_staging.dosis_texto_limpio()` normaliza **solo el formato**:
+
+- espacios sobrantes y barra de dosis pegada a la unidad;
+- unidades homogéneas (`mL`, `µg`, `UI`) y «cada N horas» → «cada N h»;
+- rangos «2 y 4 ml» → «2-4 ml», solo cuando hay unidad detrás;
+- mayúscula inicial, salvo cuando el texto es solo una unidad.
+
+No convierte unidades, no redondea, no cambia cifras y no interpreta la
+posología. La vista expone `dosis_texto` (formateado) y
+`dosis_texto_original`, para poder comparar y revertir.
+
+Comprobado sobre las 3.344 filas con texto: **0 cifras alteradas**, **0 textos
+anulados** y la función es **idempotente**. De ellas se reformatearon 1.664.
+
+Dos fallos propios que se detectaron y corrigieron durante la prueba:
+«entre 1 y 3 veces» no se tocó (la regla exige unidad detrás), y cinco etiquetas
+que eran solo una unidad («mg», «mL») se habrían convertido en «Mg» y «ML».
+
+Queda pendiente convertir a número los patrones inequívocos («1 mL/50 kg»,
+«6 mg/kg»): son unas 447 filas de volumen y 324 de mg/kg, con solape posible.
+Lo demás no se puede convertir sin inventar.
 

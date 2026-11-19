@@ -114,7 +114,9 @@ virbac as (
 select
   nombre_comercial, laboratorio, principios_activos, concentracion,
   presentacion, especie, categoria_animal, especies_originales, via_administracion,
-  case when dosis_prohibida then null else dosis_texto end dosis_texto,
+  case when dosis_prohibida then null else dosis_texto end dosis_texto_original,
+  case when dosis_prohibida then null
+       else vetdosis_reference_staging.dosis_texto_limpio(dosis_texto) end dosis_texto,
   case when dosis_prohibida then null else dosis_cantidad end dosis_cantidad,
   case when dosis_prohibida then null else dosis_unidad end dosis_unidad,
   case when dosis_prohibida then null else dosis_por_kg end dosis_por_kg,
