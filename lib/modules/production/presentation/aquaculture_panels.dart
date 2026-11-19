@@ -3,6 +3,7 @@ import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../domain/aquaculture_reference.dart';
+import '../domain/aquaculture_management_reference.dart';
 
 /// Paneles del módulo de acuicultura (tilapia): siembra y biomasa, ración
 /// diaria, indicadores y costos, y oxígeno / aireación. Cálculos de sesión;
@@ -24,11 +25,19 @@ List<Widget> aquaculturePanelsFor(String activity) {
       _Gap(),
       AquacultureIndicatorsPanel(),
       _Gap(),
+      AquacultureFcrPanel(),
+      _Gap(),
       AquacultureOxygenDemandPanel(),
       _Gap(),
       AquacultureAeratorPanel(),
       _Gap(),
       AquacultureOxygenReservePanel(),
+      _Gap(),
+      AquacultureWaterExchangePanel(),
+      _Gap(),
+      AquacultureNitriteSaltPanel(),
+      _Gap(),
+      AquacultureMedicatedFeedPanel(),
     ],
     _ => const [],
   };
@@ -1140,3 +1149,462 @@ class _AquacultureOxygenReservePanelState
     );
   }
 }
+
+// ------------------------------------------- FCA, recambio, sal, medicado
+
+class AquacultureFcrPanel extends StatefulWidget {
+  const AquacultureFcrPanel({super.key});
+  @override
+  State<AquacultureFcrPanel> createState() => _AquacultureFcrPanelState();
+}
+
+class _AquacultureFcrPanelState extends State<AquacultureFcrPanel> {
+  final feed = TextEditingController(text: '1000');
+  final initial = TextEditingController(text: '10');
+  final finalBiomass = TextEditingController(text: '765');
+  final withdrawn = TextEditingController(text: '0');
+  final dead = TextEditingController(text: '0');
+  final initialWeight = TextEditingController(text: '1');
+  final finalWeight = TextEditingController(text: '500');
+  final feedPrice = TextEditingController(text: '2.8');
+  final salePrice = TextEditingController(text: '0');
+  final days = TextEditingController(text: '100');
+  final target = TextEditingController(text: '1.2');
+  FeedConversionPlan? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [
+      feed,
+      initial,
+      finalBiomass,
+      withdrawn,
+      dead,
+      initialWeight,
+      finalWeight,
+      feedPrice,
+      salePrice,
+      days,
+      target,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = FeedConversionPlan(
+          feedKg: _decimal(feed, 'Alimento'),
+          initialBiomassKg: _decimal(initial, 'Biomasa inicial'),
+          finalBiomassKg: _decimal(finalBiomass, 'Biomasa final'),
+          withdrawnBiomassKg: _decimal(withdrawn, 'Biomasa retirada'),
+          deadFish: _whole(dead, 'Peces muertos'),
+          initialWeightG: _decimal(initialWeight, 'Peso inicial'),
+          finalWeightG: _decimal(finalWeight, 'Peso final'),
+          feedPricePerKg: _decimal(feedPrice, 'Precio del alimento'),
+          salePricePerKg: _decimal(salePrice, 'Precio de venta'),
+          days: _decimal(days, 'Días del ciclo'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final targetValue = double.tryParse(target.text.replaceAll(',', '.'));
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.trendingUp,
+            title: 'Conversión alimenticia (FCA) y costo',
+            subtitle:
+                'FCA aparente y con mortalidad, costo por kg producido y '
+                'cuánto se ahorra al bajar el FCA.',
+          ),
+          _Field(controller: feed, label: 'Alimento consumido (kg)', decimal: true, onChanged: reset),
+          _Field(controller: initial, label: 'Biomasa inicial (kg)', decimal: true, onChanged: reset),
+          _Field(controller: finalBiomass, label: 'Biomasa final (kg)', decimal: true, onChanged: reset),
+          _Field(controller: withdrawn, label: 'Biomasa retirada (kg)', decimal: true, onChanged: reset),
+          _Field(controller: dead, label: 'Peces muertos (nº)', onChanged: reset),
+          _Field(controller: initialWeight, label: 'Peso inicial (g)', decimal: true, onChanged: reset),
+          _Field(controller: finalWeight, label: 'Peso final (g)', decimal: true, onChanged: reset),
+          _Field(controller: feedPrice, label: 'Precio alimento (\$/kg)', decimal: true, onChanged: reset),
+          _Field(controller: salePrice, label: 'Precio de venta (\$/kg)', decimal: true, onChanged: reset),
+          _Field(controller: days, label: 'Días del ciclo', decimal: true, onChanged: reset),
+          _Field(controller: target, label: 'FCA objetivo', decimal: true, helper: 'Para la tabla de ahorro', onChanged: reset),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular FCA y costo',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            VetNotice(text: error!, icon: VetIcons.alertOctagon, kind: VetBadgeKind.danger),
+          if (r != null) ...[
+            _Results([
+              ('Biomasa producida', '${_fmt(r.producedBiomassKg, 0)} kg'),
+              ('FCA aparente', _fmt(r.apparentFcr, 2)),
+              ('FCA con mortalidad', _fmt(r.fcrWithMortality, 2)),
+              ('Alimento por día', '${_fmt(r.feedPerDayKg, 2)} kg'),
+              ('Ganancia diaria', '${_fmt(r.dailyWeightGainG, 2)} g/día'),
+              ('Costo de alimento por kg', '\$${_fmt(r.feedCostPerKg, 2)}'),
+              if (r.feedShareOfSalePrice != null)
+                ('Alimento sobre precio de venta', '${_fmt(r.feedShareOfSalePrice! * 100, 1)} %'),
+            ]),
+            if (targetValue != null && targetValue > 0)
+              _Results([
+                ('Alimento con FCA ${_fmt(targetValue, 2)}', '${_fmt(r.feedForTargetFcr(targetValue), 0)} kg'),
+                ('Ahorro de alimento', '\$${_fmt(r.savingsForTargetFcr(targetValue), 0)}'),
+              ]),
+            const VetNotice(
+              text:
+                  'La biomasa de los peces muertos se estima con el peso medio '
+                  'si no se registró: es un supuesto, no un dato medido.',
+              icon: VetIcons.clipboardChecks,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class AquacultureWaterExchangePanel extends StatefulWidget {
+  const AquacultureWaterExchangePanel({super.key});
+  @override
+  State<AquacultureWaterExchangePanel> createState() =>
+      _AquacultureWaterExchangePanelState();
+}
+
+class _AquacultureWaterExchangePanelState
+    extends State<AquacultureWaterExchangePanel> {
+  final volume = TextEditingController(text: '10');
+  final ammonia = TextEditingController(text: '0');
+  final ammoniaTarget = TextEditingController(text: '0');
+  final nitrite = TextEditingController(text: '4');
+  final nitriteTarget = TextEditingController(text: '2.5');
+  final nitrate = TextEditingController(text: '0');
+  final nitrateTarget = TextEditingController(text: '0');
+  WaterExchangePlan? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [
+      volume,
+      ammonia,
+      ammoniaTarget,
+      nitrite,
+      nitriteTarget,
+      nitrate,
+      nitrateTarget,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = WaterExchangePlan(
+          volumeM3: _decimal(volume, 'Volumen'),
+          currentAmmoniaMgL: _decimal(ammonia, 'Amonio actual'),
+          desiredAmmoniaMgL: _decimal(ammoniaTarget, 'Amonio deseado'),
+          currentNitriteMgL: _decimal(nitrite, 'Nitrito actual'),
+          desiredNitriteMgL: _decimal(nitriteTarget, 'Nitrito deseado'),
+          currentNitrateMgL: _decimal(nitrate, 'Nitrato actual'),
+          desiredNitrateMgL: _decimal(nitrateTarget, 'Nitrato deseado'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.drop,
+            title: 'Recambio de agua',
+            subtitle:
+                'Fracción a recambiar por dilución, tomando el máximo entre '
+                'amonio, nitrito y nitrato.',
+          ),
+          _Field(controller: volume, label: 'Volumen (m³)', decimal: true, onChanged: reset),
+          _Field(controller: ammonia, label: 'Amonio (TAN) actual (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: ammoniaTarget, label: 'Amonio deseado (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: nitrite, label: 'Nitrito (NO₂-N) actual (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: nitriteTarget, label: 'Nitrito deseado (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: nitrate, label: 'Nitrato (NO₃-N) actual (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: nitrateTarget, label: 'Nitrato deseado (mg/L)', decimal: true, onChanged: reset),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular recambio',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            VetNotice(text: error!, icon: VetIcons.alertOctagon, kind: VetBadgeKind.danger),
+          if (r != null)
+            _Results([
+              ('Fracción a recambiar', '${_fmt(r.requiredFraction * 100, 1)} %'),
+              ('Agua a recambiar', '${_fmt(r.liters, 0)} L'),
+              ('Recambios sucesivos', '${r.exchanges}'),
+              ('Amonio / nitrito / nitrato', '${_fmt(r.ammoniaFraction * 100, 0)} % · ${_fmt(r.nitriteFraction * 100, 0)} % · ${_fmt(r.nitrateFraction * 100, 0)} %'),
+            ]),
+        ],
+      ),
+    );
+  }
+}
+
+class AquacultureNitriteSaltPanel extends StatefulWidget {
+  const AquacultureNitriteSaltPanel({super.key});
+  @override
+  State<AquacultureNitriteSaltPanel> createState() =>
+      _AquacultureNitriteSaltPanelState();
+}
+
+class _AquacultureNitriteSaltPanelState
+    extends State<AquacultureNitriteSaltPanel> {
+  final volume = TextEditingController(text: '100');
+  final nitrite = TextEditingController(text: '2');
+  final chloride = TextEditingController(text: '10');
+  final ratio = TextEditingController(text: '20');
+  final maintenance = TextEditingController(text: '150');
+  final purity = TextEditingController(text: '99');
+  NitriteSaltPlan? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [volume, nitrite, chloride, ratio, maintenance, purity]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = NitriteSaltPlan(
+          volumeM3: _decimal(volume, 'Volumen'),
+          nitriteNitrogenMgL: _decimal(nitrite, 'Nitrito'),
+          currentChlorideMgL: _decimal(chloride, 'Cloruro actual'),
+          ratio: _decimal(ratio, 'Relación'),
+          maintenanceChlorideMgL: _decimal(maintenance, 'Cloruro de mantenimiento'),
+          purityPercent: _decimal(purity, 'Pureza'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.flask,
+            title: 'Sal contra el nitrito',
+            subtitle:
+                'Cloruro objetivo por la relación Cl:NO₂-N, sal común sin yodo '
+                'necesaria para alcanzarlo.',
+          ),
+          _Field(controller: volume, label: 'Volumen (m³)', decimal: true, onChanged: reset),
+          _Field(controller: nitrite, label: 'Nitrito (NO₂-N) (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: chloride, label: 'Cloruro actual (mg/L)', decimal: true, onChanged: reset),
+          _Field(controller: ratio, label: 'Relación Cl:NO₂-N', decimal: true, helper: '20 recomendada, 10 mínima', onChanged: reset),
+          _Field(controller: maintenance, label: 'Cloruro de mantenimiento (mg/L)', decimal: true, helper: 'Tilapia 150–200', onChanged: reset),
+          _Field(controller: purity, label: 'Pureza de la sal (%)', decimal: true, onChanged: reset),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular sal',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            VetNotice(text: error!, icon: VetIcons.alertOctagon, kind: VetBadgeKind.danger),
+          if (r != null) ...[
+            _Results([
+              ('Cloruro objetivo', '${_fmt(r.targetChlorideMgL, 0)} mg/L'),
+              ('Cloruro a añadir', '${_fmt(r.chlorideToAddMgL, 0)} mg/L'),
+              ('Sal por m³', '${_fmt(r.saltGramPerM3, 1)} g/m³'),
+              ('Sal total', '${_fmt(r.saltKg, 2)} kg'),
+            ]),
+            if (r.belowMinimumRatio)
+              const VetNotice(
+                text:
+                    'La relación cloruro:nitrito es menor que 10. Hay que subir '
+                    'el cloruro antes de que el nitrito dañe a los peces.',
+                icon: VetIcons.alertOctagon,
+                kind: VetBadgeKind.warning,
+              ),
+            const VetNotice(
+              text: 'Sal común sin yodo. Nunca sal de cura ni nitrada.',
+              icon: VetIcons.flask,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class AquacultureMedicatedFeedPanel extends StatefulWidget {
+  const AquacultureMedicatedFeedPanel({super.key});
+  @override
+  State<AquacultureMedicatedFeedPanel> createState() =>
+      _AquacultureMedicatedFeedPanelState();
+}
+
+class _AquacultureMedicatedFeedPanelState
+    extends State<AquacultureMedicatedFeedPanel> {
+  final biomass = TextEditingController(text: '200');
+  final dailyFeed = TextEditingController(text: '4');
+  final dose = TextEditingController(text: '10');
+  final concentration = TextEditingController(text: '50');
+  final days = TextEditingController(text: '10');
+  final consumption = TextEditingController(text: '100');
+  MedicatedDoseBasis basis = MedicatedDoseBasis.perFishPerDay;
+  MedicatedFeedPlan? result;
+  String? error;
+
+  @override
+  void dispose() {
+    for (final c in [biomass, dailyFeed, dose, concentration, days, consumption]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void reset() => setState(() {
+    result = null;
+    error = null;
+  });
+
+  void calculate() {
+    setState(() {
+      result = null;
+      error = null;
+      try {
+        result = MedicatedFeedPlan(
+          biomassKg: _decimal(biomass, 'Biomasa'),
+          dailyFeedKg: _decimal(dailyFeed, 'Alimento por día'),
+          doseBasis: basis,
+          doseValue: _decimal(dose, 'Dosis'),
+          productConcentration: MedicatedFeedPlan.concentrationFromPercent(
+            _decimal(concentration, 'Concentración'),
+          ),
+          treatmentDays: _decimal(days, 'Días de tratamiento'),
+        );
+      } on FormatException catch (e) {
+        error = e.message;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    final consumptionValue = double.tryParse(consumption.text.replaceAll(',', '.'));
+    return VetCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _PanelHeader(
+            icon: VetIcons.pills,
+            title: 'Alimento medicado o suplementado',
+            subtitle:
+                'Solo aritmética: convierte la dosis que ya decidió el MVZ. No '
+                'recomienda productos ni dosis.',
+          ),
+          _Field(controller: biomass, label: 'Biomasa (kg)', decimal: true, onChanged: reset),
+          _Field(controller: dailyFeed, label: 'Alimento por día (kg)', decimal: true, onChanged: reset),
+          _Dropdown<MedicatedDoseBasis>(
+            value: basis,
+            label: 'Base de la dosis',
+            items: const [
+              (MedicatedDoseBasis.perFishPerDay, 'Por kg de pez y día (mg/kg/día)'),
+              (MedicatedDoseBasis.perKgFeed, 'Por kg de alimento (mg/kg)'),
+            ],
+            onChanged: (v) {
+              basis = v;
+              reset();
+            },
+          ),
+          _Field(controller: dose, label: 'Dosis', decimal: true, onChanged: reset),
+          _Field(controller: concentration, label: 'Concentración del producto (%)', decimal: true, onChanged: reset),
+          _Field(controller: days, label: 'Días de tratamiento', decimal: true, onChanged: reset),
+          _Field(controller: consumption, label: 'Consumo real (% del ofrecido)', decimal: true, onChanged: reset),
+          VetActionButton(
+            icon: VetIcons.calculator,
+            label: 'Calcular alimento medicado',
+            onPressed: calculate,
+          ),
+          if (error != null)
+            VetNotice(text: error!, icon: VetIcons.alertOctagon, kind: VetBadgeKind.danger),
+          if (r != null) ...[
+            _Results([
+              ('Activo por día', '${_fmt(r.activeGramsPerDay, 2)} g'),
+              ('Producto por día', '${_fmt(r.productGramsPerDay, 2)} g'),
+              ('Producto por kg de alimento', '${_fmt(r.productPerKgFeed, 3)} g'),
+              ('Inclusión en el alimento', '${_fmt(r.inclusionPercent, 3)} %'),
+              ('Producto para el lote', '${_fmt(r.batchGrams, 0)} g'),
+              if (consumptionValue != null && consumptionValue > 0 && consumptionValue <= 100)
+                (
+                  'Dosis real si comen ${_fmt(consumptionValue, 0)} %',
+                  '${_fmt(r.realDoseAtConsumption(consumptionValue / 100), 2)} mg/kg/día',
+                ),
+            ]),
+            const VetNotice(
+              text:
+                  'Antibiótico solo con diagnóstico y receta de MVZ, y solo '
+                  'productos autorizados para peces. Respetar el tiempo de '
+                  'retiro y completar el tratamiento.',
+              icon: VetIcons.alertOctagon,
+              kind: VetBadgeKind.warning,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
