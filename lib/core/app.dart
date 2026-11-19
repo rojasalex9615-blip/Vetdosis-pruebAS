@@ -75,9 +75,11 @@ import '../modules/forms/clinical/clinical_screen.dart';
 import '../modules/forms/domain/form_repository.dart';
 import '../modules/forms/presentation/forms_screen.dart';
 import '../modules/hospital/domain/hospital_repository.dart';
+import '../modules/hospital/domain/hospital_history.dart';
 import '../modules/hospital/application/hospital_alerts.dart';
 import '../modules/hospital/application/hospital_push_service.dart';
 import '../modules/hospital/presentation/hospital_screen.dart';
+import '../modules/aviculture/domain/aviculture_records_repository.dart';
 import '../modules/patients/domain/patient_repository.dart';
 import '../modules/patients/domain/recorded_weight.dart';
 import '../modules/patients/presentation/patients_screen.dart';
@@ -265,6 +267,7 @@ class VetDosisApp extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.units,
+    this.aviculture,
     this.inboxSeenStore,
     this.laboratory,
   });
@@ -295,6 +298,10 @@ class VetDosisApp extends StatelessWidget {
   final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
+  /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
+  final AvicultureRecordsRepository? aviculture;
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
@@ -620,6 +627,7 @@ class VetDosisApp extends StatelessWidget {
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
               porcino: porcino,
+              aviculture: aviculture,
               units: units,
               inboxSeenStore: inboxSeenStore,
               personalDoses: personalDoses,
@@ -687,6 +695,7 @@ class CoreShell extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.units,
+    this.aviculture,
     this.inboxSeenStore,
   });
   final CoreViewModel model;
@@ -722,6 +731,10 @@ class CoreShell extends StatelessWidget {
   final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
+  /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
+  final AvicultureRecordsRepository? aviculture;
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
@@ -1562,108 +1575,9 @@ class CoreShell extends StatelessWidget {
                           'Conecta tu cuenta y clínica para abrir pacientes.',
                         )
                 else if (model.screen == 'Hospitalización')
-                  hospital != null &&
-                          patients != null &&
-                          hospitalAlerts != null &&
-                          auth?.active != null
-                      ? ![
-                              ClinicRole.admin,
-                              ClinicRole.mvz,
-                              ClinicRole.auxiliar,
-                            ].contains(auth!.active!.role)
-                            ? const Text(
-                                'Hospitalización requiere acceso clínico de MVZ, admin o auxiliar.',
-                              )
-                            : auth!.offline
-                            ? const Text(
-                                'Reconecta para consultar o registrar tratamientos. Los avisos locales ya programados pueden continuar; comprueba el estado actual antes de administrar.',
-                              )
-                            : HospitalScreen(
-                                key: ValueKey(
-                                  '${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role.name}',
-                                ),
-                                initialPatientId: model.activityPatientId,
-                                initialInstructions: model.activityInstructions,
-                                repository: hospital!,
-                                patients: patients!,
-                                member: auth!.active!,
-                                alerts: hospitalAlerts!,
-                                pushService: hospitalPushService,
-                                clinical: clinical,
-                                contextIsCurrent: hospitalWeightContext,
-                                sessionChanges: auth,
-                                onCalculateWeight:
-                                    serverAllowed('Cálculo rápido')
-                                    ? (weight, validate) =>
-                                          hospitalWeightCalculation(
-                                            context,
-                                            weight,
-                                            validate,
-                                          )
-                                    : null,
-                                onRecordMedication:
-                                    prescribing != null &&
-                                        clinical != null &&
-                                        forms != null
-                                    ? (task) async {
-                                        await Navigator.push(
-                                          context,
-                                          MaterialPageRoute<void>(
-                                            builder: (_) => Scaffold(
-                                              appBar: AppBar(
-                                                title: const Text(
-                                                  'Registrar medicación',
-                                                ),
-                                              ),
-                                              body: SingleChildScrollView(
-                                                padding: const EdgeInsets.all(
-                                                  20,
-                                                ),
-                                                child: PrescribingScreen(
-                                                  identity: identity,
-                                                  repository: prescribing!,
-                                                  clinical: clinical!,
-                                                  forms: forms!,
-                                                  member: auth!.active!,
-                                                  initialCase:
-                                                      task.clinicalCaseId,
-                                                  initialTask: task.id,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    : null,
-                              )
-                      : const Text(
-                          'Conecta tu cuenta y clínica para abrir hospitalización.',
-                        )
+                  _hospitalSection(context)
                 else if (model.screen == 'Receta')
-                  prescribing != null &&
-                          clinical != null &&
-                          forms != null &&
-                          auth?.active != null
-                      ? auth!.offline
-                            ? const Text(
-                                'Reconecta para consultar perfiles, recetas y medicamentos.',
-                              )
-                            : ![
-                                ClinicRole.admin,
-                                ClinicRole.mvz,
-                                ClinicRole.auxiliar,
-                              ].contains(auth!.active!.role)
-                            ? const Text('Este módulo requiere acceso clínico.')
-                            : PrescribingScreen(
-                                identity: identity,
-                                repository: prescribing!,
-                                clinical: clinical!,
-                                forms: forms!,
-                                member: auth!.active!,
-                              )
-                      : const Text(
-                          'Conecta tu cuenta y clínica para abrir recetas.',
-                        )
+                  _prescriptionSection()
                 else if (model.screen == 'Formatos')
                   forms != null && patients != null && auth?.active != null
                       ? auth!.offline
@@ -1856,12 +1770,25 @@ class CoreShell extends StatelessWidget {
                     )),
                     model: DashboardViewModel(
                       member: auth?.active,
+                      operations: operations,
+                      inventory: inventory,
+                      hospital: hospital,
+                      patients: patients,
                       backup: allowed('Estadísticas') ? backup : null,
+                      attendance: attendance,
+                      // M15 y altas: los datos ya existen en la app; aqui
+                      // solo se cablean a la pantalla de Estadisticas.
+                      aviculture: aviculture,
+                      history: hospital is HospitalHistoryRepository
+                          ? hospital as HospitalHistoryRepository
+                          : null,
                       moduleAccess: moduleAccess,
                     ),
                     offline: auth?.offline ?? false,
                     statisticsOnly: true,
                     isVisible: allowed,
+                    identity: identity,
+                    experience: experience,
                     onNavigate: model.navigate,
                   )
                 else if (model.screen == 'Respaldo' ||
@@ -2009,6 +1936,12 @@ class CoreShell extends StatelessWidget {
           patients: patients,
           backup: backup,
           attendance: attendance,
+          // Mismos datos que la pantalla de Estadisticas, para que el
+          // desplegable del Inicio muestre lo mismo.
+          aviculture: aviculture,
+          history: hospital is HospitalHistoryRepository
+              ? hospital as HospitalHistoryRepository
+              : null,
           moduleAccess: moduleAccess,
         ),
         offline: auth?.offline ?? false,
@@ -2017,6 +1950,8 @@ class CoreShell extends StatelessWidget {
         homePilot: const bool.fromEnvironment('HOME_PILOT', defaultValue: true),
         alerts: hospitalAlerts,
         isVisible: allowed,
+        identity: identity,
+        experience: experience,
         onNavigate: model.navigate,
       ),
       FirstStepsBanner(
@@ -2028,6 +1963,112 @@ class CoreShell extends StatelessWidget {
       ),
     ],
   ];
+
+
+  /// Hospitalizacion con sus guardas (repositorios, rol, conexion), usada
+  /// tanto por la ruta del armazon como por el atajo de Ajustes: asi el
+  /// atajo abre el apartado ya desarrollado y al volver se regresa a
+  /// Ajustes, en vez de sustituir la pantalla.
+  Widget _hospitalSection(BuildContext context) {
+    if (hospital == null ||
+        patients == null ||
+        hospitalAlerts == null ||
+        auth?.active == null) {
+      return const Text(
+        'Conecta tu cuenta y clinica para abrir hospitalizacion.',
+      );
+    }
+    if (![
+      ClinicRole.admin,
+      ClinicRole.mvz,
+      ClinicRole.auxiliar,
+    ].contains(auth!.active!.role)) {
+      return const Text(
+        'Hospitalizacion requiere acceso clinico de MVZ, admin o auxiliar.',
+      );
+    }
+    if (auth!.offline) {
+      return const Text(
+        'Reconecta para consultar o registrar tratamientos. Los avisos locales ya programados pueden continuar; comprueba el estado actual antes de administrar.',
+      );
+    }
+    return HospitalScreen(
+      key: ValueKey(
+        '${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role.name}',
+      ),
+      initialPatientId: model.activityPatientId,
+      initialInstructions: model.activityInstructions,
+      repository: hospital!,
+      patients: patients!,
+      member: auth!.active!,
+      alerts: hospitalAlerts!,
+      pushService: hospitalPushService,
+      clinical: clinical,
+      contextIsCurrent: hospitalWeightContext,
+      sessionChanges: auth,
+      onCalculateWeight: serverAllowed('Calculo rapido')
+          ? (weight, validate) =>
+                hospitalWeightCalculation(context, weight, validate)
+          : null,
+      onRecordMedication:
+          prescribing != null && clinical != null && forms != null
+          ? (task) async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Registrar medicacion'),
+                    ),
+                    body: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: PrescribingScreen(
+                        identity: identity,
+                        repository: prescribing!,
+                        clinical: clinical!,
+                        forms: forms!,
+                        member: auth!.active!,
+                        initialCase: task.clinicalCaseId,
+                        initialTask: task.id,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+          : null,
+    );
+  }
+
+  /// Recetas con sus guardas, igual que [_hospitalSection]: la ruta del
+  /// armazon y el atajo de Ajustes comparten la misma construccion.
+  Widget _prescriptionSection() {
+    if (prescribing == null ||
+        clinical == null ||
+        forms == null ||
+        auth?.active == null) {
+      return const Text('Conecta tu cuenta y clinica para abrir recetas.');
+    }
+    if (auth!.offline) {
+      return const Text(
+        'Reconecta para consultar perfiles, recetas y medicamentos.',
+      );
+    }
+    if (![
+      ClinicRole.admin,
+      ClinicRole.mvz,
+      ClinicRole.auxiliar,
+    ].contains(auth!.active!.role)) {
+      return const Text('Este modulo requiere acceso clinico.');
+    }
+    return PrescribingScreen(
+      identity: identity,
+      repository: prescribing!,
+      clinical: clinical!,
+      forms: forms!,
+      member: auth!.active!,
+    );
+  }
 
   List<Widget> settings(BuildContext context) => [
     Text('Ajustes', style: Theme.of(context).textTheme.headlineMedium),
@@ -2244,6 +2285,25 @@ class CoreShell extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
+                ),
+              );
+            } else if (option.$3 == 'Receta' ||
+                option.$3 == 'Hospitalización') {
+              // Estos dos atajos abren su apartado ya desarrollado encima de
+              // Ajustes: al volver se regresa a Ajustes, no a Inicio.
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (routeContext) => Scaffold(
+                    appBar: AppBar(
+                      title: Text(
+                        option.$3 == 'Receta' ? 'Recetas' : 'Hospitalización',
+                      ),
+                    ),
+                    body: option.$3 == 'Receta'
+                        ? _prescriptionSection()
+                        : _hospitalSection(routeContext),
                   ),
                 ),
               );
