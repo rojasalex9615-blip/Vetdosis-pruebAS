@@ -45,9 +45,19 @@ returns jsonb language sql immutable as $$
   with num as (
     select '[0-9]+(?:\.[0-9]+)?' n
   ),
+  -- El parentesis da la pauta de una especie concreta:
+  -- '1 mL/50 kg (1 mL/33 kg porcinos)' -> el porcino va a 1 mL/33 kg.
+  -- Se extrae antes de partir por ';' para que quede como su propio segmento.
+  con_parentesis as (
+    select regexp_replace(
+             coalesce(p_texto,''),
+             '\(([^()]*(?:bovinos?|porcinos?|ovinos?|caprinos?|equinos?|caninos?|felinos?|camélidos?)[^()]*)\)',
+             '; \1', 'gi'
+           ) t
+  ),
   segs as (
     select btrim(s) seg, ord
-    from regexp_split_to_table(coalesce(p_texto,''), ';') with ordinality as x(s, ord)
+    from con_parentesis, regexp_split_to_table(t, ';') with ordinality as x(s, ord)
     where btrim(s) <> ''
   ),
   tasas as (

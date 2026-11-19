@@ -60,7 +60,8 @@ with texto as (
     c.especies ~* '^(no administrar|prohibido|no aplicar|no se recomienda)' dosis_prohibida,
     null::text categoria_animal,
     vetdosis_reference_staging.especies_canonicas(c.especies) especies_detectadas,
-    vetdosis_reference_staging.pauta_por_especie(c.dosis_texto) pautas
+    vetdosis_reference_staging.pauta_por_especie(c.dosis_texto) pautas,
+    vetdosis_reference_staging.dosis_numerica(c.dosis_texto) num_texto
   from vetdosis_reference_staging.vademecum_producto_comercial c
   where c.fuente <> 'virbac_estructurada'
 ),
@@ -82,7 +83,8 @@ texto_dedup as (
     coalesce(dosis_texto,''), coalesce(dosis_por_kg, -1), coalesce(intervalo,''),
     coalesce(dosis_cantidad, -1), coalesce(dosis_unidad,''),
     coalesce(tiempo_retiro,''), dosis_prohibida, coalesce(cantidad_fija,-1),
-    coalesce(mezcla_valor,-1), coalesce(pautas->especie, '{}'::jsonb)
+    coalesce(mezcla_valor,-1), coalesce(pautas->especie, '{}'::jsonb),
+    coalesce(num_texto, '{}'::jsonb)
   )
     nombre_comercial, laboratorio, principios_activos, concentracion,
     presentacion, especie, categoria_animal, especies_originales,
@@ -90,7 +92,8 @@ texto_dedup as (
     dosis_por_kg, intervalo, cantidad_fija, cantidad_fija_unidad,
     mezcla_valor, mezcla_unidad, frecuencia_horas, dosis_activos, tiempo_retiro,
     indicaciones, registro, documento_origen, pagina_origen, fuente, dosis_prohibida,
-    coalesce(pautas->especie, '{}'::jsonb) pauta_especie
+    coalesce(pautas->especie, '{}'::jsonb) pauta_especie,
+    num_texto
   from expandida
   order by nombre_comercial, laboratorio, especie, coalesce(via_administracion,''),
            coalesce(dosis_texto,''), coalesce(dosis_por_kg, -1),
@@ -110,7 +113,8 @@ virbac as (
     v.indicaciones, v.registro,
     v.documento_origen, v.pagina_origen, v.fuente,
     false dosis_prohibida,
-    '{}'::jsonb pauta_especie
+    '{}'::jsonb pauta_especie,
+    null::jsonb num_texto
   from vetdosis_reference_staging.vademecum_producto_comercial v
   where v.fuente = 'virbac_estructurada'
 )
@@ -124,8 +128,18 @@ select
   case when dosis_prohibida then null else pauta_especie->>'unidad' end pauta_unidad,
   case when dosis_prohibida then null else pauta_especie->>'kg' end pauta_kg,
   case when dosis_prohibida then null else dosis_cantidad end dosis_cantidad,
-  case when dosis_prohibida then null else dosis_unidad end dosis_unidad,
-  case when dosis_prohibida then null else dosis_por_kg end dosis_por_kg,
+  case when dosis_prohibida then null
+       when dosis_por_kg is not null then dosis_por_kg
+       when num_texto is not null then (num_texto->>'cantidad')::numeric end dosis_por_kg,
+  case when dosis_prohibida then null
+       when dosis_unidad is not null then dosis_unidad
+       when num_texto is not null then num_texto->>'unidad' end dosis_unidad,
+  case when dosis_prohibida then null
+       when num_texto is not null then (num_texto->>'kg')::numeric end dosis_kg_referencia,
+  case when dosis_prohibida then null
+       when dosis_por_kg is not null or dosis_cantidad is not null then 'ficha'
+       when num_texto is not null then 'texto_convertido'
+       else null end dosis_numerica_origen,
   case when dosis_prohibida then null else intervalo end intervalo,
   case when dosis_prohibida then null else cantidad_fija end cantidad_fija,
   case when dosis_prohibida then null else cantidad_fija_unidad end cantidad_fija_unidad,

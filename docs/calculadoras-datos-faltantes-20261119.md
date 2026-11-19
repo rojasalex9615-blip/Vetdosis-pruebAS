@@ -171,3 +171,29 @@ Trampa detectada al probar: **«Bovinos» contiene «ovinos»**. Sin límites de
 palabra, el ovino heredaba la dosis del bovino, que es justo el error que este
 trabajo debía evitar. Se comparan palabras completas.
 
+También se cubrió el paréntesis con especie: «1 mL/50 kg (1 mL/33 kg porcinos)»
+(9 productos) asigna al porcino su propia pauta en vez de la del bovino.
+
+## 2 sexies. Conversión a número (grupo 1)
+
+`dosis_numerica(texto)` convierte a número solo cuando el texto tiene
+**exactamente una** tasa «X unidad / Y kg». Convierte 466 filas; la vista las
+marca con `dosis_numerica_origen = 'texto_convertido'` para distinguirlas de las
+que ya venían numéricas de la ficha (`'ficha'`).
+
+Devuelve `NULL`, a propósito, cuando:
+
+- hay más de una tasa (pauta por especie, dos vías, bandas de peso);
+- la tasa trae rango («1-5 mL/10-50 kg», «1 mL/16-20 kg»): no hay un único kg de
+  referencia y el cálculo proporcional daría un número inventado;
+- la dosis no es por kg («100 mL/día», «1 mL/animal», «10 mL/cuarto afectado»).
+
+Quedan 2.188 filas con texto y sin número. No es un fallo: es lo que no se puede
+convertir sin inventar.
+
+Comprobado con el caso de Ale: Abamexin a 25 kg da **0,5 mL en bovino** (1 mL/50
+kg) y **0,758 mL en porcino** (1 mL/33 kg, del paréntesis). La especie cambia el
+resultado y el dato sale correcto en ambas.
+
+Estado: 1.162 filas numéricas de ficha + 266 convertidas desde texto, 12
+prohibiciones sin dosis, Virbac 64/64 intacto.
