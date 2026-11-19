@@ -140,6 +140,7 @@ jobs:
           ANDROID_BETA_STORE_PASSWORD: ${{ secrets.ANDROID_BETA_STORE_PASSWORD }}
           ANDROID_BETA_KEY_ALIAS: ${{ secrets.ANDROID_BETA_KEY_ALIAS }}
           ANDROID_BETA_KEY_PASSWORD: ${{ secrets.ANDROID_BETA_KEY_PASSWORD }}
+          GOOGLE_DRIVE_WEB_CLIENT_ID: ${{ vars.GOOGLE_DRIVE_WEB_CLIENT_ID }}
         run: |
           flutter build apk --release \
             --flavor beta \
@@ -149,6 +150,7 @@ jobs:
             --target-platform android-arm,android-arm64 \
             --dart-define=APP_CHANNEL=beta \
             --dart-define=BETA_BUILD="$BETA_VERSION_CODE" \
+            --dart-define=GOOGLE_DRIVE_WEB_CLIENT_ID="$GOOGLE_DRIVE_WEB_CLIENT_ID" \
             --dart-define-from-file=supabase/config.test.local.json \
             --verbose
 

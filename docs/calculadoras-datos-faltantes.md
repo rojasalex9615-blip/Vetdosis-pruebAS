@@ -1,95 +1,96 @@
-# Calculadoras: qué datos les faltan
+# Calculadoras: qué datos faltan y qué catálogo ya existe
 
-Estado al 2026-11-18, sobre `integracion/todo-en-uno-muse-20261118`.
+Corregido el 2026-11-18. La primera versión de esta nota decía que había que
+«poblar `catalog.v1.json`» y daba a entender que no había catálogo. **Ale
+corrigió: el catálogo de fármacos ya existe y está integrado.** Aquí queda
+medido qué hay y qué falta de verdad.
 
-Hay dos familias de calculadoras y fallan por motivos distintos.
+## Lo que ya existe (no hay que crearlo)
 
-- **Fórmulas** (`assets/clinical/calculations.v1.json`): operan con los números
-  que escribe la persona. No necesitan datos precargados; el catálogo declara
-  `estado: sin verificar` y la nota dice que no son recomendaciones clínicas.
-- **Calculadoras con referencia**: eligen una referencia del catálogo
-  (`referencias`) y piden un dato, normalmente el peso. Ese arreglo está
-  **vacío**, así que hoy no ofrecen nada.
+| Recurso | Contenido | Estado |
+|---|---|---|
+| `manufacturer_research.v1.json` | **662 productos** con fabricante, ingredientes, forma farmacéutica y ficha PLM | Todos «Datos verificados» |
+| `manufacturer_pautas.v1.json` | **1197 pautas** con dosis, especie, vía, intervalo, retiro y avisos | 1168 «Pauta documentada» |
+| Pantalla de catálogo | `ManufacturerCatalogScreen`, enlazada desde el vademécum y desde la dosis de empaque | En uso |
 
-## Resumen
+Esto es un catálogo real y grande, no un hueco. Mi error fue mirar solo
+`catalog.v1.json` (que sí está vacío) y concluir que no había datos.
 
-| Calculadora | Área | Tipo | ¿Funciona hoy? | Qué falta |
-|---|---|---|---|---|
-| Fluidoterapia (`fluids`) | Pequeñas especies / clínica | Fórmula | Sí | Nada. Pide los datos en pantalla. |
-| Infusión continua (`cri`) | Pequeñas especies / clínica | Fórmula | Sí | Nada. |
-| Ajuste pediátrico / geriátrico (`adjustment`) | Pequeñas especies / clínica | Fórmula | Sí, con reserva | El «factor de referencia» lo teclea la persona: no hay tabla de factores. |
-| Producción: por cabeza y lote (`herd`) | Producción | Fórmula | Sí | Nada. |
-| Producción: agua (`water`) | Producción | Fórmula | Sí | Nada. |
-| Producción: alimento (`feed`) | Producción | Fórmula | Sí | Nada. |
-| Peso metabólico (`metabolic`) | Exóticos | Referencia `metabolico` | **No** | Referencia verificada con exponente. |
-| Constantes fisiológicas (`vitals`) | Pequeñas especies / clínica | Referencia `constante` | **No** desde este catálogo | Referencias `constante` en `referencias`. |
-| Protocolos por etapas (`protocols`) | Pequeñas especies / clínica | Referencia `protocolo` | **No** | Referencias `protocolo` + fármacos en `catalog.v1.json`. |
-| Tiempos de retiro (`withdrawals`) | Pequeñas especies / clínica | Referencia `retiro` | **No** | Referencias `retiro` verificadas. |
+## Los dos catálogos no son lo mismo
 
-## Detalle de lo que falta
+Hay dos catálogos con propósitos distintos, y no se sustituyen entre sí:
 
-### 1. `referencias` está vacío
+- **Catálogo de fabricantes** (`manufacturer_research` + `manufacturer_pautas`):
+  productos comerciales con su posología de empaque. Alimenta la calculadora de
+  **dosis de empaque** (mL o tableta por kg) y el vademécum. Es el que existe.
+- **Catálogo de principios activos** (`catalog.v1.json`): fármacos por principio
+  activo, con dosis en **mg/kg** y concentración en **mg/ml**. Alimenta la
+  calculadora de **agente farmacéutico** y los **protocolos por etapas**. Está
+  vacío (`farmacos: []`).
 
-`assets/clinical/calculations.v1.json` declara `referencias: []`. La pantalla
-filtra por tipo (`constante`, `protocolo`, `metabolico`, `retiro`) y, al no
-encontrar ninguna, muestra:
+Por eso la calculadora de agente y los protocolos no funcionan, aunque haya 662
+productos: el motor de protocolos busca
+`catalog.drugs.where((d) => d.id == stage['dosis_id'] && d.species == species)`
+y exige `unidad_dosis == 'mg/kg'` y `unidad_concentracion == 'mg/ml'`. Las pautas
+no tienen esa forma.
 
-> Sin referencias disponibles. Faltan datos con fuente y estado de verificación;
-> no se proponen valores.
+**No hace falta una tabla aparte.** La pregunta correcta no es «¿creamos un
+catálogo?» sino «¿cómo pasamos las pautas que ya tenemos a la forma que el motor
+de protocolos espera?».
 
-Esto afecta a **cuatro** calculadoras: peso metabólico (exóticos), constantes,
-protocolos y retiros. Ninguna es de producción.
+## Cuánto del catálogo existente se podría convertir
 
-### 2. Peso metabólico en exóticos
+De las 1197 pautas, 461 son «proporcional al peso». Pero la unidad de dosis no
+siempre es masa:
 
-Es la calculadora que acabamos de mover a Exóticos. Necesita una referencia de
-tipo `metabolico` con el exponente y el estado de verificación. Hoy el motor
-sabe calcular (`metabolicWeight`), pero no hay ni una referencia cargada, así
-que la pantalla no ofrece el campo de peso.
+| Dosis / ingrediente | Pautas |
+|---|---|
+| mL / mg | 220 |
+| mL / g | 57 |
+| tableta / mg | 34 |
+| **mg / mg** | **24** |
+| otras combinaciones | resto |
 
-### 3. Protocolos: faltan fármacos
+Solo **24 pautas** traen dosis en mg y concentración en mg. Las 220 en mL son
+perfectamente calculables, pero con **dosis de empaque**, no con el motor de
+principios activos. Es decir: el catálogo que existe cubre bien el camino de
+empaque y casi nada el camino de mg/kg.
 
-`assets/clinical/catalog.v1.json` tiene `farmacos: []`. Aunque se agregaran
-referencias de tipo `protocolo`, el motor busca cada etapa en
-`catalog.drugs` y lanza «Falta el fármaco/especie del protocolo» si no está.
+## Calculadoras: estado real
 
-Hay **1197 pautas** en `assets/clinical/manufacturer_pautas.v1.json`, pero son
-otro modelo (`ManufacturerPautaCatalog`) y **no** alimentan el catálogo de
-dosis. Ese es el hueco de datos más grande.
+| Calculadora | Área | ¿Funciona? | Qué falta |
+|---|---|---|---|
+| Fluidoterapia | Clínica | Sí | Nada |
+| Infusión continua (CRI) | Clínica | Sí | Nada |
+| Ajuste pediátrico / geriátrico | Clínica | Sí, con reserva | El «factor» lo teclea la persona |
+| Producción: cabeza y lote | Producción | Sí | Nada |
+| Producción: agua | Producción | Sí | Nada |
+| Producción: alimento | Producción | Sí | Nada |
+| Peso metabólico | Exóticos | **No** | Referencia `metabolico` |
+| Constantes fisiológicas | Clínica | **No** | Referencias `constante` |
+| Protocolos por etapas | Clínica | **No** | Referencias `protocolo` + fármacos mg/kg |
+| Tiempos de retiro | Clínica | **No** | Referencias `retiro` |
 
-### 4. Constantes fisiológicas: hay datos, pero en otro sitio
+Verificado con el parser real: `referencias: 0` en `calculations.v1.json`. Ese
+arreglo vacío es lo que deja sin contenido a las cuatro últimas.
 
-`assets/clinical/vital_references.v1.json` sí trae **14 referencias** de canino
-y felino (FC, FR, temperatura, TLLC, PAS, PAD), todas `unverified`. Las usa la
-pantalla de signos vitales (`clinical_vitals_screen.dart`), no la calculadora
-de constantes. La calculadora lee de `referencias` y por eso aparece vacía.
+## Detalles que importan
 
-Con cuenta de clínica y conexión, la calculadora sí puede mostrar constantes
-guardadas en la base (`ReferenceLibraryPanel`), que es otra fuente distinta.
+- **Exóticos tiene una sola calculadora y no funciona.** Es la que se movió a
+  ese menú; le falta la referencia metabólica.
+- **Las 14 referencias vitales existen**, pero las usa la pantalla de signos
+  vitales, no la calculadora de constantes. Se podrían enlazar en vez de
+  duplicarlas.
+- **Las 1197 pautas no alimentan los protocolos** porque son otro modelo, no
+  porque falten datos.
+- **Producción es el único bloque completo.**
 
-### 5. Factor de ajuste
+## Qué haría falta
 
-`adjustment` pide un «factor de referencia» que la persona escribe. No hay
-tabla de factores pediátricos/geriátricos con fuente. La fórmula funciona, pero
-el número no lo propone la app.
-
-## Reparto por área
-
-- **Producción:** las tres calculadoras funcionan y no necesitan datos. Son las
-  únicas completas.
-- **Exóticos:** la única calculadora (peso metabólico) **no funciona** por falta
-  de referencia.
-- **Pequeñas especies / clínica:** las tres fórmulas funcionan; las cuatro
-  basadas en referencia (constantes, protocolos, retiros y, fuera de esta
-  pantalla, el peso metabólico) no.
-
-## Qué haría falta para cerrarlo
-
-1. Cargar referencias verificadas en `calculations.v1.json` para `metabolico`,
-   `constante` y `retiro`, cada una con fuente y estado.
-2. Decidir si las 14 referencias vitales existentes se migran a `referencias` o
-   se enlazan desde la calculadora.
-3. Poblar `catalog.v1.json` con fármacos y presentaciones para que los
-   protocolos puedan resolver sus etapas.
-4. Revisar con criterio clínico cada dato antes de marcarlo `verified`; la app
-   bloquea el cálculo si la referencia no está verificada.
+1. Decidir si las referencias `metabolico`, `constante` y `retiro` se cargan en
+   `calculations.v1.json` o se enlazan desde sus fuentes actuales.
+2. Si se quieren protocolos con principios activos, convertir las pautas
+   compatibles (24 directas, más las que se puedan normalizar a mg/ml) a la forma
+   de `catalog.v1.json`. Las de dosis en mL no aplican a ese motor.
+3. Revisar clínicamente cada dato antes de marcarlo `verified`; el motor rechaza
+   protocolos no verificados.
