@@ -11,6 +11,8 @@ Escribe un .md junto a cada fuente:
 - .csv: una tabla con todas las filas y columnas del archivo.
 - .html: el texto visible del documento, sin etiquetas ni estilos.
 - .json: el documento formateado, sin perder ninguna clave.
+- .pdf: el texto de cada pagina. Si una pagina no trae texto (escaneada) se
+  avisa en el volcado en vez de dejarla en blanco.
 """
 
 from __future__ import annotations
@@ -224,6 +226,40 @@ def convert_json(path: Path) -> Path:
     return target
 
 
+def convert_pdf(path: Path) -> Path:
+    from pypdf import PdfReader
+
+    reader = PdfReader(str(path))
+    lines = [
+        f"# {path.name}",
+        "",
+        f"Texto extraido de `{path.name}`. Las paginas sin texto se marcan;",
+        "puede que esten escaneadas y necesiten OCR.",
+        "",
+    ]
+    vacias: list[int] = []
+    for numero, pagina in enumerate(reader.pages, start=1):
+        texto = (pagina.extract_text() or "").strip()
+        lines.append(f"## Pagina {numero}")
+        lines.append("")
+        if texto:
+            lines.append(texto)
+        else:
+            vacias.append(numero)
+            lines.append("_(pagina sin texto extraible)_")
+        lines.append("")
+    if vacias:
+        lines.insert(
+            3,
+            f"Paginas sin texto: {', '.join(str(n) for n in vacias)} de "
+            f"{len(reader.pages)}.",
+        )
+        lines.insert(4, "")
+    target = path.with_suffix('.md')
+    target.write_text("\n".join(lines), encoding='utf-8')
+    return target
+
+
 def convert(path: Path) -> Path:
     suffix = path.suffix.lower()
     if suffix == '.csv':
@@ -232,6 +268,8 @@ def convert(path: Path) -> Path:
         return convert_html(path)
     if suffix == '.json':
         return convert_json(path)
+    if suffix == '.pdf':
+        return convert_pdf(path)
     if suffix not in ('.xlsx', '.xlsm'):
         raise ValueError(f"extension no soportada: {path.suffix}")
     return convert_xlsx(path)
