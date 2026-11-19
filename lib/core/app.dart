@@ -1500,11 +1500,6 @@ class CoreShell extends StatelessWidget {
                           key: ValueKey(
                             '${model.branch}:${auth?.active?.userId}:${auth?.active?.clinicId}',
                           ),
-                          initialTool: model.branch == ClinicalBranch.exotic
-                              ? 'metabolic'
-                              : model.branch == ClinicalBranch.production
-                              ? 'water'
-                              : 'fluids',
                         )
                       : const Text(
                           'Los cálculos clínicos requieren acceso de MVZ o administrador.',

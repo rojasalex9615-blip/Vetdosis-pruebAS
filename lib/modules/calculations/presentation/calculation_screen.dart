@@ -18,6 +18,38 @@ import '../domain/calculation_engine.dart';
 import 'calculation_view_model.dart';
 import '../../../vet_ui/vet_icons.dart';
 
+/// Herramientas de la pantalla clínica. Las de producción y de exóticos ya no
+/// viven aquí: tienen su propio apartado en Producción y en Exóticos.
+const clinicalCalculationTools = <String>[
+  'fluids',
+  'cri',
+  'adjustment',
+  'protocols',
+  'vitals',
+  'withdrawals',
+];
+
+/// Calculadoras de producción (por cabeza, agua y alimento).
+const productionCalculationTools = <String>['herd', 'water', 'feed'];
+
+/// Calculadora de exóticos (peso metabólico).
+const exoticCalculationTools = <String>['metabolic'];
+
+/// Herramientas que no son fórmulas del catálogo sino pantallas propias.
+const _extraToolTitles = <String, String>{
+  'protocols': 'Protocolos por etapas',
+  'vitals': 'Constantes fisiológicas',
+  'metabolic': 'Peso metabólico en exóticos',
+  'withdrawals': 'Tiempos de retiro',
+};
+
+String calculationToolTitle(String id, CalculationCatalog catalog) {
+  for (final d in catalog.calculations) {
+    if (d.id == id) return d.title;
+  }
+  return _extraToolTitles[id] ?? id;
+}
+
 class CalculationScreen extends StatefulWidget {
   const CalculationScreen({
     super.key,
@@ -25,6 +57,8 @@ class CalculationScreen extends StatefulWidget {
     this.doses,
     this.initialTool = 'fluids',
     this.showAviculture = false,
+    this.tools = clinicalCalculationTools,
+    this.title,
     this.referenceLibrary,
     this.clinicId,
     this.patients,
@@ -34,6 +68,14 @@ class CalculationScreen extends StatefulWidget {
   final CatalogRepository? doses;
   final String initialTool;
   final bool showAviculture;
+
+  /// Herramientas ofrecidas en el selector. La pantalla clínica no ofrece las
+  /// de producción ni de exóticos: cada área tiene su propio apartado.
+  final List<String> tools;
+
+  /// Encabezado de la pantalla. Si es nulo se toma el título del catálogo de
+  /// la herramienta activa.
+  final String? title;
   final ReferenceLibraryRepository? referenceLibrary;
   final String? clinicId;
   final PatientRepository? patients;
@@ -169,7 +211,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
       final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CalculatorHeading(id: selected, title: 'Cálculos clínicos'),
+          CalculatorHeading(
+            id: selected,
+            title: widget.title ?? calculationToolTitle(selected, catalog),
+          ),
           if (widget.showAviculture)
             OutlinedButton.icon(
               onPressed: () => Navigator.push(
@@ -253,60 +298,58 @@ class _CalculationScreenState extends State<CalculationScreen> {
             'Los parámetros son indicados por el MVZ. La app no selecciona tratamientos. Los resultados no se guardan en el expediente ni emiten recetas automáticamente.',
           ),
           const SizedBox(height: 16),
-          CalculatorSelectorCard(
-            id: selected,
-            title: 'Herramienta',
-            child: DropdownButtonFormField<String>(
-              key: ValueKey('tool:$selected'),
-              initialValue: selected,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontSize: 14),
-              isDense: false,
-              itemHeight: null,
-              isExpanded: true,
-              decoration: InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
+          if (widget.tools.length > 1)
+            CalculatorSelectorCard(
+              id: selected,
+              title: 'Herramienta',
+              child: DropdownButtonFormField<String>(
+                key: ValueKey('tool:$selected'),
+                initialValue: selected,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                isDense: false,
+                itemHeight: null,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(),
+                  enabledBorder: NeuInputBorder(
+                    dark: Theme.of(context).brightness == Brightness.dark,
+                    depth: 1.8,
+                  ),
+                  filled: true,
                 ),
-                border: OutlineInputBorder(),
-                enabledBorder: NeuInputBorder(
-                  dark: Theme.of(context).brightness == Brightness.dark,
-                  depth: 1.8,
-                ),
-                filled: true,
+                items: [
+                  for (final d in catalog.calculations)
+                    if (widget.tools.contains(d.id))
+                      DropdownMenuItem(
+                        value: d.id,
+                        child: Text(
+                          d.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  for (final entry in _extraToolTitles.entries)
+                    if (widget.tools.contains(entry.key))
+                      DropdownMenuItem(
+                        value: entry.key,
+                        child: Text(
+                          entry.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                ],
+                onChanged: (v) {
+                  if (v != null) reset(v);
+                },
               ),
-              items: [
-                for (final d in catalog.calculations)
-                  DropdownMenuItem(
-                    value: d.id,
-                    child: Text(
-                      d.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                for (final entry in {
-                  'protocols': 'Protocolos por etapas',
-                  'vitals': 'Constantes fisiológicas',
-                  'metabolic': 'Peso metabólico en exóticos',
-                  'withdrawals': 'Tiempos de retiro',
-                }.entries)
-                  DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(
-                      entry.value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
-              onChanged: (v) {
-                if (v != null) reset(v);
-              },
             ),
-          ),
           const SizedBox(height: 16),
           if (type.isNotEmpty) ...[
             // Las constantes guardadas en la base se consultan aqui mismo.

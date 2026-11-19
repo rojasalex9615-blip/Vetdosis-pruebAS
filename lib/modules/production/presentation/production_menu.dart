@@ -12,6 +12,7 @@ import '../../aviculture/presentation/layer_reference_screen.dart';
 import '../../aviculture/presentation/poultry_index_screen.dart';
 import '../../incubation/presentation/incubation_screen.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../../calculations/presentation/calculation_screen.dart';
 import '../../core/domain/module_access.dart';
 import '../../core/domain/navigation_access.dart';
 import '../../../vet_ui/vet_icons.dart';
@@ -205,6 +206,40 @@ class _ProductionMenuState extends State<ProductionMenu> {
             icon: VetIcons.tap,
           ),
         ),
+      if (activity != null) ...[
+        const SizedBox(height: 16),
+        const VetSectionHeader(
+          title: 'Calculadoras de producción',
+          subtitle:
+              'Cálculo por cabeza y lote, medicación en agua y medicación en alimento.',
+        ),
+        if (allowed('Cálculos clínicos'))
+          for (final (id, label, toolIcon) in [
+            ('herd', 'Por cabeza y lote', VetIcons.cow),
+            ('water', 'Medicación en agua', VetIcons.waves),
+            ('feed', 'Medicación en alimento', VetIcons.feedBag),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: VetActionButton(
+                icon: toolIcon,
+                label: label,
+                onPressed: () => open(
+                  CalculationScreen(
+                    initialTool: id,
+                    tools: productionCalculationTools,
+                    title: 'Producción: $label',
+                  ),
+                ),
+              ),
+            )
+        else
+          const VetNotice(
+            text: 'Tu acceso actual no incluye las calculadoras de producción.',
+            icon: VetIcons.lock,
+            kind: VetBadgeKind.warning,
+          ),
+      ],
       if (species == 'Aves' && activity != null) ...[
         const SizedBox(height: 16),
         if (allowed('Cálculos clínicos') && activity == 'Postura')
