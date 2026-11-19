@@ -107,14 +107,11 @@ class _OperationsScreenState extends State<OperationsScreen>
       if (id is String && id.isNotEmpty) ids.add(id);
     }
     if (ids.length < 2) return const SizedBox.shrink();
-    final options = {
-      ...ids,
-      if (filterProfessional != null) filterProfessional!,
-    };
+    final options = {...ids, ?filterProfessional};
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: DropdownButtonFormField<String?>(
-        value: filterProfessional,
+        initialValue: filterProfessional,
         decoration: const InputDecoration(labelText: 'Responsable'),
         items: [
           const DropdownMenuItem<String?>(
