@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de la app · VetDosis (línea Neu)</title>
+<style>
+  :root{
+    --canvas:#F1F4F8; --surface:#F7F9FC; --raised:#FFFFFF; --recessed:#EDF2F7;
+    --soft:#DDE4EE; --ink:#0B1C30; --muted:#64748B;
+    --purple:#7C4DFF; --purple-deep:#632CE5; --violet:#7D7AF2;
+    --lilac:#AE92F3; --turquoise:#28D7D1; --cyan:#49DFF0; --mint:#61E2D0;
+    --pink:#FF4FB3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--canvas); color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    padding:32px 20px 64px;
+  }
+  header.top{max-width:1180px;margin:0 auto 28px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--purple-deep);font-weight:700}
+  h1{font-size:30px;line-height:1.15;margin:6px 0 8px;font-weight:800}
+  .sub{color:var(--muted);font-size:16px;max-width:70ch;margin:0}
+  .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+
+  .panel{
+    background:var(--raised); border-radius:24px; padding:24px;
+    box-shadow:0 18px 40px -24px rgba(11,28,48,.35), inset 0 1px 0 #fff;
+    border:1px solid rgba(221,228,238,.9);
+  }
+  h2{font-size:22px;margin:0 0 4px;font-weight:800}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 18px}
+
+  /* Armazón */
+  .shell{display:grid;grid-template-columns:1fr;gap:14px}
+  .bar{border-radius:18px;padding:16px 18px;font-size:14px;font-weight:600}
+  .bar.head{background:linear-gradient(120deg,var(--violet),var(--purple));color:#fff}
+  .bar.head b{display:block;font-size:16px;font-weight:800;margin-bottom:2px}
+  .bar.head span{opacity:.92;font-weight:500}
+  .content{
+    background:var(--recessed);border-radius:18px;padding:26px 18px;text-align:center;
+    color:var(--muted);font-size:14px;border:1px dashed var(--soft)
+  }
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{
+    flex:1 1 150px;text-align:center;border-radius:16px;padding:14px 10px;font-weight:700;font-size:14px;
+    background:var(--surface);border:1px solid var(--soft)
+  }
+  .tab .ic{display:block;font-size:20px;margin-bottom:4px}
+  .tab.on{background:linear-gradient(120deg,var(--lilac),var(--purple));color:#fff;border-color:transparent}
+
+  /* Grupos */
+  .groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .group{background:var(--surface);border-radius:18px;padding:16px;border:1px solid var(--soft)}
+  .group h3{margin:0 0 10px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--raised);border:1px solid var(--soft);color:#334155}
+  .chip.n{background:linear-gradient(120deg,#efe9ff,#f6f2ff);border-color:#ddd2ff;color:var(--purple-deep)}
+
+  /* Tabla pantallas */
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--soft);vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  td.route{font-weight:700;white-space:nowrap}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--recessed);padding:2px 6px;border-radius:6px}
+
+  /* Pasos */
+  ol.steps{margin:0;padding-left:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px}
+  ol.steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:14px}
+  ol.steps li::before{
+    content:counter(s);flex:0 0 28px;height:28px;border-radius:50%;
+    background:linear-gradient(120deg,var(--turquoise),var(--violet));color:#fff;font-weight:800;
+    display:grid;place-items:center;font-size:13px
+  }
+  .to{margin-left:6px;font-size:12px;font-weight:700;color:var(--purple-deep);background:#f1ebff;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .scale{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;background:var(--recessed);border-radius:16px;padding:16px}
+  .scale span{color:var(--muted);font-size:13px;font-weight:600}
+  .sw{display:flex;gap:8px;flex-wrap:wrap}
+  .sw i{width:26px;height:26px;border-radius:8px;display:block}
+  footer{max-width:1180px;margin:22px auto 0;color:var(--muted);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="eyebrow">VetDosis · línea Neu</div>
+  <h1>Mapa de la app</h1>
+  <p class="sub">Cómo está repartida la app: el armazón, los apartados por grupo, y una fila por
+  pantalla con su ruta, de dónde se entra y a qué se sale. Fuente: <code>lib/core/app.dart</code>
+  y <code>section_catalog.dart</code>.</p>
+</header>
+
+<div class="wrap">
+
+  <section class="panel">
+    <h2>1 · Armazón</h2>
+    <p class="hint">Todo lo que hay tras iniciar sesión vive aquí: cabecera fija, contenido y barra inferior con cinco ramas.</p>
+    <div class="shell">
+      <div class="bar head">
+        <b>Cabecera</b>
+        <span>marca · saludo · clínica  →  abre la cuenta</span>
+      </div>
+      <div class="content">Contenido: la pantalla activa</div>
+      <div class="tabs">
+        <div class="tab on"><span class="ic">🏠</span>Inicio</div>
+        <div class="tab"><span class="ic">🗓️</span>Agenda</div>
+        <div class="tab"><span class="ic">🐾</span>Registros</div>
+        <div class="tab"><span class="ic">🧮</span>Cálculos</div>
+        <div class="tab"><span class="ic">▦</span>Más</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2 · Apartados por grupo</h2>
+    <p class="hint">Los grupos ordenan el menú; no conceden permisos. Si el rol no autoriza una página, no aparece.</p>
+    <div class="groups">
+      <div class="group"><h3><span class="dot" style="background:var(--violet)"></span>Atención y expedientes</h3>
+        <div class="chips"><span class="chip">Agenda</span><span class="chip">Pacientes</span><span class="chip">Hospitalización</span><span class="chip">Receta</span><span class="chip">Formatos</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--turquoise)"></span>Medicamentos y herramientas</h3>
+        <div class="chips"><span class="chip">Cálculo rápido</span><span class="chip">Vademécum</span><span class="chip">Operaciones de dosis</span><span class="chip">Cálculos clínicos</span><span class="chip">Inventario</span><span class="chip">Escanear producto</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--mint)"></span>Producción animal</h3>
+        <div class="chips"><span class="chip">Producción y grandes especies</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--cyan)"></span>Exóticos y silvestres</h3>
+        <div class="chips"><span class="chip">Exóticos</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--pink)"></span>Administración y finanzas</h3>
+        <div class="chips"><span class="chip">Caja</span><span class="chip">Planeación financiera</span><span class="chip">Servicios</span><span class="chip">Proveedores</span><span class="chip">Promociones</span><span class="chip">Productividad y semana</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--lilac)"></span>Equipo y comunicación</h3>
+        <div class="chips"><span class="chip">Agenda telefónica</span><span class="chip">Equipo y avisos</span><span class="chip">Anuncios y avisos</span><span class="chip">Pendientes del equipo</span><span class="chip">Checado</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--purple-deep)"></span>Estadísticas y reportes</h3>
+        <div class="chips"><span class="chip">Estadísticas</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--violet)"></span>Asistente IA</h3>
+        <div class="chips"><span class="chip">Asistente IA</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--muted)"></span>Revisión de catálogos</h3>
+        <div class="chips"><span class="chip">Modo revisión</span></div></div>
+      <div class="group"><h3><span class="dot" style="background:var(--purple)"></span>Cuenta y ajustes</h3>
+        <div class="chips"><span class="chip">Mi cuenta y clínicas</span><span class="chip">Ajustes</span><span class="chip">Respaldo</span><span class="chip">Planes</span><span class="chip">Producto y costos</span><span class="chip">Inicio guiado</span><span class="chip">Ayuda y soporte</span></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>3 · Pantalla por pantalla</h2>
+    <p class="hint">Cada fila es una ruta real del despachador. «Entra desde» = origen de navegación.</p>
+    <table>
+      <thead><tr><th>Apartado (ruta)</th><th>Widget</th><th>Entra desde</th><th>Qué ofrece / sale hacia</th></tr></thead>
+      <tbody>
+        <tr><td class="route">Inicio</td><td><code>home()</code></td><td>Barra inferior</td><td>Accesos directos, buscador y avisos; sale a cualquier apartado</td></tr>
+        <tr><td class="route">Más</td><td><code>SectionMenu</code></td><td>Barra inferior</td><td>Grupos con buscador; sale a cada apartado autorizado</td></tr>
+        <tr><td class="route">Cálculos</td><td><code>CalculationMenu</code></td><td>Barra inferior</td><td>Menú clínico → Cálculo rápido, Vademécum, Operaciones de dosis, Cálculos clínicos</td></tr>
+        <tr><td class="route">Producción y grandes especies</td><td><code>ProductionMenu</code></td><td>Grupo Producción</td><td>Menú por especie → calculadoras de producción</td></tr>
+        <tr><td class="route">Exóticos</td><td><code>ExoticsMenu</code></td><td>Grupo Exóticos</td><td>Catálogo de exóticos; respeta permiso</td></tr>
+        <tr><td class="route">Cálculo rápido</td><td><code>DoseScreen</code></td><td>Cálculos / Inicio</td><td>Dosis por paciente → elegir paciente o escanear etiqueta</td></tr>
+        <tr><td class="route">Escanear etiqueta para dosis</td><td><code>DoseLabelScannerScreen</code></td><td>Cálculo rápido</td><td>Lee etiqueta y devuelve datos al cálculo</td></tr>
+        <tr><td class="route">Vademécum</td><td><code>VademecumScreen</code></td><td>Cálculos / Inicio</td><td>Consulta de medicamentos</td></tr>
+        <tr><td class="route">Operaciones de dosis</td><td><code>DoseMathTools</code></td><td>Cálculos / Inicio</td><td>Regla de tres y herramientas de dosis</td></tr>
+        <tr><td class="route">Cálculos clínicos</td><td><code>ClinicalCalculationsScreen</code></td><td>Cálculos / Inicio</td><td>Calculadoras clínicas</td></tr>
+        <tr><td class="route">Pacientes</td><td><code>PatientsScreen</code></td><td>Barra (Registros) / Atención</td><td>Expedientes → receta, formatos, hospitalización</td></tr>
+        <tr><td class="route">Hospitalización</td><td><code>HospitalScreen</code></td><td>Grupo Atención</td><td>Cuidados diarios, peso, altas, envíos</td></tr>
+        <tr><td class="route">Receta</td><td><code>PrescribingScreen</code></td><td>Grupo Atención / Paciente</td><td>Emisión de recetas; usa firma y plantillas</td></tr>
+        <tr><td class="route">Formatos</td><td><code>FormsScreen</code></td><td>Grupo Atención</td><td>Consentimientos y formatos; abre el editor de documentos</td></tr>
+        <tr><td class="route">Escanear producto</td><td><code>QuickScanScreen</code></td><td>Grupo Medicamentos</td><td>Alta rápida de inventario por código</td></tr>
+        <tr><td class="route">Inventario / Caja</td><td><code>InventoryScreen</code></td><td>Medicamentos / Finanzas</td><td>Inventario y ventas; <code>initialSection</code> decide si abre en Caja</td></tr>
+        <tr><td class="route">Agenda</td><td><code>OperationsScreen</code></td><td>Barra inferior</td><td>Agenda, equipo, avisos, pendientes, servicios y proveedores comparten host</td></tr>
+        <tr><td class="route">Agenda telefónica</td><td><code>ContactDirectoryScreen</code></td><td>Grupo Equipo</td><td>Directorio de contactos</td></tr>
+        <tr><td class="route">Productividad y semana</td><td><code>ProductivityScreen</code></td><td>Grupo Finanzas</td><td>Plan semanal y tareas</td></tr>
+        <tr><td class="route">Promociones</td><td><code>PromotionsScreen</code></td><td>Grupo Finanzas</td><td>Promociones y clientes; genera imagen de oferta</td></tr>
+        <tr><td class="route">Checado</td><td><code>AttendanceScreen</code></td><td>Grupo Equipo</td><td>Registro de asistencia del equipo</td></tr>
+        <tr><td class="route">Estadísticas</td><td><code>DashboardScreen</code></td><td>Estadísticas / Barra</td><td>Tableros y gráficas</td></tr>
+        <tr><td class="route">Respaldo</td><td><code>BackupScreen</code></td><td>Grupo Cuenta</td><td>Copias y restauración</td></tr>
+        <tr><td class="route">Asistente IA</td><td><code>AiScreen</code></td><td>Grupo Asistente IA</td><td>Chat con contexto configurable</td></tr>
+        <tr><td class="route">Planes</td><td><code>SubscriptionScreen</code></td><td>Grupo Cuenta / guía</td><td>Planes y suscripción</td></tr>
+        <tr><td class="route">Producto y costos</td><td><code>ProductScreen</code></td><td>Grupo Cuenta</td><td>Funciones y límites antes de datos reales</td></tr>
+        <tr><td class="route">Inicio guiado</td><td><code>GuidedStartScreen</code></td><td>Grupo Cuenta / aviso inicial</td><td>Guía por pasos (ver abajo)</td></tr>
+        <tr><td class="route">Ayuda y soporte</td><td><code>SupportScreen</code></td><td>Grupo Cuenta</td><td>Reportar problemas y seguir soporte</td></tr>
+        <tr><td class="route">Ajustes</td><td><code>settings()</code></td><td>Grupo Cuenta / cabecera</td><td>Paleta, apariencia clara/oscura, estilo Neu</td></tr>
+        <tr><td class="route">Mi cuenta</td><td>cuenta</td><td>Cabecera</td><td>Espacio personal o clínica del equipo; roles desde la cuenta</td></tr>
+        <tr><td class="route">Modo revisión</td><td><code>ReviewCatalogScreen</code></td><td>Grupo Revisión</td><td>Catálogos sin verificar; comenta errores por fila</td></tr>
+        <tr><td class="route">Bienvenida pública</td><td><code>PublicWelcomeScreen</code></td><td>Sin sesión</td><td>Entrada antes de autenticar</td></tr>
+      </tbody>
+    </table>
+    <p class="hint" style="margin-top:14px">
+      <b>Requieren rol MVZ o administrador:</b> Cálculo rápido, Escanear etiqueta, Operaciones de dosis, Cálculos clínicos ·
+      <b>Modo revisión:</b> cuenta autorizada y conexión ·
+      <b>Cuenta de plataforma:</b> sin segundo factor no muestra herramientas administrativas.
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>4 · Inicio guiado</h2>
+    <p class="hint">Lleva a cada apartado en orden. Marcar un paso indica que se revisó; no cambia permisos.</p>
+    <ol class="steps">
+      <li><div>Usa tu espacio personal o la clínica del equipo.<span class="to">Mi cuenta</span></div></li>
+      <li><div>Elige paleta y apariencia clara u oscura.<span class="to">Ajustes</span></div></li>
+      <li><div>Explora las funciones y sus límites antes de datos reales.<span class="to">Producto y costos</span></div></li>
+      <li><div>Captura tus datos profesionales y revisa membrete y plantillas.<span class="to">Receta</span></div></li>
+      <li><div>Captura datos con consentimiento y revisa el expediente.<span class="to">Pacientes</span></div></li>
+      <li><div>Decide qué contexto comparte la IA y consulta tu plan.<span class="to">Planes</span></div></li>
+      <li><div>Reporta problemas y consulta el seguimiento de soporte.<span class="to">Ayuda y soporte</span></div></li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>5 · Distribución visual y tipografía</h2>
+    <p class="hint">Escala viva en <code>VetTheme.textTheme</code>. Ningún texto de interfaz fija su tamaño a mano.</p>
+    <div class="scale">
+      <span>Escala</span>
+      <b style="font-size:12px">12</b><b style="font-size:14px">14</b><b style="font-size:16px">16</b>
+      <b style="font-size:22px">22</b><b style="font-size:24px">24</b><b style="font-size:26px">26</b>
+      <b style="font-size:30px">30</b>
+      <span>· suelo 12 px ·</span>
+      <div class="sw">
+        <i style="background:var(--ink)"></i><i style="background:var(--purple)"></i>
+        <i style="background:var(--violet)"></i><i style="background:var(--lilac)"></i>
+        <i style="background:var(--turquoise)"></i><i style="background:var(--cyan)"></i>
+        <i style="background:var(--mint)"></i><i style="background:var(--pink)"></i>
+      </div>
+    </div>
+    <p class="hint" style="margin:14px 0 0">
+      Marca y color: <b>Plus Jakarta Sans</b> empaquetada y paletas de la app; el elemento neumórfico
+      (<code>NeuStatTile</code>, <code>AccessBackdrop</code>, <code>VetIcons</code>) da la identidad Neu.
+      Los tamaños del PDF se miden aparte, en milímetros de papel.
+    </p>
+  </section>
+
+</div>
+<footer>VetDosis · línea Neu · generado a partir del código vigente · este diagrama fue creado por un agente (OpenHands) para el usuario.</footer>
+</body>
+</html>
