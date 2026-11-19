@@ -2,6 +2,7 @@ import '../../../core/widgets/neu_header_card.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import '../../patients/domain/patient_repository.dart';
+import '../../core/presentation/core_view_model.dart';
 import 'fluid_therapy_panel.dart';
 import '../../incubation/presentation/incubation_screen.dart';
 import '../../aviculture/presentation/aviculture_screen.dart';
@@ -13,6 +14,9 @@ import '../../doses/domain/quantity.dart';
 import '../data/calculation_repository.dart';
 import '../data/reference_library_repository.dart';
 import 'reference_library_screen.dart';
+import 'calculation_branch_menu.dart';
+import '../../doses/presentation/dose_screen.dart';
+import '../domain/calculation_branch.dart';
 import '../domain/calculation_catalog.dart';
 import '../domain/calculation_engine.dart';
 import 'calculation_view_model.dart';
@@ -25,6 +29,8 @@ class CalculationScreen extends StatefulWidget {
     this.doses,
     this.initialTool = 'fluids',
     this.showAviculture = false,
+    this.branch = ClinicalBranch.small,
+    this.startWithMenu = true,
     this.referenceLibrary,
     this.clinicId,
     this.patients,
@@ -34,6 +40,12 @@ class CalculationScreen extends StatefulWidget {
   final CatalogRepository? doses;
   final String initialTool;
   final bool showAviculture;
+
+  /// Rama con la que abre el menu de calculadoras.
+  final ClinicalBranch branch;
+
+  /// Si abre en la lista de calculadoras o directo en [initialTool].
+  final bool startWithMenu;
   final ReferenceLibraryRepository? referenceLibrary;
   final String? clinicId;
   final PatientRepository? patients;
@@ -55,10 +67,16 @@ class _CalculationScreenState extends State<CalculationScreen> {
       referenceError = '';
   int generation = 0;
   bool reviewed = false, confirmed = false;
+
+  /// Rama de trabajo del menu. Se queda local para no mover la rama del
+  /// armazon (y con ella el Inicio) al abrir una calculadora.
+  late ClinicalBranch branch = widget.branch;
+  bool menu = true;
   @override
   void initState() {
     super.initState();
     selected = widget.initialTool;
+    menu = widget.startWithMenu;
     model = CalculationViewModel(
       widget.repository ?? AssetCalculationRepository(),
       widget.doses ?? AssetCatalogRepository(),
@@ -143,6 +161,31 @@ class _CalculationScreenState extends State<CalculationScreen> {
       widget.referenceLibrary != null &&
       widget.clinicId != null;
 
+  /// Abre la calculadora elegida en el menu. Las que tienen pantalla propia
+  /// se empujan encima; las que son una formula se muestran aqui mismo, con
+  /// la rama que el usuario acaba de elegir.
+  void openEntry(CalculationEntry entry) {
+    final route = entry.route;
+    if (route != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => _routeScreen(route)),
+      );
+      return;
+    }
+    setState(() => menu = false);
+    reset(entry.tool ?? selected);
+  }
+
+  Widget _routeScreen(String route) => switch (route) {
+    'Calculo rapido' => DoseScreen(repository: widget.doses),
+    'Aves · Capacidad e instalaciones' => const AvicultureScreen(),
+    'Aves · Incubacion' => const IncubationScreen(),
+    'Aves · Engorda' => const BroilerScreen(),
+    'Aves · Indices productivos' => const PoultryIndexScreen(),
+    _ => const SizedBox.shrink(),
+  };
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: model,
@@ -152,6 +195,14 @@ class _CalculationScreenState extends State<CalculationScreen> {
         return model.error != null
             ? Text(model.error!)
             : const Center(child: CircularProgressIndicator());
+      }
+      if (menu) {
+        return CalculationBranchMenu(
+          branch: branch,
+          showAviculture: widget.showAviculture,
+          onBranchChanged: (value) => setState(() => branch = value),
+          onOpen: openEntry,
+        );
       }
       final defs = catalog.calculations.where((d) => d.id == selected).toList();
       final def = defs.isEmpty ? null : defs.single;
@@ -169,49 +220,22 @@ class _CalculationScreenState extends State<CalculationScreen> {
       final content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CalculatorHeading(id: selected, title: 'Cálculos clínicos'),
-          if (widget.showAviculture)
-            OutlinedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const AvicultureScreen(),
+          Row(
+            children: [
+              if (widget.startWithMenu)
+                IconButton(
+                  tooltip: 'Volver a las calculadoras',
+                  icon: const Icon(VetIcons.chevronLeft),
+                  onPressed: () => setState(() => menu = true),
+                ),
+              Expanded(
+                child: CalculatorHeading(
+                  id: selected,
+                  title: 'Cálculos clínicos',
                 ),
               ),
-              icon: const Icon(VetIcons.stable),
-              label: const Text('Aves · Capacidad e instalaciones'),
-            ),
-          if (widget.showAviculture)
-            OutlinedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const IncubationScreen(),
-                ),
-              ),
-              icon: const Icon(VetIcons.egg),
-              label: const Text('Aves · Incubación'),
-            ),
-          if (widget.showAviculture)
-            OutlinedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(builder: (_) => const BroilerScreen()),
-              ),
-              icon: const Icon(VetIcons.bird),
-              label: const Text('Aves · Engorda'),
-            ),
-          if (widget.showAviculture)
-            OutlinedButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const PoultryIndexScreen(),
-                ),
-              ),
-              icon: const Icon(VetIcons.chartGrowth),
-              label: const Text('Aves · Índices productivos'),
-            ),
+            ],
+          ),
           const SizedBox(height: 12),
           if (widget.referenceLibrary != null && widget.clinicId != null) ...[
             Wrap(

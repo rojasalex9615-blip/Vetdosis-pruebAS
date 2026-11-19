@@ -1499,14 +1499,12 @@ class CoreShell extends StatelessWidget {
                           clinicId: auth?.active?.clinicId,
                           showAviculture:
                               model.branch == ClinicalBranch.production,
+                          branch: model.branch == ClinicalBranch.management
+                              ? ClinicalBranch.small
+                              : model.branch,
                           key: ValueKey(
                             '${model.branch}:${auth?.active?.userId}:${auth?.active?.clinicId}',
                           ),
-                          initialTool: model.branch == ClinicalBranch.exotic
-                              ? 'metabolic'
-                              : model.branch == ClinicalBranch.production
-                              ? 'water'
-                              : 'fluids',
                         )
                       : const Text(
                           'Los cálculos clínicos requieren acceso de MVZ o administrador.',
