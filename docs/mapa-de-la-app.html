@@ -127,7 +127,7 @@
       <div class="group"><h3><span class="dot" style="background:var(--pink)"></span>Administración y finanzas</h3>
         <div class="chips"><span class="chip">Caja</span><span class="chip">Planeación financiera</span><span class="chip">Servicios</span><span class="chip">Proveedores</span><span class="chip">Promociones</span><span class="chip">Productividad y semana</span></div></div>
       <div class="group"><h3><span class="dot" style="background:var(--lilac)"></span>Equipo y comunicación</h3>
-        <div class="chips"><span class="chip">Agenda telefónica</span><span class="chip">Equipo y avisos</span><span class="chip">Anuncios y avisos</span><span class="chip">Pendientes del equipo</span><span class="chip">Checado</span></div></div>
+        <div class="chips"><span class="chip">Agenda telefónica</span><span class="chip">Equipo y avisos</span><span class="chip">Anuncios y avisos</span><span class="chip">Pendientes del equipo</span><span class="chip">Control de asistencia</span></div></div>
       <div class="group"><h3><span class="dot" style="background:var(--purple-deep)"></span>Estadísticas y reportes</h3>
         <div class="chips"><span class="chip">Estadísticas</span></div></div>
       <div class="group"><h3><span class="dot" style="background:var(--violet)"></span>Asistente IA</h3>
@@ -154,7 +154,7 @@
         <tr><td class="route">Escanear etiqueta para dosis</td><td><code>DoseLabelScannerScreen</code></td><td>Cálculo rápido</td><td>Lee etiqueta y devuelve datos al cálculo</td></tr>
         <tr><td class="route">Vademécum</td><td><code>VademecumScreen</code></td><td>Cálculos / Inicio</td><td>Consulta de medicamentos</td></tr>
         <tr><td class="route">Operaciones de dosis</td><td><code>DoseMathTools</code></td><td>Cálculos / Inicio</td><td>Regla de tres y herramientas de dosis</td></tr>
-        <tr><td class="route">Cálculos clínicos</td><td><code>ClinicalCalculationsScreen</code></td><td>Cálculos / Inicio</td><td>Calculadoras clínicas (fluidoterapia, CRI, ajuste, protocolos, constantes y retiros)</td></tr>
+        <tr><td class="route">Cálculos clínicos</td><td><code>CalculationScreen</code></td><td>Cálculos / Inicio</td><td>Calculadoras clínicas (fluidoterapia, CRI, ajuste, protocolos, constantes y retiros)</td></tr>
         <tr><td class="route">Pacientes</td><td><code>PatientsScreen</code></td><td>Barra (Registros) / Atención</td><td>Expedientes → receta, formatos, hospitalización</td></tr>
         <tr><td class="route">Hospitalización</td><td><code>HospitalScreen</code></td><td>Grupo Atención</td><td>Cuidados diarios, peso, altas, envíos</td></tr>
         <tr><td class="route">Receta</td><td><code>PrescribingScreen</code></td><td>Grupo Atención / Paciente</td><td>Emisión de recetas; usa firma y plantillas</td></tr>
@@ -163,9 +163,15 @@
         <tr><td class="route">Inventario / Caja</td><td><code>InventoryScreen</code></td><td>Medicamentos / Finanzas</td><td>Inventario y ventas; <code>initialSection</code> decide si abre en Caja</td></tr>
         <tr><td class="route">Agenda</td><td><code>OperationsScreen</code></td><td>Barra inferior</td><td>Agenda, equipo, avisos, pendientes, servicios y proveedores comparten host</td></tr>
         <tr><td class="route">Agenda telefónica</td><td><code>ContactDirectoryScreen</code></td><td>Grupo Equipo</td><td>Directorio de contactos</td></tr>
+        <tr><td class="route">Equipo y avisos</td><td><code>OperationsScreen</code> (<code>messages</code>)</td><td>Grupo Equipo</td><td>Mensajes internos del equipo; misma pantalla que la Agenda</td></tr>
+        <tr><td class="route">Anuncios y avisos</td><td><code>OperationsScreen</code> (<code>notices</code>)</td><td>Grupo Equipo</td><td>Avisos publicados al equipo</td></tr>
+        <tr><td class="route">Pendientes del equipo</td><td><code>OperationsScreen</code> (<code>tasks</code>)</td><td>Grupo Equipo</td><td>Tareas pendientes y su seguimiento</td></tr>
+        <tr><td class="route">Servicios</td><td><code>OperationsScreen</code> (<code>services</code>)</td><td>Grupo Finanzas</td><td>Catálogo de servicios y precios; sale a la Agenda</td></tr>
+        <tr><td class="route">Proveedores</td><td><code>OperationsScreen</code> (<code>suppliers</code>)</td><td>Grupo Finanzas</td><td>Proveedores y sus datos de contacto</td></tr>
+        <tr><td class="route">Planeación financiera</td><td><code>FinancialPlanningPanel</code></td><td>Grupo Finanzas</td><td>Proyección de ingresos y costos; solo administrador</td></tr>
         <tr><td class="route">Productividad y semana</td><td><code>ProductivityScreen</code></td><td>Grupo Finanzas</td><td>Plan semanal y tareas</td></tr>
         <tr><td class="route">Promociones</td><td><code>PromotionsScreen</code></td><td>Grupo Finanzas</td><td>Promociones y clientes; genera imagen de oferta</td></tr>
-        <tr><td class="route">Checado</td><td><code>AttendanceScreen</code></td><td>Grupo Equipo</td><td>Registro de asistencia del equipo</td></tr>
+        <tr><td class="route">Control de asistencia</td><td><code>AttendanceScreen</code></td><td>Grupo Equipo</td><td>Registro de asistencia del equipo</td></tr>
         <tr><td class="route">Estadísticas</td><td><code>DashboardScreen</code></td><td>Estadísticas / Barra</td><td>Tableros y gráficas</td></tr>
         <tr><td class="route">Respaldo</td><td><code>BackupScreen</code></td><td>Grupo Cuenta</td><td>Copias y restauración</td></tr>
         <tr><td class="route">Asistente IA</td><td><code>AiScreen</code></td><td>Grupo Asistente IA</td><td>Chat con contexto configurable</td></tr>
@@ -174,7 +180,7 @@
         <tr><td class="route">Inicio guiado</td><td><code>GuidedStartScreen</code></td><td>Grupo Cuenta / aviso inicial</td><td>Guía por pasos (ver abajo)</td></tr>
         <tr><td class="route">Ayuda y soporte</td><td><code>SupportScreen</code></td><td>Grupo Cuenta</td><td>Reportar problemas y seguir soporte</td></tr>
         <tr><td class="route">Ajustes</td><td><code>settings()</code></td><td>Grupo Cuenta / cabecera</td><td>Paleta, apariencia clara/oscura, estilo Neu</td></tr>
-        <tr><td class="route">Mi cuenta</td><td>cuenta</td><td>Cabecera</td><td>Espacio personal o clínica del equipo; roles desde la cuenta</td></tr>
+        <tr><td class="route">Mi cuenta y clínicas</td><td><code>AuthScreen</code> (cuenta)</td><td>Cabecera</td><td>Espacio personal o clínica del equipo; roles desde la cuenta</td></tr>
         <tr><td class="route">Modo revisión</td><td><code>ReviewCatalogScreen</code></td><td>Grupo Revisión</td><td>Catálogos sin verificar; comenta errores por fila</td></tr>
         <tr><td class="route">Bienvenida pública</td><td><code>PublicWelcomeScreen</code></td><td>Sin sesión</td><td>Entrada antes de autenticar</td></tr>
       </tbody>

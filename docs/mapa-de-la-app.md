@@ -44,7 +44,7 @@ una página, no aparece.
 | Producción animal | Producción y grandes especies (bovinos, porcinos, aves…) |
 | Exóticos y silvestres | Exóticos |
 | Administración y finanzas | Caja · Planeación financiera · Servicios · Proveedores · Promociones · Productividad y semana |
-| Equipo y comunicación | Agenda telefónica · Equipo y avisos · Anuncios y avisos · Pendientes del equipo · Checado |
+| Equipo y comunicación | Agenda telefónica · Equipo y avisos · Anuncios y avisos · Pendientes del equipo · Control de asistencia |
 | Estadísticas y reportes | Estadísticas |
 | Asistente IA | Asistente IA |
 | Revisión de catálogos | Modo revisión |
@@ -66,7 +66,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Escanear etiqueta para dosis | `DoseLabelScannerScreen` | Cálculo rápido | Lee etiqueta y devuelve datos al cálculo. |
 | Vademécum | `VademecumScreen` | Cálculos / Inicio | Consulta de medicamentos. |
 | Operaciones de dosis | `DoseMathTools` | Cálculos / Inicio | Regla de tres y herramientas de dosis. |
-| Cálculos clínicos | `ClinicalCalculationsScreen` | Cálculos / Inicio | Calculadoras clínicas (fluidoterapia, CRI, ajuste de dosis, protocolos, constantes y retiros). |
+| Cálculos clínicos | `CalculationScreen` (rama clínica) | Cálculos / Inicio | Calculadoras clínicas (fluidoterapia, CRI, ajuste de dosis, protocolos, constantes y retiros). |
 | Pacientes | `PatientsScreen` | Barra (Registros) / Atención | Expedientes. Sale a receta, formatos, hospitalización. |
 | Hospitalización | `HospitalScreen` | Grupo Atención | Cuidados diarios, peso, altas, envíos. |
 | Receta | `PrescribingScreen` | Grupo Atención / Paciente | Emisión de recetas; usa firma y plantillas. |
@@ -75,9 +75,15 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Inventario / Caja | `InventoryScreen` | Grupo Medicamentos / Finanzas | Inventario y ventas; `initialSection` decide si abre en Caja. |
 | Agenda | `OperationsScreen` | Barra inferior | Agenda, equipo, avisos, pendientes, servicios, proveedores comparten host. |
 | Agenda telefónica | `ContactDirectoryScreen` | Grupo Equipo | Directorio de contactos. |
+| Equipo y avisos | `OperationsScreen` (`messages`) | Grupo Equipo | Mensajes internos del equipo; misma pantalla que la Agenda. |
+| Anuncios y avisos | `OperationsScreen` (`notices`) | Grupo Equipo | Avisos publicados al equipo. |
+| Pendientes del equipo | `OperationsScreen` (`tasks`) | Grupo Equipo | Tareas pendientes y su seguimiento. |
+| Servicios | `OperationsScreen` (`services`) | Grupo Finanzas | Catálogo de servicios y precios; sale a la Agenda. |
+| Proveedores | `OperationsScreen` (`suppliers`) | Grupo Finanzas | Proveedores y sus datos de contacto. |
+| Planeación financiera | `FinancialPlanningPanel` | Grupo Finanzas | Proyección de ingresos y costos; solo administrador. |
 | Productividad y semana | `ProductivityScreen` | Grupo Finanzas | Plan semanal y tareas. |
 | Promociones | `PromotionsScreen` | Grupo Finanzas | Promociones y clientes; genera imagen de oferta. |
-| Checado | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
+| Control de asistencia | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
 | Estadísticas | `DashboardScreen` | Grupo Estadísticas / Barra | Tableros y gráficas. |
 | Respaldo | `BackupScreen` | Grupo Cuenta | Copias y restauración. |
 | Asistente IA | `AiScreen` | Grupo Asistente IA | Chat con contexto configurable. |
@@ -86,7 +92,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Inicio guiado | `GuidedStartScreen` | Grupo Cuenta / aviso inicial | Guía por pasos. |
 | Ayuda y soporte | `SupportScreen` | Grupo Cuenta | Reportar problemas y seguir soporte. |
 | Ajustes | `settings()` | Grupo Cuenta / cabecera | Paleta, apariencia clara/oscura, estilo Neu. |
-| Mi cuenta | (cuenta) | Cabecera | Espacio personal o clínica del equipo; roles desde la cuenta. |
+| Mi cuenta y clínicas | `AuthScreen` (cuenta) | Cabecera | Espacio personal o clínica del equipo; roles desde la cuenta. |
 | Modo revisión | `ReviewCatalogScreen` | Grupo Revisión | Catálogos con datos sin verificar; comenta errores por fila. |
 | Bienvenida pública | `PublicWelcomeScreen` | Sin sesión | Entrada a la app antes de autenticar. |
 
