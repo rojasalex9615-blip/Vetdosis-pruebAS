@@ -119,6 +119,13 @@ permisos.
 6. Decide qué contexto comparte la IA → **Planes**
 7. Reporta problemas y sigue el soporte → **Ayuda y soporte**
 
+El paso 1 no cambia de pantalla: abre la cuenta como ventana encima de la guía
+(`openAccount`). Los otros seis sí cambian el apartado activo. Verificado en el
+armazón real pulsando el botón «Abrir» de cada tarjeta
+(`test/inicio_guiado_test.dart`, 7 casos). El progreso se guarda por usuario y
+clínica; el aviso inicial (`FirstStepsBanner`) se descarta con «Más tarde» y no
+vuelve a salir para ese ámbito.
+
 ## 5. Distribución visual y tipografía
 
 - **Marca y color:** Plus Jakarta Sans empaquetada; paletas de la app; el
