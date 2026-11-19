@@ -1,6 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_icons.dart';
+import '../../calculations/data/reference_library_repository.dart';
+import '../data/lab_report_reader.dart';
+import '../domain/lab_reference_resolver.dart';
+import '../domain/lab_report_ocr.dart';
 import '../domain/lab_repository.dart';
 import '../domain/lab_result.dart';
 import 'lab_view_model.dart';
@@ -18,10 +26,19 @@ class LabScreen extends StatefulWidget {
     required this.clinicId,
     required this.patientId,
     required this.patientName,
+    this.referenceLibrary,
+    this.reader,
   });
 
   final LabRepository repository;
   final String clinicId, patientId, patientName;
+
+  /// Biblioteca de referencias de la clinica, para el indicador en vivo de la
+  /// captura. Nula lo desactiva sin romper la captura.
+  final ReferenceLibraryRepository? referenceLibrary;
+
+  /// Lector de imagenes inyectable. Nulo usa el OCR en el dispositivo.
+  final LabReportReader? reader;
 
   @override
   State<LabScreen> createState() => _LabScreenState();
@@ -32,6 +49,12 @@ class _LabScreenState extends State<LabScreen> {
     widget.repository,
     widget.clinicId,
     widget.patientId,
+    referenceResolver: widget.referenceLibrary == null
+        ? null
+        : ReferenceLibraryLabResolver(
+            widget.referenceLibrary!,
+            widget.clinicId,
+          ),
   );
 
   @override
@@ -50,7 +73,7 @@ class _LabScreenState extends State<LabScreen> {
     final guardado = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _CaptureSheet(model: model),
+      builder: (_) => _CaptureSheet(model: model, reader: widget.reader),
     );
     if (guardado == true && mounted) {
       ScaffoldMessenger.of(
@@ -388,8 +411,11 @@ class _CorrectionDialogState extends State<_CorrectionDialog> {
 }
 
 class _CaptureSheet extends StatefulWidget {
-  const _CaptureSheet({required this.model});
+  const _CaptureSheet({required this.model, this.reader});
   final LabViewModel model;
+
+  /// Lector de imágenes inyectable. Nulo usa el OCR en el dispositivo.
+  final LabReportReader? reader;
 
   @override
   State<_CaptureSheet> createState() => _CaptureSheetState();
@@ -408,10 +434,44 @@ class _CaptureSheetState extends State<_CaptureSheet> {
   String origin = 'laboratorio_externo';
   String? error;
 
+  /// Ocupado mientras se lee una imagen, para no lanzar dos lecturas a la vez.
+  bool busy = false;
+
+  /// Mensaje del escaneo (cuántos valores, o qué falló).
+  String? scanMessage;
+
+  /// Lectura en vivo por fila: una por fuente que aplique. Se recalcula al
+  /// teclear y es solo lectura.
+  final previews = <int, List<LabReading>>{};
+
   @override
   void initState() {
     super.initState();
     agregarFila();
+  }
+
+  /// Resuelve el indicador de la fila [i] con lo que hay tecleado.
+  ///
+  /// Se reejecuta en cada tecla; solo la ultima respuesta de ESA fila pinta,
+  /// para que una consulta lenta no pise a la nueva ni cancele otra fila.
+  final _previewToken = <int, int>{};
+  Future<void> refreshPreview(int i) async {
+    final token = (_previewToken[i] = (_previewToken[i] ?? 0) + 1);
+    final f = filas[i];
+    final lecturas = await widget.model.preview(
+      species: widget.model.species,
+      analyte: f.analyte.text,
+      unit: f.unit.text,
+      rawValue: f.value.text,
+    );
+    if (!mounted || _previewToken[i] != token) return;
+    setState(() {
+      if (lecturas.isEmpty) {
+        previews.remove(i);
+      } else {
+        previews[i] = lecturas;
+      }
+    });
   }
 
   void agregarFila() => setState(
@@ -422,6 +482,65 @@ class _CaptureSheetState extends State<_CaptureSheet> {
       focus: FocusNode(),
     )),
   );
+
+  /// Escanea una foto del reporte y vuelca lo reconocido en las filas.
+  ///
+  /// Es solo una ayuda de captura: los valores quedan como texto editable y
+  /// el profesional los revisa antes de guardar. No se envía nada al
+  /// servidor desde aquí.
+  Future<void> scanReport(ImageSource source) async {
+    if (busy) return;
+    setState(() {
+      busy = true;
+      scanMessage = null;
+    });
+    try {
+      final text = await (widget.reader ?? readLabReportOnDevice)(source);
+      if (!mounted) return;
+      if (text == null) {
+        setState(() => busy = false);
+        return;
+      }
+      final rows = parseLabReportRows(text, catalog: widget.model.catalog);
+      setState(() {
+        busy = false;
+        if (rows.isEmpty) {
+          scanMessage =
+              'No se reconocieron valores con analito y número. Puedes '
+              'corregir el texto a mano.';
+          return;
+        }
+        // La primera fila vacía se reutiliza en vez de dejar un hueco.
+        for (final row in rows) {
+          final target = filas.firstWhere(
+            (f) => f.analyte.text.trim().isEmpty && f.value.text.trim().isEmpty,
+            orElse: () {
+              agregarFila();
+              return filas.last;
+            },
+          );
+          target.analyte.text = row.analyte;
+          target.value.text = row.value;
+          target.unit.text = row.unit;
+        }
+        for (var i = 0; i < filas.length; i++) {
+          unawaited(refreshPreview(i));
+        }
+        scanMessage =
+            'Se reconocieron ${rows.length} valores. Revísalos: la lectura '
+            'puede equivocarse.';
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          busy = false;
+          scanMessage =
+              'No se pudo leer la imagen. Revisa la cámara o los permisos e '
+              'inténtalo otra vez.';
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -539,10 +658,18 @@ class _CaptureSheetState extends State<_CaptureSheet> {
                 ),
               ),
             const SizedBox(height: 8),
+            if (scanMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(scanMessage!),
+              ),
             for (final (i, f) in filas.indexed)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                   children: [
                     Expanded(
                       flex: 3,
@@ -616,6 +743,7 @@ class _CaptureSheetState extends State<_CaptureSheet> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        onChanged: (_) => refreshPreview(i),
                         decoration: const InputDecoration(labelText: 'Valor'),
                       ),
                     ),
@@ -624,17 +752,66 @@ class _CaptureSheetState extends State<_CaptureSheet> {
                       flex: 2,
                       child: TextField(
                         controller: f.unit,
+                        onChanged: (_) => refreshPreview(i),
                         decoration: const InputDecoration(labelText: 'Unidad'),
                       ),
                     ),
                   ],
                 ),
+                    // El indicador en vivo: una linea por fuente, con su
+                    // cita. Es la misma lectura que se ve al consultar el
+                    // resultado, pero mientras se teclea.
+                    for (final lectura in previews[i] ?? const <LabReading>[])
+                      if (lectura.range != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, left: 2),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Ref: ${_ResultTile.cifra(lectura.range!.low)} – '
+                                  '${_ResultTile.cifra(lectura.range!.high)} '
+                                  '${lectura.range!.unit} · ${lectura.range!.source}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              VetStatusBadge(
+                                label: _ResultTile.readingLabel(lectura),
+                                kind: _ResultTile.readingKind(lectura),
+                              ),
+                            ],
+                          ),
+                        ),
+                  ],
+                ),
               ),
-            TextButton.icon(
-              onPressed: agregarFila,
-              icon: const Icon(Icons.add),
-              label: const Text('Otro analito'),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: agregarFila,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Otro analito'),
+                ),
+                const Spacer(),
+                if (labReportCaptureSupported() || widget.reader != null) ...[
+                  IconButton(
+                    tooltip: 'Tomar foto del reporte',
+                    onPressed: busy ? null : () => scanReport(ImageSource.camera),
+                    icon: const Icon(VetIcons.camera),
+                  ),
+                  IconButton(
+                    tooltip: 'Elegir imagen de la galería',
+                    onPressed: busy
+                        ? null
+                        : () => scanReport(ImageSource.gallery),
+                    icon: const Icon(VetIcons.image),
+                  ),
+                ],
+              ],
             ),
+            if (busy) const LinearProgressIndicator(),
             TextField(
               controller: notes,
               maxLines: 2,

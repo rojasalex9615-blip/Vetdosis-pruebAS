@@ -5,6 +5,12 @@ import 'vitals_models.dart';
 
 enum VitalReferenceState { below, within, above }
 
+/// Banda de lectura para el indicador en vivo. Es más fina que
+/// [VitalReferenceState]: separa «alerta» (pegado a un límite, pero dentro)
+/// de «normal», que es lo que el profesional necesita distinguir mientras
+/// teclea. No sustituye al estado del catálogo, que es el que se guarda.
+enum VitalBand { low, alert, normal, high }
+
 class VitalReferenceEntry {
   const VitalReferenceEntry({
     required this.id,
@@ -16,6 +22,7 @@ class VitalReferenceEntry {
     required this.source,
     required this.reviewedAt,
     required this.verified,
+    this.note,
   });
 
   final String id;
@@ -28,6 +35,9 @@ class VitalReferenceEntry {
   final DateTime reviewedAt;
   final bool verified;
 
+  /// Aviso de la transcripción (p. ej. «extremos sin inclusividad indicada»).
+  final String? note;
+
   VitalReferenceState evaluate(Quantity value) {
     if (!verified) {
       throw const FormatException(
@@ -38,6 +48,39 @@ class VitalReferenceEntry {
     if (value.compareTo(max) > 0) return VitalReferenceState.above;
     return VitalReferenceState.within;
   }
+
+  /// Banda para el indicador en vivo, sin exigir verificación.
+  ///
+  /// «Alerta» es el 5 % del ancho del rango pegado a cada extremo. Se calcula
+  /// con la fracción exacta, no con el texto mostrado.
+  VitalBand band(Quantity value) {
+    if (value.compareTo(min) < 0) return VitalBand.low;
+    if (value.compareTo(max) > 0) return VitalBand.high;
+    final span = Quantity(max.n * min.d - min.n * max.d, max.d * min.d);
+    final margin = Quantity(span.n, span.d * BigInt.from(20));
+    final lowGap = Quantity(value.n * min.d - min.n * value.d, value.d * min.d);
+    final highGap = Quantity(max.n * value.d - value.n * max.d, max.d * value.d);
+    if (lowGap.compareTo(margin) <= 0 || highGap.compareTo(margin) <= 0) {
+      return VitalBand.alert;
+    }
+    return VitalBand.normal;
+  }
+}
+
+/// Una referencia aplicable a un parámetro, con la banda del valor tecleado.
+///
+/// [band] es nulo mientras no haya un valor interpretable: entonces solo se
+/// enseña el intervalo de referencia, sin juzgar.
+class VitalReferenceReading {
+  const VitalReferenceReading({required this.entry, this.band});
+
+  final VitalReferenceEntry entry;
+  final VitalBand? band;
+
+  bool get verified => entry.verified;
+
+  String get range =>
+      '${entry.min.display()} – ${entry.max.display()} ${entry.unit}';
 }
 
 class VitalReferenceEvaluation {
@@ -124,6 +167,47 @@ class VitalReferenceCatalog {
     );
   }
 
+  /// Todas las referencias que aplican a un parámetro, cada una con la banda
+  /// del valor tecleado. Es lo que alimenta el indicador en vivo.
+  ///
+  /// A diferencia de [evaluate], NO exige verificación ni un único resultado:
+  /// enseña cada fuente con su cita y marca «sin verificar» las que aún no
+  /// pasaron revisión MVZ, en vez de callarlas. Es la misma regla que sigue
+  /// el laboratorio. No participa del guardado; [snapshotFor] sigue siendo el
+  /// único que decide qué se anexa al expediente.
+  List<VitalReferenceReading> readings({
+    required String species,
+    required String parameter,
+    required String? rawValue,
+  }) {
+    final normalizedSpecies = speciesLabel(species).toLowerCase();
+    final matches = entries
+        .where(
+          (entry) =>
+              speciesLabel(entry.species).toLowerCase() == normalizedSpecies &&
+              entry.parameter == parameter,
+        )
+        .toList(growable: false);
+    if (matches.isEmpty) return const [];
+
+    final text = rawValue?.trim() ?? '';
+    Quantity? value;
+    if (text.isNotEmpty) {
+      try {
+        value = Quantity.parse(text.replaceAll(',', '.'));
+      } on FormatException {
+        value = null;
+      }
+    }
+    return List.unmodifiable([
+      for (final entry in matches)
+        VitalReferenceReading(
+          entry: entry,
+          band: value == null ? null : entry.band(value),
+        ),
+    ]);
+  }
+
 
   List<Map<String, dynamic>> snapshotFor({
     required String species,
@@ -180,6 +264,7 @@ class VitalReferenceCatalog {
       source: source,
       reviewedAt: reviewed.toUtc(),
       verified: status == 'verified',
+      note: _optionalText(raw, 'note'),
     );
   }
 
@@ -196,6 +281,12 @@ class VitalReferenceCatalog {
     if (value is! String || value.trim().isEmpty) {
       throw FormatException('Falta $key.');
     }
+    return value.trim();
+  }
+
+  static String? _optionalText(Map<String, dynamic> raw, String key) {
+    final value = raw[key];
+    if (value is! String || value.trim().isEmpty) return null;
     return value.trim();
   }
 }

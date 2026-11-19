@@ -78,3 +78,7 @@ supabase/.temp/
 # Credenciales de Google Drive / OAuth (nunca al repo: es publico)
 client_secret*.json
 token.json
+
+# Tokens y documentos con claves: nunca versionar
+Documento sin t*tulo.docx.txt
+*.docx.txt
