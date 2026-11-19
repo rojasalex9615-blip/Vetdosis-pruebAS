@@ -1748,7 +1748,7 @@ class CoreShell extends StatelessWidget {
                       : const Text(
                           'Conecta tu cuenta y clínica para abrir operación y agenda.',
                         )
-                else if (model.screen == 'Checado')
+                else if (model.screen == 'Control de asistencia')
                   attendance != null &&
                           auth?.active != null &&
                           auth?.offline != true
@@ -1757,7 +1757,7 @@ class CoreShell extends StatelessWidget {
                           member: auth!.active!,
                         )
                       : const Text(
-                          'El checado requiere conexión con el servidor.',
+                          'El control de asistencia requiere conexión con el servidor.',
                         )
                 else if (model.screen == 'Estadísticas')
                   DashboardScreen(

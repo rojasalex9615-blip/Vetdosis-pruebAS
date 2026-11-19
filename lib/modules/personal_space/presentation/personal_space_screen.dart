@@ -261,7 +261,7 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
       children: [
         status(),
         const Text(
-          'Tu horario en una o más clínicas. Solo tú lo ves; no cambia el checado ni los turnos de la clínica.',
+          'Tu horario en una o más clínicas. Solo tú lo ves; no cambia el control de asistencia ni los turnos de la clínica.',
         ),
         const SizedBox(height: 8),
         if (widget.repository == null) unavailable(),

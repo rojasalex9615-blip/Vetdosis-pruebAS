@@ -142,7 +142,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     if (result == null || !mounted) return;
     await action(() async {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        throw const FormatException('Activa la ubicación para este checado.');
+        throw const FormatException('Activa la ubicación para este control de asistencia.');
       }
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -171,7 +171,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Checado registrado con hora del servidor.'),
+            content: Text('Control de asistencia registrado con hora del servidor.'),
           ),
         );
       }
@@ -183,7 +183,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
       context,
       MaterialPageRoute(
         builder: (_) => RxEntryScreen(
-          title: 'Configurar checado',
+          title: 'Configurar control de asistencia',
           initial: Map<String, dynamic>.from(
             model.data['settings'] as Map? ?? {},
           ),
@@ -306,7 +306,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Checado', style: Theme.of(context).textTheme.headlineSmall),
+        Text('Control de asistencia', style: Theme.of(context).textTheme.headlineSmall),
         const Text(
           'Entrada y salida alternadas. Solo se consulta ubicación al escanear; se guarda distancia y precisión, no tus coordenadas.',
         ),
