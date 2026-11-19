@@ -218,5 +218,10 @@
  "wallet": 59864,
  "waves": 59865,
  "weight_paw": 59866,
- "wind": 59867
+ "wind": 59867,
+ "cloud_off": 59868,
+ "inbox": 59869,
+ "key": 59870,
+ "rule": 59871,
+ "warning_triangle": 59872
 }

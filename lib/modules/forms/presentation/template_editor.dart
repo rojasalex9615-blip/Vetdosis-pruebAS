@@ -268,11 +268,11 @@ class _TemplateEditorState extends State<TemplateEditor> {
                 changed();
               },
             ),
-            const Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
               child: Text(
                 'Campos del documento',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             const Text(
@@ -304,11 +304,11 @@ class _TemplateEditorState extends State<TemplateEditor> {
               onPressed: busy ? null : addField,
               child: const Text('Agregar pregunta o tabla'),
             ),
-            const Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
               child: Text(
                 'Cláusulas e indicaciones fijas',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             const Text(
