@@ -441,6 +441,45 @@ void main() {
       expect(rows.single.analyte, 'Hematocrito');
       expect(rows.single.unit, '%');
     });
+
+    test('no confunde un analito con una subcadena de otra palabra', () {
+      // «Creatinina» contiene «na» y «Calcio» contiene «ca»: dos claves cortas
+      // del catalogo que no deben robar la linea.
+      final rows = parseLabReportRows(
+        'Creatinina 1.2 mg/dL\n'
+        'Calcio 9.1 mg/dL\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Na', unit: 'mmol/L', sources: 1),
+          LabAnalyte(analyteKey: 'Ca', unit: 'mg/dL', sources: 1),
+        ],
+      );
+      expect(rows.map((r) => r.analyte), ['Creatinina', 'Calcio']);
+      expect(rows.map((r) => r.unit), ['mg/dL', 'mg/dL']);
+    });
+
+    test('conserva la unidad impresa aunque el catalogo use otra', () {
+      // Un reporte en mmol/L no se puede reetiquetar como mg/dL: seria un
+      // valor clinico equivocado con aspecto de correcto.
+      final rows = parseLabReportRows(
+        'Glucosa 5.5 mmol/L\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Glucosa', unit: 'mg/dL', sources: 1),
+        ],
+      );
+      expect(rows.single.analyte, 'Glucosa');
+      expect(rows.single.value, '5.5');
+      expect(rows.single.unit, 'mmol/L');
+    });
+
+    test('usa la unidad del catalogo solo si la linea no imprime ninguna', () {
+      final rows = parseLabReportRows(
+        'Hematocrito 45\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Hematocrito', unit: '%', sources: 1),
+        ],
+      );
+      expect(rows.single.unit, '%');
+    });
   });
 
   testWidgets('El escaneo vuelca los valores reconocidos en las filas', (

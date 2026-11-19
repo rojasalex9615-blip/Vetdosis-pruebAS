@@ -64,9 +64,13 @@ List<LabReportCandidate> parseLabReportRows(
     if (analyte.isEmpty) continue;
 
     final after = line.substring(match.end).trim();
-    final unit = known != null && known.unit.trim().isNotEmpty
-        ? known.unit.trim()
-        : _firstToken(after);
+    final leida = _firstToken(after);
+    // La unidad impresa manda: reetiquetar un valor en mmol/L como mg/dL lo
+    // volveria un dato clinico equivocado con aspecto de correcto. El catalogo
+    // solo rellena cuando el reporte no imprime unidad.
+    final unit = leida.isNotEmpty
+        ? leida
+        : (known != null ? known.unit.trim() : '');
 
     out.add(
       LabReportCandidate(
@@ -82,17 +86,30 @@ List<LabReportCandidate> parseLabReportRows(
 
 /// El analito conocido cuyo nombre aparece en la línea, el más largo si hay
 /// varios (para no confundir «Glucosa» con «Glucosa-6-fosfato»).
+///
+/// La clave debe aparecer como palabra completa: con `contains` a secas, «Na»
+/// coincide dentro de «Creatinina» y «Ca» dentro de «Calcio», y la línea se
+/// reetiqueta con el analito equivocado.
 LabAnalyte? _knownAnalyte(String line, List<LabAnalyte> catalog) {
-  final lower = line.toLowerCase();
   LabAnalyte? best;
   for (final entry in catalog) {
-    final key = entry.analyteKey.trim().toLowerCase();
-    if (key.isEmpty || !lower.contains(key)) continue;
+    final key = entry.analyteKey.trim();
+    if (key.isEmpty) continue;
+    if (!_apareceComoPalabra(line, key)) continue;
     if (best == null || key.length > best.analyteKey.trim().length) {
       best = entry;
     }
   }
   return best;
+}
+
+bool _apareceComoPalabra(String line, String key) {
+  final patron = RegExp(
+    '(?<![\\p{L}\\p{N}])${RegExp.escape(key)}(?![\\p{L}\\p{N}])',
+    unicode: true,
+    caseSensitive: false,
+  );
+  return patron.hasMatch(line);
 }
 
 String _cleanLabel(String text) {
