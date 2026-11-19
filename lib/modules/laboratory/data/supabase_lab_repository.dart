@@ -33,9 +33,13 @@ class SupabaseLabRepository implements LabRepository {
           )
           as Map,
     );
+    final species = '${data['species'] ?? ''}';
     return [
       for (final r in (data['items'] as List? ?? const []))
-        LabAnalyte.read(Map<String, dynamic>.from(r as Map)),
+        LabAnalyte.read({
+          ...Map<String, dynamic>.from(r as Map),
+          'species': species,
+        }),
     ];
   }
 

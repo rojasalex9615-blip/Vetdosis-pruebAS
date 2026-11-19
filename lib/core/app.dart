@@ -1544,6 +1544,8 @@ class CoreShell extends StatelessWidget {
                                                   auth!.active!.clinicId,
                                               patientId: patient.id,
                                               patientName: patient.name,
+                                              referenceLibrary:
+                                                  referenceLibrary,
                                             ),
                                           ),
                                         );

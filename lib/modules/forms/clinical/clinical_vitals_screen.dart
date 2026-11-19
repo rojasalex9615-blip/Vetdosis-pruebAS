@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../core/widgets/accent_glow.dart';
 import '../../../vet_ui/vet_theme.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +12,9 @@ import '../../patients/presentation/patient_view_model.dart' show newOperationId
 import 'clinical_models.dart';
 import 'clinical_repository.dart';
 import 'vital_reference_catalog.dart';
+import 'vital_reference_repository.dart';
 import 'vitals_models.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 /// Registro de constantes clinicas de un paciente hospitalizado.
@@ -23,6 +27,7 @@ class ClinicalVitalsScreen extends StatefulWidget {
     this.latestWeight,
     this.referenceCatalog,
     this.referenceLibrary,
+    this.referenceRepository,
   });
 
   final ClinicalRepository repository;
@@ -31,6 +36,10 @@ class ClinicalVitalsScreen extends StatefulWidget {
   final String? latestWeight;
   final VitalReferenceCatalog? referenceCatalog;
   final ReferenceLibraryRepository? referenceLibrary;
+
+  /// De dónde se cargan los rangos de referencia si no llegan ya armados.
+  /// Nulo usa el catálogo incluido en el paquete.
+  final VitalReferenceRepository? referenceRepository;
 
   @override
   State<ClinicalVitalsScreen> createState() => _ClinicalVitalsScreenState();
@@ -53,6 +62,31 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
   DateTime observedAt = DateTime.now();
   bool busy = false;
   String? error;
+
+  /// El catálogo activo. Empieza con el que llega por parámetro (las pruebas
+  /// lo inyectan) y, si no, se carga del paquete al abrir la pantalla.
+  VitalReferenceCatalog? catalog;
+
+  @override
+  void initState() {
+    super.initState();
+    catalog = widget.referenceCatalog;
+    if (catalog == null) {
+      unawaited(_loadCatalog());
+    }
+  }
+
+  Future<void> _loadCatalog() async {
+    final repository =
+        widget.referenceRepository ?? const AssetVitalReferenceRepository();
+    try {
+      final loaded = await repository.load();
+      if (mounted) setState(() => catalog = loaded);
+    } catch (_) {
+      // Sin catálogo la pantalla sigue siendo útil: se capturan las constantes
+      // y no se clasifican, que es el comportamiento seguro.
+    }
+  }
 
   @override
   void dispose() {
@@ -143,7 +177,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
           notes: controllers['notes']!.text,
         ),
       );
-      final snapshots = widget.referenceCatalog?.snapshotFor(
+      final snapshots = catalog?.snapshotFor(
         species: widget.caseData.patientSpecies,
         values: values,
       );
@@ -169,19 +203,22 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
     }
   }
 
-  VitalReferenceEvaluation? referenceEvaluation(String key) {
-    final catalog = widget.referenceCatalog;
-    if (catalog == null) return null;
-    try {
-      return catalog.evaluate(
-        species: widget.caseData.patientSpecies,
-        parameter: key,
-        rawValue: controllers[key]?.text,
-      );
-    } on FormatException {
-      return null;
-    }
+  List<VitalReferenceReading> referenceReadings(String key) {
+    final active = catalog;
+    if (active == null) return const [];
+    return active.readings(
+      species: widget.caseData.patientSpecies,
+      parameter: key,
+      rawValue: controllers[key]?.text,
+    );
   }
+
+  static String bandLabel(VitalBand band) => switch (band) {
+    VitalBand.low => 'Bajo',
+    VitalBand.alert => 'Alerta',
+    VitalBand.normal => 'Normal',
+    VitalBand.high => 'Alto',
+  };
 
   Widget numberField(
     String key,
@@ -190,10 +227,8 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
     String? helper,
     IconData? icon,
   }) {
-    final evaluation = referenceEvaluation(key);
+    final readings = referenceReadings(key);
     final theme = Theme.of(context);
-    final outside = evaluation != null &&
-        evaluation.state != VitalReferenceState.within;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -209,36 +244,53 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
           ),
           onChanged: (_) => setState(() {}),
         ),
-        if (evaluation != null) ...[
+        for (final reading in readings) ...[
           const SizedBox(height: 7),
           Wrap(
             spacing: 8,
             runSpacing: 6,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Chip(
-                avatar: Icon(
-                  outside
-                      ? VetIcons.exclamation
-                      : VetIcons.checkCircle,
-                  size: 16,
+              if (reading.band != null)
+                VetStatusBadge(
+                  label: bandLabel(reading.band!),
+                  kind: bandKind(reading.band!),
                 ),
-                label: Text(evaluation.label),
-                backgroundColor: outside
-                    ? theme.colorScheme.errorContainer
-                    : theme.colorScheme.primaryContainer,
-              ),
               Text(
-                'Referencia verificada · ${evaluation.entry.min.display()}–'
-                '${evaluation.entry.max.display()} ${evaluation.entry.unit}',
-                style: theme.textTheme.bodySmall,
+                'Ref: ${reading.range}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
+              if (!reading.verified)
+                VetStatusBadge(
+                  label: 'sin verificar',
+                  kind: VetBadgeKind.unverified,
+                ),
             ],
+          ),
+          // La cita va en letra muy pequeña pero legible, pegada a su valor.
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 2),
+            child: Text(
+              reading.entry.note == null
+                  ? reading.entry.source
+                  : '${reading.entry.source} · ${reading.entry.note}',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ],
       ],
     );
   }
+
+  static VetBadgeKind bandKind(VitalBand band) => switch (band) {
+    VitalBand.low || VitalBand.high => VetBadgeKind.warning,
+    VitalBand.alert => VetBadgeKind.information,
+    VitalBand.normal => VetBadgeKind.success,
+  };
 
   BoxDecoration softDecoration(BuildContext context, {bool accent = false}) {
     final theme = Theme.of(context);
@@ -549,20 +601,22 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.referenceCatalog == null
+                        catalog == null
                             ? 'Interpretación automática todavía desactivada'
-                            : 'Referencias clínicas versionadas activas',
+                            : 'Referencias clínicas de consulta activas',
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        widget.referenceCatalog == null
+                        catalog == null
                             ? 'Se guardan hechos estructurados. $species aún no tiene rangos '
-                                'de referencia verificados cargados en el catálogo, por lo que '
+                                'de referencia cargados en el catálogo, por lo que '
                                 'VetDosis no clasificará estos valores como normales o anormales.'
-                            : 'Los indicadores solo comparan contra referencias verificadas '
-                                'del catálogo ${widget.referenceCatalog!.version}. Estar dentro '
-                                'de un rango de referencia no equivale a un diagnóstico.',
+                            : 'Los indicadores comparan contra el catálogo '
+                                '${catalog!.version}. Se muestran todas las fuentes con su '
+                                'cita; las aún no revisadas por un MVZ van marcadas «sin '
+                                'verificar» y no se anexan al expediente. Estar dentro de un '
+                                'rango de referencia no equivale a un diagnóstico.',
                       ),
                       if (widget.referenceLibrary != null)
                         TextButton.icon(
