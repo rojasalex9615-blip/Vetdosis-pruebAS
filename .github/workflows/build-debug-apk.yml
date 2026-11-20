@@ -14,6 +14,28 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Verificar que el árbol compilado trae la marca y el icono
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Compilando $GITHUB_REF_NAME en $GITHUB_SHA"
+          missing=0
+          for path in \
+            lib/core/widgets/brand_mark.dart \
+            lib/core/widgets/google_mark.dart \
+            android/app/src/main/res/drawable/vetdosis_app_icon.xml \
+            android/app/src/main/res/mipmap-anydpi-v26/vetdosis_launcher.xml \
+            android/app/src/main/res/mipmap-anydpi/vetdosis_launcher.xml; do
+            if [[ ! -f "$path" ]]; then
+              echo "::error::Falta $path. Esta rama es anterior a la marca de la app; compila desde main."
+              missing=1
+            fi
+          done
+          if ! grep -q 'android:icon="@mipmap/vetdosis_launcher"' android/app/src/main/AndroidManifest.xml; then
+            echo "::error::AndroidManifest.xml no usa el icono de VetDosis (@mipmap/vetdosis_launcher)."
+            missing=1
+          fi
+          exit "$missing"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -55,7 +77,13 @@ jobs:
       - run: flutter analyze
       - run: flutter test --timeout 5m
       - name: Generar APK instalable de depuración
-        run: flutter build apk --debug --flavor beta --target-platform android-arm64 --dart-define=APP_CHANNEL=beta --dart-define-from-file=supabase/config.test.local.json
+        run: |
+          flutter build apk --debug \
+            --flavor beta \
+            --target-platform android-arm64 \
+            --dart-define=APP_CHANNEL=beta \
+            --dart-define=BUILD_SHA="${GITHUB_SHA:0:7}" \
+            --dart-define-from-file=supabase/config.test.local.json
       - uses: actions/upload-artifact@v4
         with:
           name: vetdosis-pruebas-debug-arm64

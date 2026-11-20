@@ -8,6 +8,7 @@ class AppVersionLabel extends StatefulWidget {
 }
 
 class _AppVersionLabelState extends State<AppVersionLabel> {
+  static const buildSha = String.fromEnvironment('BUILD_SHA');
   late final Future<PackageInfo> version = PackageInfo.fromPlatform();
   @override
   Widget build(BuildContext context) => FutureBuilder<PackageInfo>(
@@ -17,7 +18,8 @@ class _AppVersionLabelState extends State<AppVersionLabel> {
       return SelectableText(
         info == null
             ? 'VetDosis Pro · ${snapshot.hasError ? 'Versión no disponible' : 'Consultando versión…'}'
-            : 'VetDosis Pro · ${info.version} · Compilación ${info.buildNumber}\n${info.packageName}',
+            : 'VetDosis Pro · ${info.version} · Compilación ${info.buildNumber}\n${info.packageName}'
+                  '${buildSha.isEmpty ? '' : '\nOrigen $buildSha'}',
       );
     },
   );
