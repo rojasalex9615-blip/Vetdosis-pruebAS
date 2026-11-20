@@ -44,7 +44,7 @@ una página, no aparece.
 | Producción animal | Producción y grandes especies (bovinos, porcinos, aves…) |
 | Exóticos y silvestres | Exóticos |
 | Administración y finanzas | Caja · Planeación financiera · Servicios · Proveedores · Promociones · Productividad y semana |
-| Equipo y comunicación | Agenda telefónica · Equipo y avisos · Anuncios y avisos · Pendientes del equipo · Control de asistencia |
+| Equipo y comunicación | Agenda telefónica · Equipo y avisos · Anuncios y avisos · Pendientes del equipo · Checado |
 | Estadísticas y reportes | Estadísticas |
 | Asistente IA | Asistente IA |
 | Revisión de catálogos | Modo revisión |
@@ -83,7 +83,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Planeación financiera | `FinancialPlanningPanel` | Grupo Finanzas | Proyección de ingresos y costos; solo administrador. |
 | Productividad y semana | `ProductivityScreen` | Grupo Finanzas | Plan semanal y tareas. |
 | Promociones | `PromotionsScreen` | Grupo Finanzas | Promociones y clientes; genera imagen de oferta. |
-| Control de asistencia | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
+| Checado | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
 | Estadísticas | `DashboardScreen` | Grupo Estadísticas / Barra | Tableros y gráficas. |
 | Respaldo | `BackupScreen` | Grupo Cuenta | Copias y restauración. |
 | Asistente IA | `AiScreen` | Grupo Asistente IA | Chat con contexto configurable. |

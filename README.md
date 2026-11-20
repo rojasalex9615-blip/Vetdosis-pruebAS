@@ -44,6 +44,7 @@ Los próximos módulos se añadirán a `lib/modules/` con lógica de dominio ind
 
 **Mapa de la app** (armazón, apartados por grupo, una fila por pantalla con su ruta
 y los 7 pasos del Inicio guiado): [diagrama visual](docs/mapa-de-la-app.html) ·
+[PDF](docs/mapa-de-la-app.pdf) · [PNG](docs/mapa-de-la-app.png) ·
 [versión en texto](docs/mapa-de-la-app.md). Revisado contra esta rama.
 
 Room se sustituyó por Sembast/IndexedDB para la base local multiplataforma de M2.
