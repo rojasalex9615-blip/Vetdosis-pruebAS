@@ -135,10 +135,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               : 'Precios propuestos de lanzamiento. Los cobros siguen desactivados. El consumo de tu API key depende de tu proveedor.',
         ),
         if (model.busy || saving) const LinearProgressIndicator(),
-        if (model.error != null) Text(model.error!),
-        IconButton(
+        if (model.error != null)
+          Text(model.error!, style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: VetSpacing.sm),
+        VetSecondaryButton(
+          label: 'Actualizar',
+          icon: VetIcons.refresh,
           onPressed: model.busy ? null : model.load,
-          icon: const Icon(VetIcons.refresh),
         ),
         if (model.data['effective'] != null) ...[
           VetCard(
@@ -251,21 +254,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 : null,
           ),
         if (model.data['reward_enabled'] == true &&
-            canManageWorkspace)
-          TextButton(
-            onPressed: () => redeem(),
-            child: const Text('Canjear puntos por beneficio temporal'),
+            canManageWorkspace) ...[
+          const SizedBox(height: VetSpacing.md),
+          VetSecondaryButton(
+            label: 'Canjear puntos por beneficio temporal',
+            onPressed: redeem,
+            fullWidth: true,
           ),
-        if (model.data['billing_enabled'] == true)
+        ],
+        if (model.data['billing_enabled'] == true) ...[
+          const SizedBox(height: VetSpacing.md),
           for (final r in model.data['requests'] as List? ?? [])
-            TextButton(
+            VetSecondaryButton(
+              label: 'Abrir pago seguro · ${r['plan_code']} ${r['period']}',
               onPressed: r['requested_by'] == widget.member.userId
                   ? () => checkout(r['id'] as String)
                   : null,
-              child: Text(
-                'Abrir pago seguro · ${r['plan_code']} ${r['period']}',
-              ),
+              fullWidth: true,
             ),
+        ],
         const VetNote(
           text:
               'Los beneficios beta/regalo vencen en la fecha indicada. Un plan vencido conserva tus registros y permite exportar; no borra datos ni modifica tu rol.',
@@ -300,10 +307,11 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
       .paymentHistory(widget.clinic);
   @override
   Widget build(BuildContext context) => ExpansionTile(
-    title: const Text('Historial de pagos de la suscripción'),
+    title: Text('Historial de pagos de la suscripción', style: Theme.of(context).textTheme.titleMedium),
     children: [
-      const Text(
+      Text(
         'Estos pagos corresponden a VetDosis Pro. Los cobros a tus clientes se registran en Inventario y caja.',
+        style: Theme.of(context).textTheme.bodySmall,
       ),
       FutureBuilder<List<Map<String, dynamic>>>(
         future: result,
@@ -312,29 +320,50 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
             return const LinearProgressIndicator();
           }
           if (s.hasError) {
-            return const Text('No se pudo consultar el historial de pagos.');
+            return Text('No se pudo consultar el historial de pagos.',
+                style: Theme.of(context).textTheme.bodyMedium);
           }
-          if (s.data!.isEmpty) return const Text('Sin pagos confirmados.');
+          if (s.data!.isEmpty)
+            return Text('Sin pagos confirmados.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ));
           return Column(
             children: [
               for (final p in s.data!)
-                ListTile(
-                  title: Text(
-                    'Pago confirmado · \$${((p['amount_cents'] as num) / 100).toStringAsFixed(2)} ${p['currency']}',
+                VetCard(
+                  padding: const EdgeInsets.all(VetSpacing.md),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pago confirmado · \$${((p['amount_cents'] as num) / 100).toStringAsFixed(2)} ${p['currency']}',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            const SizedBox(height: VetSpacing.xs),
+                            Text(
+                              '${p['provider']} · ${p['period_start']} → ${p['period_end']}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  subtitle: Text(
-                    '${p['provider']} · ${p['period_start']} → ${p['period_end']}',
-                  ),
-                ),
             ],
           );
         },
       ),
-      TextButton(
+      const SizedBox(height: VetSpacing.md),
+      VetSecondaryButton(
+        label: 'Actualizar pagos',
+        icon: VetIcons.refresh,
         onPressed: () => setState(
           () => result = widget.repository.paymentHistory(widget.clinic),
         ),
-        child: const Text('Actualizar pagos'),
       ),
     ],
   );

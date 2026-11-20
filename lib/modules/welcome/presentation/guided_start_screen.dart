@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_theme.dart';
+import '../../../vet_ui/vet_icons.dart';
 
 const guideSteps = <(String, String, String)>[
   (
@@ -122,12 +125,13 @@ class _GuidedStartScreenState extends State<GuidedStartScreen> {
               CheckboxListTile(
                 value: done.contains(i),
                 onChanged: !loaded ? null : (v) => mark(i, v ?? false),
-                title: Text(guideSteps[i].$1),
-                subtitle: Text(guideSteps[i].$2),
+                title: Text(guideSteps[i].$1, style: VetTypography.bodyMedium),
+                subtitle: Text(guideSteps[i].$2, style: VetTypography.bodySmall),
               ),
-              TextButton(
+              VetSecondaryButton(
+                label: 'Abrir',
                 onPressed: () => widget.onNavigate(guideSteps[i].$3),
-                child: const Text('Abrir'),
+                fullWidth: true,
               ),
             ],
           ),
@@ -180,30 +184,34 @@ class _FirstStepsBannerState extends State<FirstStepsBanner> {
   @override
   Widget build(BuildContext context) => !visible
       ? const SizedBox.shrink()
-      : Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Bienvenido: configura tu espacio paso a paso'),
-                const Text(
-                  'Revisa la guía antes de comenzar. Puedes retomarla desde el menú.',
-                ),
-                Wrap(
-                  children: [
-                    FilledButton(
-                      onPressed: widget.onOpen,
-                      child: const Text('Comenzar guía'),
-                    ),
-                    TextButton(
-                      onPressed: dismiss,
-                      child: const Text('Más tarde'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      : VetCard(
+          padding: const EdgeInsets.all(VetSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Bienvenido: configura tu espacio paso a paso',
+                  style: VetTypography.titleMedium),
+              const SizedBox(height: VetSpacing.xs),
+              Text(
+                'Revisa la guía antes de comenzar. Puedes retomarla desde el menú.',
+                style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
+              ),
+              const SizedBox(height: VetSpacing.md),
+              Wrap(
+                spacing: VetSpacing.sm,
+                runSpacing: VetSpacing.sm,
+                children: [
+                  VetActionButton(
+                    label: 'Comenzar guía',
+                    onPressed: widget.onOpen,
+                  ),
+                  VetSecondaryButton(
+                    label: 'Más tarde',
+                    onPressed: dismiss,
+                  ),
+                ],
+              ),
+            ],
           ),
         );
 }
