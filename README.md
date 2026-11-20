@@ -41,6 +41,11 @@ Capturas en `review/`. Pendiente de compilación Android/iOS y prueba en disposi
 `lib/modules/core` separa presentación (ViewModel) y datos (repositorio de ajustes).
 `lib/core/app.dart` compone la aplicación y la UI del núcleo. Inyección por constructor.
 Los próximos módulos se añadirán a `lib/modules/` con lógica de dominio independiente.
+
+**Mapa de la app** (armazón, apartados por grupo, una fila por pantalla con su ruta
+y los 7 pasos del Inicio guiado): [diagrama visual](docs/mapa-de-la-app.html) ·
+[versión en texto](docs/mapa-de-la-app.md). Revisado contra esta rama.
+
 Room se sustituyó por Sembast/IndexedDB para la base local multiplataforma de M2.
 Los expedientes de M4 requieren conexión; no se guardan datos de pacientes ni contactos en preferencias o en la caché sin cifrado.
 
