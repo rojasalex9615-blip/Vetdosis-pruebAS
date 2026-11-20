@@ -16,6 +16,8 @@ import '../domain/prescribing_repository.dart';
 import '../domain/prescribing_models.dart';
 import 'prescribing_view_model.dart';
 import 'rx_entry_screen.dart';
+import '../../../vet_ui/vet_theme.dart';
+import '../../../vet_ui/vet_components.dart';
 
 class PrescribingScreen extends StatefulWidget {
   const PrescribingScreen({
@@ -260,69 +262,103 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
   }
 
   List<Widget> standingPanel() => [
-    const Text('Recetas ordinarias · casos seleccionados'),
-    const Text(
+    const SizedBox(height: VetSpacing.md),
+    Text('Recetas ordinarias · casos seleccionados', style: VetTypography.titleMedium),
+    const SizedBox(height: VetSpacing.xs),
+    Text(
       'Avisos dentro de la app. Se actualizan cada 30 segundos mientras esta pantalla permanece abierta; no son notificaciones con la app cerrada.',
+      style: VetTypography.bodySmall,
     ),
-    if (model.standingError != null) Text(model.standingError!),
+    if (model.standingError != null)
+      Text(model.standingError!, style: VetTypography.bodyMedium),
+    const SizedBox(height: VetSpacing.md),
     if (model.canOfferStanding)
-      FilledButton(
+      VetActionButton(
+        label: 'Dejar a cargo',
         onPressed: offerStanding,
-        child: const Text('Dejar a cargo'),
+        fullWidth: true,
       ),
     if (!model.busy &&
         model.standingOffers.any(
           (d) =>
               d['created_by'] == widget.member.userId && d['revoked'] != true,
-        ))
-      OutlinedButton(
+        )) ...[
+      const SizedBox(height: VetSpacing.sm),
+      VetSecondaryButton(
+        label: 'Retomar revisión',
         onPressed: resumeStanding,
-        child: const Text('Retomar revisión'),
+        fullWidth: true,
       ),
+    ],
     for (final d in model.standingOffers)
-      Card(
-        child: ListTile(
-          title: Text(
-            d['revoked'] == true
-                ? 'Revocada'
-                : d['active'] == true
-                ? 'Activa y aceptada'
-                : d['available'] == true
-                ? 'Pendiente de aceptación'
-                : 'No vigente',
-          ),
-          subtitle: Text(
-            'Caso: ${d['case_id']}\nPersona: ${d['recipient_id']}\nVence: ${d['valid_until']}',
-          ),
-          trailing:
-              d['recipient_id'] == widget.member.userId &&
-                  d['available'] == true &&
-                  d['accepted'] != true
-              ? TextButton(
-                  onPressed: () => acceptStanding(d),
-                  child: const Text('Aceptar'),
-                )
-              : null,
+      VetCard(
+        padding: const EdgeInsets.all(VetSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              d['revoked'] == true
+                  ? 'Revocada'
+                  : d['active'] == true
+                      ? 'Activa y aceptada'
+                      : d['available'] == true
+                          ? 'Pendiente de aceptación'
+                          : 'No vigente',
+              style: VetTypography.titleSmall,
+            ),
+            const SizedBox(height: VetSpacing.xs),
+            Text(
+              'Caso: ${d['case_id']}\nPersona: ${d['recipient_id']}\nVence: ${d['valid_until']}',
+              style: VetTypography.bodySmall,
+            ),
+            if (d['recipient_id'] == widget.member.userId &&
+                d['available'] == true &&
+                d['accepted'] != true) ...[
+              const SizedBox(height: VetSpacing.sm),
+              VetSecondaryButton(
+                label: 'Aceptar',
+                onPressed: () => acceptStanding(d),
+                fullWidth: true,
+              ),
+            ],
+          ],
         ),
       ),
+    const SizedBox(height: VetSpacing.lg),
     Text(
       'Revisiones pendientes: ${model.standingEvents.where((e) => e['reviewed'] != true).length}',
+      style: VetTypography.titleMedium,
     ),
+    const SizedBox(height: VetSpacing.md),
     for (final e in model.standingEvents)
-      Card(
-        child: ListTile(
-          title: Text(
-            '${e['patient_name']} · ${e['reviewed'] == true ? 'Revisada' : 'Pendiente de revisión posterior'}',
-          ),
-          subtitle: Text(
-            'Emitida por ${e['recipient_id']} · ${e['created_at']}',
-          ),
-          trailing: e['reviewed'] == true
-              ? const Icon(Icons.check)
-              : TextButton(
-                  onPressed: model.busy ? null : () => postReview(e),
-                  child: const Text('Revisar'),
-                ),
+      VetCard(
+        padding: const EdgeInsets.all(VetSpacing.md),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${e['patient_name']} · ${e['reviewed'] == true ? 'Revisada' : 'Pendiente de revisión posterior'}',
+                    style: VetTypography.titleSmall,
+                  ),
+                  const SizedBox(height: VetSpacing.xs),
+                  Text(
+                    'Emitida por ${e['recipient_id']} · ${e['created_at']}',
+                    style: VetTypography.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            if (e['reviewed'] != true)
+              VetSecondaryButton(
+                label: 'Revisar',
+                onPressed: model.busy ? null : () => postReview(e),
+              )
+            else
+              const Icon(Icons.check, color: VetColors.success),
+          ],
         ),
       ),
   ];
@@ -1393,20 +1429,25 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
       children: [
         Text(
           'Recetas y control de medicamentos',
-          style: Theme.of(context).textTheme.headlineMedium,
+          style: VetTypography.headlineMedium,
         ),
-        const Text(
+        const SizedBox(height: VetSpacing.xs),
+        Text(
           'Aplicar, reportar, autorizar y emitir son actos separados. El puesto no sustituye la habilitación profesional ni los permisos necesarios.',
+          style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
         ),
-        OutlinedButton.icon(
+        const SizedBox(height: VetSpacing.md),
+        VetSecondaryButton(
+          label: 'Actualizar',
+          icon: Icons.refresh,
           onPressed: model.busy ? null : () => model.load(),
-          icon: const Icon(Icons.refresh),
-          label: const Text('Actualizar'),
         ),
+        const SizedBox(height: VetSpacing.md),
         DropdownButtonFormField<String>(
           key: ValueKey('prescribing-section-$section'),
           initialValue: section,
           decoration: const InputDecoration(labelText: 'Apartado'),
+          isExpanded: true,
           items: [
             for (final s in [
               'Perfil',
@@ -1421,16 +1462,17 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
           onChanged: model.busy ? null : (v) => setState(() => section = v!),
         ),
         if (model.standingEvents.any((e) => e['reviewed'] != true))
-          TextButton.icon(
+          VetSecondaryButton(
+            label:
+                '${model.standingEvents.where((e) => e['reviewed'] != true).length} recetas pendientes de revisión posterior',
+            icon: Icons.notifications_active_outlined,
             onPressed: () => setState(() => section = 'A cargo'),
-            icon: const Icon(Icons.notifications_active_outlined),
-            label: Text(
-              '${model.standingEvents.where((e) => e['reviewed'] != true).length} recetas pendientes de revisión posterior',
-            ),
           ),
         if (model.busy) const LinearProgressIndicator(),
-        if (model.error != null) Text(model.error!),
-        if (['Recetas', 'Medicación'].contains(section))
+        if (model.error != null)
+          Text(model.error!, style: VetTypography.bodyMedium),
+        if (['Recetas', 'Medicación'].contains(section)) ...[
+          const SizedBox(height: VetSpacing.md),
           DropdownButtonFormField<String>(
             key: ValueKey('case-${model.caseId}-${model.cases.length}'),
             initialValue: model.caseId,
@@ -1444,59 +1486,78 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     '${c.patientName} · ${c.title}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    style: VetTypography.bodyMedium,
                   ),
                 ),
             ],
             onChanged: model.busy ? null : (id) => model.load(selectedCase: id),
           ),
+        ],
         if (section == 'Perfil') ...[
+          const SizedBox(height: VetSpacing.lg),
           Text(
             model.ownProfile == null
                 ? 'Perfil pendiente'
                 : '${model.ownProfile!['name']} · cédula ${model.ownProfile!['license']} · versión ${model.ownProfile!['version']}',
+            style: VetTypography.bodyLarge,
           ),
+          const SizedBox(height: VetSpacing.xs),
           Text(
             model.professional
                 ? 'Habilitación profesional vigente en servidor'
                 : 'Habilitación profesional pendiente o no vigente. Capturar una cédula no la concede.',
+            style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
           ),
-          FilledButton(
+          const SizedBox(height: VetSpacing.md),
+          VetActionButton(
+            label: 'Editar mis datos / firma en nueva versión',
             onPressed: model.busy ? null : profile,
-            child: const Text('Editar mis datos / firma en nueva versión'),
+            fullWidth: true,
           ),
-          if (model.professional && !model.prescriptionKnown)
-            OutlinedButton(
+          if (model.professional && !model.prescriptionKnown) ...[
+            const SizedBox(height: VetSpacing.sm),
+            VetSecondaryButton(
+              label: 'Compartir datos, firma o permisos ordinarios',
               onPressed: model.busy ? null : delegate,
-              child: const Text('Compartir datos, firma o permisos ordinarios'),
+              fullWidth: true,
             ),
+          ],
           for (final d in model.delegations)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${model.prescriptionKnown ? 'Histórico: no habilita el nuevo flujo de recetas.\n' : ''}Receptor: ${d['recipient_id']}\nDatos: ${d['use_data']} · Firma: ${d['use_signature']}\nPreparar ordinaria: ${d['prepare_ordinary']} · Emitir ordinaria: ${d['issue_ordinary']}\nVigencia: ${d['valid_until']} · ${d['revoked'] == true ? 'Revocado' : 'Sin revocación registrada'}',
+            VetCard(
+              padding: const EdgeInsets.all(VetSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${model.prescriptionKnown ? 'Histórico: no habilita el nuevo flujo de recetas.\n' : ''}Receptor: ${d['recipient_id']}\nDatos: ${d['use_data']} · Firma: ${d['use_signature']}\nPreparar ordinaria: ${d['prepare_ordinary']} · Emitir ordinaria: ${d['issue_ordinary']}\nVigencia: ${d['valid_until']} · ${d['revoked'] == true ? 'Revocado' : 'Sin revocación registrada'}',
+                    style: VetTypography.bodyMedium,
+                  ),
+                  if (d['created_by'] == widget.member.userId &&
+                      d['revoked'] != true) ...[
+                    const SizedBox(height: VetSpacing.sm),
+                    TextButton(
+                      onPressed: model.busy ? null : () => revoke(d),
+                      child: const Text('Revocar permiso'),
                     ),
-                    if (d['created_by'] == widget.member.userId &&
-                        d['revoked'] != true)
-                      TextButton(
-                        onPressed: model.busy ? null : () => revoke(d),
-                        child: const Text('Revocar permiso'),
-                      ),
                   ],
-                ),
+                ],
               ),
             ),
         ],
-        if (section == 'A cargo') ...standingPanel(),
+        if (section == 'A cargo') ...[
+          const SizedBox(height: VetSpacing.lg),
+          ...standingPanel(),
+        ],
         if (section == 'Recetas') ...[
+          const SizedBox(height: VetSpacing.lg),
           if (model.products.isEmpty)
-            const Text(
+            Text(
               'No hay productos con clasificación publicada. Se pueden completar perfiles; faltan los datos de productos para preparar recetas.',
+              style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
             ),
-          FilledButton(
+          const SizedBox(height: VetSpacing.md),
+          VetActionButton(
+            label: 'Nueva receta del caso',
             onPressed:
                 model.busy ||
                     model.caseId == null ||
@@ -1504,79 +1565,75 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     !model.canPreparePrescription
                 ? null
                 : createRx,
-            child: const Text('Nueva receta del caso'),
+            fullWidth: true,
           ),
+          const SizedBox(height: VetSpacing.lg),
           for (final r in model.prescriptions.where(
             (r) => model.caseId == null || r['case_id'] == model.caseId,
           ))
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${r['patient_name']} · ${r['controlled'] == true ? 'Restringida' : 'Ordinaria'} · ${rxState(r['state'])}',
-                    ),
-                    Text(
-                      'Folio capturado: ${r['official_folio'] == '' ? 'pendiente / no aplica' : r['official_folio']}',
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        if (r['state'] != 'awaiting_authorization')
-                          TextButton(
-                            onPressed:
-                                model.busy ||
-                                    (r['state'] == 'draft' &&
-                                        model.prescriptionKnown &&
-                                        !model.prescriptionAction(r, 'edit'))
-                                ? null
-                                : () => openRx(r),
-                            child: Text(
-                              r['state'] == 'draft'
-                                  ? 'Editar borrador'
-                                  : 'Ver PDF / confirmar',
-                            ),
-                          ),
-                        if (model.prescriptionAction(r, 'sign'))
-                          TextButton(
-                            onPressed: () => signConsultation(r),
-                            child: const Text('Firmar consulta realizada'),
-                          ),
-                        if (model.prescriptionAction(r, 'prepare_standing'))
-                          OutlinedButton(
-                            onPressed: () => prepare(r, standing: true),
-                            child: const Text(
-                              'Preparar con autorización temporal',
-                            ),
-                          ),
-                        if (model.prescriptionAction(r, 'authorize'))
-                          TextButton(
-                            onPressed: () => authorizePrescription(r),
-                            child: const Text(
-                              'Revisar y autorizar indicaciones',
-                            ),
-                          ),
-                        if (model.prescriptionAction(r, 'correct'))
-                          TextButton(
-                            onPressed: () => returnPrescription(r),
-                            child: const Text('Devolver a borrador'),
-                          ),
-                        if (r['state'] == 'draft' &&
-                            (!model.prescriptionKnown ||
-                                model.prescriptionAction(r, 'prepare')))
-                          TextButton(
-                            onPressed: model.busy ? null : () => prepare(r),
-                            child: Text(
-                              model.prescriptionKnown
-                                  ? 'Preparar para autorización'
-                                  : 'Preparar PDF con identidad y firma',
-                            ),
-                          ),
-                        if (r['state'] == 'issued' &&
-                            r['responsible_id'] == widget.member.userId &&
-                            model.canScheduleMedication)
+            VetCard(
+              padding: const EdgeInsets.all(VetSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${r['patient_name']} · ${r['controlled'] == true ? 'Restringida' : 'Ordinaria'} · ${rxState(r['state'])}',
+                    style: VetTypography.titleMedium,
+                  ),
+                  const SizedBox(height: VetSpacing.xs),
+                  Text(
+                    'Folio capturado: ${r['official_folio'] == '' ? 'pendiente / no aplica' : r['official_folio']}',
+                    style: VetTypography.bodyMedium,
+                  ),
+                  const SizedBox(height: VetSpacing.md),
+                  Wrap(
+                    spacing: VetSpacing.sm,
+                    runSpacing: VetSpacing.sm,
+                    children: [
+                      if (r['state'] != 'awaiting_authorization')
+                        VetSecondaryButton(
+                          label:
+                              r['state'] == 'draft' ? 'Editar borrador' : 'Ver PDF / confirmar',
+                          onPressed:
+                              model.busy ||
+                                  (r['state'] == 'draft' &&
+                                      model.prescriptionKnown &&
+                                      !model.prescriptionAction(r, 'edit'))
+                              ? null
+                              : () => openRx(r),
+                        ),
+                      if (model.prescriptionAction(r, 'sign'))
+                        VetSecondaryButton(
+                          label: 'Firmar consulta realizada',
+                          onPressed: () => signConsultation(r),
+                        ),
+                      if (model.prescriptionAction(r, 'prepare_standing'))
+                        VetSecondaryButton(
+                          label: 'Preparar con autorización temporal',
+                          onPressed: () => prepare(r, standing: true),
+                        ),
+                      if (model.prescriptionAction(r, 'authorize'))
+                        VetSecondaryButton(
+                          label: 'Revisar y autorizar indicaciones',
+                          onPressed: () => authorizePrescription(r),
+                        ),
+                      if (model.prescriptionAction(r, 'correct'))
+                        VetSecondaryButton(
+                          label: 'Devolver a borrador',
+                          onPressed: () => returnPrescription(r),
+                        ),
+                      if (r['state'] == 'draft' &&
+                          (!model.prescriptionKnown ||
+                              model.prescriptionAction(r, 'prepare')))
+                        VetSecondaryButton(
+                          label: model.prescriptionKnown
+                              ? 'Preparar para autorización'
+                              : 'Preparar PDF con identidad y firma',
+                          onPressed: model.busy ? null : () => prepare(r),
+                        ),
+                      if (r['state'] == 'issued' &&
+                          r['responsible_id'] == widget.member.userId &&
+                          model.canScheduleMedication)
                           TextButton(
                             onPressed: model.busy ? null : () => schedule(r),
                             child: const Text('Programar en hospitalización'),

@@ -6,6 +6,8 @@ import '../../patients/presentation/signature_pad.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
 import '../domain/prescribing_models.dart';
+import '../../../vet_ui/vet_theme.dart';
+import '../../../vet_ui/vet_components.dart';
 
 class RxField {
   const RxField(
@@ -166,7 +168,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
             (e) => e.value.toLowerCase().contains(query),
           ))
             CheckboxListTile(
-              title: Text(option.value),
+              title: Text(option.value, style: VetTypography.bodyMedium),
               value: selected.contains(option.key),
               onChanged: busy
                   ? null
@@ -210,7 +212,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
     }
     if (f.type == 'checkbox') {
       return CheckboxListTile(
-        title: Text(f.label),
+        title: Text(f.label, style: VetTypography.bodyMedium),
         value: data[f.key] == true,
         onChanged: busy
             ? null
@@ -219,7 +221,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
     }
     if (f.type == 'select') {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: VetSpacing.xs),
         child: DropdownButtonFormField<String>(
           initialValue: f.options.containsKey(data[f.key]) ? data[f.key] : null,
           isExpanded: true,
@@ -234,6 +236,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
                   e.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: VetTypography.bodyMedium,
                 ),
               ),
           ],
@@ -244,11 +247,14 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
     if (f.type == 'local_date') {
       final selected = DateTime.tryParse('${data[f.key] ?? ''}');
       return ListTile(
-        title: Text('${f.label}${f.required ? ' *' : ''}'),
+        contentPadding: EdgeInsets.zero,
+        title: Text('${f.label}${f.required ? ' *' : ''}',
+            style: VetTypography.bodyMedium),
         subtitle: Text(
           selected == null
               ? 'Selecciona fecha'
               : '${selected.day.toString().padLeft(2, '0')}/${selected.month.toString().padLeft(2, '0')}/${selected.year}',
+          style: VetTypography.bodySmall,
         ),
         trailing: const Icon(Icons.calendar_month),
         onTap: busy
@@ -272,13 +278,16 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
     if (f.type == 'local_instant') {
       final instant = DateTime.tryParse('${data[f.key] ?? ''}')?.toLocal();
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: VetSpacing.xs),
         child: ListTile(
-          title: Text('${f.label}${f.required ? ' *' : ''}'),
+          contentPadding: EdgeInsets.zero,
+          title: Text('${f.label}${f.required ? ' *' : ''}',
+              style: VetTypography.bodyMedium),
           subtitle: Text(
             instant == null
                 ? 'Selecciona fecha y hora local'
                 : '${instant.day.toString().padLeft(2, '0')}/${instant.month.toString().padLeft(2, '0')}/${instant.year} · ${instant.hour.toString().padLeft(2, '0')}:${instant.minute.toString().padLeft(2, '0')}',
+            style: VetTypography.bodySmall,
           ),
           trailing: const Icon(Icons.calendar_month),
           onTap: busy
@@ -320,7 +329,7 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
     }
     if (f.type == 'items') return items(f);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: VetSpacing.xs),
       child: TextFormField(
         initialValue: data[f.key]?.toString() ?? '',
         enabled: !busy,
@@ -344,67 +353,73 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(f.label),
-        const Text(
+        Text(f.label, style: VetTypography.titleMedium),
+        const SizedBox(height: VetSpacing.xs),
+        Text(
           'Captura las indicaciones revisadas por el responsable. No se proponen dosis ni intervalos.',
+          style: VetTypography.bodySmall,
         ),
+        const SizedBox(height: VetSpacing.md),
         for (var i = 0; i < rows.length; i++)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    key: ValueKey('product-${identityHashCode(rows[i])}'),
-                    initialValue:
-                        widget.products.any(
-                          (p) => p['id'] == rows[i]['product_version_id'],
-                        )
-                        ? rows[i]['product_version_id']
-                        : null,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Producto y presentación',
-                    ),
-                    items: [
-                      for (final p in widget.products)
-                        DropdownMenuItem(
-                          value: p['id'] as String,
-                          child: Text(
-                            '${p['name']} · ${p['presentation']} · ${p['source_status']}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                    onChanged: busy
-                        ? null
-                        : (id) => setState(() {
-                            rows[i]['product_version_id'] = id;
-                            rows[i]['unit'] = widget.products.firstWhere(
-                              (p) => p['id'] == id,
-                            )['unit'];
-                          }),
+          VetCard(
+            padding: const EdgeInsets.all(VetSpacing.md),
+            child: Column(
+              children: [
+                DropdownButtonFormField<String>(
+                  key: ValueKey('product-${identityHashCode(rows[i])}'),
+                  initialValue:
+                      widget.products.any(
+                        (p) => p['id'] == rows[i]['product_version_id'],
+                      )
+                      ? rows[i]['product_version_id']
+                      : null,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Producto y presentación',
                   ),
-                  for (final e in {
-                    'invalid_clinical_date':
-                        'Selecciona una fecha clínica válida que no sea futura.',
-                    'explicit_clinical_date_required':
-                        'Selecciona explícitamente la fecha clínica.',
-                    'explicit_verified_case_responsible_required':
-                        'Selecciona un MVZ habilitado con permiso vigente para este espacio.',
-                    'invalid_case_context':
-                        'Revisa el contexto, el motivo (hasta 300 caracteres) y las notas (hasta 4000).',
-                    'case_context_fields_only':
-                        'El caso inicial solo guarda contexto. Registra mediciones y actuaciones en sus apartados.',
-                    'quantity':
-                        'Cantidad por administración (${rows[i]['unit'] ?? 'unidad pendiente'})',
-                    'route': 'Vía',
-                    'interval': 'Intervalo',
-                    'duration': 'Duración',
-                    'care': 'Cuidados / indicaciones',
-                  }.entries)
-                    TextFormField(
+                  items: [
+                    for (final p in widget.products)
+                      DropdownMenuItem(
+                        value: p['id'] as String,
+                        child: Text(
+                          '${p['name']} · ${p['presentation']} · ${p['source_status']}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: VetTypography.bodyMedium,
+                        ),
+                      ),
+                  ],
+                  onChanged: busy
+                      ? null
+                      : (id) => setState(() {
+                          rows[i]['product_version_id'] = id;
+                          rows[i]['unit'] = widget.products.firstWhere(
+                            (p) => p['id'] == id,
+                          )['unit'];
+                        }),
+                ),
+                const SizedBox(height: VetSpacing.md),
+                for (final e in {
+                  'invalid_clinical_date':
+                      'Selecciona una fecha clínica válida que no sea futura.',
+                  'explicit_clinical_date_required':
+                      'Selecciona explícitamente la fecha clínica.',
+                  'explicit_verified_case_responsible_required':
+                      'Selecciona un MVZ habilitado con permiso vigente para este espacio.',
+                  'invalid_case_context':
+                      'Revisa el contexto, el motivo (hasta 300 caracteres) y las notas (hasta 4000).',
+                  'case_context_fields_only':
+                      'El caso inicial solo guarda contexto. Registra mediciones y actuaciones en sus apartados.',
+                  'quantity':
+                      'Cantidad por administración (${rows[i]['unit'] ?? 'unidad pendiente'})',
+                  'route': 'Vía',
+                  'interval': 'Intervalo',
+                  'duration': 'Duración',
+                  'care': 'Cuidados / indicaciones',
+                }.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: VetSpacing.xs),
+                    child: TextFormField(
                       key: ValueKey('${identityHashCode(rows[i])}-${e.key}'),
                       initialValue: rows[i][e.key],
                       enabled: !busy,
@@ -412,17 +427,19 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
                       decoration: InputDecoration(labelText: e.value),
                       onChanged: (v) => setState(() => rows[i][e.key] = v),
                     ),
-                  TextButton(
-                    onPressed: busy
-                        ? null
-                        : () => setState(() {
-                            rows.removeAt(i);
-                            data[f.key] = rows;
-                          }),
-                    child: const Text('Quitar indicación'),
                   ),
-                ],
-              ),
+                const SizedBox(height: VetSpacing.md),
+                VetSecondaryButton(
+                  label: 'Quitar indicación',
+                  onPressed: busy
+                      ? null
+                      : () => setState(() {
+                          rows.removeAt(i);
+                          data[f.key] = rows;
+                        }),
+                  fullWidth: true,
+                ),
+              ],
             ),
           ),
         OutlinedButton(
@@ -449,18 +466,29 @@ class _RxEntryScreenState extends State<RxEntryScreen> {
         leading: BackButton(onPressed: busy ? null : leave),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(VetSpacing.lg),
         children: [
-          if (widget.reviewText != null) SelectableText(widget.reviewText!),
-          for (final f in widget.fields) field(f),
+          if (widget.reviewText != null) ...[
+            SelectableText(widget.reviewText!, style: VetTypography.bodyMedium),
+            const SizedBox(height: VetSpacing.lg),
+          ],
+          for (final f in widget.fields) ...[
+            field(f),
+            const SizedBox(height: VetSpacing.xs),
+          ],
           if (error != null)
             Text(
               error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: VetTypography.bodyMedium.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
-          FilledButton(
+          const SizedBox(height: VetSpacing.lg),
+          VetActionButton(
+            label: busy ? 'Guardando…' : widget.submitLabel,
             onPressed: busy ? null : save,
-            child: Text(busy ? 'Guardando…' : widget.submitLabel),
+            fullWidth: true,
+            loading: busy,
           ),
         ],
       ),

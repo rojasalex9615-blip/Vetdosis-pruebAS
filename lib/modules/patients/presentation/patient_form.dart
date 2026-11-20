@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../domain/patient_models.dart';
 import 'patient_view_model.dart';
+import '../../../vet_ui/vet_theme.dart';
+import '../../../vet_ui/vet_components.dart';
 
 class PatientForm extends StatefulWidget {
   const PatientForm({super.key, required this.owners, required this.save});
@@ -126,24 +128,21 @@ class _PatientFormState extends State<PatientForm> {
     }
   }
 
-  Widget input(String key, String label) => Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: TextField(
-      enabled: !busy,
-      controller: fields[key],
-      keyboardType: switch (key) {
-        'phone' => TextInputType.phone,
-        'email' => TextInputType.emailAddress,
-        _ => TextInputType.text,
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-    ),
-  );
+  Widget input(String key, String label,
+      {TextInputType? keyboardType, String? hint}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: VetSpacing.md),
+        child: TextField(
+          enabled: !busy,
+          controller: fields[key],
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => UnsavedFormScope(
     controller: exit,
@@ -152,13 +151,13 @@ class _PatientFormState extends State<PatientForm> {
     child: Scaffold(
       appBar: AppBar(title: const Text('Nuevo paciente')),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(VetSpacing.xxl),
         children: [
           Text(
             'Datos del paciente',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: VetTypography.headlineSmall,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: VetSpacing.lg),
           input('name', 'Nombre del paciente'),
           input('species', 'Especie'),
           input('breed', 'Raza (opcional)'),
@@ -176,13 +175,14 @@ class _PatientFormState extends State<PatientForm> {
             ],
             onChanged: busy ? null : (v) => setState(() => sex = v ?? sex),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: VetSpacing.lg),
           input('birth_date', 'Fecha de nacimiento (AAAA-MM-DD, opcional)'),
+          const SizedBox(height: VetSpacing.xl),
           Text(
             'Tutor y contacto',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: VetTypography.headlineSmall,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: VetSpacing.md),
           DropdownButtonFormField<String>(
             initialValue: ownerMode,
             isExpanded: true,
@@ -205,7 +205,7 @@ class _PatientFormState extends State<PatientForm> {
                 ? null
                 : (v) => setState(() => ownerMode = v ?? ownerMode),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: VetSpacing.md),
           if (ownerMode == 'existing')
             DropdownButtonFormField<String>(
               initialValue: ownerId,
@@ -220,19 +220,26 @@ class _PatientFormState extends State<PatientForm> {
             ),
           if (ownerMode == 'new') ...[
             input('owner_name', 'Nombre del tutor'),
-            input('phone', 'Teléfono internacional (opcional, ej. +52…)'),
-            input('email', 'Correo (opcional)'),
+            input('phone', 'Teléfono internacional (opcional, ej. +52…)',
+                keyboardType: TextInputType.phone),
+            input('email', 'Correo (opcional)', keyboardType: TextInputType.emailAddress),
             input('address', 'Dirección (opcional)'),
           ],
-          if (error != null)
+          if (error != null) ...[
+            const SizedBox(height: VetSpacing.md),
             Text(
               error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: VetTypography.bodyMedium.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
-          const SizedBox(height: 16),
-          FilledButton(
+          ],
+          const SizedBox(height: VetSpacing.xl),
+          VetActionButton(
+            label: busy ? 'Guardando…' : 'Crear paciente',
             onPressed: busy ? null : save,
-            child: Text(busy ? 'Guardando…' : 'Crear paciente'),
+            fullWidth: true,
+            loading: busy,
           ),
         ],
       ),

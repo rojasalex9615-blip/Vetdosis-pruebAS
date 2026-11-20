@@ -6,9 +6,10 @@ import 'appointment_message_screen.dart';
 import 'appointment_links_panel.dart';
 import 'appointment_care_panel.dart';
 import '../domain/appointment_care.dart';
-import 'appointment_summary.dart';
+import 'appointment_summary.dart'
 import 'commission_panel.dart';
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/staff_labels.dart';
 import 'appointment_patient_picker.dart';
 import '../../backup/domain/backup_archive.dart';
@@ -463,19 +464,25 @@ class _OperationsScreenState extends State<OperationsScreen>
           activeSection == 'blocked'
               ? sectionTitle(section)
               : sectionTitle(activeSection),
-          style: Theme.of(context).textTheme.headlineSmall,
+          style: VetTypography.headlineSmall,
         ),
-        const Text(
+        const SizedBox(height: VetSpacing.xs),
+        Text(
           'La agenda y los servicios no autorizan procedimientos ni sustituyen el registro clínico.',
+          style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
         ),
-        if (widget.onOpenDuty != null && !widget.member.isPersonal)
-          OutlinedButton.icon(
+        if (widget.onOpenDuty != null && !widget.member.isPersonal) ...[
+          const SizedBox(height: VetSpacing.md),
+          VetSecondaryButton(
+            label: 'Horarios, faltas y coberturas',
+            icon: Icons.schedule,
             onPressed: widget.onOpenDuty,
-            icon: const Icon(Icons.schedule),
-            label: const Text('Horarios, faltas y coberturas'),
           ),
+        ],
+        const SizedBox(height: VetSpacing.md),
         Wrap(
-          spacing: 8,
+          spacing: VetSpacing.sm,
+          runSpacing: VetSpacing.xs,
           children: [
             for (final e in {
               'appointments': 'Agenda y citas',
@@ -488,11 +495,12 @@ class _OperationsScreenState extends State<OperationsScreen>
             }.entries)
               if (!model.explicitPermissions || model.sectionAllowed(e.key))
                 glowChip(ChoiceChip(
-                  label: Text(e.value),
+                  label: Text(e.value, style: VetTypography.labelMedium),
                   selected: section == e.key,
                   onSelected: (_) => setState(() => section = e.key),
                 )),
-            TextButton(
+            VetSecondaryButton(
+              label: 'Mi nombre en el equipo',
               onPressed: model.busy
                   ? null
                   : () => form(
@@ -516,12 +524,11 @@ class _OperationsScreenState extends State<OperationsScreen>
                             '',
                       },
                     ),
-              child: const Text('Mi nombre en el equipo'),
             ),
             if (!model.explicitPermissions)
-              TextButton(
+              VetSecondaryButton(
+                label: 'Ficha médica privada',
                 onPressed: model.busy ? null : medical,
-                child: const Text('Ficha médica privada'),
               ),
             IconButton(
               tooltip: 'Actualizar registros',
@@ -534,34 +541,38 @@ class _OperationsScreenState extends State<OperationsScreen>
         if (model.error != null)
           Text(
             model.error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            style: VetTypography.bodyMedium.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
           ),
         if (activeSection == 'blocked')
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Esta sección no está habilitada para tu cuenta.'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'El acceso requiere ${sectionPermission(section)}. Pide a una persona administradora de la clínica que revise “Permisos y habilitación”.',
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: model.busy ? null : model.load,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Actualizar permisos'),
-                  ),
-                ],
-              ),
+          VetCard(
+            padding: const EdgeInsets.all(VetSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Esta sección no está habilitada para tu cuenta.',
+                    style: VetTypography.bodyMedium),
+                const SizedBox(height: VetSpacing.sm),
+                Text(
+                  'El acceso requiere ${sectionPermission(section)}. Pide a una persona administradora de la clínica que revise “Permisos y habilitación”.',
+                  style: VetTypography.bodySmall,
+                ),
+                const SizedBox(height: VetSpacing.md),
+                VetSecondaryButton(
+                  label: 'Actualizar permisos',
+                  icon: Icons.refresh,
+                  onPressed: model.busy ? null : model.load,
+                ),
+              ],
             ),
           ),
         if (activeSection == 'appointments') ...[
-          if (model.linksError != null) Text(model.linksError!),
+          if (model.linksError != null)
+            Text(model.linksError!, style: VetTypography.bodySmall),
           if (widget.initialPatientId != null)
-            const Text('Atenciones del paciente seleccionado en Pacientes.'),
+            Text('Atenciones del paciente seleccionado en Pacientes.',
+                style: VetTypography.bodySmall),
           if (!model.busy && model.error == null)
             AppointmentSummary(
               rows: model.rows('appointments'),
@@ -570,18 +581,23 @@ class _OperationsScreenState extends State<OperationsScreen>
                   setState(() => appointmentState = value),
             ),
           if (careEnabled) ...[
+            const SizedBox(height: VetSpacing.md),
             glowChip(FilterChip(
-              label: const Text('Atención del día y pendientes anteriores'),
+              label: Text('Atención del día y pendientes anteriores',
+                  style: VetTypography.labelMedium),
               selected: careDay,
               onSelected: (value) => setState(() => careDay = value),
             )),
             if (model.careWindow != null && careDay)
               Text(
                 '${model.careWindow!['day']} · ${model.careWindow!['timezone']} · ${visibleAppointments.length} citas',
+                style: VetTypography.bodyMedium,
               ),
           ],
           // Do not hide the failure message when care mode falls back.
-          if (model.careError != null) Text(model.careError!),
+          if (model.careError != null)
+            Text(model.careError!, style: VetTypography.bodySmall),
+          const SizedBox(height: VetSpacing.md),
           VetActionButton(
             label: 'Agendar cita',
             icon: Icons.add,
@@ -591,12 +607,13 @@ class _OperationsScreenState extends State<OperationsScreen>
                         !model.allowed('appointment.manage'))
                 ? null
                 : newAppointment,
+            fullWidth: true,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: VetSpacing.lg),
           VetCard(
             padding: EdgeInsets.zero,
             child: ExpansionTile(
-              title: const Text('Calendario'),
+              title: Text('Calendario', style: VetTypography.titleMedium),
               children: [
                 CalendarDatePicker(
                   initialDate: calendarDay ?? DateTime.now(),

@@ -11,7 +11,6 @@ import '../domain/clinical_record_fields.dart';
 import 'preventive_booklet.dart';
 import 'preventive_screen.dart';
 import '../domain/preventive_repository.dart';
-import '../../../core/widgets/workspace_panel.dart';
 import 'patient_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -24,6 +23,8 @@ import 'patient_form.dart';
 import 'event_form.dart';
 import 'signature_pad.dart';
 import 'weight_chart.dart';
+import '../../../vet_ui/vet_theme.dart';
+import '../../../vet_ui/vet_components.dart';
 
 class PatientsScreen extends StatefulWidget {
   const PatientsScreen({
@@ -264,69 +265,78 @@ class _PatientsScreenState extends State<PatientsScreen>
         children: [
           Text(
             'Pacientes y expedientes',
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: VetTypography.headlineMedium,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: VetSpacing.lg),
           Wrap(
-            spacing: 12,
-            runSpacing: 8,
+            spacing: VetSpacing.sm,
+            runSpacing: VetSpacing.xs,
             children: [
               if (model.access.createPatient)
-                FilledButton.icon(
+                VetActionButton(
+                  label: 'Nuevo paciente',
+                  icon: Icons.pets,
                   onPressed: model.busy ? null : create,
-                  icon: const Icon(Icons.pets),
-                  label: const Text('Nuevo paciente'),
                 ),
-              OutlinedButton.icon(
+              VetSecondaryButton(
+                label: 'Actualizar',
+                icon: Icons.refresh,
                 onPressed: model.busy
                     ? null
                     : () async {
                         await model.load();
                         await activity?.load();
                       },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Actualizar'),
               ),
             ],
           ),
           if (model.busy) const LinearProgressIndicator(),
           if (model.error != null)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: VetSpacing.md),
               child: Text(
                 model.error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                style: VetTypography.bodyMedium.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
             ),
           if (activity != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: VetSpacing.lg),
             Text(
               snapshot == null
                   ? 'Actividad de pacientes'
                   : 'Actividad · ${snapshot.day} · ${snapshot.timezone}',
+              style: VetTypography.titleMedium,
             ),
             if (activity!.busy) const LinearProgressIndicator(),
-            if (activity!.error != null) Text(activity!.error!),
+            if (activity!.error != null)
+              Text(activity!.error!, style: VetTypography.bodySmall),
             if (snapshot != null) ...[
-              const Text(
+              const SizedBox(height: VetSpacing.xs),
+              Text(
                 'Incluye hospitalización activa y atenciones pendientes de días anteriores. Contadores de pacientes cargados, sin duplicados.',
+                style: VetTypography.bodySmall,
               ),
+              const SizedBox(height: VetSpacing.sm),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
                     glowChip(ChoiceChip(
-                      label: Text('Todos (${model.patients.length})'),
+                      label: Text('Todos (${model.patients.length})',
+                          style: VetTypography.labelMedium),
                       selected: selectedActivity == null,
                       onSelected: (_) => setState(() => activityFilter = null),
                     )),
                     for (final kind in PatientActivityKind.values)
                       if (snapshot.allowed(kind))
                         Padding(
-                          padding: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.only(left: VetSpacing.sm),
                           child: glowChip(ChoiceChip(
                             label: Text(
                               '${kind.label} (${snapshot.count(kind, model.patients.map((p) => p.id).toSet())})',
+                              style: VetTypography.labelMedium,
                             ),
                             selected: selectedActivity == kind,
                             onSelected: (_) =>
@@ -337,12 +347,16 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
               ),
               if (!snapshot.hospitalAllowed || !snapshot.appointmentsAllowed)
-                const Text(
-                  'Solo se muestra actividad de las áreas autorizadas.',
+                Padding(
+                  padding: const EdgeInsets.only(top: VetSpacing.xs),
+                  child: Text(
+                    'Solo se muestra actividad de las áreas autorizadas.',
+                    style: VetTypography.bodySmall,
+                  ),
                 ),
             ],
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: VetSpacing.lg),
           TextField(
             controller: search,
             decoration: const InputDecoration(
@@ -352,30 +366,33 @@ class _PatientsScreenState extends State<PatientsScreen>
             onChanged: (s) => setState(() => query = patientSearchText(s)),
           ),
           if (model.patients.isEmpty && !model.busy && model.error == null)
-            const Padding(
-              padding: EdgeInsets.all(20),
+            Padding(
+              padding: const EdgeInsets.all(VetSpacing.xl),
               child: Text(
                 'Todavía no hay pacientes registrados en esta clínica.',
+                style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
               ),
             ),
           if (!model.busy &&
               model.error == null &&
               model.patients.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: VetSpacing.md),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   glowChip(ChoiceChip(
-                    label: const Text('Todas las especies'),
+                    label: Text('Todas las especies',
+                        style: VetTypography.labelMedium),
                     selected: selectedSpecies == null,
                     onSelected: (_) => setState(() => species = null),
                   )),
                   for (final key in speciesKeys)
                     Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.only(left: VetSpacing.sm),
                       child: glowChip(ChoiceChip(
-                        label: Text(speciesNames[key]!),
+                        label: Text(speciesNames[key]!,
+                            style: VetTypography.labelMedium),
                         selected: selectedSpecies == key,
                         onSelected: (_) => setState(() => species = key),
                       )),
@@ -383,16 +400,16 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: VetSpacing.md),
             Text(
               '${matches.length} coincidencias de ${model.patients.length} pacientes cargados',
+              style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
             ),
             if (matches.isEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'No hay pacientes que coincidan con la búsqueda y la especie.',
-                ),
+              const SizedBox(height: VetSpacing.md),
+              Text(
+                'No hay pacientes que coincidan con la búsqueda y la especie.',
+                style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
               ),
               TextButton(
                 onPressed: () => setState(() {
@@ -424,16 +441,18 @@ class _PatientsScreenState extends State<PatientsScreen>
               for (final item in snapshot.forPatient(p.id))
                 ListTile(
                   dense: true,
-                  title: Text('${item.kind.label} · ${item.detail}'),
+                  title: Text('${item.kind.label} · ${item.detail}',
+                      style: VetTypography.bodyMedium),
                   subtitle: Text(
                     '${item.kind == PatientActivityKind.hospitalized ? 'Ingreso' : 'Cita'}: ${item.localTime} · ${snapshot.timezone}${item.responsible.isEmpty ? '' : ' · Responsable: ${item.responsible}'}',
+                    style: VetTypography.bodySmall,
                   ),
                   trailing:
                       (widget.onOpenActivity == null ||
                           widget.canOpenActivity?.call(item.destination) ==
                               false)
                       ? null
-                      : const Icon(Icons.open_in_new),
+                      : const Icon(Icons.open_in_new, size: 20),
                   onTap:
                       (widget.onOpenActivity == null ||
                           widget.canOpenActivity?.call(item.destination) ==
@@ -446,7 +465,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
           ],
           if (patient != null) ...[
-            const Divider(height: 32),
+            const Divider(height: VetSpacing.xxxl),
             PatientIdentity(patient: patient),
             if (model.access.clinical && !model.busy && model.error == null)
               for (final allergy in model.events.where(
@@ -494,12 +513,12 @@ class _PatientsScreenState extends State<PatientsScreen>
               ),
             if (model.access.clinical) ...[
               if (model.access.canAdd(EventKind.soap))
-                OutlinedButton.icon(
+                VetSecondaryButton(
+                  label: 'Registrar historia clínica',
+                  icon: Icons.history_edu,
                   onPressed: model.busy
                       ? null
                       : () => add(EventKind.soap, history: true),
-                  icon: const Icon(Icons.history_edu),
-                  label: const Text('Registrar historia clínica'),
                 ),
               for (final e in patientTimeline(model.events).where(
                 (e) =>
@@ -507,26 +526,27 @@ class _PatientsScreenState extends State<PatientsScreen>
                     e.data['record_type'] == 'clinical_history',
               ))
                 ExpansionTile(
-                  title: Text('Historia clínica · ${e.data['date']}'),
+                  title: Text('Historia clínica · ${e.data['date']}',
+                      style: VetTypography.titleMedium),
                   subtitle: Text(
                     'Registro: ${patientEventTimestamp(context, e.createdAt)} · ${e.createdBy}',
+                    style: VetTypography.bodySmall,
                   ),
                   children: [
                     for (final field in historyFields.entries)
                       if ('${e.data[field.key] ?? ''}'.isNotEmpty)
                         ListTile(
-                          title: Text(field.value),
-                          subtitle: Text('${e.data[field.key]}'),
+                          title: Text(field.value, style: VetTypography.titleSmall),
+                          subtitle: Text('${e.data[field.key]}',
+                              style: VetTypography.bodyMedium),
                         ),
                   ],
                 ),
               PreventiveBooklet(events: model.events),
               if (widget.repository is PreventiveRepository)
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.menu_book),
-                  label: const Text(
-                    'Abrir carnet · comprobantes y próximas citas',
-                  ),
+                VetSecondaryButton(
+                  label: 'Abrir carnet · comprobantes y próximas citas',
+                  icon: Icons.menu_book,
                   onPressed: model.busy
                       ? null
                       : () async {
@@ -550,34 +570,34 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
 
               if (widget.onOpenClinical != null)
-                OutlinedButton(
+                VetSecondaryButton(
+                  label: 'Casos clínicos / hoja quirúrgica',
                   onPressed: model.busy
                       ? null
                       : () async {
                           await widget.onOpenClinical!(patient);
                           if (mounted) await model.select(patient);
                         },
-                  child: const Text('Casos clínicos / hoja quirúrgica'),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: VetSpacing.lg),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: VetSpacing.sm,
+                runSpacing: VetSpacing.sm,
                 children: [
                   for (final kind in EventKind.values)
                     if (model.access.canAdd(kind))
-                      OutlinedButton(
+                      VetSecondaryButton(
+                        label: 'Agregar ${kind.label.toLowerCase()}',
                         onPressed: model.busy ? null : () => add(kind),
-                        child: Text('Agregar ${kind.label.toLowerCase()}'),
                       ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: VetSpacing.xl),
               Text(
                 'Historial clínico',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: VetTypography.headlineSmall,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: VetSpacing.md),
               TextField(
                 key: ValueKey('history-search:${patient.id}'),
                 controller: historySearch,
@@ -587,6 +607,7 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
                 onChanged: (value) => setState(() => historyQuery = value),
               ),
+              const SizedBox(height: VetSpacing.md),
               DropdownButtonFormField<EventKind?>(
                 key: ValueKey(
                   'history-kind:${patient.id}:${historyKind?.name}',
@@ -604,38 +625,45 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ],
                 onChanged: (value) => setState(() => historyKind = value),
               ),
+              const SizedBox(height: VetSpacing.md),
               Wrap(
-                spacing: 8,
+                spacing: VetSpacing.sm,
                 children: [
                   glowChip(FilterChip(
-                    label: const Text('Más antiguas primero'),
+                    label: Text('Más antiguas primero',
+                        style: VetTypography.labelMedium),
                     selected: historyOldestFirst,
                     onSelected: (value) =>
                         setState(() => historyOldestFirst = value),
                   )),
                   glowChip(FilterChip(
-                    label: const Text('Agrupar por motivo'),
+                    label: Text('Agrupar por motivo',
+                        style: VetTypography.labelMedium),
                     selected: historyByReason,
                     onSelected: (value) =>
                         setState(() => historyByReason = value),
                   )),
                 ],
               ),
-              const Text(
+              const SizedBox(height: VetSpacing.xs),
+              Text(
                 'Orden por fecha clínica. Fechas preventivas desconocidas: se usa la fecha de registro. El motivo agrupa consultas, sin unir ni modificar documentos.',
+                style: VetTypography.bodySmall,
               ),
               WeightChart(events: model.events),
-              const Divider(height: 32),
+              const Divider(height: VetSpacing.xxxl),
               if (model.events.isEmpty && !model.busy)
-                const Text('Sin entradas clínicas registradas.'),
+                Text('Sin entradas clínicas registradas.',
+                    style: VetTypography.bodyMedium.copyWith(color: VetColors.muted)),
               if (model.events.isNotEmpty &&
                   patientTimeline(
                     model.events,
                     query: historyQuery,
                     kind: historyKind,
                   ).isEmpty)
-                const Text(
+                Text(
                   'Sin coincidencias para estos filtros; el expediente original se conserva.',
+                  style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
                 ),
               for (final event in patientTimeline(
                 model.events,
@@ -644,30 +672,31 @@ class _PatientsScreenState extends State<PatientsScreen>
                 oldestFirst: historyOldestFirst,
                 byReason: historyByReason,
               ))
-                WorkspacePanel(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                VetCard(
+                  padding: const EdgeInsets.all(VetSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.kind == EventKind.preventive
+                            ? '${event.kind.label} · ${preventiveDateLabel(event.data)}'
+                            : '${event.data['record_type'] == 'clinical_history'
+                                  ? 'Historia clínica'
+                                  : event.data['record_type'] == 'care_discharge'
+                                  ? 'Cierre de consulta e indicaciones'
+                                  : event.kind.label} · ${event.data['date']}',
+                        style: VetTypography.titleMedium,
+                      ),
+                      if (event.formDocumentId != null ||
+                          event.clinicalCaseId != null)
                         Text(
-                          event.kind == EventKind.preventive
-                              ? '${event.kind.label} · ${preventiveDateLabel(event.data)}'
-                              : '${event.data['record_type'] == 'clinical_history'
-                                    ? 'Historia clínica'
-                                    : event.data['record_type'] == 'care_discharge'
-                                    ? 'Cierre de consulta e indicaciones'
-                                    : event.kind.label} · ${event.data['date']}',
-                          style: Theme.of(context).textTheme.titleMedium,
+                          'Vinculado a un formato clínico · consulta el documento y sus anexos en Casos clínicos.',
+                          style: VetTypography.bodyMedium,
                         ),
-                        if (event.formDocumentId != null ||
-                            event.clinicalCaseId != null)
-                          Text(
-                            'Vinculado a un formato clínico · consulta el documento y sus anexos en Casos clínicos.',
-                          ),
                         ...switch (event.kind) {
                           EventKind.soap => [
-                            Text('Motivo: ${event.data['reason']}'),
+                            Text('Motivo: ${event.data['reason']}',
+                                style: VetTypography.bodyMedium),
                             for (final pair in <(String, String)>[
                               ('subjective', 'Subjetivo'),
                               ('objective', 'Objetivo'),
@@ -675,46 +704,58 @@ class _PatientsScreenState extends State<PatientsScreen>
                               ('plan', 'Plan'),
                             ])
                               if ((event.data[pair.$1] as String).isNotEmpty)
-                                Text('${pair.$2}: ${event.data[pair.$1]}'),
+                                Text('${pair.$2}: ${event.data[pair.$1]}',
+                                    style: VetTypography.bodyMedium),
                           ],
-                          EventKind.weight => [Text('${event.data['kg']} kg')],
+                          EventKind.weight => [
+                            Text('${event.data['kg']} kg',
+                                style: VetTypography.bodyMedium)
+                          ],
                           EventKind.allergy => [
                             Text(
                               '${event.data['substance']} · ${event.data['reaction']}',
-                              style: TextStyle(
+                              style: VetTypography.bodyMedium.copyWith(
                                 color: Theme.of(context).colorScheme.error,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(event.data['notes'] as String? ?? ''),
+                            Text(event.data['notes'] as String? ?? '',
+                                style: VetTypography.bodyMedium),
                           ],
                           EventKind.preventive => [
-                            Text(preventiveOriginLabel(event.data)),
+                            Text(preventiveOriginLabel(event.data),
+                                style: VetTypography.bodyMedium),
                             if ('${event.data['coverage'] ?? ''}'.isNotEmpty)
                               Text(
                                 'Coberturas / tipo: ${event.data['coverage']}',
+                                style: VetTypography.bodyMedium,
                               ),
                             Text(
                               '${event.data['type']} · ${event.data['product']}',
+                              style: VetTypography.bodyMedium,
                             ),
-                            Text('Lote: ${event.data['batch'] ?? 'Pendiente'}'),
+                            Text('Lote: ${event.data['batch'] ?? 'Pendiente'}',
+                                style: VetTypography.bodyMedium),
                             if (event.data['next_date'] != null) ...[
-                              Text('Próxima fecha: ${event.data['next_date']}'),
+                              Text('Próxima fecha: ${event.data['next_date']}',
+                                  style: VetTypography.bodyMedium),
                               if (owner != null)
-                                TextButton.icon(
+                                VetSecondaryButton(
+                                  label: 'Preparar recordatorio por WhatsApp',
+                                  icon: Icons.message_outlined,
                                   onPressed: () => reminder(owner!, event),
-                                  icon: const Icon(Icons.message_outlined),
-                                  label: const Text(
-                                    'Preparar recordatorio por WhatsApp',
-                                  ),
                                 ),
                             ],
-                            Text(event.data['notes'] as String? ?? ''),
+                            Text(event.data['notes'] as String? ?? '',
+                                style: VetTypography.bodyMedium),
                           ],
                           EventKind.consent => [
-                            Text(event.data['procedure'] as String),
-                            Text('Tutor firmante: ${event.data['signer']}'),
-                            Text(event.data['text'] as String),
+                            Text(event.data['procedure'] as String,
+                                style: VetTypography.bodyMedium),
+                            Text('Tutor firmante: ${event.data['signer']}',
+                                style: VetTypography.bodyMedium),
+                            Text(event.data['text'] as String,
+                                style: VetTypography.bodyMedium),
                             SizedBox(
                               height: 120,
                               child: CustomPaint(
@@ -735,20 +776,21 @@ class _PatientsScreenState extends State<PatientsScreen>
                             ),
                           ],
                         },
-                        const SizedBox(height: 8),
+                        const SizedBox(height: VetSpacing.sm),
                         Text(
                           'Registrado: ${patientEventTimestamp(context, event.createdAt)} · Usuario: ${event.createdBy}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: VetTypography.bodySmall,
                         ),
                       ],
                     ),
                   ),
                 ),
             ] else
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: VetSpacing.md),
                 child: Text(
                   'Tu rol permite consultar datos generales del paciente. El expediente clínico requiere acceso de MVZ, admin o auxiliar.',
+                  style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
                 ),
               ),
           ],

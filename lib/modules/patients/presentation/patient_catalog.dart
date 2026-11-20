@@ -1,7 +1,7 @@
-import '../../../core/widgets/neu_header_card.dart';
 import 'package:flutter/material.dart';
-import '../../../core/widgets/workspace_panel.dart';
 import '../domain/patient_models.dart';
+import '../../../vet_ui/vet_theme.dart';
+import '../../../vet_ui/vet_components.dart';
 
 String patientSearchText(String text) {
   var value = text.toLowerCase().trim();
@@ -28,29 +28,44 @@ class PatientCatalogTile extends StatelessWidget {
   final VetPatient patient;
   final bool selected;
   final VoidCallback? onTap;
+
   @override
-  Widget build(BuildContext context) => NeuHeaderCard(
+  Widget build(BuildContext context) => VetSectionCard(
     title: patient.name,
     icon: Icons.pets_outlined,
-    color: const Color(0xFF61C7BA),
+    accentColor: VetColors.turquoise,
     onTap: onTap,
-    child: ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      selected: selected,
-      leading: Icon(
-        Icons.pets_outlined,
-        color: selected ? Theme.of(context).colorScheme.primary : null,
-      ),
-      subtitle: Text(
-        [
-          patient.species,
-          if (patient.breed.isNotEmpty) patient.breed,
-        ].join(' · '),
-      ),
-      trailing: Icon(
-        selected ? Icons.check_circle_outline : Icons.chevron_right,
-      ),
-      onTap: onTap,
+    padding: const EdgeInsets.all(VetSpacing.md),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                [
+                  patient.species,
+                  if (patient.breed.isNotEmpty) patient.breed,
+                ].join(' · '),
+                style: VetTypography.bodyMedium,
+              ),
+              if (patient.birthDate != null) ...[
+                const SizedBox(height: VetSpacing.xs),
+                Text(
+                  'Nacimiento: ${patient.birthDate} · ${patient.sex}',
+                  style: VetTypography.bodySmall,
+                ),
+              ],
+            ],
+          ),
+        ),
+        Icon(
+          selected ? Icons.check_circle_outline : Icons.chevron_right,
+          color: selected
+              ? Theme.of(context).colorScheme.primary
+              : VetColors.muted,
+        ),
+      ],
     ),
   );
 }
@@ -58,25 +73,29 @@ class PatientCatalogTile extends StatelessWidget {
 class PatientIdentity extends StatelessWidget {
   const PatientIdentity({super.key, required this.patient});
   final VetPatient patient;
+
   @override
-  Widget build(BuildContext context) => WorkspacePanel(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Expediente abierto'),
-          const SizedBox(height: 8),
-          Text(
-            '${patient.name} · ${patient.species}',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          if (patient.breed.isNotEmpty) Text(patient.breed),
-          Text(
-            '${patient.sex} · Nacimiento: ${patient.birthDate ?? 'Pendiente'}',
-          ),
+  Widget build(BuildContext context) => VetCard(
+    padding: const EdgeInsets.all(VetSpacing.lg),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Expediente abierto', style: VetTypography.labelMedium),
+        const SizedBox(height: VetSpacing.sm),
+        Text(
+          '${patient.name} · ${patient.species}',
+          style: VetTypography.headlineSmall,
+        ),
+        if (patient.breed.isNotEmpty) ...[
+          const SizedBox(height: VetSpacing.xs),
+          Text(patient.breed, style: VetTypography.bodyMedium),
         ],
-      ),
+        const SizedBox(height: VetSpacing.xs),
+        Text(
+          '${patient.sex} · Nacimiento: ${patient.birthDate ?? 'Pendiente'}',
+          style: VetTypography.bodyMedium.copyWith(color: VetColors.muted),
+        ),
+      ],
     ),
   );
 }
