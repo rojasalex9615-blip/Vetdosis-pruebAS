@@ -91,6 +91,25 @@ class InventoryProbe implements InventoryRepository {
   Future<dynamic> write(String command, Map<String, dynamic> args) async {}
 }
 
+/// Registra el [State] creado para comprobar si el subarbol se reconstruye.
+class _Tracked extends StatefulWidget {
+  const _Tracked({super.key, required this.states});
+  final List<State> states;
+  @override
+  State<_Tracked> createState() => _TrackedState();
+}
+
+class _TrackedState extends State<_Tracked> {
+  @override
+  void initState() {
+    super.initState();
+    widget.states.add(this);
+  }
+
+  @override
+  Widget build(BuildContext context) => const Text('module-content');
+}
+
 void main() {
   test('explicit modules override visual administrator and remain narrow', () {
     final denied = ModuleAccess.read(contract());
@@ -421,6 +440,36 @@ void main() {
     expect(find.textContaining('No se pudieron comprobar'), findsNothing);
     expect(find.text('inventory-visible'), findsOneWidget);
     expect(repository.calls, 2);
+  });
+
+  testWidgets('recovering from failed permissions keeps the module subtree alive', (
+    tester,
+  ) async {
+    // El aviso de permisos no debe cambiar la forma del arbol: si el contenido
+    // pasa de raiz a `Expanded` (o al reves), se reparenta el subarbol y un
+    // elemento que aun depende de un InheritedWidget revienta con la asercion
+    // de `InheritedElement` y deja la pantalla duplicada.
+    final repository = SequenceAccessRepo([{}, contract(enabled: 'inventory')]);
+    final states = <State>[];
+    await tester.pumpWidget(MaterialApp(
+      home: ModuleAccessBoundary(
+        member: member,
+        repository: repository,
+        revision: 0,
+        builder: (access) => _Tracked(
+          key: const ValueKey('module-content'),
+          states: states,
+        ),
+      ),
+    ));
+    await tester.pump();
+    expect(states, hasLength(1));
+    await tester.tap(find.text('Reintentar'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('module-content')), findsOneWidget);
+    // El mismo State: el subarbol no se reconstruyo al recuperar permisos.
+    expect(states, hasLength(1));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('identity change clears an earlier module contract', (

@@ -80,41 +80,48 @@ class _ModuleAccessBoundaryState extends State<ModuleAccessBoundary> {
           ? access ?? ModuleAccess.denied
           : access,
     );
-    if (!failed || widget.member == null || widget.repository == null) {
-      return content;
-    }
+    final banner = failed && widget.member != null && widget.repository != null;
+    // El contenido conserva siempre el mismo puesto y la misma clave, con o
+    // sin aviso. Antes el aviso sustituia la raiz (`content` o `Column(...)`),
+    // asi que al aparecer o desaparecer se reparentaba el subarbol completo y
+    // un elemento que aun dependia de un InheritedWidget se notificaba ya
+    // movido: de ahi la asercion de `InheritedElement` y la pantalla duplicada.
     return Column(
       children: [
-        Material(
-          color: Theme.of(context).colorScheme.errorContainer,
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'No se pudieron comprobar los permisos de tu espacio. '
-                      'Algunos accesos y resúmenes están ocultos. '
-                      'Revisa tu conexión; si persiste, contacta a soporte.',
+        if (banner)
+          Material(
+            color: Theme.of(context).colorScheme.errorContainer,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'No se pudieron comprobar los permisos de tu espacio. '
+                        'Algunos accesos y resúmenes están ocultos. '
+                        'Revisa tu conexión; si persiste, contacta a soporte.',
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: loading ? null : () {
-                      setState(() => loading = true);
-                      load();
-                    },
-                    child: const Text('Reintentar'),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: loading ? null : () {
+                        setState(() => loading = true);
+                        load();
+                      },
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
+        Expanded(
+          key: const ValueKey('module_access_content'),
+          child: content,
         ),
-        Expanded(child: content),
       ],
     );
   }
