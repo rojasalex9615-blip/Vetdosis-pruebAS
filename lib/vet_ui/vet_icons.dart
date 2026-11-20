@@ -76,6 +76,7 @@ abstract final class VetIcons {
   static const IconData close = IconData(0xe93f, fontFamily: _family);
   static const IconData cloudCheck = IconData(0xe940, fontFamily: _family);
   static const IconData cloudDownload = IconData(0xe941, fontFamily: _family);
+  static const IconData cloudOff = IconData(0xe9dc, fontFamily: _family);
   static const IconData cloudUpload = IconData(0xe942, fontFamily: _family);
   static const IconData coins = IconData(0xe943, fontFamily: _family);
   static const IconData collar = IconData(0xe944, fontFamily: _family);
@@ -129,7 +130,9 @@ abstract final class VetIcons {
   static const IconData idBadge = IconData(0xe974, fontFamily: _family);
   static const IconData idCardPaw = IconData(0xe975, fontFamily: _family);
   static const IconData image = IconData(0xe976, fontFamily: _family);
+  static const IconData inbox = IconData(0xe9dd, fontFamily: _family);
   static const IconData info = IconData(0xe977, fontFamily: _family);
+  static const IconData key = IconData(0xe9de, fontFamily: _family);
   static const IconData keyboard = IconData(0xe978, fontFamily: _family);
   static const IconData kgToMeat = IconData(0xe979, fontFamily: _family);
   static const IconData laptopPaw = IconData(0xe97a, fontFamily: _family);
@@ -174,6 +177,7 @@ abstract final class VetIcons {
   static const IconData receipt = IconData(0xe9a1, fontFamily: _family);
   static const IconData refresh = IconData(0xe9a2, fontFamily: _family);
   static const IconData robot = IconData(0xe9a3, fontFamily: _family);
+  static const IconData rule = IconData(0xe9df, fontFamily: _family);
   static const IconData rx = IconData(0xe9a4, fontFamily: _family);
   static const IconData save = IconData(0xe9a5, fontFamily: _family);
   static const IconData scale = IconData(0xe9a6, fontFamily: _family);
@@ -227,6 +231,7 @@ abstract final class VetIcons {
   static const IconData vetPerson = IconData(0xe9d6, fontFamily: _family);
   static const IconData video = IconData(0xe9d7, fontFamily: _family);
   static const IconData wallet = IconData(0xe9d8, fontFamily: _family);
+  static const IconData warningTriangle = IconData(0xe9e0, fontFamily: _family);
   static const IconData waves = IconData(0xe9d9, fontFamily: _family);
   static const IconData weightPaw = IconData(0xe9da, fontFamily: _family);
   static const IconData wind = IconData(0xe9db, fontFamily: _family);
@@ -299,6 +304,7 @@ abstract final class VetIcons {
     'close': close,
     'cloud_check': cloudCheck,
     'cloud_download': cloudDownload,
+    'cloud_off': cloudOff,
     'cloud_upload': cloudUpload,
     'coins': coins,
     'collar': collar,
@@ -352,7 +358,9 @@ abstract final class VetIcons {
     'id_badge': idBadge,
     'id_card_paw': idCardPaw,
     'image': image,
+    'inbox': inbox,
     'info': info,
+    'key': key,
     'keyboard': keyboard,
     'kg_to_meat': kgToMeat,
     'laptop_paw': laptopPaw,
@@ -397,6 +405,7 @@ abstract final class VetIcons {
     'receipt': receipt,
     'refresh': refresh,
     'robot': robot,
+    'rule': rule,
     'rx': rx,
     'save': save,
     'scale': scale,
@@ -450,6 +459,7 @@ abstract final class VetIcons {
     'vet_person': vetPerson,
     'video': video,
     'wallet': wallet,
+    'warning_triangle': warningTriangle,
     'waves': waves,
     'weight_paw': weightPaw,
     'wind': wind,
