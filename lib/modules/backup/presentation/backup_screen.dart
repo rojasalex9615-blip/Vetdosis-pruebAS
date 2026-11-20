@@ -939,7 +939,9 @@ class _BackupScreenState extends State<BackupScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  widget.backupOnly ? 'Respaldo' : 'Estadísticas y respaldo',
+                  widget.backupOnly
+                      ? 'Respaldo manual de tu clínica'
+                      : 'Estadísticas y respaldo',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 if (model.busy || working) const LinearProgressIndicator(),
@@ -1044,6 +1046,10 @@ class _BackupScreenState extends State<BackupScreen> {
                     'Guardaré el archivo con acceso restringido: contiene datos de pacientes y propietarios.',
                   ),
                 ),
+                if (!ack)
+                  const Text(
+                    'Marca la casilla para activar la exportación.',
+                  ),
                 Wrap(
                   spacing: 8,
                   children: [
