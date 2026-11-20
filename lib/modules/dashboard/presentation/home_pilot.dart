@@ -1,4 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
+import '../../../core/widgets/contrast.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../../../core/widgets/neu_identity.dart';
@@ -34,6 +35,7 @@ ThemeData homePilotTheme(ThemeData base) {
   return base;
 }
 
+/// Tarjeta de fondo de los bloques del Inicio, con su relieve y su borde.
 class HomeSurface extends StatelessWidget {
   const HomeSurface({
     super.key,
@@ -73,7 +75,7 @@ class HomeSurface extends StatelessWidget {
                     blurRadius: 14,
                   ),
                   BoxShadow(
-                    color: dark ? const Color(0xFF1C2935) : Colors.white,
+                    color: dark ? VetColors.darkHighlight : Colors.white,
                     offset: const Offset(-4, -4),
                     blurRadius: 12,
                   ),
@@ -90,6 +92,7 @@ class HomeSurface extends StatelessWidget {
   }
 }
 
+/// Selector del area clinica en la que se esta trabajando.
 class HomePracticeSelector extends StatelessWidget {
   const HomePracticeSelector({
     super.key,
@@ -184,6 +187,7 @@ class HomePracticeSelector extends StatelessWidget {
   );
 }
 
+/// Rejilla de accesos a los modulos disponibles en el Inicio.
 class HomeModuleGrid extends StatelessWidget {
   const HomeModuleGrid({
     super.key,
@@ -260,9 +264,25 @@ class HomeModuleGrid extends StatelessWidget {
   );
 }
 
+/// Fondo real de la tarjeta de un modulo: su color de marca, translucido,
+/// compuesto sobre la superficie. El contraste del icono se mide contra esto.
+Color _placa(BuildContext context, Color color) => composite(
+  color,
+  Theme.of(context).brightness == Brightness.dark ? .14 : .10,
+  Theme.of(context).colorScheme.surface,
+);
+
+/// Resumen del Inicio: las cifras del espacio y el grafico de la semana.
+///
+/// Cada cifra lleva el color de su modulo, retocado si hiciera falta para
+/// que el icono se distinga sobre su propia tarjeta tenida.
 class HomeSummary extends StatelessWidget {
   const HomeSummary({super.key, required this.metrics, this.activity});
-  final List<(String, String, IconData)> metrics;
+  /// Cada tarjeta del resumen: etiqueta, valor, icono y color de identidad.
+  ///
+  /// El color tine la tarjeta y pinta el glifo; el tono que acaba en pantalla
+  /// se mide contra esa tarjeta ya tenida, no contra el lienzo.
+  final List<(String, String, IconData, Color)> metrics;
   final List<(String, int)>? activity;
   @override
   Widget build(BuildContext context) => HomeSurface(
@@ -299,9 +319,10 @@ class HomeSummary extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: .05),
+                        // Cada modulo lleva su color de la paleta de marca en
+                        // lugar de un unico primary, para distinguirlos de un
+                        // vistazo igual que en el prototipo.
+                        color: _placa(context, metric.$4),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Column(
@@ -309,7 +330,13 @@ class HomeSummary extends StatelessWidget {
                         children: [
                           Icon(
                             metric.$3,
-                            color: Theme.of(context).colorScheme.primary,
+                            // Los tonos de marca son claros: sobre la tarjeta
+                            // casi blanca del tema claro no se verian, asi que
+                            // el glifo se oscurece lo justo para ser legible.
+                            color: readableOn(
+                              metric.$4,
+                              _placa(context, metric.$4),
+                            ),
                             size: 22,
                           ),
                           const SizedBox(height: 8),

@@ -1,4 +1,5 @@
 import 'accent_glow.dart';
+import 'contrast.dart';
 
 import 'package:flutter/material.dart';
 
@@ -8,43 +9,43 @@ import 'workspace_panel.dart';
 
 /// Stable identities shared by the tool selector and its calculation surface.
 ({Color color, IconData icon}) calculatorIdentity(String id) => switch (id) {
-  'dose' => (color: const Color(0xFF087F70), icon: Icons.medication_outlined),
+  'dose' => (color: const Color(0xFF7BEADC), icon: Icons.medication_outlined),
   'concentration' => (
-    color: const Color(0xFF087B91),
+    color: const Color(0xFF7BD8EA),
     icon: Icons.medication_liquid_outlined,
   ),
-  'withdrawals' => (color: const Color(0xFF7D5EAB), icon: Icons.schedule),
+  'withdrawals' => (color: const Color(0xFFAE9ACB), icon: Icons.schedule),
   'manufacturer' => (
-    color: const Color(0xFF3968A7),
+    color: const Color(0xFF8DADD8),
     icon: Icons.medication_liquid_outlined,
   ),
   'aviculture' => (
-    color: const Color(0xFF137D9F),
+    color: const Color(0xFF7BCFEA),
     icon: Icons.agriculture_outlined,
   ),
-  'incubation' => (color: const Color(0xFF7855B5), icon: Icons.egg_outlined),
-  'fluids' => (color: const Color(0xFF087B91), icon: Icons.water_drop_outlined),
-  'cri' => (color: const Color(0xFF7550AE), icon: Icons.speed_outlined),
-  'herd' => (color: const Color(0xFF555CB0), icon: Icons.pets_outlined),
-  'water' => (color: const Color(0xFF087E82), icon: Icons.water_outlined),
-  'feed' => (color: const Color(0xFF94619B), icon: Icons.grass_outlined),
-  'adjustment' => (color: const Color(0xFF9A36AE), icon: Icons.tune),
+  'incubation' => (color: const Color(0xFFAA94D1), icon: Icons.egg_outlined),
+  'fluids' => (color: const Color(0xFF7BD8EA), icon: Icons.water_drop_outlined),
+  'cri' => (color: const Color(0xFFAC96CF), icon: Icons.speed_outlined),
+  'herd' => (color: const Color(0xFF979BCE), icon: Icons.pets_outlined),
+  'water' => (color: const Color(0xFF7BE6EA), icon: Icons.water_outlined),
+  'feed' => (color: const Color(0xFFC0A1C4), icon: Icons.grass_outlined),
+  'adjustment' => (color: const Color(0xFFCD8ADB), icon: Icons.tune),
   'vitals' => (
-    color: const Color(0xFF087B99),
+    color: const Color(0xFF7BD3EA),
     icon: Icons.monitor_heart_outlined,
   ),
   'metabolic' => (
-    color: const Color(0xFF6B5EB2),
+    color: const Color(0xFFA098CD),
     icon: Icons.monitor_weight_outlined,
   ),
-  'protocols' => (color: const Color(0xFF4F64AB), icon: Icons.checklist),
-  'ruleOfThree' => (color: const Color(0xFF555CB0), icon: Icons.balance),
+  'protocols' => (color: const Color(0xFF96A3CF), icon: Icons.checklist),
+  'ruleOfThree' => (color: const Color(0xFF979BCE), icon: Icons.balance),
   'internationalUnits' => (
-    color: const Color(0xFF94619B),
+    color: const Color(0xFFC0A1C4),
     icon: Icons.vaccines_outlined,
   ),
-  'conversion' => (color: const Color(0xFF087B91), icon: Icons.swap_horiz),
-  _ => (color: const Color(0xFF7550AE), icon: Icons.schedule),
+  'conversion' => (color: const Color(0xFF7BD8EA), icon: Icons.swap_horiz),
+  _ => (color: const Color(0xFFAC96CF), icon: Icons.schedule),
 };
 
 /// Persistent tool colors: independent of the user's global palette.
@@ -70,16 +71,39 @@ Color calculatorPastel(String id) => switch (id) {
   _ => const Color(0xFFE7E8EF),
 };
 
+/// Color de la calculadora tal como se eligio, igual en claro y en oscuro.
+///
+/// El tono identifica a cada calculadora y va a juego con su icono, asi que no
+/// se cambia por tema. Lo unico que se corrige es la legibilidad: sobre el
+/// fondo grafito unos pocos tonos quedan por debajo del minimo de 3:1 que pide
+/// WCAG para iconos y componentes, y se aclaran lo justo para alcanzarlo, que
+/// resulta ser entre un 2% y un 6%. Antes se aclaraban todos un 50%, que si
+/// alteraba la identidad y era innecesario: la mayoria ya pasaba de sobra.
+Color calculatorAccent(Color identity, Color background) =>
+    readableOn(identity, background);
+
+/// Insignia de una calculadora: su icono sobre una placa de su propio color.
+///
+/// El color identifica a la calculadora y es el mismo en claro y en oscuro;
+/// solo se retoca si no se distinguiria sobre la placa.
 class CalculatorIcon extends StatelessWidget {
   const CalculatorIcon(this.id, {super.key});
   final String id;
   @override
   Widget build(BuildContext context) {
     final identity = calculatorIdentity(id);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final color = dark
-        ? Color.lerp(identity.color, Colors.white, .5)!
-        : identity.color;
+    // El glifo no se pinta sobre el lienzo sino sobre una placa tenida con su
+    // propio color, que aclara el fondo. Se compone primero esa placa y el
+    // contraste se mide contra ella.
+    // La placa se tine al 35%, no al 10%. Con los tonos cargados de antes un
+    // 10% ya se notaba; con la paleta palida que pidio Ale ese 10% dejaba la
+    // placa indistinguible del fondo y el icono parecia flotar suelto.
+    final placa = composite(
+      identity.color,
+      .35,
+      Theme.of(context).scaffoldBackgroundColor,
+    );
+    final color = calculatorAccent(identity.color, placa);
     return AccentGlow(
       color: color,
       radius: 12,
@@ -87,7 +111,7 @@ class CalculatorIcon extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: .1),
+          color: placa,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(identity.icon, color: color, size: 24),
@@ -96,6 +120,11 @@ class CalculatorIcon extends StatelessWidget {
   }
 }
 
+/// Envoltura de una calculadora, con el color que la identifica aplicado al
+/// fondo, al borde y al boton principal.
+///
+/// Sustituye el tema para su contenido, de modo que los campos y botones de
+/// dentro salen ya con el tono de esa calculadora sin configurarlos uno a uno.
 class CalculatorSurface extends StatelessWidget {
   const CalculatorSurface({
     super.key,
@@ -113,14 +142,12 @@ class CalculatorSurface extends StatelessWidget {
     final neu = base.extension<WorkspaceStyle>()?.neumorphic == true;
     final referenceStyle = this.referenceStyle && neu;
     final identity = calculatorIdentity(id);
-    final accent = dark
-        ? Color.lerp(identity.color, Colors.white, .5)!
-        : identity.color;
     final surface = Color.lerp(
       base.scaffoldBackgroundColor,
       dark ? identity.color : calculatorPastel(id),
       dark ? .16 : .88,
     )!;
+    final accent = calculatorAccent(identity.color, surface);
     return Theme(
       data: base.copyWith(
         scaffoldBackgroundColor: surface,
@@ -150,22 +177,22 @@ class CalculatorSurface extends StatelessWidget {
               ? const EdgeInsets.symmetric(horizontal: 22, vertical: 20)
               : base.inputDecorationTheme.contentPadding,
           border: neu
-              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.8 : 1)
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.2 : 1)
               : null,
           enabledBorder: neu
-              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.8 : 1)
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.2 : 1)
               : null,
           focusedBorder: referenceStyle
               ? NeuInputBorder(
                   dark: dark,
-                  depth: 1.8,
+                  depth: 1.2,
                   borderSide: BorderSide(color: accent, width: 1.5),
                 )
               : base.inputDecorationTheme.focusedBorder,
           errorBorder: referenceStyle
               ? NeuInputBorder(
                   dark: dark,
-                  depth: 1.8,
+                  depth: 1.2,
                   borderSide: BorderSide(
                     color: base.colorScheme.error,
                     width: 1.5,
@@ -176,7 +203,10 @@ class CalculatorSurface extends StatelessWidget {
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             backgroundColor: accent,
-            foregroundColor: dark ? const Color(0xFF101A28) : Colors.white,
+            // La tinta se elige midiendo contra el acento ya ajustado. Fijar
+            // blanco dejaba el peor caso en 4.51:1, justo en el limite de
+            // 4.5:1 que pide el texto: cualquier retoque posterior lo rompia.
+            foregroundColor: inkOn(accent),
             minimumSize: Size(0, referenceStyle ? 58 : 52),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             shape: RoundedRectangleBorder(
@@ -285,25 +315,38 @@ class CalculatorSelectorCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            color: identity.color,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Icon(identity.icon, color: Colors.white, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+          Builder(
+            builder: (context) {
+              // La cabecera del estilo clasico se rellena con el color de
+              // identidad a pleno. Iba con blanco fijo, que con los tonos
+              // cargados de antes funcionaba y con la paleta palida cae a
+              // 1.4:1: el titulo y el icono desaparecian. Se mide la tinta
+              // contra el relleno real en vez de darla por supuesta.
+              final tinta = inkOn(identity.color);
+              return Container(
+                color: identity.color,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(identity.icon, color: tinta, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: tinta,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           Padding(padding: const EdgeInsets.all(14), child: child),
         ],

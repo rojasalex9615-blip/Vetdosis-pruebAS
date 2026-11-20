@@ -1,5 +1,8 @@
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import 'widgets/accent_glow.dart';
+import 'widgets/brand_gradient.dart';
+import 'widgets/contrast.dart';
+import 'widgets/screen_title.dart';
 import '../modules/hospital/presentation/hospital_dose_patient_screen.dart';
 import '../modules/clinic_experience/domain/clinic_experience.dart';
 import '../modules/clinic_experience/domain/clinic_experience_repository.dart';
@@ -94,6 +97,8 @@ const paletteColors = [
   Color(0xFF52606D),
 ];
 
+/// Raiz de la aplicacion: arma el tema, decide si hay que autenticar y
+/// entrega los repositorios que cada modulo necesita.
 class VetDosisApp extends StatelessWidget {
   const VetDosisApp({
     super.key,
@@ -151,11 +156,16 @@ class VetDosisApp extends StatelessWidget {
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
+    // Tonos tomados de las maquetas de modo oscuro que entrego Ale: grafito
+    // neutro con matiz violeta. Si se agrega un color oscuro nuevo, debe salir
+    // de esta familia (#201F25, #25242A, #2A2932, #2E2D35, #34333B, #39383F) y
+    // no del azul marino anterior, o la pantalla se vera de dos tonos.
+    // Medidos sobre las capturas: fondo #201F25 y tarjetas #25242A.
     final background = dark
-        ? const Color(0xFF0B121C)
+        ? VetColors.darkCanvas
         : (neumorphic ? neuBackground : VetColors.canvas);
     final surface = dark
-        ? const Color(0xFF131E2A)
+        ? VetColors.darkSurface
         : (neumorphic ? neuBackground : VetColors.surface);
     final primary = dark
         ? const Color(0xFF55E2D3)
@@ -248,7 +258,7 @@ class VetDosisApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               side: BorderSide(
-                color: dark ? const Color(0xFF2A3A4B) : const Color(0xFFDDE7EF),
+                color: dark ? VetColors.darkOutline : const Color(0xFFDDE7EF),
               ),
             )
           : null,
@@ -349,6 +359,8 @@ class VetDosisApp extends StatelessWidget {
         );
 }
 
+/// Armazon de la sesion iniciada: cabecera, navegacion, menu lateral y el
+/// despacho de pantallas por nombre.
 class CoreShell extends StatelessWidget {
   const CoreShell({
     super.key,
@@ -608,6 +620,20 @@ class CoreShell extends StatelessWidget {
     child: Builder(builder: _buildShell),
   );
 
+  /// Si la barra lleva el boton de cuenta.
+  bool get showsAccountAction => auth != null;
+
+  /// Si la barra lleva el boton del asistente de IA.
+  bool get showsAiAction =>
+      ai != null && auth?.active != null && allowed('Asistente IA');
+
+  /// Cuantos botones lleva la barra a la derecha.
+  ///
+  /// De aqui salen tanto el `actions` como el ancho que le queda al titulo,
+  /// para que no se calculen por separado y acaben discrepando.
+  int get barActions =>
+      (showsAccountAction ? 1 : 0) + (showsAiAction ? 1 : 0);
+
   Widget _buildShell(BuildContext context) => PopScope(
     canPop: model.screen == 'Inicio',
     onPopInvokedWithResult: (didPop, result) {
@@ -615,6 +641,12 @@ class CoreShell extends StatelessWidget {
     },
     child: Scaffold(
       appBar: AppBar(
+        // El alto se calcula con la misma regla que usa ScreenTitle para
+        // decidir si el nombre cabe en una linea o necesita dos. Si no, un
+        // titulo de dos lineas se recorta contra una barra pensada para una.
+        //
+        // El ancho disponible descuenta la hamburguesa y los dos botones de
+        // la derecha, que es lo que de verdad deja libre la barra.
         toolbarHeight: auth?.active == null
             ? 56
             : math.max(
@@ -627,7 +659,17 @@ class CoreShell extends StatelessWidget {
                                     ).textTheme.titleLarge?.fontSize ??
                                     22,
                               ) *
-                              1.4) +
+                              1.4 *
+                              screenTitleFit(
+                                model.screen,
+                                screenTitleAvailableWidth(
+                                  MediaQuery.sizeOf(context).width,
+                                  barActions,
+                                ),
+                                Theme.of(context).textTheme.titleLarge ??
+                                    const TextStyle(fontSize: 22),
+                                scaler: MediaQuery.textScalerOf(context),
+                              ).lines) +
                     MediaQuery.textScalerOf(context).scale(
                           Theme.of(context).textTheme.labelSmall?.fontSize ??
                               11,
@@ -635,29 +677,31 @@ class CoreShell extends StatelessWidget {
                         1.4 +
                     16,
               ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (model.screen == 'Inicio')
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: const VetDosisBrand(),
+        title: model.screen == 'Inicio'
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: VetDosisBrand(),
+                  ),
+                  if (auth?.active != null)
+                    Text(
+                      auth!.active!.clinicName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                ],
               )
-            else
-              Text(model.screen, maxLines: 1, overflow: TextOverflow.ellipsis),
-            if (auth?.active != null)
-              Text(
-                auth!.active!.clinicName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall,
+            : ScreenTitle(
+                screen: model.screen,
+                clinic: auth?.active?.clinicName,
               ),
-          ],
-        ),
         actions: [
-          if (auth != null)
+          if (showsAccountAction)
             IconButton(
               tooltip: 'Mi cuenta y clínicas',
               icon: AccountAvatar(
@@ -666,11 +710,11 @@ class CoreShell extends StatelessWidget {
               ),
               onPressed: () => openAccount(context),
             ),
-          if (ai != null && auth?.active != null && allowed('Asistente IA'))
+          if (showsAiAction)
             IconButton(
               tooltip: 'Asistente IA',
               onPressed: () => model.navigate('Asistente IA'),
-              icon: const Icon(Icons.auto_awesome_outlined),
+              icon: BrandGradientIcon(Icons.auto_awesome),
             ),
         ],
       ),
@@ -736,13 +780,30 @@ class CoreShell extends StatelessWidget {
               allowed('Cálculo rápido') &&
               model.screen != 'Escanear etiqueta para dosis'
           ? AccentGlow(
-              color: Theme.of(context).colorScheme.primary,
+              color: VetColors.violet,
               radius: 16,
-              child: FloatingActionButton(
-                heroTag: 'dose-label-scanner',
-                tooltip: 'Escanear etiqueta para dosis',
-                onPressed: () => model.navigate('Escanear etiqueta para dosis'),
-                child: const Icon(Icons.document_scanner_outlined),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: brandGradient(),
+                ),
+                child: FloatingActionButton(
+                  heroTag: 'dose-label-scanner',
+                  tooltip: 'Escanear etiqueta para dosis',
+                  // El degradado lo pinta el contenedor; el botón aporta la
+                  // pulsación y el foco, sin tapar ese fondo.
+                  backgroundColor: Colors.transparent,
+                  // El glifo se mide contra el degradado completo: en blanco
+                  // se perdia sobre el extremo turquesa (1.79:1).
+                  foregroundColor: inkOnGradient(brandGradientColors),
+                  elevation: 0,
+                  focusElevation: 0,
+                  hoverElevation: 0,
+                  highlightElevation: 0,
+                  onPressed: () =>
+                      model.navigate('Escanear etiqueta para dosis'),
+                  child: const Icon(Icons.document_scanner_outlined),
+                ),
               ),
             )
           : null,
@@ -1733,6 +1794,8 @@ class CoreShell extends StatelessWidget {
   ];
 }
 
+/// Tarjeta con relieve suave, el envoltorio habitual de los bloques de
+/// contenido fuera de las calculadoras.
 class SoftPanel extends StatelessWidget {
   const SoftPanel({super.key, required this.child});
   final Widget child;
@@ -1741,19 +1804,19 @@ class SoftPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
-    final surface = dark ? const Color(0xFF131E2A) : VetColors.surface;
+    final surface = dark ? VetColors.darkSurface : VetColors.surface;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: dark
-              ? const [Color(0xFF182536), Color(0xFF101923)]
+              ? const [VetColors.darkRaised, VetColors.darkCanvas]
               : const [Color(0xFFFFFFFF), Color(0xFFF1F6FA)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: dark ? const Color(0xFF243547) : const Color(0xFFE4EDF3),
+          color: dark ? VetColors.darkBorder : const Color(0xFFE4EDF3),
         ),
         boxShadow: [
           BoxShadow(

@@ -1,4 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
+import '../../../vet_ui/vet_theme.dart';
 import 'package:flutter/material.dart';
 import '../../calculations/data/reference_library_repository.dart';
 import '../../calculations/presentation/reference_library_screen.dart';
@@ -9,6 +10,7 @@ import 'clinical_repository.dart';
 import 'vital_reference_catalog.dart';
 import 'vitals_models.dart';
 
+/// Registro de constantes clinicas de un paciente hospitalizado.
 class ClinicalVitalsScreen extends StatefulWidget {
   const ClinicalVitalsScreen({
     super.key,
@@ -248,13 +250,13 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
                 theme.colorScheme.secondary.withValues(alpha: dark ? 0.18 : 0.11),
               ]
             : dark
-            ? const [Color(0xFF182536), Color(0xFF101923)]
+            ? const <Color>[VetColors.darkRaised, VetColors.darkCanvas]
             : const [Color(0xFFFFFFFF), Color(0xFFF1F6FA)],
       ),
       borderRadius: BorderRadius.circular(24),
       border: Border.all(
         color: dark
-            ? const Color(0xFF243547)
+            ? VetColors.darkBorder
             : const Color(0xFFE4EDF3),
       ),
       boxShadow: [
