@@ -175,25 +175,25 @@ class CalculatorSurface extends StatelessWidget {
             referenceStyle ? .02 : .24,
           ),
           contentPadding: referenceStyle
-              ? const EdgeInsets.symmetric(horizontal: 22, vertical: 20)
+              ? const EdgeInsets.symmetric(horizontal: 18, vertical: 15)
               : base.inputDecorationTheme.contentPadding,
           border: neu
-              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.2 : 1)
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 0.8 : 0.65)
               : null,
           enabledBorder: neu
-              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 1.2 : 1)
+              ? NeuInputBorder(dark: dark, depth: referenceStyle ? 0.8 : 0.65)
               : null,
           focusedBorder: referenceStyle
               ? NeuInputBorder(
                   dark: dark,
-                  depth: 1.2,
+                  depth: 0.8,
                   borderSide: BorderSide(color: accent, width: 1.5),
                 )
               : base.inputDecorationTheme.focusedBorder,
           errorBorder: referenceStyle
               ? NeuInputBorder(
                   dark: dark,
-                  depth: 1.2,
+                  depth: 0.8,
                   borderSide: BorderSide(
                     color: base.colorScheme.error,
                     width: 1.5,

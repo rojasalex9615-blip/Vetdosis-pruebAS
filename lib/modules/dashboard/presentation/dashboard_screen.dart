@@ -1,4 +1,5 @@
 import '../../../core/widgets/contrast.dart';
+import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/neu_header_card.dart';
 import 'home_pilot.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -372,31 +373,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onNavigate: openPage,
               ),
               const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final action in <(String, String)>[
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final actions = <(String, String)>[
                     ('Formatos', 'Formatos'),
                     ('Estadísticas', 'Estadísticas'),
                     ('Cálculos clínicos', 'Cálculos clínicos'),
                     ('Escáner', 'Escanear producto'),
-                  ])
-                    if (routeVisible(action.$2))
-                      // El relieve y la falta de trazo los pone ya el
-                      // tema Neu en todos los botones secundarios.
-                      OutlinedButton.icon(
-                        onPressed: () => openPage(action.$2),
-                        icon: Icon(
-                          sectionIcon(action.$2),
-                          color: readableOn(
-                            sectionAccent(action.$2),
-                            Theme.of(context).colorScheme.surface,
+                  ].where((a) => routeVisible(a.$2)).toList();
+
+                  if (actions.isEmpty) return const SizedBox.shrink();
+
+                  const spacing = 10.0;
+                  final colWidth = (constraints.maxWidth - spacing) / 2;
+
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      for (final action in actions)
+                        SizedBox(
+                          width: colWidth,
+                          child: _DashboardActionCapsule(
+                            label: action.$1,
+                            page: action.$2,
+                            onTap: () => openPage(action.$2),
                           ),
                         ),
-                        label: Text(action.$1),
-                      ),
-                ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
             ] else
@@ -458,9 +464,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             label: 'Dosis con horario cumplido',
                             value: '${m.overdue.length}',
                             icon: VetIcons.clock,
-                            valueColor: VetColors.danger,
+                            valueColor: m.overdue.isEmpty
+                                ? VetColors.success
+                                : VetColors.danger,
                             emphasized: true,
                           ),
+                          if (m.overdue.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Al día · no hay dosis retrasadas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: VetColors.success,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                           for (final t in m.overdue.take(3))
                             ListTile(
                               title: Text('${m.patient(t)} · ${t.label}'),
@@ -485,9 +505,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             label: 'Productos con stock en el mínimo',
                             value: '${m.lowStock.length}',
                             icon: VetIcons.box,
-                            valueColor: VetColors.warning,
+                            valueColor: m.lowStock.isEmpty
+                                ? VetColors.success
+                                : VetColors.warning,
                             emphasized: true,
                           ),
+                          if (m.lowStock.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Stock en niveles óptimos',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: VetColors.success,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                           for (final p in m.lowStock.take(3))
                             ListTile(
                               title: Text('${p['nombre']}'),
@@ -931,4 +965,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     },
   );
+}
+
+
+/// Botón en cápsula simétrica de 2x2 para las acciones rápidas del Inicio
+/// (Formatos, Estadísticas, Cálculos clínicos, Escáner), con relieve neu
+/// suave y tonalidad lavanda armónica.
+class _DashboardActionCapsule extends StatelessWidget {
+  const _DashboardActionCapsule({
+    required this.label,
+    required this.page,
+    required this.onTap,
+  });
+
+  final String label;
+  final String page;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    final neu = theme.extension<WorkspaceStyle>()?.neumorphic == true;
+    final accent = sectionAccent(page);
+
+    final surface = Color.lerp(
+      theme.scaffoldBackgroundColor,
+      const Color(0xFFC5A8EF),
+      dark ? 0.18 : 0.22,
+    )!;
+
+    final iconColor = readableOn(accent, surface, objetivo: 3);
+    final textColor = readableOn(
+      dark ? const Color(0xFFE2D9FA) : const Color(0xFF4C387B),
+      surface,
+      objetivo: 4.5,
+    );
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: dark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.8),
+          width: 1.2,
+        ),
+        boxShadow: neu ? neuShadows(dark, depth: 0.5) : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(sectionIcon(page), size: 20, color: iconColor),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
