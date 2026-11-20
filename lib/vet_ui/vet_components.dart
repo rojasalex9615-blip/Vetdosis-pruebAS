@@ -1206,7 +1206,7 @@ class VetSectionCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (trailing != null) trailing!,
+                    ?trailing,
                   ],
                 ),
               ),
