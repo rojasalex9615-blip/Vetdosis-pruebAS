@@ -26,6 +26,16 @@ void main() {
   testWidgets(
     'Recovery link displays password confirmation even with clinic access',
     (tester) async {
+      // La pantalla de acceso es una lista desplazable pensada para un
+      // telefono. Con el lienzo de prueba por omision (800x600) el boton de
+      // confirmacion queda fuera del area visible y el finder lo descarta por
+      // estar offstage, aunque el widget si se construya. Se usa un lienzo con
+      // proporcion de telefono para comprobar el flujo completo tal como lo ve
+      // la clinica.
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final repo = RecoveryFake()..recoveringPassword = true;
       final model = AuthViewModel(repo);
       await model.start();
