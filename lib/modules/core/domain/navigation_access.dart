@@ -13,17 +13,13 @@ bool navigationAllowed(
   }
   final role = member.role;
   if (role == ClinicRole.revisor) {
-    // El revisor abre el Vademécum para comprobar que la pauta da el resultado
-    // correcto. Sin la calculadora no puede revisar la calidad del dato. No se
-    // le abre la receta ni la dosis clínica por paciente: eso sigue siendo del
-    // MVZ.
-    return const {
-      'Inicio',
-      'Modo revisión',
-      'Vademécum',
-      'Ajustes',
-      'Ayuda y soporte',
-    }.contains(page);
+    // Decisión 2026-11-19 (Alejandra): el revisor ve todo y usa las
+    // herramientas — Vademécum y cálculo de dosis del empaque para comprobar
+    // que la pauta da el resultado correcto — sin editar datos de la clínica.
+    // La edición sigue cerrada por los permisos de cada módulo
+    // (PatientAccess, canManage, canCalculate) y por la autorización del
+    // servidor; este filtro solo abre la navegación.
+    return true;
   }
   return switch (page) {
     'Modo revisión' => role == ClinicRole.admin,
