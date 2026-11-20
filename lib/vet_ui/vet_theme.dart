@@ -42,6 +42,143 @@ abstract final class VetColors {
   static const success = Color(0xFF087F5B);
 }
 
+/// Espaciado y radios consistentes para toda la app.
+abstract final class VetSpacing {
+  static const xs = 4.0;
+  static const sm = 8.0;
+  static const md = 12.0;
+  static const lg = 16.0;
+  static const xl = 20.0;
+  static const xxl = 24.0;
+  static const xxxl = 32.0;
+
+  static const radiusSm = 12.0;
+  static const radiusMd = 16.0;
+  static const radiusLg = 20.0;
+  static const radiusXl = 24.0;
+  static const radiusFull = 999.0;
+}
+
+/// Tipografía profesional consistente para toda la app.
+abstract final class VetTypography {
+  // Display / Headlines
+  static const displayLarge = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 30,
+    fontWeight: FontWeight.w800,
+    height: 1.15,
+    letterSpacing: -0.5,
+    color: VetColors.ink,
+  );
+  static const displayMedium = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    height: 1.2,
+    letterSpacing: -0.3,
+    color: VetColors.ink,
+  );
+  static const displaySmall = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 24,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    color: VetColors.ink,
+  );
+
+  // Headlines
+  static const headlineLarge = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    height: 1.3,
+    color: VetColors.ink,
+  );
+  static const headlineMedium = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+    color: VetColors.ink,
+  );
+  static const headlineSmall = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 1.35,
+    color: VetColors.ink,
+  );
+
+  // Titles
+  static const titleLarge = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+    color: VetColors.ink,
+  );
+  static const titleMedium = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: VetColors.ink,
+  );
+  static const titleSmall = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: VetColors.ink,
+  );
+
+  // Body
+  static const bodyLarge = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    color: VetColors.ink,
+  );
+  static const bodyMedium = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    color: VetColors.ink,
+  );
+  static const bodySmall = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    height: 1.5,
+    color: VetColors.muted,
+  );
+
+  // Labels / Utility
+  static const labelLarge = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: VetColors.ink,
+  );
+  static const labelMedium = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: VetColors.ink,
+  );
+  static const labelSmall = TextStyle(
+    fontFamily: VetTheme.fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: VetColors.muted,
+  );
+}
+
 abstract final class VetTheme {
   /// Familia de la interfaz: Plus Jakarta Sans, la que el propio tema ya
   /// pedia en un comentario desde antes («cargar Plus Jakarta Sans como
