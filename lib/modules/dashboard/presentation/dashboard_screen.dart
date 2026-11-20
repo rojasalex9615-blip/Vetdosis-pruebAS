@@ -437,9 +437,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             if (widget.homePilot && routeVisible('Estadísticas'))
-              ExpansionTile(
-                title: const Text('Ver estadísticas'),
-                children: [statisticsPanel],
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 4),
+                child: VetCard(
+                  padding: EdgeInsets.zero,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      dividerColor: Colors.transparent,
+                    ),
+                    child: ExpansionTile(
+                      shape: const Border(),
+                      collapsedShape: const Border(),
+                      leading: const Icon(VetIcons.barChart, size: 20),
+                      title: const Text(
+                        'Ver estadísticas',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: statisticsPanel,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             if (routeAuthorized('Hospitalización') ||
                 routeVisible('Agenda') ||
@@ -483,10 +505,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           for (final t in m.overdue.take(3))
                             ListTile(
-                              title: Text('${m.patient(t)} · ${t.label}'),
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                              leading: const Icon(VetIcons.clock, size: 18, color: VetColors.danger),
+                              title: Text(
+                                '${m.patient(t)} · ${t.label}',
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                              ),
                               subtitle: Text(
                                 'Horario: ${time(m.effectiveTime(t))}',
+                                style: const TextStyle(fontSize: 12),
                               ),
+                              trailing: const Icon(VetIcons.chevronRight, size: 16),
                               onTap: () => openPage('Hospitalización'),
                             ),
                         ],
@@ -524,10 +554,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           for (final p in m.lowStock.take(3))
                             ListTile(
-                              title: Text('${p['nombre']}'),
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                              leading: const Icon(VetIcons.warningTriangle, size: 18, color: VetColors.warning),
+                              title: Text(
+                                '${p['nombre']}',
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                              ),
                               subtitle: Text(
                                 'Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}',
+                                style: const TextStyle(fontSize: 12),
                               ),
+                              trailing: const Icon(VetIcons.chevronRight, size: 16),
                               onTap: () => openPage('Inventario'),
                             ),
                         ],
@@ -1023,18 +1061,19 @@ class _DashboardActionCapsule extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(sectionIcon(page), size: 20, color: iconColor),
-                const SizedBox(width: 8),
+                Icon(sectionIcon(page), size: 19, color: iconColor),
+                const SizedBox(width: 7),
                 Flexible(
                   child: Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: textColor,
                       letterSpacing: 0.1,

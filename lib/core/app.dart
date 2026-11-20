@@ -399,8 +399,8 @@ class VetDosisApp extends StatelessWidget {
               filled: true,
               fillColor: surface,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 16,
+                horizontal: 16,
+                vertical: 14,
               ),
               border: NeuInputBorder(dark: dark),
               enabledBorder: NeuInputBorder(dark: dark),
@@ -415,6 +415,20 @@ class VetDosisApp extends StatelessWidget {
               focusedErrorBorder: NeuInputBorder(
                 dark: dark,
                 borderSide: BorderSide(color: scheme.error, width: 1.5),
+              ),
+              labelStyle: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
+              floatingLabelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: primary,
+              ),
+              helperStyle: TextStyle(
+                fontSize: 12,
+                color: dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               ),
             )
           : null,
