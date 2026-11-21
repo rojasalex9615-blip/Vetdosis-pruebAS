@@ -266,7 +266,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(VetIcons.arrowRight, size: 20, color: VetColors.teal),
+                    const Icon(VetIcons.arrowForward, size: 20, color: VetColors.turquoise),
                     const SizedBox(width: 8),
                     Text(
                       'Flujos de trabajo',
@@ -458,7 +458,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                   ? VetBadgeKind.danger
                   : VetBadgeKind.success,
               icon: message!.contains('No se pudo')
-                  ? VetIcons.alertTriangle
+                  ? VetIcons.warningTriangle
                   : VetIcons.checkCircle,
             ),
             const SizedBox(height: 12),

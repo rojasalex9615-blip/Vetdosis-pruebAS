@@ -148,7 +148,7 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
         VetCallout(
           text: error!,
           kind: VetBadgeKind.danger,
-          icon: VetIcons.alertTriangle,
+          icon: VetIcons.warningTriangle,
         ),
         const SizedBox(height: 12),
       ],
@@ -182,7 +182,7 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
             child: Center(
               child: Column(
                 children: [
-                  AccentIcon(VetIcons.fileText, size: 36),
+                  AccentIcon(VetIcons.document, size: 36),
                   SizedBox(height: 8),
                   Text('Aún no tienes notas.', style: TextStyle(fontWeight: FontWeight.w600)),
                 ],
@@ -201,7 +201,7 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
-                  VetIcons.fileText,
+                  VetIcons.document,
                   color: VetColors.brandSky,
                   size: 20,
                 ),

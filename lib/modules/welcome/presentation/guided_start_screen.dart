@@ -45,7 +45,7 @@ const guideSteps = <(String, String, String)>[
 
 IconData _stepIcon(int index) => switch (index) {
   0 => VetIcons.userCircle,
-  1 => VetIcons.palette,
+  1 => VetIcons.brush,
   2 => VetIcons.info,
   3 => VetIcons.document,
   4 => VetIcons.paw,
@@ -219,7 +219,7 @@ class _GuidedStartScreenState extends State<GuidedStartScreen> {
           VetCallout(
             text: error!,
             kind: VetBadgeKind.danger,
-            icon: VetIcons.alertTriangle,
+            icon: VetIcons.warningTriangle,
           ),
         ],
         const SizedBox(height: 16),
@@ -279,7 +279,7 @@ class _GuidedStartScreenState extends State<GuidedStartScreen> {
                   alignment: Alignment.centerRight,
                   child: FilledButton.tonalIcon(
                     onPressed: () => widget.onNavigate(guideSteps[i].$3),
-                    icon: const Icon(VetIcons.arrowRight, size: 16),
+                    icon: const Icon(VetIcons.arrowForward, size: 16),
                     label: const Text('Abrir'),
                   ),
                 ),

@@ -2119,7 +2119,7 @@ class CoreShell extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(VetIcons.palette, size: 20, color: VetColors.violet),
+                const Icon(VetIcons.brush, size: 20, color: VetColors.violet),
                 const SizedBox(width: 8),
                 Text('Estilo visual', style: theme.textTheme.titleLarge),
               ],
@@ -2175,7 +2175,7 @@ class CoreShell extends StatelessWidget {
               decoration: const InputDecoration(
                 labelText: 'Apariencia',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(VetIcons.sun, size: 20),
+                prefixIcon: Icon(VetIcons.sparkles, size: 20),
               ),
               items: const [
                 DropdownMenuItem(

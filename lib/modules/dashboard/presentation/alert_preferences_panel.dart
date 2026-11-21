@@ -65,7 +65,7 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SwitchListTile(
-            secondary: const Icon(VetIcons.volume),
+            secondary: const Icon(VetIcons.bell),
             title: const Text('Alerta sonora'),
             subtitle: const Text('Emite un sonido de notificación al vencer un horario'),
             value: alerts.sound,
@@ -73,7 +73,7 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
           ),
           const Divider(height: 1),
           SwitchListTile(
-            secondary: const Icon(VetIcons.smartphone),
+            secondary: const Icon(VetIcons.phone),
             title: const Text('Vibración'),
             subtitle: const Text(
               'Android; en iPhone depende de los ajustes del sistema.',
@@ -152,7 +152,7 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
             VetCallout(
               text: error!,
               kind: VetBadgeKind.danger,
-              icon: VetIcons.alertTriangle,
+              icon: VetIcons.warningTriangle,
             ),
           ],
           if (busy) ...[

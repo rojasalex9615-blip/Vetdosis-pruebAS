@@ -132,7 +132,7 @@ class _CommissionPanelState extends State<CommissionPanel> {
             VetCallout(
               text: error!,
               kind: VetBadgeKind.danger,
-              icon: VetIcons.alertTriangle,
+              icon: VetIcons.warningTriangle,
             ),
           ],
           if (schedule != null) ...[
@@ -215,7 +215,7 @@ class _CommissionPanelState extends State<CommissionPanel> {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(VetIcons.lock, size: 18, color: VetColors.amber),
+                const Icon(VetIcons.lock, size: 18, color: VetColors.warning),
                 const SizedBox(width: 8),
                 Text(
                   'Calendario de pagos · solo administración',
