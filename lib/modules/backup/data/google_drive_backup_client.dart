@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/drive_backup_client.dart';
+import 'drive_backup_authorization.dart';
 
 /// Android beta: per-device clinic binding and direct drive.file upload.
 /// No Google token or backup password is sent to the VetDosis server.
@@ -14,9 +15,7 @@ class GoogleDriveBackupClient implements DriveBackupClient {
   GoogleDriveBackupClient({http.Client? httpClient})
     : _http = httpClient ?? http.Client();
   static const _scope = 'https://www.googleapis.com/auth/drive.file';
-  static const _webClientId = String.fromEnvironment(
-    'GOOGLE_DRIVE_WEB_CLIENT_ID',
-  );
+  static const _webClientId = driveWebClientId;
   final http.Client _http;
   final GoogleSignIn _signIn = GoogleSignIn.instance;
   Future<void>? _initialization;

@@ -4,6 +4,7 @@ import '../../../core/widgets/accent_glow.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
+import '../../calculations/presentation/calculation_screen.dart';
 import '../domain/exotic_reference.dart';
 
 /// Áreas de exóticos que aún no tienen datos; solo se nombran.
@@ -112,6 +113,60 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           ),
         ),
       const SizedBox(height: 12),
+      const VetSectionHeader(
+        title: 'Calculadora',
+        subtitle:
+            'Peso metabólico en exóticos: convierte el peso en la escala usada para comparar especies de tamaños muy distintos. No es una dosis.',
+      ),
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: VetCard(
+          padding: EdgeInsets.zero,
+          child: InkWell(
+            onTap: () => Navigator.push<void>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CalculationScreen(
+                  initialTool: 'metabolic',
+                  tools: exoticCalculationTools,
+                  title: 'Peso metabólico en exóticos',
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const VetIconBox(
+                    icon: VetIcons.scale,
+                    accent: VetColors.violet,
+                    size: 52,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Peso metabólico', style: textTheme.titleMedium),
+                        const SizedBox(height: 2),
+                        Text(
+                          'kg^exponente con la referencia verificada que elijas.',
+                          style: textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 14),
+                    child: Icon(VetIcons.chevronRight, color: VetColors.muted),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
       const VetSectionHeader(
         title: 'Previstos',
         subtitle: 'Todavía sin datos ni herramientas.',
@@ -248,10 +303,7 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
       if (taxonNote != null)
         Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: VetNotice(
-            text: taxonNote,
-            icon: VetIcons.clipboardChecks,
-          ),
+          child: VetNotice(text: taxonNote, icon: VetIcons.clipboardChecks),
         ),
       if (rows.any((r) => r.flagged))
         const Padding(

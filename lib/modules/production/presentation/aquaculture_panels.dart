@@ -90,6 +90,13 @@ int _whole(TextEditingController c, String label) {
   return value;
 }
 
+/// Como [_decimal] pero admite el campo vacío. Se usa donde la fuente no
+/// publica el dato para esa especie y el usuario puede dejarlo en blanco.
+double _optionalDecimal(TextEditingController c, String label, double fallback) {
+  if (c.text.trim().isEmpty) return fallback;
+  return _decimal(c, label);
+}
+
 String _fmt(double v, [int decimals = 2]) {
   if (!v.isFinite) return '—';
   final fixed = v.toStringAsFixed(decimals);
@@ -296,6 +303,17 @@ class _AquacultureSeedPanelState extends State<AquacultureSeedPanel> {
   SeedStockPlan? result;
   String? error;
 
+  @override
+  void didUpdateWidget(AquacultureSeedPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.species != widget.species) {
+      species = widget.species;
+      systemIndex = 0;
+      result = null;
+      error = null;
+    }
+  }
+
   /// Tabla de densidades de la especie elegida, o vacía si la fuente no la da.
   List<AquacultureSystem> get systems => switch (species) {
     FishSpecies.tilapia => aquacultureSystems,
@@ -499,6 +517,21 @@ class _AquacultureRationPanelState extends State<AquacultureRationPanel> {
     cachamaResult = null;
     error = null;
   });
+
+  @override
+  void didUpdateWidget(AquacultureRationPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.species != widget.species) {
+      species = widget.species;
+      troutRow = 0;
+      troutSize = 0;
+      cachamaWeek = 0;
+      result = null;
+      troutResult = null;
+      cachamaResult = null;
+      error = null;
+    }
+  }
 
   void changeSpecies(FishSpecies next) => setState(() {
     species = next;
@@ -1638,11 +1671,37 @@ class _AquacultureNitriteSaltPanelState
   final nitrite = TextEditingController(text: '2');
   final chloride = TextEditingController(text: '10');
   final ratio = TextEditingController(text: '20');
-  final maintenance = TextEditingController(text: '150');
+  final maintenance = TextEditingController();
   final purity = TextEditingController(text: '99');
   late FishSpecies species = widget.species;
   NitriteSaltPlan? result;
   String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _applySpeciesDefaults(species);
+  }
+
+  /// Siembra la relación y el cloruro con el dato publicado de la especie. En
+  /// las que no lo publican el campo queda vacío a propósito: rellenarlo con el
+  /// número de otra especie es justo el error que hay que evitar.
+  void _applySpeciesDefaults(FishSpecies next) {
+    ratio.text = next == FishSpecies.bagre ? _fmt(bagreNitriteRatio, 0) : '20';
+    final published = maintenanceChlorideFor(next);
+    maintenance.text = published == null ? '' : _fmt(published, 0);
+  }
+
+  @override
+  void didUpdateWidget(AquacultureNitriteSaltPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.species != widget.species) {
+      species = widget.species;
+      _applySpeciesDefaults(species);
+      result = null;
+      error = null;
+    }
+  }
 
   @override
   void dispose() {
@@ -1657,19 +1716,11 @@ class _AquacultureNitriteSaltPanelState
     error = null;
   });
 
-  /// La relación mínima y el cloruro de mantenimiento salen de la fuente de
-  /// cada especie; donde no hay dato se deja el valor que escriba el usuario.
   void changeSpecies(FishSpecies next) => setState(() {
     species = next;
+    _applySpeciesDefaults(next);
     result = null;
     error = null;
-    if (next == FishSpecies.bagre) {
-      ratio.text = _fmt(bagreNitriteRatio, 0);
-      maintenance.text = _fmt(bagreSafeChlorideMgL, 0);
-    } else if (next == FishSpecies.tilapia) {
-      ratio.text = '20';
-      maintenance.text = '150';
-    }
   });
 
   void calculate() {
@@ -1682,7 +1733,11 @@ class _AquacultureNitriteSaltPanelState
           nitriteNitrogenMgL: _decimal(nitrite, 'Nitrito'),
           currentChlorideMgL: _decimal(chloride, 'Cloruro actual'),
           ratio: _decimal(ratio, 'Relación'),
-          maintenanceChlorideMgL: _decimal(maintenance, 'Cloruro de mantenimiento'),
+          maintenanceChlorideMgL: _optionalDecimal(
+            maintenance,
+            'Cloruro de mantenimiento',
+            0,
+          ),
           purityPercent: _decimal(purity, 'Pureza'),
         );
       } on FormatException catch (e) {

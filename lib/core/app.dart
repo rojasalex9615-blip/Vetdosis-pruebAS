@@ -27,6 +27,7 @@ import '../modules/production/domain/porcino_repository.dart';
 import '../modules/production/domain/production_unit_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
+import '../vet_ui/vet_components.dart';
 import 'widgets/neu_identity.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
@@ -401,8 +402,8 @@ class VetDosisApp extends StatelessWidget {
               filled: true,
               fillColor: surface,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 16,
+                horizontal: 16,
+                vertical: 14,
               ),
               border: NeuInputBorder(dark: dark),
               enabledBorder: NeuInputBorder(dark: dark),
@@ -417,6 +418,20 @@ class VetDosisApp extends StatelessWidget {
               focusedErrorBorder: NeuInputBorder(
                 dark: dark,
                 borderSide: BorderSide(color: scheme.error, width: 1.5),
+              ),
+              labelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
+              floatingLabelStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: primary,
+              ),
+              helperStyle: TextStyle(
+                fontSize: 12,
+                color: dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               ),
             )
           : null,
@@ -1544,6 +1559,8 @@ class CoreShell extends StatelessWidget {
                                                   auth!.active!.clinicId,
                                               patientId: patient.id,
                                               patientName: patient.name,
+                                              referenceLibrary:
+                                                  referenceLibrary,
                                             ),
                                           ),
                                         );
@@ -1746,7 +1763,7 @@ class CoreShell extends StatelessWidget {
                       : const Text(
                           'Conecta tu cuenta y clínica para abrir operación y agenda.',
                         )
-                else if (model.screen == 'Checado')
+                else if (model.screen == 'Control de asistencia')
                   attendance != null &&
                           auth?.active != null &&
                           auth?.offline != true
@@ -1755,7 +1772,7 @@ class CoreShell extends StatelessWidget {
                           member: auth!.active!,
                         )
                       : const Text(
-                          'El checado requiere conexión con el servidor.',
+                          'El control de asistencia requiere conexión con el servidor.',
                         )
                 else if (model.screen == 'Estadísticas')
                   DashboardScreen(
@@ -1774,8 +1791,8 @@ class CoreShell extends StatelessWidget {
                       patients: patients,
                       backup: allowed('Estadísticas') ? backup : null,
                       attendance: attendance,
-                      // M15 y altas: los datos ya existen en la app; aqui
-                      // solo se cablean a la pantalla de Estadisticas.
+                      // M15 y altas: los datos ya existen en la app; aquí
+                      // solo se cablean a la pantalla de Estadísticas.
                       aviculture: aviculture,
                       history: hospital is HospitalHistoryRepository
                           ? hospital as HospitalHistoryRepository
@@ -1934,8 +1951,8 @@ class CoreShell extends StatelessWidget {
           patients: patients,
           backup: backup,
           attendance: attendance,
-          // Mismos datos que la pantalla de Estadisticas, para que el
-          // desplegable del Inicio muestre lo mismo.
+          // Mismos datos que la pantalla de Estadísticas, para que el
+          // desplegable «Ver estadísticas» del Inicio muestre lo mismo.
           aviculture: aviculture,
           history: hospital is HospitalHistoryRepository
               ? hospital as HospitalHistoryRepository
@@ -1962,9 +1979,8 @@ class CoreShell extends StatelessWidget {
     ],
   ];
 
-
-  /// Hospitalizacion con sus guardas (repositorios, rol, conexion), usada
-  /// tanto por la ruta del armazon como por el atajo de Ajustes: asi el
+  /// Hospitalización con sus guardas (repositorios, rol, conexión), usada
+  /// tanto por la ruta del armazón como por el atajo de Ajustes: así el
   /// atajo abre el apartado ya desarrollado y al volver se regresa a
   /// Ajustes, en vez de sustituir la pantalla.
   Widget _hospitalSection(BuildContext context) {
@@ -1973,7 +1989,7 @@ class CoreShell extends StatelessWidget {
         hospitalAlerts == null ||
         auth?.active == null) {
       return const Text(
-        'Conecta tu cuenta y clinica para abrir hospitalizacion.',
+        'Conecta tu cuenta y clínica para abrir hospitalización.',
       );
     }
     if (![
@@ -1982,7 +1998,7 @@ class CoreShell extends StatelessWidget {
       ClinicRole.auxiliar,
     ].contains(auth!.active!.role)) {
       return const Text(
-        'Hospitalizacion requiere acceso clinico de MVZ, admin o auxiliar.',
+        'Hospitalización requiere acceso clínico de MVZ, admin o auxiliar.',
       );
     }
     if (auth!.offline) {
@@ -2004,7 +2020,7 @@ class CoreShell extends StatelessWidget {
       clinical: clinical,
       contextIsCurrent: hospitalWeightContext,
       sessionChanges: auth,
-      onCalculateWeight: serverAllowed('Calculo rapido')
+      onCalculateWeight: serverAllowed('Cálculo rápido')
           ? (weight, validate) =>
                 hospitalWeightCalculation(context, weight, validate)
           : null,
@@ -2016,7 +2032,7 @@ class CoreShell extends StatelessWidget {
                 MaterialPageRoute<void>(
                   builder: (_) => Scaffold(
                     appBar: AppBar(
-                      title: const Text('Registrar medicacion'),
+                      title: const Text('Registrar medicación'),
                     ),
                     body: SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
@@ -2039,13 +2055,13 @@ class CoreShell extends StatelessWidget {
   }
 
   /// Recetas con sus guardas, igual que [_hospitalSection]: la ruta del
-  /// armazon y el atajo de Ajustes comparten la misma construccion.
+  /// armazón y el atajo de Ajustes comparten la misma construcción.
   Widget _prescriptionSection() {
     if (prescribing == null ||
         clinical == null ||
         forms == null ||
         auth?.active == null) {
-      return const Text('Conecta tu cuenta y clinica para abrir recetas.');
+      return const Text('Conecta tu cuenta y clínica para abrir recetas.');
     }
     if (auth!.offline) {
       return const Text(
@@ -2057,7 +2073,7 @@ class CoreShell extends StatelessWidget {
       ClinicRole.mvz,
       ClinicRole.auxiliar,
     ].contains(auth!.active!.role)) {
-      return const Text('Este modulo requiere acceso clinico.');
+      return const Text('Este módulo requiere acceso clínico.');
     }
     return PrescribingScreen(
       identity: identity,
@@ -2068,258 +2084,386 @@ class CoreShell extends StatelessWidget {
     );
   }
 
-  List<Widget> settings(BuildContext context) => [
-    Text('Ajustes', style: Theme.of(context).textTheme.headlineMedium),
-    const SizedBox(height: 24),
-    Text('Estilo visual', style: Theme.of(context).textTheme.titleLarge),
-    const SizedBox(height: 12),
-    Wrap(
-      spacing: 12,
-      children: [
-        glowChip(
-          ChoiceChip(
-            label: const Text('Clásico'),
-            selected: model.settings.visualStyle == 'standard',
-            onSelected: (_) => model.updateSettings(visualStyle: 'standard'),
-          ),
-        ),
-        glowChip(
-          ChoiceChip(
-            label: const Text('Neu · relieve suave'),
-            selected: model.settings.visualStyle == 'neu',
-            onSelected: (_) => model.updateSettings(visualStyle: 'neu'),
-          ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 24),
-    Text('Elige tu tema', style: Theme.of(context).textTheme.titleLarge),
-    const SizedBox(height: 12),
-    Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        for (var index = 0; index < paletteNames.length; index++)
-          glowChip(
-            ChoiceChip(
-              label: Text(paletteNames[index]),
-              avatar: CircleAvatar(
-                backgroundColor: paletteColors[index],
-                radius: 8,
-              ),
-              selected: model.settings.palette == index,
-              onSelected: (_) => model.updateSettings(palette: index),
+  List<Widget> settings(BuildContext context) {
+    final theme = Theme.of(context);
+    return [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AccentIcon(VetIcons.sliders, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ajustes',
+                  style: theme.textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Personaliza la interfaz visual, gestiona tu cuenta y configura tus herramientas.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
-      ],
-    ),
-    const SizedBox(height: 24),
-    DropdownButtonFormField<String>(
-      isExpanded: true,
-      initialValue: model.settings.brightness,
-      key: ValueKey(model.settings.brightness),
-      decoration: const InputDecoration(
-        labelText: 'Apariencia',
-        border: OutlineInputBorder(),
+        ],
       ),
-      items: const [
-        DropdownMenuItem(value: 'system', child: Text('Seguir al dispositivo')),
-        DropdownMenuItem(value: 'light', child: Text('Claro')),
-        DropdownMenuItem(value: 'dark', child: Text('Oscuro')),
-      ],
-      onChanged: (value) {
-        if (value != null) model.updateSettings(brightness: value);
-      },
-    ),
-    if (model.saveError != null)
-      Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Text(
-          model.saveError!,
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
-        ),
-      ),
-    const SizedBox(height: 24),
-    const Divider(),
-    Text('Cuenta y espacio', style: Theme.of(context).textTheme.titleLarge),
-    if (auth != null)
-      ListTile(
-        leading: const Icon(VetIcons.userCircle),
-        title: const Text('Mi cuenta y clínicas'),
-        subtitle: const Text('Mi espacio personal, clínicas e invitaciones'),
-        // Ya con sesion, la pantalla de cuenta (no la de alta, que ofrecia
-        // un segundo «Usar mi espacio personal»).
-        onTap: () => openAccount(context),
-      ),
-    if (operations is CommissionRepository &&
-        auth?.active != null &&
-        auth?.offline != true)
-      ListTile(
-        leading: const Icon(VetIcons.coins),
-        title: const Text('Mis comisiones'),
-        subtitle: const Text('Saldo, próximo pago e historial'),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => Scaffold(
-              appBar: AppBar(title: const Text('Mis comisiones')),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: CommissionPanel(
-                  repository: operations as CommissionRepository,
-                  member: auth!.active!,
+      const SizedBox(height: 20),
+      VetCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(VetIcons.palette, size: 20, color: VetColors.violet),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Estilo visual', style: theme.textTheme.titleLarge),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                glowChip(
+                  ChoiceChip(
+                    label: const Text('Clásico'),
+                    selected: model.settings.visualStyle == 'standard',
+                    onSelected: (_) =>
+                        model.updateSettings(visualStyle: 'standard'),
+                  ),
+                ),
+                glowChip(
+                  ChoiceChip(
+                    label: const Text('Neu · relieve suave'),
+                    selected: model.settings.visualStyle == 'neu',
+                    onSelected: (_) => model.updateSettings(visualStyle: 'neu'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text('Elige tu tema', style: theme.textTheme.titleLarge),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                for (var index = 0; index < paletteNames.length; index++)
+                  glowChip(
+                    ChoiceChip(
+                      label: Text(paletteNames[index]),
+                      avatar: CircleAvatar(
+                        backgroundColor: paletteColors[index],
+                        radius: 8,
+                      ),
+                      selected: model.settings.palette == index,
+                      onSelected: (_) => model.updateSettings(palette: index),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              isExpanded: true,
+              initialValue: model.settings.brightness,
+              key: ValueKey(model.settings.brightness),
+              decoration: const InputDecoration(
+                labelText: 'Apariencia',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(VetIcons.sun, size: 20),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'system',
+                  child: Text('Seguir al dispositivo'),
+                ),
+                DropdownMenuItem(value: 'light', child: Text('Claro')),
+                DropdownMenuItem(value: 'dark', child: Text('Oscuro')),
+              ],
+              onChanged: (value) {
+                if (value != null) model.updateSettings(brightness: value);
+              },
+            ),
+            if (model.saveError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  model.saveError!,
+                  style: TextStyle(color: theme.colorScheme.error),
                 ),
               ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      VetCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(VetIcons.userCircle, size: 20, color: VetColors.turquoise),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Cuenta y espacio', style: theme.textTheme.titleLarge),
+                ),
+              ],
             ),
-          ),
-        ),
-      ),
-    if (auth?.active != null)
-      ListTile(
-        leading: const Icon(VetIcons.sliders),
-        title: const Text('Perfil, módulos y flujos de la clínica'),
-        subtitle: Text(
-          !experienceReady
-              ? 'Configuración compartida aún no disponible en el servidor.'
-              : auth?.active?.role == ClinicRole.admin
-              ? 'Elige secciones, submódulos, procesos y proveedor IA predeterminado.'
-              : 'Solo la administración puede modificar estas preferencias.',
-        ),
-        onTap: experienceRepository == null || !experienceReady
-            ? null
-            : () async {
-                await Navigator.push<void>(
+            const SizedBox(height: 8),
+            if (auth != null)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const AccentIcon(VetIcons.userCircle, size: 24),
+                title: const Text('Mi cuenta y clínicas'),
+                subtitle: const Text('Mi espacio personal, clínicas e invitaciones'),
+                trailing: const Icon(VetIcons.chevronRight, size: 18),
+                onTap: () => openAccount(context),
+              ),
+            if (operations is CommissionRepository &&
+                auth?.active != null &&
+                auth?.offline != true) ...[
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const AccentIcon(VetIcons.coins, size: 24),
+                title: const Text('Mis comisiones'),
+                subtitle: const Text('Saldo, próximo pago e historial'),
+                trailing: const Icon(VetIcons.chevronRight, size: 18),
+                onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => ClinicExperienceScreen(
-                      member: auth!.active!,
-                      initial: experience ?? ClinicExperience.defaults(),
-                      repository: experienceRepository!,
-                      ready: experienceReady,
-                      onSaved: onExperienceSaved,
-                    ),
-                  ),
-                );
-              },
-      ),
-    Text(
-      'Configura tus herramientas',
-      style: Theme.of(context).textTheme.titleLarge,
-    ),
-    for (final option in <(String, String, String)>[
-      (
-        'Perfil profesional, firma y permisos',
-        'Revisa tus datos antes de emitir documentos.',
-        'Receta',
-      ),
-      (
-        'Membrete y plantillas',
-        'Logo, versiones y formatos de tu clínica.',
-        'Formatos',
-      ),
-      (
-        'Avisos de hospitalización',
-        'Activa y revisa permisos en la hoja de tratamientos.',
-        'Hospitalización',
-      ),
-      (
-        'Inventario, ventas y pagos de clientes',
-        'Productos, caja y referencias de cobro.',
-        'Inventario',
-      ),
-      (
-        'Proveedor de IA y privacidad',
-        'Claves, modelos y uso de contexto.',
-        'Asistente IA',
-      ),
-      (
-        'Plan y pagos de VetDosis',
-        'Suscripción y beneficios de tu espacio.',
-        'Planes',
-      ),
-      (
-        'Exportación y respaldo',
-        'Consulta límites y genera tus archivos.',
-        'Respaldo',
-      ),
-      (
-        'Ayuda y contacto',
-        'Reportes, archivos y seguimiento.',
-        'Ayuda y soporte',
-      ),
-      ('Primeros pasos', 'Retoma la guía de configuración.', 'Inicio guiado'),
-    ])
-      if (allowed(option.$3))
-        ListTile(
-          leading: Icon(sectionIcon(option.$3)),
-          title: Text(option.$1),
-          subtitle: Text(option.$2),
-          trailing: const Icon(VetIcons.chevronRight),
-          onTap: () {
-            if (option.$1 == 'Proveedor de IA y privacidad') {
-              if (ai == null || auth?.active == null || auth?.offline == true) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'La configuración de IA requiere cuenta y conexión.',
-                    ),
-                  ),
-                );
-                return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => Scaffold(
-                    appBar: AppBar(title: const Text('Proveedores de IA')),
-                    body: SafeArea(
-                      child: SingleChildScrollView(
+                  MaterialPageRoute<void>(
+                    builder: (_) => Scaffold(
+                      appBar: AppBar(title: const Text('Mis comisiones')),
+                      body: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
-                        child: AiScreen(
-                          repository: ai!,
+                        child: CommissionPanel(
+                          repository: operations as CommissionRepository,
                           member: auth!.active!,
-                          configurationOnly: true,
-                          preferredProvider: experience?.defaultAiProvider,
                         ),
                       ),
                     ),
                   ),
                 ),
-              );
-            } else if (option.$3 == 'Receta' ||
-                option.$3 == 'Hospitalización') {
-              // Estos dos atajos abren su apartado ya desarrollado encima de
-              // Ajustes: al volver se regresa a Ajustes, no a Inicio.
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (routeContext) => Scaffold(
-                    appBar: AppBar(
-                      title: Text(
-                        option.$3 == 'Receta' ? 'Recetas' : 'Hospitalización',
-                      ),
-                    ),
-                    body: option.$3 == 'Receta'
-                        ? _prescriptionSection()
-                        : _hospitalSection(routeContext),
+              ),
+            ],
+            if (auth?.active != null) ...[
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const AccentIcon(VetIcons.sliders, size: 24),
+                title: const Text('Perfil, módulos y flujos de la clínica'),
+                subtitle: Text(
+                  !experienceReady
+                      ? 'Configuración compartida aún no disponible en el servidor.'
+                      : auth?.active?.role == ClinicRole.admin
+                      ? 'Elige secciones, submódulos, procesos y proveedor IA predeterminado.'
+                      : 'Solo la administración puede modificar estas preferencias.',
+                ),
+                trailing: const Icon(VetIcons.chevronRight, size: 18),
+                onTap: experienceRepository == null || !experienceReady
+                    ? null
+                    : () async {
+                        await Navigator.push<void>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ClinicExperienceScreen(
+                              member: auth!.active!,
+                              initial: experience ?? ClinicExperience.defaults(),
+                              repository: experienceRepository!,
+                              ready: experienceReady,
+                              onSaved: onExperienceSaved,
+                            ),
+                          ),
+                        );
+                      },
+              ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      VetCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(VetIcons.grid, size: 20, color: VetColors.purple),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Configura tus herramientas',
+                    style: theme.textTheme.titleLarge,
                   ),
                 ),
-              );
-            } else {
-              model.navigate(option.$3);
-            }
-          },
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Accesos rápidos a la configuración de cada apartado clínico y operativo.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final option in <(String, String, String)>[
+              (
+                'Perfil profesional, firma y permisos',
+                'Revisa tus datos antes de emitir documentos.',
+                'Receta',
+              ),
+              (
+                'Membrete y plantillas',
+                'Logo, versiones y formatos de tu clínica.',
+                'Formatos',
+              ),
+              (
+                'Avisos de hospitalización',
+                'Activa y revisa permisos en la hoja de tratamientos.',
+                'Hospitalización',
+              ),
+              (
+                'Inventario, ventas y pagos de clientes',
+                'Productos, caja y referencias de cobro.',
+                'Inventario',
+              ),
+              (
+                'Proveedor de IA y privacidad',
+                'Claves, modelos y uso de contexto.',
+                'Asistente IA',
+              ),
+              (
+                'Plan y pagos de VetDosis',
+                'Suscripción y beneficios de tu espacio.',
+                'Planes',
+              ),
+              (
+                'Exportación y respaldo',
+                'Consulta límites y genera tus archivos.',
+                'Respaldo',
+              ),
+              (
+                'Ayuda y contacto',
+                'Reportes, archivos y seguimiento.',
+                'Ayuda y soporte',
+              ),
+              ('Primeros pasos', 'Retoma la guía de configuración.', 'Inicio guiado'),
+            ])
+              if (allowed(option.$3)) ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: sectionAccent(option.$3).withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      sectionIcon(option.$3),
+                      color: sectionAccent(option.$3),
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    option.$1,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(option.$2),
+                  trailing: const Icon(VetIcons.chevronRight, size: 18),
+                  onTap: () {
+                    if (option.$1 == 'Proveedor de IA y privacidad') {
+                      if (ai == null || auth?.active == null || auth?.offline == true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'La configuración de IA requiere cuenta y conexión.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => Scaffold(
+                            appBar: AppBar(title: const Text('Proveedores de IA')),
+                            body: SafeArea(
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(16),
+                                child: AiScreen(
+                                  repository: ai!,
+                                  member: auth!.active!,
+                                  configurationOnly: true,
+                                  preferredProvider: experience?.defaultAiProvider,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    } else if (option.$3 == 'Receta' ||
+                        option.$3 == 'Hospitalización') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (routeContext) => Scaffold(
+                            appBar: AppBar(
+                              title: Text(
+                                option.$3 == 'Receta' ? 'Recetas' : 'Hospitalización',
+                              ),
+                            ),
+                            body: option.$3 == 'Receta'
+                                ? _prescriptionSection()
+                                : _hospitalSection(routeContext),
+                          ),
+                        ),
+                      );
+                    } else {
+                      model.navigate(option.$3);
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+              ],
+          ],
         ),
-    if (serverAllowed('Hospitalización')) ...[
-      const Divider(),
-      Text(
-        'Alertas y recordatorios',
-        style: Theme.of(context).textTheme.titleLarge,
       ),
-      AlertPreferencesPanel(alerts: hospitalAlerts),
-    ],
-    const AppVersionLabel(),
-  ];
+      if (serverAllowed('Hospitalización')) ...[
+        const SizedBox(height: 16),
+        VetCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(VetIcons.bell, size: 20, color: VetColors.mint),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Alertas y recordatorios',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              AlertPreferencesPanel(alerts: hospitalAlerts),
+            ],
+          ),
+        ),
+      ],
+      const SizedBox(height: 20),
+      const AppVersionLabel(),
+    ];
+  }
 
   List<Widget> pending(BuildContext context) => [
     Text(model.screen, style: Theme.of(context).textTheme.headlineMedium),

@@ -202,10 +202,7 @@ class _DoseMathToolsState extends State<DoseMathTools> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(context).textTheme.titleMedium,
                 decoration: InputDecoration(
                   hintText: '0,00',
                   suffixText: unit,

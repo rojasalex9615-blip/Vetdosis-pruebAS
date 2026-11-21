@@ -1032,3 +1032,192 @@ Color _badgeColor(ThemeData theme, VetBadgeKind kind) => switch (kind) {
   VetBadgeKind.danger => theme.colorScheme.error,
   VetBadgeKind.unverified => theme.colorScheme.onSurfaceVariant,
 };
+
+/// Botón secundario estilizado con borde sutil y estado de carga opcional.
+class VetSecondaryButton extends StatelessWidget {
+  const VetSecondaryButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.loading = false,
+    this.fullWidth = false,
+  });
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool loading;
+  final bool fullWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final enabled = !loading && onPressed != null;
+
+    return OutlinedButton(
+      onPressed: enabled ? onPressed : null,
+      style: OutlinedButton.styleFrom(
+        minimumSize: Size(fullWidth ? double.infinity : 48, 48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: VetSpacing.lg,
+          vertical: VetSpacing.md,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (loading) ...[
+            const SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+          ] else if (icon != null) ...[
+            Icon(icon, size: 18),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip de acción con resplandor suave y estado de selección.
+class VetActionChip extends StatelessWidget {
+  const VetActionChip({
+    super.key,
+    required this.label,
+    this.icon,
+    this.onPressed,
+    this.selected = false,
+    this.accentColor,
+  });
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onPressed;
+  final bool selected;
+  final Color? accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = accentColor ?? cs.primary;
+    final isActive = onPressed != null;
+
+    return AccentGlow(
+      color: color,
+      enabled: selected && isActive,
+      emphasis: .6,
+      radius: VetSpacing.radiusMd,
+      child: ActionChip(
+        avatar: icon != null ? Icon(icon, size: 16, color: color) : null,
+        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        onPressed: onPressed,
+        backgroundColor: selected
+            ? color.withValues(alpha: .15)
+            : isActive
+                ? cs.surface
+                : cs.surfaceContainerLow,
+        side: BorderSide(
+          color: selected ? color : cs.outlineVariant,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 6,
+        ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta de sección con encabezado estilizado y resplandor de acento.
+class VetSectionCard extends StatelessWidget {
+  const VetSectionCard({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.accentColor,
+    required this.child,
+    this.onTap,
+    this.trailing,
+    this.padding = const EdgeInsets.all(VetSpacing.lg),
+    this.radius = VetSpacing.radiusXl,
+  });
+  final String title;
+  final IconData icon;
+  final Color accentColor;
+  final Widget child;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return AccentGlow(
+      color: accentColor,
+      radius: radius,
+      emphasis: .65,
+      child: VetCard(
+        radius: radius,
+        padding: EdgeInsets.zero,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(radius),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, size: 18, color: accentColor),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    ?trailing,
+                  ],
+                ),
+              ),
+              Padding(
+                padding: padding,
+                child: child,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

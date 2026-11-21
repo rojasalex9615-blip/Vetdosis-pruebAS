@@ -280,11 +280,7 @@ class HomeModuleGrid extends StatelessWidget {
                             actions[i].$1,
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(
-                                  fontSize: 13,
-                                  letterSpacing: 0,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           if (details[actions[i].$2] != null)
                             Padding(
@@ -296,8 +292,6 @@ class HomeModuleGrid extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
-                                      fontSize: 11,
-                                      letterSpacing: 0,
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.onSurfaceVariant,

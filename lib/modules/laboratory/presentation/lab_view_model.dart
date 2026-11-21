@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../domain/lab_reference_resolver.dart';
 import '../domain/lab_repository.dart';
 import '../domain/lab_result.dart';
 
@@ -37,10 +38,14 @@ class LabResultView {
 }
 
 class LabViewModel extends ChangeNotifier {
-  LabViewModel(this.repository, this.clinicId, this.patientId);
+  LabViewModel(this.repository, this.clinicId, this.patientId, {this.referenceResolver});
 
   final LabRepository repository;
   final String clinicId, patientId;
+
+  /// Fuente de rangos para el indicador en vivo de la captura. Nulo lo
+  /// desactiva: la captura sigue funcionando, sin juzgar lo tecleado.
+  final LabReferenceResolver? referenceResolver;
 
   LabWorkspace? workspace;
   bool busy = false;
@@ -50,6 +55,10 @@ class LabViewModel extends ChangeNotifier {
   /// Vacio no es un fallo: significa que para esa especie no hay referencias
   /// importadas, y la captura sigue aceptando el nombre a mano.
   List<LabAnalyte> catalog = const [];
+
+  /// La especie del paciente. La lee el servidor del expediente; el cliente
+  /// no la elige. Se usa para resolver el indicador en vivo de la captura.
+  String species = '';
 
   Future<void> load() async {
     busy = true;
@@ -67,6 +76,11 @@ class LabViewModel extends ChangeNotifier {
     } catch (_) {
       catalog = const [];
     }
+    species = catalog.isNotEmpty
+        ? catalog.first.species
+        : (workspace?.panels.isNotEmpty ?? false
+              ? workspace!.panels.first.species
+              : '');
     busy = false;
     notifyListeners();
   }
@@ -89,6 +103,40 @@ class LabViewModel extends ChangeNotifier {
       readings: resultado.readings(panel.species, rangos),
       agreed: resultado.agreedFlag(panel.species, rangos),
     );
+  }
+
+  /// Lectura en vivo de un valor tecleado en la captura, contra los rangos de
+  /// la biblioteca. Devuelve una lectura por fuente, sin resumir.
+  ///
+  /// Es solo lectura: no guarda ni altera nada. Sin resolvedor, o sin valor
+  /// interpretable, devuelve una lista vacia y la captura no juzga.
+  Future<List<LabReading>> preview({
+    required String species,
+    required String analyte,
+    required String unit,
+    required String rawValue,
+  }) async {
+    final resolver = referenceResolver;
+    if (resolver == null) return const [];
+    if (analyte.trim().isEmpty || unit.trim().isEmpty) return const [];
+    final double value;
+    try {
+      value = LabResult.parseValue(rawValue);
+    } on FormatException {
+      return const [];
+    }
+    final ranges = await resolver.rangesFor(
+      species: species,
+      analyte: analyte,
+      unit: unit,
+    );
+    if (ranges.isEmpty) return const [];
+    final result = LabResult(
+      analyteKey: analyte.trim(),
+      value: value,
+      unit: unit.trim(),
+    );
+    return result.readings(species.trim(), ranges);
   }
 
   /// Valida y guarda una toma. Devuelve el mensaje de error, o nulo si se

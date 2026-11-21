@@ -1,6 +1,9 @@
+import 'dart:ui' show ClipOp;
+
 import 'accent_glow.dart';
 import 'brand_mark.dart';
 import 'package:flutter/material.dart';
+import '../../vet_ui/vet_theme.dart';
 
 const neuBackground = Color(0xFFEBECF2);
 const neuInk = Color(0xFF17223D);
@@ -63,8 +66,8 @@ class NeuInputBorder extends OutlineInputBorder {
     this.dark = false,
     this.depth = 1,
     super.borderSide = BorderSide.none,
-    super.borderRadius = const BorderRadius.all(Radius.circular(24)),
-    super.gapPadding = 4,
+    super.borderRadius = const BorderRadius.all(Radius.circular(16)),
+    super.gapPadding = 6,
   });
   final bool dark;
   final double depth;
@@ -94,14 +97,23 @@ class NeuInputBorder extends OutlineInputBorder {
     final shape = borderRadius.toRRect(rect);
     canvas.save();
     canvas.clipRRect(shape);
+    if (gapExtent > 0 && gapStart != null) {
+      final notch = Rect.fromLTRB(
+        gapStart - gapPadding,
+        rect.top - 12,
+        gapStart + gapExtent + gapPadding,
+        rect.top + 8,
+      );
+      canvas.clipRect(notch, clipOp: ClipOp.difference);
+    }
     for (final entry in [
       (
-        Offset(3 * depth, 3 * depth),
-        dark ? const Color(0x90000000) : const Color(0x99AEB5C7),
+        Offset(2 * depth, 2 * depth),
+        dark ? const Color(0x35000000) : const Color(0x338A99AB),
       ),
       (
-        Offset(-3 * depth, -3 * depth),
-        dark ? const Color(0x503E5063) : Colors.white,
+        Offset(-1.5 * depth, -1.5 * depth),
+        dark ? const Color(0x20556677) : Colors.white.withValues(alpha: 0.85),
       ),
     ]) {
       final outside = Path()
@@ -112,7 +124,7 @@ class NeuInputBorder extends OutlineInputBorder {
         outside,
         Paint()
           ..color = entry.$2
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5 * depth),
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4 * depth),
       );
     }
     canvas.restore();
@@ -155,13 +167,13 @@ class VetDosisBrand extends StatelessWidget {
         ],
       ),
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: large ? 30 : 20, fontWeight: FontWeight.w700),
+      style: TextStyle(fontSize: large ? 30 : 22, fontWeight: FontWeight.w700),
     );
     final slogan = Text(
       'Tu espacio veterinario',
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: large ? 14 : 11,
+        fontSize: large ? 14 : 12,
         color: dark ? const Color(0xFF93C5FD) : const Color(0xFF0E1B45),
       ),
     );
@@ -269,7 +281,7 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
                   ),
                   shape: const StadiumBorder(),
                   textStyle: const TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: VetTheme.fontFamily,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -309,9 +321,9 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
               borderRadius: BorderRadius.circular(26),
             ),
             textStyle: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontFamily: VetTheme.fontFamily,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
           onPressed: widget.onPressed,

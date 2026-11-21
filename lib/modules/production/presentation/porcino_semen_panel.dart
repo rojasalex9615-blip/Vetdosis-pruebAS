@@ -336,11 +336,10 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
             ),
             _Field(
               controller: doseVolume,
-              label: insemination == null
-                  ? 'Volumen por dosis (ml)'
-                  : 'Volumen por dosis (ml) · rango '
-                        '${_fmt(insemination!.doseVolumeMinMl)}–'
-                        '${_fmt(insemination!.doseVolumeMaxMl)}',
+              label: 'Volumen por dosis (ml)',
+              helper: insemination == null
+                  ? null
+                  : 'Rango recomendado: ${_fmt(insemination!.doseVolumeMinMl)}–${_fmt(insemination!.doseVolumeMaxMl)} ml',
               onChanged: recalc,
             ),
             _Field(
@@ -578,7 +577,14 @@ class _Field extends StatelessWidget {
       keyboardType: text
           ? TextInputType.text
           : TextInputType.numberWithOptions(decimal: decimal || !text),
-      decoration: InputDecoration(labelText: label, helperText: helper),
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helper,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+      ),
       onChanged: (_) => onChanged(),
     ),
   );

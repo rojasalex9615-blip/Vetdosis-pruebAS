@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/accent_glow.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
+import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../operations/domain/operations_repository.dart';
 import '../../operations/presentation/staff_medical_screen.dart';
@@ -137,45 +140,81 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
   Widget status() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (busy) const LinearProgressIndicator(),
-      if (error != null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
+      if (busy) ...[
+        const LinearProgressIndicator(),
+        const SizedBox(height: 12),
+      ],
+      if (error != null) ...[
+        VetCallout(
+          text: error!,
+          kind: VetBadgeKind.danger,
+          icon: VetIcons.alertTriangle,
         ),
+        const SizedBox(height: 12),
+      ],
     ],
   );
 
   Widget unavailable() => const Padding(
-    padding: EdgeInsets.all(16),
-    child: Text(
-      'Las notas, recordatorios y horarios se guardan en tu cuenta y requieren conexión al servidor.',
+    padding: EdgeInsets.symmetric(vertical: 8),
+    child: VetNote(
+      text:
+          'Las notas, recordatorios y horarios se guardan en tu cuenta y requieren conexión al servidor.',
+      icon: VetIcons.cloudOff,
     ),
   );
 
   Widget notesTab() {
     final items = notes.where((n) => !n.reminder).toList();
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
         status(),
-        const Text('Solo tú ves tus notas.'),
-        const SizedBox(height: 8),
+        const VetNote(
+          text: 'Solo tú ves tus notas.',
+          icon: VetIcons.shield,
+        ),
+        const SizedBox(height: 12),
         if (widget.repository == null) unavailable(),
         if (widget.repository != null && items.isEmpty && !busy)
-          const Text('Aún no tienes notas.'),
-        for (final note in items)
-          Card(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Column(
+                children: [
+                  AccentIcon(VetIcons.document, size: 36),
+                  SizedBox(height: 8),
+                  Text('Aún no tienes notas.', style: TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        for (final note in items) ...[
+          VetCard(
             child: ListTile(
-              title: Text(note.title),
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: VetColors.brandSky.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  VetIcons.document,
+                  color: VetColors.brandSky,
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                note.title,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
               subtitle: note.body.isEmpty ? null : Text(note.body),
               onTap: busy ? null : () => editNote(note: note, reminder: false),
               trailing: IconButton(
                 tooltip: 'Eliminar nota',
-                icon: const Icon(VetIcons.trash),
+                icon: const Icon(VetIcons.trash, color: VetColors.danger),
                 onPressed: busy
                     ? null
                     : () async {
@@ -188,12 +227,16 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
               ),
             ),
           ),
-        if (widget.repository != null)
+          const SizedBox(height: 10),
+        ],
+        if (widget.repository != null) ...[
+          const SizedBox(height: 6),
           FilledButton.icon(
             onPressed: busy ? null : () => editNote(reminder: false),
             icon: const Icon(VetIcons.noteEdit),
             label: const Text('Nueva nota'),
           ),
+        ],
       ],
     );
   }
@@ -202,17 +245,32 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
     final items = sortedReminders(notes);
     final now = (widget.now ?? DateTime.now)();
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
         status(),
-        const Text('Recordatorios personales. Solo tú los ves.'),
-        const SizedBox(height: 8),
+        const VetNote(
+          text: 'Recordatorios personales. Solo tú los ves.',
+          icon: VetIcons.bell,
+        ),
+        const SizedBox(height: 12),
         if (widget.repository == null) unavailable(),
         if (widget.repository != null && items.isEmpty && !busy)
-          const Text('Sin recordatorios.'),
-        for (final note in items)
-          Card(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Column(
+                children: [
+                  AccentIcon(VetIcons.bell, size: 36),
+                  SizedBox(height: 8),
+                  Text('Sin recordatorios.', style: TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        for (final note in items) ...[
+          VetCard(
             child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
               value: note.done,
               onChanged: busy
                   ? null
@@ -223,9 +281,13 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
                     ),
               title: Text(
                 note.title,
-                style: note.done
-                    ? const TextStyle(decoration: TextDecoration.lineThrough)
-                    : null,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  decoration: note.done ? TextDecoration.lineThrough : null,
+                  color: note.done
+                      ? Theme.of(context).colorScheme.onSurfaceVariant
+                      : null,
+                ),
               ),
               subtitle: Text(
                 [
@@ -244,12 +306,16 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
               ),
             ),
           ),
-        if (widget.repository != null)
+          const SizedBox(height: 10),
+        ],
+        if (widget.repository != null) ...[
+          const SizedBox(height: 6),
           FilledButton.icon(
             onPressed: busy ? null : () => editNote(reminder: true),
             icon: const Icon(VetIcons.bell),
             label: const Text('Nuevo recordatorio'),
           ),
+        ],
       ],
     );
   }
@@ -257,34 +323,72 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
   Widget schedulesTab() {
     final week = sortedWeek(schedules);
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
         status(),
-        const Text(
-          'Tu horario en una o más clínicas. Solo tú lo ves; no cambia el checado ni los turnos de la clínica.',
+        const VetNote(
+          text:
+              'Tu horario en una o más clínicas. Solo tú lo ves; no cambia el control de asistencia ni los turnos de la clínica.',
+          icon: VetIcons.clock,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         if (widget.repository == null) unavailable(),
         if (widget.repository != null && week.isEmpty && !busy)
-          const Text('Aún no registras horarios.'),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Column(
+                children: [
+                  AccentIcon(VetIcons.calendar, size: 36),
+                  SizedBox(height: 8),
+                  Text('Aún no registras horarios.', style: TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
         for (final day in weekdayLabels.entries)
           if (week.any((s) => s.weekday == day.key)) ...[
             Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 4),
-              child: Text(
-                day.value,
-                style: Theme.of(context).textTheme.titleSmall,
+              padding: const EdgeInsets.only(top: 14, bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(VetIcons.calendar, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    day.value,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ],
               ),
             ),
-            for (final s in week.where((s) => s.weekday == day.key))
-              Card(
+            for (final s in week.where((s) => s.weekday == day.key)) ...[
+              VetCard(
                 child: ListTile(
-                  title: Text('${s.range} · ${s.place}'),
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: VetColors.brandSky.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      VetIcons.clock,
+                      size: 18,
+                      color: VetColors.brandSky,
+                    ),
+                  ),
+                  title: Text(
+                    '${s.range} · ${s.place}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   subtitle: s.note.isEmpty ? null : Text(s.note),
                   onTap: busy ? null : () => editSchedule(s),
                   trailing: IconButton(
                     tooltip: 'Eliminar horario',
-                    icon: const Icon(VetIcons.trash),
+                    icon: const Icon(VetIcons.trash, color: VetColors.danger),
                     onPressed: busy
                         ? null
                         : () async {
@@ -297,26 +401,35 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
+            ],
           ],
-        if (widget.repository != null)
+        if (widget.repository != null) ...[
+          const SizedBox(height: 8),
           FilledButton.icon(
             onPressed: busy ? null : () => editSchedule(),
             icon: const Icon(VetIcons.calendarPlus),
             label: const Text('Agregar horario'),
           ),
+        ],
       ],
     );
   }
 
   Widget emergencyTab() => ListView(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     children: [
-      const Text(
-        'Tu ficha de emergencia: contacto, tipo de sangre, alergias, fármacos a los que eres alérgico/a y, si quieres, enfermedades o padecimientos.',
+      const VetCallout(
+        text:
+            'Tu ficha de emergencia: contacto, tipo de sangre, alergias, fármacos a los que eres alérgico/a y, si quieres, enfermedades o padecimientos.',
+        kind: VetBadgeKind.warning,
+        icon: VetIcons.firstAidKit,
       ),
-      const SizedBox(height: 8),
-      const Text(
-        'Se guarda por clínica y solo con tu consentimiento. La consultan la administración de la clínica con permiso y los compañeros que tú elijas; cada consulta queda registrada y la ves tú y la administración.',
+      const SizedBox(height: 12),
+      const VetNote(
+        text:
+            'Se guarda por clínica y solo con tu consentimiento. La consultan la administración de la clínica con permiso y los compañeros que tú elijas; cada consulta queda registrada y la ves tú y la administración.',
+        icon: VetIcons.shield,
       ),
       const SizedBox(height: 16),
       if (widget.medical == null)
@@ -326,11 +439,27 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
           'Únete a una clínica para tener ficha de emergencia: se comparte con su equipo, no existe en el área de trabajo personal.',
         )
       else
-        for (final clinic in clinics)
-          Card(
+        for (final clinic in clinics) ...[
+          VetCard(
             child: ListTile(
-              leading: const Icon(VetIcons.firstAidKit),
-              title: Text(clinic.clinicName),
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: VetColors.danger.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  VetIcons.firstAidKit,
+                  color: VetColors.danger,
+                  size: 22,
+                ),
+              ),
+              title: Text(
+                clinic.clinicName,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
               subtitle: const Text(
                 'Mi ficha, compañeros con acceso y registro',
               ),
@@ -346,6 +475,8 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 10),
+        ],
     ],
   );
 

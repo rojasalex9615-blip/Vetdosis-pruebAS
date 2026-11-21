@@ -44,7 +44,7 @@ una página, no aparece.
 | Producción animal | Producción y grandes especies (bovinos, porcinos, aves…) |
 | Exóticos y silvestres | Exóticos |
 | Administración y finanzas | Caja · Planeación financiera · Servicios · Proveedores · Promociones · Productividad y semana |
-| Equipo y comunicación | Agenda telefónica · Equipo y avisos · Anuncios y avisos · Pendientes del equipo · Checado |
+| Equipo y comunicación | Agenda telefónica · Equipo y avisos · Anuncios y avisos · Pendientes del equipo · Control de asistencia |
 | Estadísticas y reportes | Estadísticas |
 | Asistente IA | Asistente IA |
 | Revisión de catálogos | Modo revisión |
@@ -83,7 +83,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Planeación financiera | `FinancialPlanningPanel` | Grupo Finanzas | Proyección de ingresos y costos; solo administrador. |
 | Productividad y semana | `ProductivityScreen` | Grupo Finanzas | Plan semanal y tareas. |
 | Promociones | `PromotionsScreen` | Grupo Finanzas | Promociones y clientes; genera imagen de oferta. |
-| Checado | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
+| Control de asistencia | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
 | Estadísticas | `DashboardScreen` | Grupo Estadísticas / Barra | Tableros y gráficas. |
 | Respaldo | `BackupScreen` | Grupo Cuenta | Copias y restauración. |
 | Asistente IA | `AiScreen` | Grupo Asistente IA | Chat con contexto configurable. |
@@ -132,11 +132,12 @@ vuelve a salir para ese ámbito.
   elemento neumórfico (`NeuStatTile`, `AccessBackdrop`, `VetIcons`) da la
   identidad Neu.
 - **Escala tipográfica:** vive en `VetTheme.textTheme`. Tamaños
-  `12 · 14 · 16 · 22 · 24 · 26 · 30` (más `labelSmall` en 11). El tema fija los
-  tamaños base, pero **37 textos de interfaz todavía declaran su `fontSize` a
-  mano** (los que más: `promotion_image_screen.dart` 7,
-  `branded_export_action.dart` 5, `calculator_surface.dart` 5). Unificarlos
-  queda pendiente. Los tamaños del PDF se miden aparte, en milímetros de papel.
+  `12 · 14 · 16 · 22 · 24 · 26 · 30`, con suelo de 12 px. Ningún texto de
+  interfaz fija un tamaño fuera de la escala: lo vigila
+  `test/typography_guard_test.dart`, que falla también si el tema baja de 12.
+  Quedan exentos los `pw.TextStyle` del PDF, que se miden en milímetros de
+  papel, y la imagen promocional (`promotion_image_screen.dart`). El arnés
+  `test/audit/typography_audit.dart` vuelca `build/audit/tipografia.csv`.
 
 ## 6. Cómo se comprueba todo esto
 

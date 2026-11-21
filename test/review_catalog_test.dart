@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/core/domain/navigation_access.dart';
+import 'package:vetdosis_pro/modules/patients/domain/patient_models.dart';
 import 'package:vetdosis_pro/modules/review/domain/review_catalog_repository.dart';
 import 'package:vetdosis_pro/modules/review/presentation/review_catalog_screen.dart';
 
@@ -154,12 +155,13 @@ Future<void> pumpReviewScreen(
 }
 
 void main() {
-  test('el rol revisor navega a revisión, vademécum y apartados generales', () {
+  test('el rol revisor ve todo y usa las herramientas, sin editar datos', () {
     expect(ClinicRole.parse('revisor'), ClinicRole.revisor);
     expect(navigationAllowed('Modo revisión', reviewer), isTrue);
     // El revisor necesita la calculadora de dosis del empaque para comprobar
     // que la pauta da el resultado correcto; sin ella no puede revisar.
     expect(navigationAllowed('Vademécum', reviewer), isTrue);
+    // Decisión 2026-11-19 (Alejandra): el revisor ve todas las secciones.
     for (final page in [
       'Pacientes',
       'Hospitalización',
@@ -168,9 +170,19 @@ void main() {
       'Cálculos clínicos',
       'Inventario',
       'Asistente IA',
+      'Producción',
+      'Planes',
+      'Respaldo',
+      'Agenda',
     ]) {
-      expect(navigationAllowed(page, reviewer), isFalse, reason: page);
+      expect(navigationAllowed(page, reviewer), isTrue, reason: page);
     }
+    // ...pero no edita datos de la clínica: ni crear pacientes ni tocar
+    // expedientes clínicos.
+    final access = PatientAccess(ClinicRole.revisor);
+    expect(access.createPatient, isFalse);
+    expect(access.clinical, isFalse);
+    expect(access.medical, isFalse);
   });
 
   testWidgets('propietaria puede cambiar el estado global sin tocar otros ámbitos',

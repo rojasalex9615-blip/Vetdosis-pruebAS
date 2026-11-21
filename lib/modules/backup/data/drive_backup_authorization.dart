@@ -1,10 +1,22 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
-const driveWebClientId = String.fromEnvironment(
+/// Public OAuth web client confirmed by the account owner. Not a secret.
+const driveDefaultWebClientId =
+    '137670819-4skobkrkoqpk3leupqmns4aav5aahkpb.apps.googleusercontent.com';
+
+const _declaredDriveWebClientId = String.fromEnvironment(
   'GOOGLE_DRIVE_WEB_CLIENT_ID',
-  defaultValue:
-      '137670819-4skobkrkoqpk3leupqmns4aav5aahkpb.apps.googleusercontent.com',
 );
+
+/// Raw value of the compile-time define, empty when unset.
+const declaredDriveWebClientId = _declaredDriveWebClientId;
+
+/// CI passes this define even when the variable is unset, and an empty define
+/// overrides `defaultValue`. Fall back explicitly so the empty case cannot
+/// reach `GoogleSignIn.initialize` as an empty `serverClientId`.
+const driveWebClientId = declaredDriveWebClientId == ''
+    ? driveDefaultWebClientId
+    : declaredDriveWebClientId;
 
 class DriveBackupAuthorization {
   static Future<void>? _initialization;

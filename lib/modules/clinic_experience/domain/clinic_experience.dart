@@ -119,9 +119,10 @@ class ClinicExperience {
           for (final page in group.pages)
             if (!protectedExperiencePages.contains(page)) page,
     };
-    if (preset == ClinicPreset.smallAnimals) {
-      hide.addAll({'Planeación financiera', 'Productividad y semana'});
-    }
+    // «Administración y finanzas» se ofrece completa en todos los presets: el
+    // simulador de planeación financiera y la productividad del equipo sirven
+    // igual a una clínica de pequeñas especies. La clínica puede ocultar
+    // cualquiera de las dos desde sus ajustes.
     return ClinicExperience(
       preset: preset,
       hiddenPages: hide,

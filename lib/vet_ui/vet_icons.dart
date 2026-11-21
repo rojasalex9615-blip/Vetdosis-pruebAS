@@ -15,6 +15,7 @@ abstract final class VetIcons {
   static const IconData aiChip = IconData(0xe902, fontFamily: _family);
   static const IconData aiSpark = IconData(0xe903, fontFamily: _family);
   static const IconData alertOctagon = IconData(0xe904, fontFamily: _family);
+  static const IconData alertTriangle = IconData(0xe9e1, fontFamily: _family);
   static const IconData arrowBack = IconData(0xe905, fontFamily: _family);
   static const IconData arrowDown = IconData(0xe906, fontFamily: _family);
   static const IconData arrowForward = IconData(0xe907, fontFamily: _family);
@@ -156,6 +157,8 @@ abstract final class VetIcons {
   static const IconData mountain = IconData(0xe98c, fontFamily: _family);
   static const IconData navigation = IconData(0xe98d, fontFamily: _family);
   static const IconData noteEdit = IconData(0xe98e, fontFamily: _family);
+  static const IconData palette = IconData(0xe9e2, fontFamily: _family);
+  static const IconData paperPlane = IconData(0xe9e3, fontFamily: _family);
   static const IconData paperclip = IconData(0xe98f, fontFamily: _family);
   static const IconData paw = IconData(0xe990, fontFamily: _family);
   static const IconData pdf = IconData(0xe991, fontFamily: _family);
@@ -169,6 +172,7 @@ abstract final class VetIcons {
   static const IconData pin = IconData(0xe999, fontFamily: _family);
   static const IconData pinPaw = IconData(0xe99a, fontFamily: _family);
   static const IconData playCircle = IconData(0xe99b, fontFamily: _family);
+  static const IconData plusCircle = IconData(0xe9e4, fontFamily: _family);
   static const IconData plusSquare = IconData(0xe99c, fontFamily: _family);
   static const IconData printer = IconData(0xe99d, fontFamily: _family);
   static const IconData qrCode = IconData(0xe99e, fontFamily: _family);
@@ -194,6 +198,7 @@ abstract final class VetIcons {
   static const IconData shieldPaw = IconData(0xe9b1, fontFamily: _family);
   static const IconData shower = IconData(0xe9b2, fontFamily: _family);
   static const IconData sliders = IconData(0xe9b3, fontFamily: _family);
+  static const IconData smartphone = IconData(0xe9e5, fontFamily: _family);
   static const IconData snake = IconData(0xe9b4, fontFamily: _family);
   static const IconData sparkles = IconData(0xe9b5, fontFamily: _family);
   static const IconData stable = IconData(0xe9b6, fontFamily: _family);
@@ -201,6 +206,7 @@ abstract final class VetIcons {
   static const IconData stop = IconData(0xe9b8, fontFamily: _family);
   static const IconData stopwatch = IconData(0xe9b9, fontFamily: _family);
   static const IconData store = IconData(0xe9ba, fontFamily: _family);
+  static const IconData sun = IconData(0xe9e6, fontFamily: _family);
   static const IconData swapHoriz = IconData(0xe9bb, fontFamily: _family);
   static const IconData swapVert = IconData(0xe9bc, fontFamily: _family);
   static const IconData sync = IconData(0xe9bd, fontFamily: _family);
@@ -230,6 +236,7 @@ abstract final class VetIcons {
   static const IconData verified = IconData(0xe9d5, fontFamily: _family);
   static const IconData vetPerson = IconData(0xe9d6, fontFamily: _family);
   static const IconData video = IconData(0xe9d7, fontFamily: _family);
+  static const IconData volume = IconData(0xe9e7, fontFamily: _family);
   static const IconData wallet = IconData(0xe9d8, fontFamily: _family);
   static const IconData warningTriangle = IconData(0xe9e0, fontFamily: _family);
   static const IconData waves = IconData(0xe9d9, fontFamily: _family);
@@ -243,6 +250,7 @@ abstract final class VetIcons {
     'ai_chip': aiChip,
     'ai_spark': aiSpark,
     'alert_octagon': alertOctagon,
+    'alert_triangle': alertTriangle,
     'arrow_back': arrowBack,
     'arrow_down': arrowDown,
     'arrow_forward': arrowForward,
@@ -384,6 +392,8 @@ abstract final class VetIcons {
     'mountain': mountain,
     'navigation': navigation,
     'note_edit': noteEdit,
+    'palette': palette,
+    'paper_plane': paperPlane,
     'paperclip': paperclip,
     'paw': paw,
     'pdf': pdf,
@@ -397,6 +407,7 @@ abstract final class VetIcons {
     'pin': pin,
     'pin_paw': pinPaw,
     'play_circle': playCircle,
+    'plus_circle': plusCircle,
     'plus_square': plusSquare,
     'printer': printer,
     'qr_code': qrCode,
@@ -422,6 +433,7 @@ abstract final class VetIcons {
     'shield_paw': shieldPaw,
     'shower': shower,
     'sliders': sliders,
+    'smartphone': smartphone,
     'snake': snake,
     'sparkles': sparkles,
     'stable': stable,
@@ -429,6 +441,7 @@ abstract final class VetIcons {
     'stop': stop,
     'stopwatch': stopwatch,
     'store': store,
+    'sun': sun,
     'swap_horiz': swapHoriz,
     'swap_vert': swapVert,
     'sync': sync,
@@ -458,6 +471,7 @@ abstract final class VetIcons {
     'verified': verified,
     'vet_person': vetPerson,
     'video': video,
+    'volume': volume,
     'wallet': wallet,
     'warning_triangle': warningTriangle,
     'waves': waves,

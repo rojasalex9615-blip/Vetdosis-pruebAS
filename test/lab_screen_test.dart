@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:vetdosis_pro/modules/laboratory/domain/lab_report_ocr.dart';
 import 'package:vetdosis_pro/modules/laboratory/domain/lab_repository.dart';
 import 'package:vetdosis_pro/modules/laboratory/presentation/lab_screen.dart';
 
@@ -116,6 +118,25 @@ Future<void> _montar(WidgetTester tester, _FakeLab repo) async {
         clinicId: 'c1',
         patientId: 'pac1',
         patientName: 'Max',
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _montarConLector(
+  WidgetTester tester,
+  _FakeLab repo,
+  Future<String?> Function(ImageSource) reader,
+) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: LabScreen(
+        repository: repo,
+        clinicId: 'c1',
+        patientId: 'pac1',
+        patientName: 'Max',
+        reader: reader,
       ),
     ),
   );
@@ -366,5 +387,139 @@ void main() {
     expect(repo.guardado!['results'], [
       {'analyte_key': 'analito raro', 'value': '1.5', 'unit': 'mg/dL'},
     ]);
+  });
+
+  group('parseLabReportRows', () {
+    test('extrae analito, valor y unidad de un reporte', () {
+      final rows = parseLabReportRows(
+        'Hemograma\n'
+        'Hematocrito: 45 %\n'
+        'Leucocitos 12.4 10^3/uL\n'
+        '2026\n',
+      );
+      expect(rows, hasLength(2));
+      expect(rows[0].analyte, 'Hematocrito');
+      expect(rows[0].value, '45');
+      expect(rows[0].unit, '%');
+      expect(rows[1].analyte, 'Leucocitos');
+      expect(rows[1].value, '12.4');
+      expect(rows[1].unit, '10^3/uL');
+    });
+
+    test('descarta lineas sin numero, sin letras y con coma ambigua', () {
+      final rows = parseLabReportRows(
+        'Reporte de laboratorio\n'
+        '2026\n'
+        'Pagina 1 de 3\n'
+        'Glucosa: 1,5 g/L\n'
+        '---\n',
+      );
+      expect(rows, isEmpty);
+    });
+
+    test('usa el nombre y la unidad conocidos del catalogo', () {
+      final rows = parseLabReportRows(
+        'Hto 45\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Hematocrito', unit: '%', sources: 1),
+        ],
+      );
+      expect(rows, hasLength(1));
+      // «Hto» no coincide, pero el catalogo aporta la unidad solo si coincide
+      // el nombre; aqui no coincide, asi que se conserva lo leido.
+      expect(rows.single.analyte, 'Hto');
+      expect(rows.single.value, '45');
+    });
+
+    test('con el nombre exacto del catalogo toma su unidad', () {
+      final rows = parseLabReportRows(
+        'Hematocrito 45\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Hematocrito', unit: '%', sources: 1),
+        ],
+      );
+      expect(rows.single.analyte, 'Hematocrito');
+      expect(rows.single.unit, '%');
+    });
+
+    test('no confunde un analito con una subcadena de otra palabra', () {
+      // «Creatinina» contiene «na» y «Calcio» contiene «ca»: dos claves cortas
+      // del catalogo que no deben robar la linea.
+      final rows = parseLabReportRows(
+        'Creatinina 1.2 mg/dL\n'
+        'Calcio 9.1 mg/dL\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Na', unit: 'mmol/L', sources: 1),
+          LabAnalyte(analyteKey: 'Ca', unit: 'mg/dL', sources: 1),
+        ],
+      );
+      expect(rows.map((r) => r.analyte), ['Creatinina', 'Calcio']);
+      expect(rows.map((r) => r.unit), ['mg/dL', 'mg/dL']);
+    });
+
+    test('conserva la unidad impresa aunque el catalogo use otra', () {
+      // Un reporte en mmol/L no se puede reetiquetar como mg/dL: seria un
+      // valor clinico equivocado con aspecto de correcto.
+      final rows = parseLabReportRows(
+        'Glucosa 5.5 mmol/L\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Glucosa', unit: 'mg/dL', sources: 1),
+        ],
+      );
+      expect(rows.single.analyte, 'Glucosa');
+      expect(rows.single.value, '5.5');
+      expect(rows.single.unit, 'mmol/L');
+    });
+
+    test('usa la unidad del catalogo solo si la linea no imprime ninguna', () {
+      final rows = parseLabReportRows(
+        'Hematocrito 45\n',
+        catalog: const [
+          LabAnalyte(analyteKey: 'Hematocrito', unit: '%', sources: 1),
+        ],
+      );
+      expect(rows.single.unit, '%');
+    });
+  });
+
+  testWidgets('El escaneo vuelca los valores reconocidos en las filas', (
+    tester,
+  ) async {
+    final repo = _FakeLab(_ws(const []));
+    await _montarConLector(
+      tester,
+      repo,
+      (source) async => 'Hematocrito: 45 %\nGlucosa 90 mg/dL\n',
+    );
+    await tester.tap(find.text('Registrar una toma'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Elegir imagen de la galería'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(TextField, 'Hematocrito'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Se reconocieron 2 valores'), findsOneWidget);
+  });
+
+  testWidgets('Una imagen ilegible no rompe la captura', (tester) async {
+    final repo = _FakeLab(_ws(const []));
+    await _montarConLector(
+      tester,
+      repo,
+      (source) async => 'sin valores aqui\n',
+    );
+    await tester.tap(find.text('Registrar una toma'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Tomar foto del reporte'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('No se reconocieron valores'),
+      findsOneWidget,
+    );
+    // La captura sigue en pie: se puede guardar a mano.
+    expect(find.text('Guardar la toma'), findsOneWidget);
   });
 }
