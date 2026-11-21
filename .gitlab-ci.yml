@@ -127,7 +127,7 @@ apk-depuracion:
     - >
       flutter build apk --debug --flavor beta
       --target-platform android-arm64
-      --dart-define=APP_CHANNEL=beta
+      --dart-define=APP_CHANNEL="${CI_COMMIT_BRANCH%%/*}"
       --dart-define=GOOGLE_DRIVE_WEB_CLIENT_ID="${GOOGLE_DRIVE_WEB_CLIENT_ID:-}"
       --dart-define-from-file=supabase/config.test.local.json
   after_script:

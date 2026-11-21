@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/commercial_package_dose.dart';
 import '../domain/manufacturer_pauta.dart';
+import '../domain/pauta_review_gate.dart';
 import '../domain/quantity.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
@@ -59,7 +60,7 @@ class _CommercialPackageDoseScreenState
     super.initState();
     if (widget.initialProduct != null) selectProduct(widget.initialProduct);
     final pauta = widget.initialPauta;
-    if (pauta != null && pauta.canCalculate) {
+    if (pauta != null && pauta.canCalculate && mostrarPautasSinRevisar()) {
       final ref = pauta.weightReference!;
       preloadedPauta = pauta;
       labelWording.text = pauta.literal;

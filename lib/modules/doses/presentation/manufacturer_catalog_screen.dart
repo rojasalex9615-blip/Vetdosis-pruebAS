@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../domain/manufacturer_catalog.dart';
 import '../domain/manufacturer_pauta.dart';
+import '../domain/pauta_review_gate.dart';
 import 'commercial_package_dose_screen.dart';
 import 'manufacturer_pauta_section.dart';
 import '../../../vet_ui/vet_icons.dart';
@@ -172,7 +173,9 @@ class _ManufacturerProductDetail extends StatelessWidget {
       future: pautas,
       builder: (context, snapshot) {
         final catalog = snapshot.data;
-        final delProducto = catalog?.forProduct(product.sourceUrl) ?? const [];
+        final delProducto = pautasVisibles(
+          catalog?.forProduct(product.sourceUrl) ?? const [],
+        );
         final deEmpaque = delProducto
             .where(
               (p) => p.canCalculate && p.calculator == PautaCalculator.package,
@@ -189,6 +192,11 @@ class _ManufacturerProductDetail extends StatelessWidget {
               )
             else if (catalog == null)
               const Center(child: CircularProgressIndicator())
+            else if (!mostrarPautasSinRevisar())
+              const Text(
+                'Las pautas del fabricante están pendientes de revisión '
+                'clínica: esta versión no las muestra.',
+              )
             else
               ManufacturerPautaSection(pautas: delProducto),
             if (canCalculate && deEmpaque.isNotEmpty) ...[
