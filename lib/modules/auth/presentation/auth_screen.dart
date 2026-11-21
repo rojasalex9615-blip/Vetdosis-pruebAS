@@ -469,10 +469,12 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                     children: [
                       const Icon(VetIcons.hospital, size: 20),
                       const SizedBox(width: 8),
-                      Text(
-                        'Áreas de trabajo',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      Expanded(
+                        child: Text(
+                          'Áreas de trabajo',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -643,10 +645,12 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                               color: VetColors.brandSky,
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              'Invitar a una persona a esta clínica',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
+                            Expanded(
+                              child: Text(
+                                'Invitar a una persona a esta clínica',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
