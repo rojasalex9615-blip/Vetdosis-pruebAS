@@ -153,12 +153,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                    VetStatusBadge(
-                      label: VetFormat.enumLabel(
-                        (model.data['workspace'] as Map)['kind'],
+                    if (VetFormat.enumLabel(
+                          (model.data['workspace'] as Map)['kind'],
+                        ).toLowerCase() !=
+                        '${(model.data['effective'] as Map)['name']}'
+                            .toLowerCase())
+                      VetStatusBadge(
+                        label: VetFormat.enumLabel(
+                          (model.data['workspace'] as Map)['kind'],
+                        ),
+                        kind: VetBadgeKind.information,
                       ),
-                      kind: VetBadgeKind.information,
-                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -171,7 +176,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 VetDataRow(
                   label: 'Almacenamiento',
                   value:
-                      '${storageSize(model.data['usage_bytes'])} de ${storageSize((model.data['effective'] as Map)['storage_bytes'])}',
+                      '${storagePercent(model.data['usage_bytes'], (model.data['effective'] as Map)['storage_bytes'])} de ${storageSize((model.data['effective'] as Map)['storage_bytes'])}',
                   icon: VetIcons.folder,
                 ),
                 VetDataRow(
@@ -214,7 +219,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         for (final p in model.data['plans'] as List? ?? [])
           VetPlanCard(
             name: '${p['name']}',
-            price: price(p[period == 'annual' ? 'annual_cents' : 'monthly_cents']),
+            price: p['code'] == 'free'
+                ? 'Gratis'
+                : price(p[period == 'annual' ? 'annual_cents' : 'monthly_cents']),
             current: (model.data['effective'] as Map?)?['code'] == p['code'],
             rows: [
               VetDataRow(
@@ -273,9 +280,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         ),
         for (final g in model.data['grants'] as List? ?? [])
           ListTile(
-            title: Text('${g['source']} · ${g['plan_code']}'),
+            title: Text(grantTitle(g['source'], g['plan_code'])),
             subtitle: Text(
-              '${g['starts_at']} → ${g['ends_at']} · ${g['revoked'] == true ? 'revocado' : 'registrado'}',
+              '${shortDate(g['starts_at'])} → ${shortDate(g['ends_at'])} · ${g['revoked'] == true ? 'Revocado' : 'Vigente'}',
             ),
           ),
       ],
@@ -323,7 +330,7 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
                     'Pago confirmado · \$${((p['amount_cents'] as num) / 100).toStringAsFixed(2)} ${p['currency']}',
                   ),
                   subtitle: Text(
-                    '${p['provider']} · ${p['period_start']} → ${p['period_end']}',
+                    '${p['provider']} · ${shortDate(p['period_start'])} → ${shortDate(p['period_end'])}',
                   ),
                 ),
             ],
@@ -341,3 +348,55 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
 }
 
 String storageSize(dynamic value) => VetFormat.size(value);
+
+const _spanishMonths = [
+  'ene',
+  'feb',
+  'mar',
+  'abr',
+  'may',
+  'jun',
+  'jul',
+  'ago',
+  'sep',
+  'oct',
+  'nov',
+  'dic',
+];
+
+/// Fecha corta en español, p. ej. "22 oct 2026". Si el valor no es una
+/// fecha ISO válida se devuelve tal cual, sin romper la pantalla.
+String shortDate(dynamic value) {
+  final parsed = DateTime.tryParse('$value');
+  if (parsed == null) return '$value';
+  final d = parsed.toLocal();
+  return '${d.day} ${_spanishMonths[d.month - 1]} ${d.year}';
+}
+
+/// Fecha y hora cortas, p. ej. "17 nov 2026, 08:05".
+String shortDateTime(dynamic value) {
+  final parsed = DateTime.tryParse('$value');
+  if (parsed == null) return '$value';
+  final d = parsed.toLocal();
+  final hh = d.hour.toString().padLeft(2, '0');
+  final mm = d.minute.toString().padLeft(2, '0');
+  return '${shortDate(value)}, $hh:$mm';
+}
+
+String storagePercent(dynamic used, dynamic limit) {
+  final u = (num.tryParse('$used') ?? 0).toDouble();
+  final l = (num.tryParse('$limit') ?? 0).toDouble();
+  if (l <= 0) return '0.0%';
+  return '${(u / l * 100).toStringAsFixed(1)}%';
+}
+
+String grantTitle(dynamic source, dynamic planCode) {
+  final s = '$source'.toLowerCase() == 'beta' ? 'Beta' : '$source';
+  final p = switch ('$planCode'.toLowerCase()) {
+    'clinic' => 'Clínica',
+    'individual' => 'Individual',
+    'free' => 'Gratis',
+    _ => '$planCode',
+  };
+  return '$s · $p';
+}

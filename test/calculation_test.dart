@@ -42,6 +42,7 @@ ClinicalReference reference(String type, Map<String, dynamic> values) =>
 
 // Synthetic arithmetic vectors, NOT treatment recommendations.
 void main() {
+  menuTests();
   const engine = CalculationEngine();
   test(
     'Fluid volume uses requested period and total losses, not hourly losses',
@@ -342,6 +343,7 @@ void main() {
               child: CalculationScreen(
                 repository: CalcRepo(),
                 doses: DoseRepo(),
+                startWithMenu: false,
               ),
             ),
           ),
@@ -385,4 +387,61 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+}
+
+void menuTests() {
+  Future<void> open(WidgetTester tester, {bool aviculture = false}) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: CalculationScreen(
+              repository: CalcRepo(),
+              doses: DoseRepo(),
+              showAviculture: aviculture,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('el menu abre en pequenas especies y no mezcla produccion', (
+    tester,
+  ) async {
+    await open(tester);
+    expect(find.text('Fluidoterapia'), findsOneWidget);
+    expect(find.text('Protocolos por etapas'), findsOneWidget);
+    expect(find.text('Aves · Engorda'), findsNothing);
+    expect(find.text('Agua de bebida'), findsNothing);
+  });
+
+  testWidgets('produccion ofrece las de aves y las de agua y alimento', (
+    tester,
+  ) async {
+    await open(tester, aviculture: true);
+    await tester.tap(find.text('Producción y grandes especies'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agua de bebida'), findsOneWidget);
+    expect(find.text('Aves · Engorda'), findsOneWidget);
+    expect(find.text('Fluidoterapia'), findsNothing);
+  });
+
+  testWidgets('elegir una formula la abre y deja volver al menu', (
+    tester,
+  ) async {
+    await open(tester);
+    await tester.tap(find.text('Infusion continua (CRI)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Datos del cálculo'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver a las calculadoras'));
+    await tester.pumpAndSettle();
+    expect(find.text('Fluidoterapia'), findsOneWidget);
+  });
 }

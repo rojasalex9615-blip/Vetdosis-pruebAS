@@ -118,7 +118,7 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
     final distinctIntervals = row['distinct_intervals'] as int? ?? 1;
     String value(String key) => (row[key] ?? '').toString().trim();
     final range = value('min_value').isEmpty && value('max_value').isEmpty
-        ? 'Sin intervalo transcrito'
+        ? (value('transcripcion').isEmpty ? 'Sin intervalo transcrito' : '')
         : '${value('min_value')} – ${value('max_value')} ${value('unit')}';
     return Card(
       child: Padding(
@@ -126,9 +126,12 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('${value('species')} · ${value('parameter')}', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 6),
-          Text(range, style: Theme.of(context).textTheme.titleLarge),
+          if (range.isNotEmpty) Text(range, style: Theme.of(context).textTheme.titleLarge),
+          if (value('transcripcion').isNotEmpty)
+            Text('«${value('transcripcion')}»', style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 6),
           Text(highlighted ? 'Fuente externa contrastada · pendiente de revisión MVZ' : 'Transcripción pendiente de revisión MVZ'),
+          const Text('Consulta la fuente antes de decidir: esta ficha no calcula ni prescribe.'),
           if (distinctIntervals > 1) Text('$distinctIntervals intervalos distintos para esta especie, parámetro y unidad. Revisa condiciones y fuentes.'),
           if (distinctIntervals == 1 && alternatives > 1) Text('$alternatives fuentes registradas para este intervalo.'),
           if (value('notes').isNotEmpty) Text(value('notes')),
@@ -166,6 +169,7 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
         Wrap(spacing: 8, children: [
           glowChip(ChoiceChip(label: const Text('Constantes y fisiología'), selected: section == 'fisiologia', onSelected: (_) { section = 'fisiologia'; load(reset: true); })),
           glowChip(ChoiceChip(label: const Text('Laboratorio'), selected: section == 'laboratorio', onSelected: (_) { section = 'laboratorio'; load(reset: true); })),
+          glowChip(ChoiceChip(label: const Text('Vademécum por principio activo'), selected: section == 'farmacologia', onSelected: (_) { section = 'farmacologia'; load(reset: true); })),
         ]),
         const SizedBox(height: 12),
       ],

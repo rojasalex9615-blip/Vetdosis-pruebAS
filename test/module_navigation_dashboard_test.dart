@@ -528,7 +528,9 @@ void main() {
     await tester.pump();
     expect(find.text('inventory-visible'), findsOneWidget);
     await tester.pumpWidget(app(1));
-    expect(find.text('inventory-hidden'), findsOneWidget);
+    // El refresco periodico no vacia el acceso ya leido: si lo hiciera, el
+    // apartado se sustituiria por el aviso de permisos y volveria cada 30 s.
+    expect(find.text('inventory-visible'), findsOneWidget);
     await tester.pump();
     expect(find.text('inventory-hidden'), findsOneWidget);
     expect(repository.calls, 2);

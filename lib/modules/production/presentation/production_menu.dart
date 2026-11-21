@@ -16,6 +16,7 @@ import '../../core/domain/module_access.dart';
 import '../../core/domain/navigation_access.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../domain/porcino_repository.dart';
+import '../domain/aquaculture_species.dart';
 import '../domain/production_catalog.dart';
 import '../domain/production_unit_repository.dart';
 import 'production_units_screen.dart';
@@ -127,6 +128,21 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ),
     ],
   };
+
+  /// Paneles de peces: un apartado por especie, con las calculadoras dentro.
+  List<Widget> _fishPanels(Widget denied) {
+    final chosen = activity;
+    if (chosen == null) return const [];
+    final fish = FishSpecies.fromActivity(chosen);
+    if (fish == null) return const [];
+    return [
+      const SizedBox(height: 16),
+      if (allowed('Cálculos clínicos'))
+        ...aquaculturePanelsFor(fish)
+      else
+        denied,
+    ];
+  }
 
   List<Widget> _detail(BuildContext context) {
     final (icon, accent) = speciesVisual(species!);
@@ -279,13 +295,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             icon: VetIcons.clipboardChecks,
           ),
       ],
-      if (species == 'Peces' && activity == 'Tilapia') ...[
-        const SizedBox(height: 16),
-        if (allowed('Cálculos clínicos'))
-          ...aquaculturePanelsFor('Tilapia')
-        else
-          denied,
-      ],
+      if (species == 'Peces') ..._fishPanels(denied),
       if (species == 'Porcinos' && activity != null) ...[
         const SizedBox(height: 16),
         if (allowed('Cálculos clínicos') &&

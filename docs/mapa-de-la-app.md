@@ -60,13 +60,13 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Inicio | (vista `home()`) | Barra inferior | Cuadrícula de accesos directos, buscador, avisos. Sale a cualquier apartado de un toque. |
 | Más | `SectionMenu` | Barra inferior | Grupos de arriba con buscador. Sale a cada apartado autorizado. |
 | Cálculos | `CalculationMenu` | Barra inferior | Menú clínico. Sale a Cálculo rápido, Vademécum, Operaciones de dosis, Cálculos clínicos. |
-| Producción y grandes especies | `ProductionMenu` | Grupo Producción | Menú por especie. Sale a calculadoras de producción. |
-| Exóticos | `ExoticsMenu` | Grupo Exóticos | Catálogo de exóticos; respeta permiso. |
+| Producción y grandes especies | `ProductionMenu` | Grupo Producción | Menú por especie. Sale a las calculadoras de producción (por cabeza y lote, agua y alimento). |
+| Exóticos | `ExoticsMenu` | Grupo Exóticos | Catálogo de exóticos y la calculadora de peso metabólico; respeta permiso. |
 | Cálculo rápido | `DoseScreen` | Cálculos / Inicio | Dosis por paciente. Sale a elegir paciente o escanear etiqueta. |
 | Escanear etiqueta para dosis | `DoseLabelScannerScreen` | Cálculo rápido | Lee etiqueta y devuelve datos al cálculo. |
 | Vademécum | `VademecumScreen` | Cálculos / Inicio | Consulta de medicamentos. |
 | Operaciones de dosis | `DoseMathTools` | Cálculos / Inicio | Regla de tres y herramientas de dosis. |
-| Cálculos clínicos | `ClinicalCalculationsScreen` | Cálculos / Inicio | Calculadoras clínicas. |
+| Cálculos clínicos | `CalculationScreen` (rama clínica) | Cálculos / Inicio | Calculadoras clínicas (fluidoterapia, CRI, ajuste de dosis, protocolos, constantes y retiros). |
 | Pacientes | `PatientsScreen` | Barra (Registros) / Atención | Expedientes. Sale a receta, formatos, hospitalización. |
 | Hospitalización | `HospitalScreen` | Grupo Atención | Cuidados diarios, peso, altas, envíos. |
 | Receta | `PrescribingScreen` | Grupo Atención / Paciente | Emisión de recetas; usa firma y plantillas. |
@@ -75,6 +75,12 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Inventario / Caja | `InventoryScreen` | Grupo Medicamentos / Finanzas | Inventario y ventas; `initialSection` decide si abre en Caja. |
 | Agenda | `OperationsScreen` | Barra inferior | Agenda, equipo, avisos, pendientes, servicios, proveedores comparten host. |
 | Agenda telefónica | `ContactDirectoryScreen` | Grupo Equipo | Directorio de contactos. |
+| Equipo y avisos | `OperationsScreen` (`messages`) | Grupo Equipo | Mensajes internos del equipo; misma pantalla que la Agenda. |
+| Anuncios y avisos | `OperationsScreen` (`notices`) | Grupo Equipo | Avisos publicados al equipo. |
+| Pendientes del equipo | `OperationsScreen` (`tasks`) | Grupo Equipo | Tareas pendientes y su seguimiento. |
+| Servicios | `OperationsScreen` (`services`) | Grupo Finanzas | Catálogo de servicios y precios; sale a la Agenda. |
+| Proveedores | `OperationsScreen` (`suppliers`) | Grupo Finanzas | Proveedores y sus datos de contacto. |
+| Planeación financiera | `FinancialPlanningPanel` | Grupo Finanzas | Proyección de ingresos y costos; solo administrador. |
 | Productividad y semana | `ProductivityScreen` | Grupo Finanzas | Plan semanal y tareas. |
 | Promociones | `PromotionsScreen` | Grupo Finanzas | Promociones y clientes; genera imagen de oferta. |
 | Checado | `AttendanceScreen` | Grupo Equipo | Registro de asistencia del equipo. |
@@ -86,7 +92,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Inicio guiado | `GuidedStartScreen` | Grupo Cuenta / aviso inicial | Guía por pasos. |
 | Ayuda y soporte | `SupportScreen` | Grupo Cuenta | Reportar problemas y seguir soporte. |
 | Ajustes | `settings()` | Grupo Cuenta / cabecera | Paleta, apariencia clara/oscura, estilo Neu. |
-| Mi cuenta | (cuenta) | Cabecera | Espacio personal o clínica del equipo; roles desde la cuenta. |
+| Mi cuenta y clínicas | `AuthScreen` (cuenta) | Cabecera | Espacio personal o clínica del equipo; roles desde la cuenta. |
 | Modo revisión | `ReviewCatalogScreen` | Grupo Revisión | Catálogos con datos sin verificar; comenta errores por fila. |
 | Bienvenida pública | `PublicWelcomeScreen` | Sin sesión | Entrada a la app antes de autenticar. |
 
@@ -113,21 +119,34 @@ permisos.
 6. Decide qué contexto comparte la IA → **Planes**
 7. Reporta problemas y sigue el soporte → **Ayuda y soporte**
 
+El paso 1 no cambia de pantalla: abre la cuenta como ventana encima de la guía
+(`openAccount`). Los otros seis sí cambian el apartado activo. Verificado en el
+armazón real pulsando el botón «Abrir» de cada tarjeta
+(`test/inicio_guiado_test.dart`, 7 casos). El progreso se guarda por usuario y
+clínica; el aviso inicial (`FirstStepsBanner`) se descarta con «Más tarde» y no
+vuelve a salir para ese ámbito.
+
 ## 5. Distribución visual y tipografía
 
 - **Marca y color:** Plus Jakarta Sans empaquetada; paletas de la app; el
   elemento neumórfico (`NeuStatTile`, `AccessBackdrop`, `VetIcons`) da la
-  identidad Neu. El guardián `scripts/validation/check_diseno_vigente.py`
-  detecta si se vuelve al diseño clásico.
+  identidad Neu.
 - **Escala tipográfica:** vive en `VetTheme.textTheme`. Tamaños
-  `12 · 14 · 16 · 22 · 24 · 26 · 30`, con suelo de 12 px. Ningún texto de
-  interfaz fija su propio tamaño (lo vigila `test/typography_guard_test.dart`).
-  Los tamaños del PDF se miden aparte, en milímetros de papel.
+  `12 · 14 · 16 · 22 · 24 · 26 · 30` (más `labelSmall` en 11). El tema fija los
+  tamaños base, pero **37 textos de interfaz todavía declaran su `fontSize` a
+  mano** (los que más: `promotion_image_screen.dart` 7,
+  `branded_export_action.dart` 5, `calculator_surface.dart` 5). Unificarlos
+  queda pendiente. Los tamaños del PDF se miden aparte, en milímetros de papel.
 
 ## 6. Cómo se comprueba todo esto
 
-- `flutter test test/audit/typography_audit.dart` mide cada pantalla y vuelca
-  `build/audit/tipografia.csv` (solo lectura).
-- `flutter test test/previews/capture_*.dart` escribe PNG por pantalla en
-  `review/`.
 - `flutter build web --release` compila la app.
+- `flutter test test/previews/capture_*.dart` escribe PNG por pantalla en
+  `review/` (solo lectura).
+
+Este mapa se revisó contra `beta/profesores-20261115` (`ee5f409`): las clases de
+la sección 3, los grupos de la sección 2 y los 7 pasos del Inicio guiado existen
+en esa rama. Lo que no existe en beta y por eso no se cita: el guardián
+`test/typography_guard_test.dart`, `test/inicio_guiado_test.dart`,
+`test/mapa_de_la_app_test.dart` y `scripts/validation/check_diseno_vigente.py`.
+Viven en `fix/tipografia-neu`.

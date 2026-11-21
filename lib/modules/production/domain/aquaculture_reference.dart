@@ -73,8 +73,9 @@ class SeedStockPlan {
     required this.harvestWeightG,
     required this.survivalPercent,
     required this.level,
+    this.systems = aquacultureSystems,
   }) {
-    if (systemIndex < 0 || systemIndex >= aquacultureSystems.length) {
+    if (systemIndex < 0 || systemIndex >= systems.length) {
       throw _invalid('Elige un sistema de cultivo de la lista.');
     }
     if (!areaM2.isFinite || areaM2 <= 0) {
@@ -99,7 +100,10 @@ class SeedStockPlan {
   final int systemIndex, level;
   final double areaM2, averageDepthM, harvestWeightG, survivalPercent;
 
-  AquacultureSystem get system => aquacultureSystems[systemIndex];
+  /// Tabla de densidades publicadas para la especie elegida.
+  final List<AquacultureSystem> systems;
+
+  AquacultureSystem get system => systems[systemIndex];
   double get volumeM3 => areaM2 * averageDepthM;
 
   /// Base de la densidad: volumen si el sistema va por m³, área si va por m².

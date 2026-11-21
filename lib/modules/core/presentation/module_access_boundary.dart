@@ -36,11 +36,17 @@ class _ModuleAccessBoundaryState extends State<ModuleAccessBoundary> {
   @override
   void didUpdateWidget(covariant ModuleAccessBoundary oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.member?.userId != widget.member?.userId ||
+    final identityChanged =
+        oldWidget.member?.userId != widget.member?.userId ||
         oldWidget.member?.clinicId != widget.member?.clinicId ||
-        oldWidget.repository != widget.repository ||
-        oldWidget.revision != widget.revision) {
+        oldWidget.repository != widget.repository;
+    if (identityChanged) {
       access = null;
+      load();
+    } else if (oldWidget.revision != widget.revision) {
+      // Un refresco periodico de permisos no debe vaciar el acceso ya leido:
+      // al pasar por `denied` la pantalla se sustituia por el aviso de
+      // permisos y volvia, y el usuario veia recargarse el apartado cada 30 s.
       load();
     }
   }

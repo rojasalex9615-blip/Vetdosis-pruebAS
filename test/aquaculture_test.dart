@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/production/domain/aquaculture_reference.dart';
+import 'package:vetdosis_pro/modules/production/domain/aquaculture_species.dart';
+import 'package:vetdosis_pro/modules/production/domain/production_catalog.dart';
 import 'package:vetdosis_pro/modules/production/presentation/aquaculture_panels.dart';
 
 void main() {
@@ -289,14 +291,18 @@ void main() {
     });
   });
 
-  testWidgets('Panel de siembra calcula y muestra los alevinos', (tester) async {
+  testWidgets('Panel de siembra calcula y muestra los alevinos', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1200, 4000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: SingleChildScrollView(child: AquacultureSeedPanel()),
+          body: SingleChildScrollView(
+            child: AquacultureSeedPanel(species: FishSpecies.tilapia),
+          ),
         ),
       ),
     );
@@ -353,7 +359,9 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: SingleChildScrollView(child: AquacultureNitriteSaltPanel()),
+          body: SingleChildScrollView(
+            child: AquacultureNitriteSaltPanel(species: FishSpecies.tilapia),
+          ),
         ),
       ),
     );
@@ -380,5 +388,117 @@ void main() {
     await tester.pump();
     expect(find.text('40 g'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('Datos por especie', () {
+    test('Cada actividad de peces del catálogo tiene su especie', () {
+      for (final name in productionSpecies['Peces']!) {
+        expect(
+          FishSpecies.fromActivity(name),
+          isNotNull,
+          reason: '$name debería mapear a una especie',
+        );
+      }
+    });
+
+    test('Tilapia y trucha usan tablas de densidad distintas', () {
+      expect(aquacultureSystems.first.name, contains('Estanque'));
+      expect(troutDensityRanges.first.name, contains('Jaula'));
+      expect(
+        aquacultureSystems.map((s) => s.range),
+        isNot(equals(troutDensityRanges.map((s) => s.range))),
+      );
+    });
+
+    test('La siembra de trucha usa su propia densidad', () {
+      final plan = SeedStockPlan(
+        systemIndex: 0,
+        areaM2: 10,
+        averageDepthM: 1,
+        harvestWeightG: 400,
+        survivalPercent: 90,
+        level: 1,
+        systems: troutDensityRanges,
+      );
+      // 26–30 kg/m³, nivel medio = 28; 10 m³ → 280 kg.
+      expect(plan.densityKgPerUnit, closeTo(28, 1e-9));
+      expect(plan.biomassKg, closeTo(280, 1e-9));
+      expect(plan.harvestFish, closeTo(700, 1e-9));
+    });
+
+    test('Cachama y bagre no ofrecen siembra', () {
+      expect(seedSupportedBy(FishSpecies.cachama), isFalse);
+      expect(seedSupportedBy(FishSpecies.bagre), isFalse);
+      expect(seedUnavailableReason(FishSpecies.cachama), isNotEmpty);
+      expect(seedUnavailableReason(FishSpecies.bagre), isNotEmpty);
+    });
+
+    test('La ración de trucha sale de Shelton, no de SENA', () {
+      final plan = TroutRationPlan(
+        rowIndex: 0,
+        sizeIndex: 0,
+        averageGrams: 100,
+        fishCount: 1000,
+      );
+      // 55 °F, 2500+ peces/libra = 6.1 %.
+      expect(plan.dailyPercent, closeTo(6.1, 1e-9));
+      expect(plan.biomassKg, closeTo(100, 1e-9));
+      expect(plan.rationKg, closeTo(6.1, 1e-9));
+    });
+
+    test('La errata de 65 °F no se ofrece en vez de inventarse', () {
+      const row = 2;
+      final review = troutRationRows[row].review;
+      expect(review, isNotNull);
+      expect(review, contains('errata'));
+      // Las tallas 1 y 2 son las que la obra imprime rotas.
+      expect(troutRationRows[row].percentBySize[1], isNull);
+      expect(troutRationRows[row].percentBySize[2], isNull);
+      expect(
+        () => TroutRationPlan(
+          rowIndex: row,
+          sizeIndex: 1,
+          averageGrams: 100,
+          fishCount: 100,
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('La ración de cachama sigue el plan semanal', () {
+      final plan = CachamaRationPlan(weekIndex: 19, fishCount: 1000);
+      expect(plan.week.week, 20);
+      expect(plan.week.finalG, closeTo(658, 1e-9));
+      expect(plan.feedKgPerDay, closeTo(9.272, 1e-9));
+      expect(plan.feedKgPerWeek, closeTo(64.904, 1e-9));
+    });
+
+    test('Bagre no ofrece ración y avisa por qué', () {
+      expect(rationSupportedBy(FishSpecies.bagre), isFalse);
+      expect(rationUnavailableReason(FishSpecies.bagre), isNotEmpty);
+      expect(maintenanceChlorideFor(FishSpecies.bagre), 100);
+      expect(maintenanceChlorideFor(FishSpecies.tilapia), 150);
+    });
+
+    testWidgets(
+      'Cambiar de especie recalcula con la tabla nueva, no con la vieja',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: AquacultureSeedPanel(species: FishSpecies.tilapia),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('aqua-seed-species-trucha')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Jaula de 1 m³'), findsWidgets);
+        expect(find.textContaining('Estanque en tierra'), findsNothing);
+      },
+    );
   });
 }

@@ -51,6 +51,32 @@ void main() {
     expect(model.signedIn, isFalse);
     expect(model.active, isNull);
   });
+  test('Lectura antigua no restaura acceso después de cerrar sesión', () async {
+    await model.start();
+    repo.pending = Completer<List<ClinicMembership>>();
+    final oldRead = model.refresh();
+    final pending = repo.pending!;
+    repo.pending = null;
+    await model.signOut();
+    pending.complete([member]);
+    await oldRead;
+    expect(model.signedIn, isFalse);
+    expect(model.active, isNull);
+  });
+  test(
+    'Un evento de sesión no vacía la clínica activa ni el apartado',
+    () async {
+      await model.start();
+      expect(model.active, isNotNull);
+      final before = model.active;
+      // La renovación del token llega como evento del stream. Antes vaciaba
+      // `active` y el armazón volvía a la pantalla de acceso.
+      repo.controller.add(null);
+      await pumpEventQueue();
+      expect(model.active, same(before));
+      expect(model.signedIn, isTrue);
+    },
+  );
   test('Rol desconocido falla sin sustituir por admin', () {
     expect(() => ClinicRole.parse('superuser'), throwsFormatException);
   });

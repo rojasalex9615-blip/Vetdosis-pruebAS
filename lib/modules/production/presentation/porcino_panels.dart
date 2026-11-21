@@ -2835,7 +2835,7 @@ class _PorcinoInventoryPanelState extends State<PorcinoInventoryPanel> {
             controller: weanedPerBand,
             label: 'Lechones destetados por banda',
             decimal: true,
-            helper: 'Sale del flujo por bandas; edítalo si tienes tu dato.',
+            helper: 'Ejemplo de clase: 550 vientres, banda de 14 días. Edítalo con tu dato.',
             onChanged: reset,
           ),
           _Field(
