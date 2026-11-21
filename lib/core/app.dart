@@ -978,8 +978,10 @@ class CoreShell extends StatelessWidget {
                 : Icon(entry.$2),
             // «Asistente IA» no cabe en el hueco de 72 px de un telefono y
             // se recortaba contra el borde de la pantalla. El destino es el
-            // mismo; solo cambia la etiqueta visible.
+            // mismo; solo cambia la etiqueta visible, y el tooltip conserva
+            // el nombre completo para lectores de pantalla.
             label: entry.$1 == 'Asistente IA' ? 'Asistente' : entry.$1,
+            tooltip: entry.$1 == 'Asistente IA' ? 'Asistente IA' : null,
           ),
       ],
     );
