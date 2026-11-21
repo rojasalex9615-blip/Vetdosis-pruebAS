@@ -8,6 +8,7 @@ import 'package:vetdosis_pro/modules/auth/presentation/auth_view_model.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
 import 'package:vetdosis_pro/modules/welcome/presentation/guided_start_screen.dart';
+import 'package:vetdosis_pro/vet_ui/vet_components.dart';
 import 'support/fake_auth.dart';
 
 void main() {
@@ -45,7 +46,7 @@ void main() {
       final boton = find.descendant(
         of: find.ancestor(
           of: find.text(guideSteps[i].$1),
-          matching: find.byType(Card),
+          matching: find.byType(VetCard),
         ),
         matching: find.text('Abrir'),
       );

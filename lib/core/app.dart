@@ -2297,9 +2297,11 @@ class CoreShell extends StatelessWidget {
               children: [
                 const Icon(VetIcons.grid, size: 20, color: VetColors.purple),
                 const SizedBox(width: 8),
-                Text(
-                  'Configura tus herramientas',
-                  style: theme.textTheme.titleLarge,
+                Expanded(
+                  child: Text(
+                    'Configura tus herramientas',
+                    style: theme.textTheme.titleLarge,
+                  ),
                 ),
               ],
             ),
@@ -2444,9 +2446,11 @@ class CoreShell extends StatelessWidget {
                 children: [
                   const Icon(VetIcons.bell, size: 20, color: VetColors.mint),
                   const SizedBox(width: 8),
-                  Text(
-                    'Alertas y recordatorios',
-                    style: theme.textTheme.titleLarge,
+                  Expanded(
+                    child: Text(
+                      'Alertas y recordatorios',
+                      style: theme.textTheme.titleLarge,
+                    ),
                   ),
                 ],
               ),
