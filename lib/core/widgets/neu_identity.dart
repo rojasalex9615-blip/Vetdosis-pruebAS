@@ -148,7 +148,7 @@ class VetDosisBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final mark = VetDosisMark(size: large ? 132 : 34);
+    final mark = VetDosisMark(size: large ? 100 : 34);
     final name = Text.rich(
       TextSpan(
         children: [
@@ -167,13 +167,13 @@ class VetDosisBrand extends StatelessWidget {
         ],
       ),
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: large ? 30 : 22, fontWeight: FontWeight.w700),
+      style: TextStyle(fontSize: large ? 24 : 22, fontWeight: FontWeight.w700),
     );
     final slogan = Text(
       'Tu espacio veterinario',
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: large ? 14 : 12,
+        fontSize: large ? 13 : 12,
         color: dark ? const Color(0xFF93C5FD) : const Color(0xFF0E1B45),
       ),
     );
@@ -181,9 +181,9 @@ class VetDosisBrand extends StatelessWidget {
       return Column(
         children: [
           mark,
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
           name,
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           slogan,
         ],
       );
@@ -213,11 +213,15 @@ class NeuPrimaryButton extends StatefulWidget {
     required this.child,
     this.soft = false,
     this.color,
+    this.dense = false,
   });
   final VoidCallback? onPressed;
   final Widget child;
   final bool soft;
   final Color? color;
+
+  /// Altura y tipografia compactas para acciones dentro de formularios largos.
+  final bool dense;
   @override
   State<NeuPrimaryButton> createState() => _NeuPrimaryButtonState();
 }
@@ -246,7 +250,7 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(widget.dense ? 24 : 32),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -271,18 +275,21 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
                   backgroundBuilder: plainButtonLayer,
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
-                  foregroundColor: color.computeLuminance() > .4
+                  // El umbral .4 mandaba a blanco los tonos medios de las
+                  // calculadoras, donde ese blanco perdía contraste. La tinta
+                  // se elige por lo que de verdad se lee sobre el relleno.
+                  foregroundColor: color.computeLuminance() > .18
                       ? neuInk
                       : Colors.white,
-                  minimumSize: const Size(0, 58),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 18,
+                  minimumSize: Size(0, widget.dense ? 46 : 58),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: widget.dense ? 18 : 22,
+                    vertical: widget.dense ? 12 : 18,
                   ),
                   shape: const StadiumBorder(),
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                     fontFamily: VetTheme.fontFamily,
-                    fontSize: 16,
+                    fontSize: widget.dense ? 14 : 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
