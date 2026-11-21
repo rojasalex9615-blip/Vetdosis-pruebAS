@@ -936,11 +936,11 @@ class _DocumentEditorState extends State<DocumentEditor> {
                 'Cambiar el perfil exige revisar y firmar de nuevo. Sin firma compartida se usa la firma propia de quien emite.',
               ),
             ],
-            const Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
               child: Text(
                 'Datos para completar',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             const Text(
@@ -957,11 +957,11 @@ class _DocumentEditorState extends State<DocumentEditor> {
               if (!(widget.draftOnly &&
                   ['mvz_name', 'mvz_license'].contains(f['id'])))
                 field(f),
-            const Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 8),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 8),
               child: Text(
                 'Cláusulas e indicaciones para revisar',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             for (final c in schema['clauses'])

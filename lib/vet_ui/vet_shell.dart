@@ -72,8 +72,7 @@ class VetWorkspaceHeader extends StatelessWidget {
                 'Hola, $displayName',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 17,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),

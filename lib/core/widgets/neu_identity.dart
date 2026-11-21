@@ -1,6 +1,7 @@
 import 'accent_glow.dart';
 import 'brand_mark.dart';
 import 'package:flutter/material.dart';
+import '../../vet_ui/vet_theme.dart';
 
 const neuBackground = Color(0xFFEBECF2);
 const neuInk = Color(0xFF17223D);
@@ -155,13 +156,13 @@ class VetDosisBrand extends StatelessWidget {
         ],
       ),
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: large ? 30 : 20, fontWeight: FontWeight.w700),
+      style: TextStyle(fontSize: large ? 30 : 22, fontWeight: FontWeight.w700),
     );
     final slogan = Text(
       'Tu espacio veterinario',
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: large ? 14 : 11,
+        fontSize: large ? 14 : 12,
         color: dark ? const Color(0xFF93C5FD) : const Color(0xFF0E1B45),
       ),
     );
@@ -269,7 +270,7 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
                   ),
                   shape: const StadiumBorder(),
                   textStyle: const TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: VetTheme.fontFamily,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -309,9 +310,9 @@ class _NeuPrimaryButtonState extends State<NeuPrimaryButton> {
               borderRadius: BorderRadius.circular(26),
             ),
             textStyle: const TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
+              fontFamily: VetTheme.fontFamily,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
           onPressed: widget.onPressed,
