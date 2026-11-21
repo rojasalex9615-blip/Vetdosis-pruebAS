@@ -61,6 +61,13 @@ class ReviewAi extends AiFake implements StarterAiRepository {
     String topic,
     String operation,
   ) async => throw StateError('preview only');
+  @override
+  Future<String> starterChat(
+    String clinic,
+    String? chat,
+    String message,
+    String operation,
+  ) async => throw StateError('preview only');
 }
 
 class AiFake implements AiRepository {
