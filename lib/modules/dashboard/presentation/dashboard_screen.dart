@@ -513,7 +513,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               leading: const Icon(VetIcons.clock, size: 18, color: VetColors.danger),
                               title: Text(
                                 '${m.patient(t)} · ${t.label}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                               ),
                               subtitle: Text(
                                 'Horario: ${time(m.effectiveTime(t))}',
@@ -562,7 +562,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               leading: const Icon(VetIcons.alertOctagon, size: 18, color: VetColors.warning),
                               title: Text(
                                 '${p['nombre']}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                               ),
                               subtitle: Text(
                                 'Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}',
@@ -1076,7 +1076,7 @@ class _DashboardActionCapsule extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelMedium?.copyWith(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: textColor,
                       letterSpacing: 0.1,

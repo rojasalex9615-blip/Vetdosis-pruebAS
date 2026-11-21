@@ -420,7 +420,7 @@ class VetDosisApp extends StatelessWidget {
                 borderSide: BorderSide(color: scheme.error, width: 1.5),
               ),
               labelStyle: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               ),
