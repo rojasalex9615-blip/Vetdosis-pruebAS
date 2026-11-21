@@ -45,7 +45,7 @@ const guideSteps = <(String, String, String)>[
 
 IconData _stepIcon(int index) => switch (index) {
   0 => VetIcons.userCircle,
-  1 => VetIcons.brush,
+  1 => VetIcons.palette,
   2 => VetIcons.info,
   3 => VetIcons.document,
   4 => VetIcons.paw,
@@ -221,7 +221,7 @@ class _GuidedStartScreenState extends State<GuidedStartScreen> {
           VetCallout(
             text: error!,
             kind: VetBadgeKind.danger,
-            icon: VetIcons.warningTriangle,
+            icon: VetIcons.alertTriangle,
           ),
         ],
         const SizedBox(height: 16),

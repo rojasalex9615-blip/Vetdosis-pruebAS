@@ -697,7 +697,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                                     model.invite(_email.text, _role);
                                   }
                                 },
-                          icon: const Icon(VetIcons.mail, size: 18),
+                          icon: const Icon(VetIcons.paperPlane, size: 18),
                           label: const Text('Generar código de invitación'),
                         ),
                         if (model.invitation != null) ...[
@@ -736,7 +736,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                 if (!model.offline) ...[
                   VetCard(
                     child: ExpansionTile(
-                      leading: const Icon(VetIcons.plusSquare),
+                      leading: const Icon(VetIcons.plusCircle),
                       title: const Text(
                         'Agregar otra clínica',
                         style: TextStyle(fontWeight: FontWeight.w700),
@@ -802,7 +802,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                   VetCallout(
                     text: model.error!,
                     kind: VetBadgeKind.danger,
-                    icon: VetIcons.warningTriangle,
+                    icon: VetIcons.alertTriangle,
                   ),
                 ],
                 if (model.busy) ...[
