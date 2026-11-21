@@ -184,7 +184,7 @@ class _SemenReferenceScreenState extends State<SemenReferenceScreen> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Evaluación seminal')),
     body: SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       child: CalculatorSurface(
         id: 'semen',
         child: Column(
@@ -255,7 +255,14 @@ class _SemenReferenceScreenState extends State<SemenReferenceScreen> {
       keyboardType: text
           ? TextInputType.text
           : const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(labelText: label, hintText: hint),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+      ),
       onChanged: onChanged ?? (_) => recalc(),
     ),
   );
