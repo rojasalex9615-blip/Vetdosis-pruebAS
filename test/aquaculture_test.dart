@@ -4,6 +4,7 @@ import 'package:vetdosis_pro/modules/production/domain/aquaculture_reference.dar
 import 'package:vetdosis_pro/modules/production/domain/aquaculture_species.dart';
 import 'package:vetdosis_pro/modules/production/domain/production_catalog.dart';
 import 'package:vetdosis_pro/modules/production/presentation/aquaculture_panels.dart';
+import 'package:vetdosis_pro/vet_ui/vet_components.dart';
 
 void main() {
   group('Siembra y biomasa', () {
@@ -500,5 +501,101 @@ void main() {
         expect(find.textContaining('Estanque en tierra'), findsNothing);
       },
     );
+  });
+
+  group('La especie del padre llega a los paneles', () {
+    Future<void> pumpWith(WidgetTester tester, FishSpecies species) async {
+      tester.view.physicalSize = const Size(1200, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AquacultureNitriteSaltPanel(species: species),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('El panel de nitrito cambia de especie al cambiar el padre', (
+      tester,
+    ) async {
+      await pumpWith(tester, FishSpecies.tilapia);
+      expect(
+        tester
+            .widget<VetChip>(
+              find.byKey(const ValueKey('aqua-nitrite-species-tilapia')),
+            )
+            .selected,
+        isTrue,
+      );
+
+      await pumpWith(tester, FishSpecies.trucha);
+
+      expect(
+        tester
+            .widget<VetChip>(
+              find.byKey(const ValueKey('aqua-nitrite-species-trucha')),
+            )
+            .selected,
+        isTrue,
+        reason: 'el panel debe seguir la especie que le pasa el padre',
+      );
+      expect(
+        tester
+            .widget<VetChip>(
+              find.byKey(const ValueKey('aqua-nitrite-species-tilapia')),
+            )
+            .selected,
+        isFalse,
+      );
+    });
+
+    testWidgets('Trucha no hereda el cloruro de mantenimiento de tilapia', (
+      tester,
+    ) async {
+      await pumpWith(tester, FishSpecies.tilapia);
+      final tilapiaField = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .firstWhere((f) => f.controller?.text == '150');
+      expect(tilapiaField.controller!.text, '150');
+
+      await pumpWith(tester, FishSpecies.trucha);
+
+      final stale = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .where((f) => f.controller?.text == '150');
+      expect(
+        stale,
+        isEmpty,
+        reason: 'el 150 mg/L es el dato de tilapia, no de trucha',
+      );
+    });
+
+    testWidgets('El panel de siembra cambia de tabla con el padre', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      Widget host(FishSpecies s) => MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(child: AquacultureSeedPanel(species: s)),
+        ),
+      );
+
+      await tester.pumpWidget(host(FishSpecies.tilapia));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Estanque en tierra'), findsWidgets);
+
+      await tester.pumpWidget(host(FishSpecies.trucha));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Jaula de 1 m³'), findsWidgets);
+      expect(find.textContaining('Estanque en tierra'), findsNothing);
+    });
   });
 }
