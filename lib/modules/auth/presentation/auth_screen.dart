@@ -9,7 +9,10 @@ import 'team_screen.dart';
 import 'package:flutter/material.dart';
 import '../domain/clinic_membership.dart';
 import 'auth_view_model.dart';
+import '../../../core/widgets/accent_glow.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
+import '../../../vet_ui/vet_theme.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, required this.model, this.configured = true, this.initialRegister = false});
@@ -410,226 +413,409 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
     listenable: widget.model,
     builder: (context, _) {
       final model = widget.model;
+      final theme = Theme.of(context);
+
       return Scaffold(
-        appBar: AppBar(title: const Text('Mi cuenta y clínicas')),
+        appBar: AppBar(
+          title: const Text('Mi cuenta y clínicas'),
+          actions: [
+            IconButton(
+              icon: const Icon(VetIcons.refresh),
+              tooltip: 'Actualizar permisos',
+              onPressed: model.busy ? null : model.refresh,
+            ),
+          ],
+        ),
         body: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           children: [
-            // Todo el panel iba sin separacion: campo, selector y boton
-            // pegados, y en el telefono la etiqueta flotante del selector de
-            // rol se montaba sobre el campo del correo. La separacion la pone
-            // la columna, una sola vez, en vez de un SizedBox entre cada par
-            // que el proximo control agregado volveria a olvidar.
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
               children: [
-            if (widget.identityBuilder != null)
-              widget.identityBuilder!(context),
-            // Antes habia dos «Mi espacio personal»: este boton y la fila del
-            // area de trabajo personal (que el servidor llama asi). Los dos
-            // solo cambiaban de area de trabajo y dejaban a la persona en
-            // Inicio o Produccion. Ahora el espacio personal es una pantalla
-            // propia y el area de trabajo se nombra como tal.
-            if (widget.personalSpaceBuilder != null)
-              Card(
-                child: ListTile(
-                  leading: const Icon(VetIcons.userCircle),
-                  title: const Text('Mi espacio personal'),
-                  subtitle: const Text(
-                    'Notas, recordatorios, horarios y ficha de emergencia',
-                  ),
-                  trailing: const Icon(VetIcons.chevronRight),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: widget.personalSpaceBuilder!,
-                    ),
-                  ),
-                ),
-              ),
-            if (model.memberships.isNotEmpty)
-              Text(
-                'Áreas de trabajo',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            if (model.personalAvailable &&
-                !model.memberships.any((m) => m.isPersonal))
-              TextButton.icon(
-                onPressed: model.busy ? null : model.createPersonalWorkspace,
-                icon: const Icon(VetIcons.user),
-                label: const Text('Crear mi área de trabajo personal'),
-              ),
-            for (final member in model.memberships)
-              ListTile(
-                title: Text(member.displayName),
-                subtitle: Text(
-                  member.isPersonal
-                      ? 'Pacientes y dosis propios, sin equipo'
-                      : member.role.label,
-                ),
-                trailing: model.active == member
-                    ? const Icon(VetIcons.checkCircle)
-                    : null,
-                onTap: model.busy ? null : () => model.selectClinic(member),
-              ),
-            if (!model.offline &&
-                model.active != null &&
-                model.repository is PermissionRepository)
-              OutlinedButton.icon(
-                onPressed: model.busy
-                    ? null
-                    : () => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => PermissionScreen(
-                            model: model,
-                            clinic: model.active!,
+                if (widget.identityBuilder != null) ...[
+                  widget.identityBuilder!(context),
+                  const SizedBox(height: 16),
+                ],
+                if (widget.personalSpaceBuilder != null) ...[
+                  AccentGlow(
+                    color: theme.colorScheme.primary,
+                    radius: 24,
+                    emphasis: 0.45,
+                    child: VetCard(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const AccentIcon(VetIcons.userCircle, size: 28),
+                        title: const Text(
+                          'Mi espacio personal',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: const Text(
+                          'Notas, recordatorios, horarios y ficha de emergencia',
+                        ),
+                        trailing: const Icon(VetIcons.chevronRight),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: widget.personalSpaceBuilder!,
                           ),
                         ),
                       ),
-                icon: const Icon(VetIcons.shieldCheck),
-                label: const Text('Permisos y habilitación'),
-              ),
-            if (!model.offline &&
-                model.active != null &&
-                model.active?.isPersonal != true &&
-                model.repository is TeamDutyRepository)
-              OutlinedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) =>
-                        TeamDutyScreen(model: model, clinic: model.active!),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (model.memberships.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(VetIcons.hospital, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Áreas de trabajo',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (model.personalAvailable &&
+                      !model.memberships.any((m) => m.isPersonal)) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: model.busy
+                            ? null
+                            : model.createPersonalWorkspace,
+                        icon: const Icon(VetIcons.user),
+                        label: const Text('Crear mi área de trabajo personal'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  for (final member in model.memberships) ...[
+                    VetCard(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: InkWell(
+                        onTap: model.busy
+                            ? null
+                            : () => model.selectClinic(member),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: (model.active == member
+                                        ? VetColors.success
+                                        : theme.colorScheme.primary)
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                member.isPersonal
+                                    ? VetIcons.userCircle
+                                    : VetIcons.hospital,
+                                color: model.active == member
+                                    ? VetColors.success
+                                    : theme.colorScheme.primary,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    member.displayName,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    member.isPersonal
+                                        ? 'Pacientes y dosis propios, sin equipo'
+                                        : member.role.label,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (model.active == member) ...[
+                              const VetStatusBadge(
+                                label: 'Activa',
+                                kind: VetBadgeKind.success,
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                VetIcons.checkCircle,
+                                color: VetColors.success,
+                                size: 20,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  const SizedBox(height: 8),
+                ],
+                if (!model.offline &&
+                    model.active != null &&
+                    model.repository is PermissionRepository) ...[
+                  OutlinedButton.icon(
+                    onPressed: model.busy
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => PermissionScreen(
+                                model: model,
+                                clinic: model.active!,
+                              ),
+                            ),
+                          ),
+                    icon: const Icon(VetIcons.shieldCheck),
+                    label: const Text('Permisos y habilitación'),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (!model.offline &&
+                    model.active != null &&
+                    model.active?.isPersonal != true &&
+                    model.repository is TeamDutyRepository) ...[
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => TeamDutyScreen(
+                          model: model,
+                          clinic: model.active!,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(VetIcons.clock),
+                    label: const Text('Equipo: horarios y faltas'),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (!model.offline &&
+                    model.active?.role == ClinicRole.admin &&
+                    model.active?.isPersonal != true) ...[
+                  const SizedBox(height: 12),
+                  if (model.repository is TeamRepository &&
+                      (model.repository as TeamRepository)
+                          .teamManagementAvailable) ...[
+                    OutlinedButton.icon(
+                      onPressed: model.busy
+                          ? null
+                          : () => Navigator.push(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => TeamScreen(
+                                  model: model,
+                                  clinic: model.active!,
+                                ),
+                              ),
+                            ),
+                      icon: const Icon(VetIcons.usersGroup),
+                      label: const Text('Administrar equipo e invitaciones'),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  VetCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              VetIcons.userPlus,
+                              size: 20,
+                              color: VetColors.brandSky,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Invitar a una persona a esta clínica',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'Correo de la persona invitada',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(VetIcons.mail, size: 20),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<ClinicRole>(
+                          initialValue: _role,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Rol que le asignarás',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(VetIcons.idBadge, size: 20),
+                          ),
+                          items: ClinicRole.values
+                              .map(
+                                (role) => DropdownMenuItem(
+                                  value: role,
+                                  child: Text(role.label),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (role) {
+                            if (role != null) setState(() => _role = role);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: model.busy
+                              ? null
+                              : () {
+                                  if (RegExp(
+                                    r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                                  ).hasMatch(_email.text.trim())) {
+                                    model.invite(_email.text, _role);
+                                  }
+                                },
+                          icon: const Icon(VetIcons.paperPlane, size: 18),
+                          label: const Text('Generar código de invitación'),
+                        ),
+                        if (model.invitation != null) ...[
+                          const SizedBox(height: 14),
+                          const VetCallout(
+                            text:
+                                'Comparte este código con la persona invitada. Vence en 7 días y solo puede usarse una vez con su correo confirmado.',
+                            kind: VetBadgeKind.information,
+                            icon: VetIcons.shieldCheck,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: SelectableText(
+                              model.invitation!,
+                              style: const TextStyle(
+                                fontFamily: 'monospace',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (!model.offline) ...[
+                  VetCard(
+                    child: ExpansionTile(
+                      leading: const Icon(VetIcons.plusCircle),
+                      title: const Text(
+                        'Agregar otra clínica',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      childrenPadding: const EdgeInsets.only(top: 8, bottom: 8),
+                      children: [
+                        TextField(
+                          controller: _clinicName,
+                          decoration: const InputDecoration(
+                            labelText: 'Nombre de la nueva clínica',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.tonal(
+                          onPressed: model.busy
+                              ? null
+                              : () {
+                                  final name = _clinicName.text.trim();
+                                  if (name.length >= 2 && name.length <= 120) {
+                                    model.createClinic(name);
+                                  }
+                                },
+                          child: const Text('Crear clínica'),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(height: 1),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _inviteCode,
+                          autocorrect: false,
+                          decoration: const InputDecoration(
+                            labelText: 'Código de invitación',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: model.busy
+                              ? null
+                              : () {
+                                  if (_inviteCode.text.trim().isNotEmpty) {
+                                    model.joinClinic(_inviteCode.text);
+                                  }
+                                },
+                          child: const Text('Unirme a una clínica'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: model.busy ? null : model.refresh,
+                    icon: const Icon(VetIcons.refresh, size: 16),
+                    label: const Text('Actualizar mis permisos'),
                   ),
                 ),
-                icon: const Icon(VetIcons.clock),
-                label: const Text('Equipo: horarios y faltas'),
-              ),
-            if (!model.offline &&
-                model.active?.role == ClinicRole.admin &&
-                model.active?.isPersonal != true) ...[
-              const Divider(),
-              if (model.repository is TeamRepository &&
-                  (model.repository as TeamRepository).teamManagementAvailable)
+                if (model.error != null) ...[
+                  const SizedBox(height: 10),
+                  VetCallout(
+                    text: model.error!,
+                    kind: VetBadgeKind.danger,
+                    icon: VetIcons.alertTriangle,
+                  ),
+                ],
+                if (model.busy) ...[
+                  const SizedBox(height: 12),
+                  const LinearProgressIndicator(),
+                ],
+                const SizedBox(height: 20),
                 OutlinedButton.icon(
                   onPressed: model.busy
                       ? null
-                      : () => Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                TeamScreen(model: model, clinic: model.active!),
-                          ),
-                        ),
-                  icon: const Icon(VetIcons.usersGroup),
-                  label: const Text('Administrar equipo e invitaciones'),
+                      : () async {
+                          await model.signOut();
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                  icon: const Icon(VetIcons.logout),
+                  label: const Text('Cerrar sesión'),
                 ),
-              const Text('Invitar a una persona a esta clínica'),
-              TextField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Correo de la persona invitada',
-                ),
-              ),
-              DropdownButtonFormField<ClinicRole>(
-                initialValue: _role,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: 'Rol que le asignarás',
-                ),
-                items: ClinicRole.values
-                    .map(
-                      (role) => DropdownMenuItem(
-                        value: role,
-                        child: Text(role.label),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (role) {
-                  if (role != null) setState(() => _role = role);
-                },
-              ),
-              FilledButton(
-                onPressed: model.busy
-                    ? null
-                    : () {
-                        if (RegExp(
-                          r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-                        ).hasMatch(_email.text.trim())) {
-                          model.invite(_email.text, _role);
-                        }
-                      },
-                child: const Text('Generar código de invitación'),
-              ),
-              if (model.invitation != null) ...[
-                const Text(
-                  'Comparte este código con la persona invitada. Vence en 7 días y solo puede usarse una vez con su correo confirmado.',
-                ),
-                SelectableText(model.invitation!),
-              ],
-            ],
-            const Divider(),
-            if (!model.offline)
-              ExpansionTile(
-                title: const Text('Agregar otra clínica'),
-                childrenPadding: const EdgeInsets.only(top: 4, bottom: 12),
-                children: [
-                  TextField(
-                    controller: _clinicName,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre de la nueva clínica',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: model.busy
-                        ? null
-                        : () {
-                            final name = _clinicName.text.trim();
-                            if (name.length >= 2 && name.length <= 120) {
-                              model.createClinic(name);
-                            }
-                          },
-                    child: const Text('Crear clínica'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _inviteCode,
-                    autocorrect: false,
-                    decoration: const InputDecoration(
-                      labelText: 'Código de invitación',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: model.busy
-                        ? null
-                        : () {
-                            if (_inviteCode.text.trim().isNotEmpty) {
-                              model.joinClinic(_inviteCode.text);
-                            }
-                          },
-                    child: const Text('Unirme a una clínica'),
-                  ),
-                ],
-              ),
-            TextButton(
-              onPressed: model.busy ? null : model.refresh,
-              child: const Text('Actualizar mis permisos'),
-            ),
-            if (model.error != null) Text(model.error!),
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: model.busy
-                  ? null
-                  : () async {
-                      await model.signOut();
-                      if (context.mounted) Navigator.pop(context);
-                    },
-              child: const Text('Cerrar sesión'),
-            ),
               ],
             ),
           ],

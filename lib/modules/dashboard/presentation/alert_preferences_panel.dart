@@ -1,5 +1,7 @@
 import '../../../core/widgets/accent_glow.dart';
 import 'package:flutter/material.dart';
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_icons.dart';
 import '../../hospital/application/hospital_alerts.dart';
 
 class AlertPreferencesPanel extends StatefulWidget {
@@ -17,6 +19,7 @@ class AlertPreferencesPanel extends StatefulWidget {
 class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
   bool busy = false;
   String? error;
+
   Future<void> update({
     bool? sound,
     bool? vibration,
@@ -54,17 +57,23 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
     if (alerts == null) {
       return const Text('Preferencias de avisos no disponibles.');
     }
+    final theme = Theme.of(context);
+
     return ListenableBuilder(
       listenable: alerts,
       builder: (context, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SwitchListTile(
+            secondary: const Icon(VetIcons.volume),
             title: const Text('Alerta sonora'),
+            subtitle: const Text('Emite un sonido de notificación al vencer un horario'),
             value: alerts.sound,
             onChanged: busy ? null : (value) => update(sound: value),
           ),
+          const Divider(height: 1),
           SwitchListTile(
+            secondary: const Icon(VetIcons.smartphone),
             title: const Text('Vibración'),
             subtitle: const Text(
               'Android; en iPhone depende de los ajustes del sistema.',
@@ -72,31 +81,84 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
             value: alerts.vibration,
             onChanged: busy ? null : (value) => update(vibration: value),
           ),
+          const Divider(height: 1),
           SwitchListTile(
+            secondary: const Icon(VetIcons.box),
             title: const Text('Aviso visual de stock bajo'),
+            subtitle: const Text('Señala insumos por agotarse o caducar'),
             value: alerts.stockWarnings,
             onChanged: busy ? null : (value) => update(stockWarnings: value),
           ),
-          const Text('Anticipación de avisos de hospitalización'),
-          Wrap(
-            spacing: 8,
+          const SizedBox(height: 14),
+          Row(
             children: [
-              for (final minutes in [0, 5, 10, 15, 30])
-                glowChip(ChoiceChip(
-                  label: Text(
-                    minutes == 0 ? 'Sin anticipación' : '$minutes min',
-                  ),
-                  selected: alerts.leadMinutes == minutes,
-                  onSelected: busy ? null : (_) => update(lead: minutes),
-                )),
+              const Icon(VetIcons.clock, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Anticipación de avisos de hospitalización',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
-          Text(alerts.status),
-          const Text(
-            'Activa los avisos en Hospitalización. El sonido, vibración y entrega dependen de permisos, canales y batería del teléfono. Al cambiar preferencias, abre la hoja para revisar todos los horarios.',
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final minutes in [0, 5, 10, 15, 30])
+                glowChip(
+                  ChoiceChip(
+                    label: Text(
+                      minutes == 0 ? 'Sin anticipación' : '$minutes min',
+                    ),
+                    selected: alerts.leadMinutes == minutes,
+                    onSelected: busy ? null : (_) => update(lead: minutes),
+                  ),
+                ),
+            ],
           ),
-          if (error != null) Text(error!),
-          if (busy) const LinearProgressIndicator(),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(VetIcons.info, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    alerts.status,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const VetNote(
+            text:
+                'Activa los avisos en Hospitalización. El sonido, vibración y entrega dependen de permisos, canales y batería del teléfono. Al cambiar preferencias, abre la hoja para revisar todos los horarios.',
+            icon: VetIcons.bell,
+          ),
+          if (error != null) ...[
+            const SizedBox(height: 10),
+            VetCallout(
+              text: error!,
+              kind: VetBadgeKind.danger,
+              icon: VetIcons.alertTriangle,
+            ),
+          ],
+          if (busy) ...[
+            const SizedBox(height: 10),
+            const LinearProgressIndicator(),
+          ],
         ],
       ),
     );
