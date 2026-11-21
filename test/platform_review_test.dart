@@ -45,6 +45,18 @@ class StarterFake implements StarterAiRepository {
     expect(starterTopics.containsKey(topic), isTrue);
     return 'new-private-chat';
   }
+
+  @override
+  Future<String> starterChat(
+    String clinic,
+    String? chat,
+    String message,
+    String operation,
+  ) async {
+    calls++;
+    expect(message.trim(), isNotEmpty);
+    return 'new-private-chat';
+  }
 }
 
 /// Devuelve la respuesta que la ayuda incluida muestra en su propio panel.
@@ -192,15 +204,23 @@ void main() {
       expect(
         tester
             .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Consultar ayuda incluida'),
+              find.widgetWithText(FilledButton, 'Enviar'),
             )
             .onPressed,
         isNull,
       );
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.ensureVisible(find.byType(CheckboxListTile));
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Consultar ayuda incluida'));
+      await tester.ensureVisible(find.byType(TextField));
+      await tester.enterText(
+        find.byType(TextField),
+        '¿Cómo empiezo a usar mi espacio personal?',
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Enviar'));
+      await tester.tap(find.text('Enviar'));
       await tester.pumpAndSettle();
       expect(r.calls, 1);
       // La respuesta se ve en el propio panel y no se entrega ningún id de chat
@@ -232,7 +252,7 @@ void main() {
       expect(
         tester
             .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Consultar ayuda incluida'),
+              find.widgetWithText(FilledButton, 'Enviar'),
             )
             .onPressed,
         isNull,
