@@ -83,6 +83,18 @@ Color calculatorPastel(String id) => switch (id) {
 Color calculatorAccent(Color identity, Color background) =>
     readableOn(identity, background);
 
+/// Relleno de una accion de calculadora, distinto del lienzo pastel.
+///
+/// Las acciones usaban el mismo pastel que el fondo de la calculadora, asi
+/// que el boton se perdia. En claro se usa el tono de identidad; en oscuro se
+/// mezcla con el lienzo lo justo para separarse y mantener la tinta legible.
+Color calculatorActionColor(BuildContext context, String id) {
+  final identity = calculatorIdentity(id).color;
+  return Theme.of(context).brightness == Brightness.dark
+      ? Color.lerp(Theme.of(context).scaffoldBackgroundColor, identity, .9)!
+      : identity;
+}
+
 /// Insignia de una calculadora: su icono sobre una placa de su propio color.
 ///
 /// El color identifica a la calculadora y es el mismo en claro y en oscuro;
@@ -209,10 +221,10 @@ class CalculatorSurface extends StatelessWidget {
             // blanco dejaba el peor caso en 4.51:1, justo en el limite de
             // 4.5:1 que pide el texto: cualquier retoque posterior lo rompia.
             foregroundColor: inkOn(accent),
-            minimumSize: Size(0, referenceStyle ? 58 : 52),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            minimumSize: Size(0, referenceStyle ? 48 : 46),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(referenceStyle ? 32 : 16),
+              borderRadius: BorderRadius.circular(referenceStyle ? 24 : 16),
             ),
           ),
         ),
@@ -387,13 +399,8 @@ class CalculatorActionButton extends StatelessWidget {
       Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
       ? NeuPrimaryButton(
           soft: true,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Color.lerp(
-                  Theme.of(context).scaffoldBackgroundColor,
-                  calculatorIdentity(id).color,
-                  .25,
-                )!
-              : calculatorPastel(id),
+          dense: true,
+          color: calculatorActionColor(context, id),
           onPressed: onPressed,
           child: DefaultTextStyle.merge(
             textAlign: TextAlign.center,
