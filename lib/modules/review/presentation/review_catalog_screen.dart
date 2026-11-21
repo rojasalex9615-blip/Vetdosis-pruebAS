@@ -19,6 +19,23 @@ const _clinicPersonalReviewStatuses = [
   'rechazado',
 ];
 
+/// Los estados viven en la base como claves tecnicas (`sin_verificar`). En
+/// pantalla se leian tal cual, con guion bajo incluido; esta es la etiqueta
+/// que ve la persona.
+const _reviewStatusLabels = {
+  'sin_verificar': 'Sin verificar',
+  'revisar_conflicto': 'Revisar conflicto',
+  'validado': 'Validado',
+  'descartado': 'Descartado',
+  'en_revision': 'En revisión',
+  'verificado': 'Verificado',
+  'corregido': 'Corregido',
+  'rechazado': 'Rechazado',
+};
+
+String reviewStatusLabel(String status) =>
+    _reviewStatusLabels[status] ?? status;
+
 class ReviewCatalogScreen extends StatefulWidget {
   const ReviewCatalogScreen({
     super.key,
@@ -286,19 +303,26 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     required List<String> statuses,
     required ValueChanged<String> onChanged,
   }) =>
-      DropdownButtonFormField<String>(
-        key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
-        initialValue: value,
-        decoration: InputDecoration(labelText: label, isDense: true),
-        items: statuses
-            .map((status) => DropdownMenuItem(
-                  value: status,
-                  child: Text(status),
-                ))
-            .toList(),
-        onChanged: (next) {
-          if (next != null && next != value) onChanged(next);
-        },
+      // Separacion entre selectores: sin ella, la etiqueta flotante del
+      // siguiente se dibujaba encima del borde del anterior y los tres
+      // estados parecian un solo bloque roto.
+      Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: DropdownButtonFormField<String>(
+          key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
+          initialValue: value,
+          isExpanded: true,
+          decoration: InputDecoration(labelText: label),
+          items: statuses
+              .map((status) => DropdownMenuItem(
+                    value: status,
+                    child: Text(reviewStatusLabel(status)),
+                  ))
+              .toList(),
+          onChanged: (next) {
+            if (next != null && next != value) onChanged(next);
+          },
+        ),
       );
   Future<void> report(ReviewCatalogItem item) async {
     final clinic = widget.clinic, user = widget.user;
@@ -382,7 +406,10 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                   onChanged: (value) => confirmGlobalStatusChange(item, value),
                 )
               else
-                Text('Global (solo lectura): ${item.globalStatus}'),
+                Text(
+                  'Global (solo lectura): '
+                  '${reviewStatusLabel(item.globalStatus)}',
+                ),
               if (widget.canManageClinic)
                 statusPicker(
                   key: '${item.key}-clinic',
@@ -396,7 +423,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                   ),
                 )
               else
-                Text('Clínica: ${item.status}'),
+                Text('Clínica: ${reviewStatusLabel(item.status)}'),
               statusPicker(
                 key: '${item.key}-personal',
                 label: 'Mi estado personal',

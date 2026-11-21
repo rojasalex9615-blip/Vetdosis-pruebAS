@@ -976,7 +976,10 @@ class CoreShell extends StatelessWidget {
                     emphasis: .75,
                   )
                 : Icon(entry.$2),
-            label: entry.$1,
+            // «Asistente IA» no cabe en el hueco de 72 px de un telefono y
+            // se recortaba contra el borde de la pantalla. El destino es el
+            // mismo; solo cambia la etiqueta visible.
+            label: entry.$1 == 'Asistente IA' ? 'Asistente' : entry.$1,
           ),
       ],
     );

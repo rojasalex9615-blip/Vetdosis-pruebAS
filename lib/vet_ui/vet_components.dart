@@ -540,8 +540,10 @@ class VetNotice extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final color = switch (kind) {
       VetBadgeKind.information => scheme.primary,
-      VetBadgeKind.success => VetColors.success,
-      VetBadgeKind.warning => VetColors.warning,
+      // Aclarados en modo oscuro: los tonos de marca medidos sobre blanco
+      // quedaban por debajo del contraste mínimo como texto.
+      VetBadgeKind.success => VetColors.successOn(context),
+      VetBadgeKind.warning => VetColors.warningOn(context),
       VetBadgeKind.danger => scheme.error,
       VetBadgeKind.unverified => scheme.onSurfaceVariant,
     };

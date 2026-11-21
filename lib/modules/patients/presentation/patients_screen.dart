@@ -318,30 +318,29 @@ class _PatientsScreenState extends State<PatientsScreen>
               const Text(
                 'Incluye hospitalización activa y atenciones pendientes de días anteriores. Contadores de pacientes cargados, sin duplicados.',
               ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    glowChip(ChoiceChip(
-                      label: Text('Todos (${model.patients.length})'),
-                      selected: selectedActivity == null,
-                      onSelected: (_) => setState(() => activityFilter = null),
-                    )),
-                    for (final kind in PatientActivityKind.values)
-                      if (snapshot.allowed(kind))
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: glowChip(ChoiceChip(
-                            label: Text(
-                              '${kind.label} (${snapshot.count(kind, model.patients.map((p) => p.id).toSet())})',
-                            ),
-                            selected: selectedActivity == kind,
-                            onSelected: (_) =>
-                                setState(() => activityFilter = kind),
-                          )),
+              // Wrap y no una fila con desplazamiento horizontal: en el
+              // telefono el ultimo filtro quedaba cortado a media palabra y
+              // parecia roto. Asi se ven todos, en una o dos lineas.
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  glowChip(ChoiceChip(
+                    label: Text('Todos (${model.patients.length})'),
+                    selected: selectedActivity == null,
+                    onSelected: (_) => setState(() => activityFilter = null),
+                  )),
+                  for (final kind in PatientActivityKind.values)
+                    if (snapshot.allowed(kind))
+                      glowChip(ChoiceChip(
+                        label: Text(
+                          '${kind.label} (${snapshot.count(kind, model.patients.map((p) => p.id).toSet())})',
                         ),
-                  ],
-                ),
+                        selected: selectedActivity == kind,
+                        onSelected: (_) =>
+                            setState(() => activityFilter = kind),
+                      )),
+                ],
               ),
               if (!snapshot.hospitalAllowed || !snapshot.appointmentsAllowed)
                 const Text(
@@ -369,30 +368,30 @@ class _PatientsScreenState extends State<PatientsScreen>
               model.error == null &&
               model.patients.isNotEmpty) ...[
             const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                glowChip(ChoiceChip(
+                  label: const Text('Todas las especies'),
+                  selected: selectedSpecies == null,
+                  onSelected: (_) => setState(() => species = null),
+                )),
+                for (final key in speciesKeys)
                   glowChip(ChoiceChip(
-                    label: const Text('Todas las especies'),
-                    selected: selectedSpecies == null,
-                    onSelected: (_) => setState(() => species = null),
+                    label: Text(speciesNames[key]!),
+                    selected: selectedSpecies == key,
+                    onSelected: (_) => setState(() => species = key),
                   )),
-                  for (final key in speciesKeys)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: glowChip(ChoiceChip(
-                        label: Text(speciesNames[key]!),
-                        selected: selectedSpecies == key,
-                        onSelected: (_) => setState(() => species = key),
-                      )),
-                    ),
-                ],
-              ),
+              ],
             ),
             const SizedBox(height: 12),
             Text(
-              '${matches.length} coincidencias de ${model.patients.length} pacientes cargados',
+              '${matches.length} '
+              '${matches.length == 1 ? 'coincidencia' : 'coincidencias'} de '
+              '${model.patients.length} '
+              '${model.patients.length == 1 ? 'paciente cargado' : 'pacientes cargados'}',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             if (matches.isEmpty) ...[
               const Padding(

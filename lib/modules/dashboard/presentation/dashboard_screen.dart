@@ -122,7 +122,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ? Text(model.errors[name]!)
       : loaded
       ? content
-      : const Text('Resumen no disponible.');
+      : const VetEmptyState(
+          text: 'Resumen no disponible.',
+          icon: VetIcons.info,
+        );
   Widget metrics(List<(String, String)> values) => LayoutBuilder(
     builder: (context, c) {
       final cols =
