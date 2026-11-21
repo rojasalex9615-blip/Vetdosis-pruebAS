@@ -24,10 +24,12 @@ class PatientCatalogTile extends StatelessWidget {
     super.key,
     required this.patient,
     required this.selected,
+    this.ownerName,
     this.onTap,
   });
   final VetPatient patient;
   final bool selected;
+  final String? ownerName;
   final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) => NeuHeaderCard(
@@ -42,11 +44,24 @@ class PatientCatalogTile extends StatelessWidget {
         VetIcons.paw,
         color: selected ? Theme.of(context).colorScheme.primary : null,
       ),
-      subtitle: Text(
-        [
-          patient.species,
-          if (patient.breed.isNotEmpty) patient.breed,
-        ].join(' · '),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            [
+              patient.species,
+              if (patient.breed.isNotEmpty) patient.breed,
+            ].join(' · '),
+          ),
+          if (ownerName != null && ownerName!.isNotEmpty)
+            Text(
+              ownerName!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
       ),
       trailing: Icon(selected ? VetIcons.checkCircle : VetIcons.chevronRight),
       onTap: onTap,

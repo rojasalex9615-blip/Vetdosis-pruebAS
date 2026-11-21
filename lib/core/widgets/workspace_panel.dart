@@ -79,7 +79,7 @@ class WorkspacePanel extends StatelessWidget {
 Color sectionAccent(String page) => switch (page) {
   'Pacientes' => VetColors.turquoise,
   'Hospitalización' => VetColors.mint,
-  'Agenda' || 'Checado' => VetColors.violet,
+  'Agenda' || 'Control de asistencia' => VetColors.violet,
   'Inventario' => VetColors.cyan,
   'Receta' || 'Recetas' => VetColors.lilac,
   'Cálculo rápido' ||
@@ -108,7 +108,7 @@ IconData sectionIcon(String page) => switch (page) {
   'Formatos' => VetIcons.folder,
   'Receta' || 'Recetas' => VetIcons.document,
   'Agenda' => VetIcons.calendar,
-  'Checado' => VetIcons.idBadge,
+  'Control de asistencia' => VetIcons.idBadge,
   'Asistente IA' => VetIcons.sparkles,
   'Planes' => VetIcons.certificate,
   'Producto y costos' => VetIcons.info,

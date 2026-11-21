@@ -168,12 +168,14 @@ class LabAnalyte {
     required this.analyteKey,
     required this.unit,
     required this.sources,
+    this.species = '',
   });
 
   factory LabAnalyte.read(Map<String, dynamic> row) => LabAnalyte(
     analyteKey: '${row['analyte_key']}',
     unit: '${row['unit']}',
     sources: (row['sources'] as num?)?.toInt() ?? 0,
+    species: '${row['species'] ?? ''}',
   );
 
   final String analyteKey, unit;
@@ -181,6 +183,10 @@ class LabAnalyte {
   /// Cuantas fuentes publican un rango para este analito y unidad. Dos o mas
   /// es el caso en que las fuentes pueden no coincidir.
   final int sources;
+
+  /// Especie a la que pertenece el catalogo. La lee el servidor del
+  /// expediente; el cliente no la elige.
+  final String species;
 
   String get label => sources > 1
       ? '$analyteKey · $unit · $sources fuentes'

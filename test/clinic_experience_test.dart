@@ -385,6 +385,30 @@ void main() {
     )).onPressed, isNull);
   });
 
+  test('Administracion y finanzas se ofrece completa en todos los presets', () {
+    for (final page in ['Planeación financiera', 'Productividad y semana']) {
+      expect(sectionGroups.any((group) => group.pages.contains(page)), isTrue);
+      expect(configurableExperiencePages.contains(page), isTrue);
+      for (final preset in ClinicPreset.values) {
+        if (preset == ClinicPreset.custom) continue;
+        expect(
+          ClinicExperience.forPreset(preset).visible(page),
+          isTrue,
+          reason: '«$page» no deberia quedar oculta por preset.',
+        );
+      }
+    }
+
+    // La clinica puede ocultarlas a proposito, y puede restaurarlas.
+    const page = 'Planeación financiera';
+    final hidden = ClinicExperience.defaults().withPage(page, false);
+    expect(hidden.visible(page), isFalse);
+    expect(
+      hidden.restoreModuleVisibility('Administración y finanzas').visible(page),
+      isTrue,
+    );
+  });
+
   test('production visibility remains configurable while preserving the existing menu', () {
     const page = 'Producción y grandes especies';
     expect(sectionGroups.any((group) => group.pages.contains(page)), isTrue);

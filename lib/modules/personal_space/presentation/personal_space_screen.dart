@@ -328,7 +328,7 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
         status(),
         const VetNote(
           text:
-              'Tu horario en una o más clínicas. Solo tú lo ves; no cambia el checado ni los turnos de la clínica.',
+              'Tu horario en una o más clínicas. Solo tú lo ves; no cambia el control de asistencia ni los turnos de la clínica.',
           icon: VetIcons.clock,
         ),
         const SizedBox(height: 12),

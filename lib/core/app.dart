@@ -1559,6 +1559,8 @@ class CoreShell extends StatelessWidget {
                                                   auth!.active!.clinicId,
                                               patientId: patient.id,
                                               patientName: patient.name,
+                                              referenceLibrary:
+                                                  referenceLibrary,
                                             ),
                                           ),
                                         );
@@ -1761,7 +1763,7 @@ class CoreShell extends StatelessWidget {
                       : const Text(
                           'Conecta tu cuenta y clínica para abrir operación y agenda.',
                         )
-                else if (model.screen == 'Checado')
+                else if (model.screen == 'Control de asistencia')
                   attendance != null &&
                           auth?.active != null &&
                           auth?.offline != true
@@ -1770,7 +1772,7 @@ class CoreShell extends StatelessWidget {
                           member: auth!.active!,
                         )
                       : const Text(
-                          'El checado requiere conexión con el servidor.',
+                          'El control de asistencia requiere conexión con el servidor.',
                         )
                 else if (model.screen == 'Estadísticas')
                   DashboardScreen(
@@ -1789,8 +1791,8 @@ class CoreShell extends StatelessWidget {
                       patients: patients,
                       backup: allowed('Estadísticas') ? backup : null,
                       attendance: attendance,
-                      // M15 y altas: los datos ya existen en la app; aqui
-                      // solo se cablean a la pantalla de Estadisticas.
+                      // M15 y altas: los datos ya existen en la app; aquí
+                      // solo se cablean a la pantalla de Estadísticas.
                       aviculture: aviculture,
                       history: hospital is HospitalHistoryRepository
                           ? hospital as HospitalHistoryRepository
@@ -1949,8 +1951,8 @@ class CoreShell extends StatelessWidget {
           patients: patients,
           backup: backup,
           attendance: attendance,
-          // Mismos datos que la pantalla de Estadisticas, para que el
-          // desplegable del Inicio muestre lo mismo.
+          // Mismos datos que la pantalla de Estadísticas, para que el
+          // desplegable «Ver estadísticas» del Inicio muestre lo mismo.
           aviculture: aviculture,
           history: hospital is HospitalHistoryRepository
               ? hospital as HospitalHistoryRepository
@@ -1977,9 +1979,8 @@ class CoreShell extends StatelessWidget {
     ],
   ];
 
-
-  /// Hospitalizacion con sus guardas (repositorios, rol, conexion), usada
-  /// tanto por la ruta del armazon como por el atajo de Ajustes: asi el
+  /// Hospitalización con sus guardas (repositorios, rol, conexión), usada
+  /// tanto por la ruta del armazón como por el atajo de Ajustes: así el
   /// atajo abre el apartado ya desarrollado y al volver se regresa a
   /// Ajustes, en vez de sustituir la pantalla.
   Widget _hospitalSection(BuildContext context) {
@@ -1988,7 +1989,7 @@ class CoreShell extends StatelessWidget {
         hospitalAlerts == null ||
         auth?.active == null) {
       return const Text(
-        'Conecta tu cuenta y clinica para abrir hospitalizacion.',
+        'Conecta tu cuenta y clínica para abrir hospitalización.',
       );
     }
     if (![
@@ -1997,7 +1998,7 @@ class CoreShell extends StatelessWidget {
       ClinicRole.auxiliar,
     ].contains(auth!.active!.role)) {
       return const Text(
-        'Hospitalizacion requiere acceso clinico de MVZ, admin o auxiliar.',
+        'Hospitalización requiere acceso clínico de MVZ, admin o auxiliar.',
       );
     }
     if (auth!.offline) {
@@ -2019,7 +2020,7 @@ class CoreShell extends StatelessWidget {
       clinical: clinical,
       contextIsCurrent: hospitalWeightContext,
       sessionChanges: auth,
-      onCalculateWeight: serverAllowed('Calculo rapido')
+      onCalculateWeight: serverAllowed('Cálculo rápido')
           ? (weight, validate) =>
                 hospitalWeightCalculation(context, weight, validate)
           : null,
@@ -2031,7 +2032,7 @@ class CoreShell extends StatelessWidget {
                 MaterialPageRoute<void>(
                   builder: (_) => Scaffold(
                     appBar: AppBar(
-                      title: const Text('Registrar medicacion'),
+                      title: const Text('Registrar medicación'),
                     ),
                     body: SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
@@ -2054,13 +2055,13 @@ class CoreShell extends StatelessWidget {
   }
 
   /// Recetas con sus guardas, igual que [_hospitalSection]: la ruta del
-  /// armazon y el atajo de Ajustes comparten la misma construccion.
+  /// armazón y el atajo de Ajustes comparten la misma construcción.
   Widget _prescriptionSection() {
     if (prescribing == null ||
         clinical == null ||
         forms == null ||
         auth?.active == null) {
-      return const Text('Conecta tu cuenta y clinica para abrir recetas.');
+      return const Text('Conecta tu cuenta y clínica para abrir recetas.');
     }
     if (auth!.offline) {
       return const Text(
@@ -2072,7 +2073,7 @@ class CoreShell extends StatelessWidget {
       ClinicRole.mvz,
       ClinicRole.auxiliar,
     ].contains(auth!.active!.role)) {
-      return const Text('Este modulo requiere acceso clinico.');
+      return const Text('Este módulo requiere acceso clínico.');
     }
     return PrescribingScreen(
       identity: identity,

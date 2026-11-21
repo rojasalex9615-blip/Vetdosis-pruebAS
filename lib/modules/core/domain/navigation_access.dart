@@ -40,7 +40,7 @@ bool navigationAllowed(
     'Estadísticas y respaldo' when access == null => role == ClinicRole.admin,
     'Estadísticas' || 'Respaldo' || 'Estadísticas y respaldo' => true,
     'Equipo y avisos' || 'Anuncios y avisos' || 'Pendientes del equipo' || 'Productividad y semana' => !member.isPersonal,
-    'Checado' => !member.isPersonal,
+    'Control de asistencia' => !member.isPersonal,
     _ => true,
   };
 }

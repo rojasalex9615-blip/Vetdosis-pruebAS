@@ -416,6 +416,10 @@ class _PatientsScreenState extends State<PatientsScreen>
             PatientCatalogTile(
               patient: p,
               selected: patient?.id == p.id,
+              ownerName: model.owners
+                  .where((o) => o.id == p.ownerId)
+                  .firstOrNull
+                  ?.name,
               onTap: model.busy
                   ? null
                   : () {
@@ -770,7 +774,10 @@ class _PatientsScreenState extends State<PatientsScreen>
                   'Tu rol permite consultar datos generales del paciente. El expediente clínico requiere acceso de MVZ, admin o auxiliar.',
                 ),
               ),
-          ],
+          // Espacio libre al final para que el botón flotante del
+          // escáner no tape el último elemento de la lista.
+          const SizedBox(height: 100),
+        ],
         ],
       );
     },

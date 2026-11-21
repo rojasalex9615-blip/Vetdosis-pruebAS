@@ -119,7 +119,7 @@ void main() {
       );
       expect(navigationAllowed('Receta', reception), false);
       expect(navigationAllowed('Inventario', reception), true);
-      expect(navigationAllowed('Checado', personal), false);
+      expect(navigationAllowed('Control de asistencia', personal), false);
       expect(navigationAllowed('Planes', reception), true);
     },
   );

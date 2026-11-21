@@ -49,5 +49,5 @@ String attendanceError(Object e) {
   for (final e in m.entries) {
     if (t.contains(e.key)) return e.value;
   }
-  return 'No se pudo completar el checado. Revisa la conexión y los permisos.';
+  return 'No se pudo completar el control de asistencia. Revisa la conexión y los permisos.';
 }

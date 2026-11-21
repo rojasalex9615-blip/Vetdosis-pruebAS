@@ -5,6 +5,7 @@ import 'package:vetdosis_pro/modules/forms/clinical/clinical_models.dart';
 import 'package:vetdosis_pro/modules/forms/clinical/clinical_repository.dart';
 import 'package:vetdosis_pro/modules/forms/clinical/clinical_vitals_screen.dart';
 import 'package:vetdosis_pro/modules/forms/clinical/vital_reference_catalog.dart';
+import 'package:vetdosis_pro/modules/forms/clinical/vital_reference_repository.dart';
 import 'package:vetdosis_pro/modules/forms/clinical/vitals_models.dart';
 
 class VitalsFake implements ClinicalRepository {
@@ -29,6 +30,56 @@ class VitalsFake implements ClinicalRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Un catálogo de constantes de prueba, en la forma que espera el parser.
+VitalReferenceCatalog catalogForTest() => VitalReferenceCatalog.parse(r'''
+{
+  "schema_version": 1,
+  "catalog_version": "synthetic-2026-11",
+  "references": [
+    {
+      "id": "canino-fc",
+      "species": "Canino",
+      "parameter": "fc",
+      "unit": "lpm",
+      "min": "60",
+      "max": "180",
+      "status": "unverified",
+      "source": "Fuente sintética de prueba",
+      "note": "Extremos sin inclusividad indicada.",
+      "reviewed_at": "2026-11-08T00:00:00Z"
+    },
+    {
+      "id": "felino-fc",
+      "species": "Felino",
+      "parameter": "fc",
+      "unit": "lpm",
+      "min": "140",
+      "max": "220",
+      "status": "unverified",
+      "source": "Fuente sintética de prueba",
+      "reviewed_at": "2026-11-08T00:00:00Z"
+    }
+  ]
+}
+''');
+
+/// Repositorio que siempre falla: deja la pantalla sin catálogo.
+class FailingVitalReferenceRepository implements VitalReferenceRepository {
+  const FailingVitalReferenceRepository();
+
+  @override
+  Future<VitalReferenceCatalog> load() async =>
+      throw const FormatException('sin catálogo');
+}
+
+class FixedVitalReferenceRepository implements VitalReferenceRepository {
+  const FixedVitalReferenceRepository(this.catalog);
+  final VitalReferenceCatalog catalog;
+
+  @override
+  Future<VitalReferenceCatalog> load() async => catalog;
 }
 
 const member = ClinicMembership(
@@ -206,9 +257,11 @@ void main() {
           member: member,
           caseData: patientCase(),
           latestWeight: '28.5',
+          referenceRepository: const FailingVitalReferenceRepository(),
         ),
       ),
     );
+    await tester.pumpAndSettle();
     expect(find.text('Monitor de constantes'), findsOneWidget);
     expect(find.text('Max'), findsOneWidget);
     expect(find.textContaining('Canino · Golden Retriever · 28.5 kg'), findsOneWidget);
@@ -229,5 +282,140 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(saveButton, findsOneWidget);
+  });
+
+  test('la banda marca alerta junto al limite y normal en el centro', () {
+    final catalog = catalogForTest();
+    VitalBand? bandFor(String value) => catalog
+        .readings(species: 'Canino', parameter: 'fc', rawValue: value)
+        .single
+        .band;
+
+    expect(bandFor('50'), VitalBand.low);
+    expect(bandFor('61'), VitalBand.alert);
+    expect(bandFor('120'), VitalBand.normal);
+    expect(bandFor('179'), VitalBand.alert);
+    expect(bandFor('200'), VitalBand.high);
+    // Sin valor interpretable no se juzga.
+    expect(bandFor(''), isNull);
+    expect(bandFor('abc'), isNull);
+  });
+
+  test('las lecturas no exigen verificacion y traen la cita de cada fuente', () {
+    final catalog = catalogForTest();
+    final canino = catalog.readings(
+      species: 'Canino',
+      parameter: 'fc',
+      rawValue: '120',
+    );
+    expect(canino, hasLength(1));
+    expect(canino.single.verified, isFalse);
+    expect(canino.single.entry.source, 'Fuente sintética de prueba');
+    expect(canino.single.range, '60 – 180 lpm');
+
+    // Otra especie: otra referencia.
+    final felino = catalog.readings(
+      species: 'Felino',
+      parameter: 'fc',
+      rawValue: '120',
+    );
+    expect(felino.single.range, '140 – 220 lpm');
+    expect(felino.single.band, VitalBand.low);
+  });
+
+  test('el indicador en vivo no altera lo que se guarda', () {
+    // Aunque las referencias no estén verificadas, el snapshot de guardado
+    // sigue vacío: solo lo alimentan entradas verificadas.
+    final catalog = catalogForTest();
+    final snapshot = catalog.snapshotFor(
+      species: 'Canino',
+      values: {'fc': '120'},
+    );
+    expect(snapshot, isEmpty);
+  });
+
+  testWidgets('el indicador en vivo muestra referencia, badge y cita', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(720, 1600);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClinicalVitalsScreen(
+          repository: VitalsFake(),
+          member: member,
+          caseData: patientCase(),
+          referenceRepository: FixedVitalReferenceRepository(catalogForTest()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final fc = find.widgetWithText(TextField, 'Frecuencia cardíaca');
+
+    // Dentro: referencia y «Normal».
+    await tester.enterText(fc, '120');
+    await tester.pumpAndSettle();
+    expect(find.text('Ref: 60 – 180 lpm'), findsOneWidget);
+    expect(find.text('Normal'), findsOneWidget);
+    expect(find.textContaining('Fuente sintética de prueba'), findsWidgets);
+
+    // Bajo: el badge cambia.
+    await tester.enterText(fc, '40');
+    await tester.pumpAndSettle();
+    expect(find.text('Bajo'), findsOneWidget);
+    expect(find.text('Normal'), findsNothing);
+
+    // Alto: vuelve a cambiar.
+    await tester.enterText(fc, '250');
+    await tester.pumpAndSettle();
+    expect(find.text('Alto'), findsOneWidget);
+    expect(find.text('Bajo'), findsNothing);
+
+    // Cerca del límite bajo: alerta.
+    await tester.enterText(fc, '65');
+    await tester.pumpAndSettle();
+    expect(find.text('Alerta'), findsOneWidget);
+  });
+
+  testWidgets('cambiar de especie cambia el texto de referencia', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(720, 1600);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClinicalVitalsScreen(
+          repository: VitalsFake(),
+          member: member,
+          caseData: ClinicalCase({
+            'id': 'case',
+            'patient_id': 'patient',
+            'responsible_id': 'person',
+            'kind': 'clinical_history',
+            'title': 'Historia',
+            'patient_name': 'Luna',
+            'patient_species': 'felino',
+            'patient_breed': 'Siamés',
+            'patient_sex': 'hembra',
+            'created_at': '2026-10-17T00:00:00Z',
+          }),
+          referenceRepository: FixedVitalReferenceRepository(catalogForTest()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final fc = find.widgetWithText(TextField, 'Frecuencia cardíaca');
+    await tester.enterText(fc, '160');
+    await tester.pumpAndSettle();
+    // La referencia felina, no la canina.
+    expect(find.text('Ref: 140 – 220 lpm'), findsOneWidget);
+    expect(find.text('Ref: 60 – 180 lpm'), findsNothing);
+    expect(find.text('Normal'), findsOneWidget);
   });
 }

@@ -80,3 +80,6 @@ client_secret*.json
 token.json
 
 .vibepocket/
+# Tokens y documentos con claves: nunca versionar
+Documento sin t*tulo.docx.txt
+*.docx.txt
