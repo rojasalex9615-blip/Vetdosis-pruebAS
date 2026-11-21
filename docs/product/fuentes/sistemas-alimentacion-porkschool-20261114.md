@@ -1,0 +1,21 @@
+# sistemas-alimentacion-porkschool-20261114.csv
+
+Extraido de `sistemas-alimentacion-porkschool-20261114.csv` para poder leerlo sin herramienta de hoja de calculo.
+Filas de datos: 14 ademas de la cabecera.
+
+| dato | valor | unidad | categoria | fuente | pagina_o_seccion | confianza | nota |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| capacidad_max_transporte_mod220 | 400 | kg/h | Sistema de transporte | Sistemas de Alimentación por etapas (Pork School ago-2026) | Sistemas de transporte de alimento | alta | Mod. 220 (2.2” diámetro), longitud máxima 75 m |
+| capacidad_max_transporte_mod300 | 1.36 | ton/h | Sistema de transporte | Sistemas de Alimentación por etapas (Pork School ago-2026) | Sistemas de transporte de alimento | alta | Mod. 300 (3.0” diámetro), longitud máxima 60 m |
+| capacidad_max_transporte_mod350 | 2.72 | ton/h | Sistema de transporte | Sistemas de Alimentación por etapas (Pork School ago-2026) | Sistemas de transporte de alimento | alta | Mod. 350 (3.5” diámetro), longitud máxima 46 m |
+| capacidad_max_transporte_mod500 | 5.99 | ton/h | Sistema de transporte | Sistemas de Alimentación por etapas (Pork School ago-2026) | Sistemas de transporte de alimento | alta | Mod. 500 (5.0” diámetro), longitud máxima 46 m |
+| formula_capacidad_silo | No. animales × Consumo diario × Días inventario deseado | kg o ton | Selección de silo | Sistemas de Alimentación por etapas (Pork School ago-2026) | Selección del tamaño del silo | alta | Fórmula explícita en la diapositiva |
+| diametros_silos_disponibles | 6, 7, 9, 12 y 15 | pies | Silos-Tolva | Sistemas de Alimentación por etapas (Pork School ago-2026) | Silos - Tolva | alta |  |
+| angulos_tolva_descarga | 45, 60 ó 67 | grados | Silos-Tolva | Sistemas de Alimentación por etapas (Pork School ago-2026) | Silos - Tolva | alta |  |
+| inclinacion_techos_silo | 30 ó 40 | grados | Silos-Tolva | Sistemas de Alimentación por etapas (Pork School ago-2026) | Silos - Tolva | alta |  |
+| boca_salida_silo | 16” ó 22” | pulgadas | Silos-Tolva | Sistemas de Alimentación por etapas (Pork School ago-2026) | Bocas de salida | alta | 16” para 1-2 sistemas; 22” para 3-4 sistemas |
+| capacidad_tolva_bascula_interior | 281 | kg | Tolva-Báscula | Sistemas de Alimentación por etapas (Pork School ago-2026) | Tolva – Báscula para interior del galpón | alta | 620 lb = 281 kg |
+| nivel_alimento_charola_primera_semana_destete | 2/3 de la charola cubierta | proporción | Manejo de comederos - Destete | Sistemas de Alimentación por etapas (Pork School ago-2026) | Regla #5 | alta | Para atraer a los lechones |
+| nivel_alimento_charola_siguientes_semanas_destete | 1/3 de la charola | proporción | Manejo de comederos - Destete | Sistemas de Alimentación por etapas (Pork School ago-2026) | Regla #5 | alta | Especialmente con alimento en harina |
+| nivel_alimento_charola_crecimiento_finalizacion | máximo 1/4 de la charola cubierta | proporción | Manejo de comederos - Crecimiento/Finalización | Sistemas de Alimentación por etapas (Pork School ago-2026) | Regla #5 | alta |  |
+| tamano_particula_optimo_flujo | 700 | micrones | Flujo de alimento | Sistemas de Alimentación por etapas (Pork School ago-2026) | Regla #9 | alta | Óptimo para dietas a base de cereales; mejora eficiencia y reduce excreción de nutrientes |
