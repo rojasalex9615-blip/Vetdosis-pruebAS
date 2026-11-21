@@ -1138,6 +1138,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ),
                             trailing: model.canAdjust && p['m8_enabled'] == true
                                 ? IconButton(
+                                  tooltip: 'Editar',
                                     onPressed: () =>
                                         adjust(Map<String, dynamic>.from(l)),
                                     icon: const Icon(Icons.edit_note),

@@ -5,6 +5,7 @@ import '../modules/operations/presentation/productivity_screen.dart';
 import '../modules/core/presentation/section_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
+import '../vet_ui/vet_components.dart';
 import '../vet_ui/vet_theme.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
@@ -136,7 +137,7 @@ class VetDosisApp extends StatelessWidget {
           surface: neumorphic ? surface : null,
         );
 
-    return ThemeData(
+    return VetTheme.refine(ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: neumorphic ? background : null,
@@ -188,7 +189,7 @@ class VetDosisApp extends StatelessWidget {
             )
           : null,
       extensions: [WorkspaceStyle(neumorphic: neumorphic)],
-    );
+    ));
   }
 
   @override
@@ -448,14 +449,59 @@ class CoreShell extends StatelessWidget {
         child: SafeArea(
           child: ListView(
             children: [
-              const ListTile(
-                title: Text('VetDosis Pro'),
-                subtitle: Text('Tu espacio veterinario'),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: Image.asset(
+                        'assets/brand/vetdosis-logo.png',
+                        height: 26,
+                        fit: BoxFit.contain,
+                        semanticLabel: 'VetDosis Pro',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'VetDosis Pro',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            'Tu espacio veterinario',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const Divider(),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Área de trabajo'),
+              const Divider(indent: 16, endIndent: 16),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  'ÁREA DE TRABAJO',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    letterSpacing: 1.1,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
               for (final branch in ClinicalBranch.values.where(
                 (b) => b != ClinicalBranch.management,
@@ -464,15 +510,26 @@ class CoreShell extends StatelessWidget {
                   leading: Icon(branch.icon),
                   title: Text(branch.label),
                   selected: model.branch == branch,
+                  selectedTileColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: .08),
+                  trailing: model.branch == branch
+                      ? Icon(
+                          Icons.check_circle,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        )
+                      : null,
                   onTap: () {
                     Navigator.pop(context);
                     model.selectBranch(branch);
                   },
                 ),
-              const Divider(),
+              const Divider(indent: 16, endIndent: 16),
               ListTile(
                 leading: const Icon(Icons.business_outlined),
                 title: const Text('Gestión clínica'),
+                trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(context);
                   model.selectBranch(ClinicalBranch.management);
@@ -1122,204 +1179,300 @@ class CoreShell extends StatelessWidget {
     ),
   ];
 
+  Widget settingsCard(
+    BuildContext context, {
+    required String title,
+    String? description,
+    required List<Widget> children,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: VetCard(
+      radius: 20,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
+                if (description != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          ...children,
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+
   List<Widget> settings(BuildContext context) => [
     Text('Ajustes', style: Theme.of(context).textTheme.headlineMedium),
-    const SizedBox(height: 24),
-    Text('Estilo visual', style: Theme.of(context).textTheme.titleLarge),
-    const SizedBox(height: 12),
-    Wrap(
-      spacing: 12,
+    const SizedBox(height: 4),
+    Text(
+      'Personaliza la apariencia y revisa tu cuenta, herramientas y avisos.',
+      style: Theme.of(context).textTheme.bodySmall,
+    ),
+    const SizedBox(height: 20),
+    settingsCard(
+      context,
+      title: 'Estilo visual',
+      description: 'Define el relieve de las tarjetas y controles.',
       children: [
-        ChoiceChip(
-          label: const Text('Clásico'),
-          selected: model.settings.visualStyle == 'standard',
-          onSelected: (_) => model.updateSettings(visualStyle: 'standard'),
-        ),
-        ChoiceChip(
-          label: const Text('Neu · relieve suave'),
-          selected: model.settings.visualStyle == 'neu',
-          onSelected: (_) => model.updateSettings(visualStyle: 'neu'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              ChoiceChip(
+                label: const Text('Clásico'),
+                selected: model.settings.visualStyle == 'standard',
+                onSelected: (_) =>
+                    model.updateSettings(visualStyle: 'standard'),
+              ),
+              ChoiceChip(
+                label: const Text('Neu · relieve suave'),
+                selected: model.settings.visualStyle == 'neu',
+                onSelected: (_) => model.updateSettings(visualStyle: 'neu'),
+              ),
+            ],
+          ),
         ),
       ],
     ),
-    const SizedBox(height: 24),
-    Text('Elige tu tema', style: Theme.of(context).textTheme.titleLarge),
-    const SizedBox(height: 12),
-    Wrap(
-      spacing: 12,
-      runSpacing: 12,
+    settingsCard(
+      context,
+      title: 'Elige tu tema',
+      description: 'La paleta se aplica en toda la app.',
       children: [
-        for (var index = 0; index < paletteNames.length; index++)
-          ChoiceChip(
-            label: Text(paletteNames[index]),
-            avatar: CircleAvatar(
-              backgroundColor: paletteColors[index],
-              radius: 8,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (var index = 0; index < paletteNames.length; index++)
+                ChoiceChip(
+                  label: Text(paletteNames[index]),
+                  avatar: CircleAvatar(
+                    backgroundColor: paletteColors[index],
+                    radius: 8,
+                  ),
+                  selected: model.settings.palette == index,
+                  onSelected: (_) => model.updateSettings(palette: index),
+                ),
+            ],
+          ),
+        ),
+      ],
+    ),
+    settingsCard(
+      context,
+      title: 'Apariencia',
+      description: 'Modo claro, oscuro o según el dispositivo.',
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: DropdownButtonFormField<String>(
+            isExpanded: true,
+            initialValue: model.settings.brightness,
+            key: ValueKey(model.settings.brightness),
+            decoration: const InputDecoration(
+              labelText: 'Apariencia',
+              border: OutlineInputBorder(),
             ),
-            selected: model.settings.palette == index,
-            onSelected: (_) => model.updateSettings(palette: index),
+            items: const [
+              DropdownMenuItem(
+                value: 'system',
+                child: Text('Seguir al dispositivo'),
+              ),
+              DropdownMenuItem(value: 'light', child: Text('Claro')),
+              DropdownMenuItem(value: 'dark', child: Text('Oscuro')),
+            ],
+            onChanged: (value) {
+              if (value != null) model.updateSettings(brightness: value);
+            },
+          ),
+        ),
+        if (model.saveError != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(
+              model.saveError!,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
       ],
     ),
-    const SizedBox(height: 24),
-    DropdownButtonFormField<String>(
-      isExpanded: true,
-      initialValue: model.settings.brightness,
-      key: ValueKey(model.settings.brightness),
-      decoration: const InputDecoration(
-        labelText: 'Apariencia',
-        border: OutlineInputBorder(),
-      ),
-      items: const [
-        DropdownMenuItem(value: 'system', child: Text('Seguir al dispositivo')),
-        DropdownMenuItem(value: 'light', child: Text('Claro')),
-        DropdownMenuItem(value: 'dark', child: Text('Oscuro')),
-      ],
-      onChanged: (value) {
-        if (value != null) model.updateSettings(brightness: value);
-      },
-    ),
-    if (model.saveError != null)
-      Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Text(
-          model.saveError!,
-          style: TextStyle(color: Theme.of(context).colorScheme.error),
-        ),
-      ),
-    const SizedBox(height: 24),
-    const Divider(),
-    Text('Cuenta y espacio', style: Theme.of(context).textTheme.titleLarge),
-    if (auth != null)
-      ListTile(
-        leading: const Icon(Icons.account_circle_outlined),
-        title: const Text('Mi cuenta y clínicas'),
-        subtitle: const Text('Espacio personal, clínica e invitaciones'),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => AuthScreen(model: auth)),
-        ),
-      ),
-    if (operations is CommissionRepository &&
-        auth?.active != null &&
-        auth?.offline != true)
-      ListTile(
-        leading: const Icon(Icons.payments_outlined),
-        title: const Text('Mis comisiones'),
-        subtitle: const Text('Saldo, próximo pago e historial'),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => Scaffold(
-              appBar: AppBar(title: const Text('Mis comisiones')),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: CommissionPanel(
-                  repository: operations as CommissionRepository,
-                  member: auth!.active!,
+    settingsCard(
+      context,
+      title: 'Cuenta y espacio',
+      description: 'Identidad, clínica activa e invitaciones.',
+      children: [
+        if (auth != null)
+          ListTile(
+            leading: const Icon(Icons.account_circle_outlined),
+            title: const Text('Mi cuenta y clínicas'),
+            subtitle: const Text('Espacio personal, clínica e invitaciones'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => AuthScreen(model: auth)),
+            ),
+          ),
+        if (operations is CommissionRepository &&
+            auth?.active != null &&
+            auth?.offline != true)
+          ListTile(
+            leading: const Icon(Icons.payments_outlined),
+            title: const Text('Mis comisiones'),
+            subtitle: const Text('Saldo, próximo pago e historial'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: const Text('Mis comisiones')),
+                  body: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: CommissionPanel(
+                      repository: operations as CommissionRepository,
+                      member: auth!.active!,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
-    Text(
-      'Configura tus herramientas',
-      style: Theme.of(context).textTheme.titleLarge,
+      ],
     ),
-    for (final option in <(String, String, String)>[
-      (
-        'Perfil profesional, firma y permisos',
-        'Revisa tus datos antes de emitir documentos.',
-        'Receta',
-      ),
-      (
-        'Membrete y plantillas',
-        'Logo, versiones y formatos de tu clínica.',
-        'Formatos',
-      ),
-      (
-        'Avisos de hospitalización',
-        'Activa y revisa permisos en la hoja de tratamientos.',
-        'Hospitalización',
-      ),
-      (
-        'Inventario, ventas y pagos de clientes',
-        'Productos, caja y referencias de cobro.',
-        'Inventario',
-      ),
-      (
-        'Proveedor de IA y privacidad',
-        'Claves, modelos y uso de contexto.',
-        'Asistente IA',
-      ),
-      (
-        'Plan y pagos de VetDosis',
-        'Suscripción y beneficios de tu espacio.',
-        'Planes',
-      ),
-      (
-        'Exportación y respaldo',
-        'Consulta límites y genera tus archivos.',
-        'Respaldo',
-      ),
-      (
-        'Ayuda y contacto',
-        'Reportes, archivos y seguimiento.',
-        'Ayuda y soporte',
-      ),
-      ('Primeros pasos', 'Retoma la guía de configuración.', 'Inicio guiado'),
-    ])
-      if (allowed(option.$3))
-        ListTile(
-          leading: Icon(sectionIcon(option.$3)),
-          title: Text(option.$1),
-          subtitle: Text(option.$2),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            if (option.$1 == 'Proveedor de IA y privacidad') {
-              if (ai == null || auth?.active == null || auth?.offline == true) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'La configuración de IA requiere cuenta y conexión.',
-                    ),
-                  ),
-                );
-                return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => Scaffold(
-                    appBar: AppBar(title: const Text('Proveedores de IA')),
-                    body: SafeArea(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: AiScreen(
-                          repository: ai!,
-                          member: auth!.active!,
-                          configurationOnly: true,
+    settingsCard(
+      context,
+      title: 'Configura tus herramientas',
+      description: 'Cada apartado abre su configuración.',
+      children: [
+        for (final option in <(String, String, String)>[
+          (
+            'Perfil profesional, firma y permisos',
+            'Revisa tus datos antes de emitir documentos.',
+            'Receta',
+          ),
+          (
+            'Membrete y plantillas',
+            'Logo, versiones y formatos de tu clínica.',
+            'Formatos',
+          ),
+          (
+            'Avisos de hospitalización',
+            'Activa y revisa permisos en la hoja de tratamientos.',
+            'Hospitalización',
+          ),
+          (
+            'Inventario, ventas y pagos de clientes',
+            'Productos, caja y referencias de cobro.',
+            'Inventario',
+          ),
+          (
+            'Proveedor de IA y privacidad',
+            'Claves, modelos y uso de contexto.',
+            'Asistente IA',
+          ),
+          (
+            'Plan y pagos de VetDosis',
+            'Suscripción y beneficios de tu espacio.',
+            'Planes',
+          ),
+          (
+            'Exportación y respaldo',
+            'Consulta límites y genera tus archivos.',
+            'Respaldo',
+          ),
+          (
+            'Ayuda y contacto',
+            'Reportes, archivos y seguimiento.',
+            'Ayuda y soporte',
+          ),
+          (
+            'Primeros pasos',
+            'Retoma la guía de configuración.',
+            'Inicio guiado',
+          ),
+        ])
+          if (allowed(option.$3))
+            ListTile(
+              leading: Icon(sectionIcon(option.$3)),
+              title: Text(option.$1),
+              subtitle: Text(option.$2),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                if (option.$1 == 'Proveedor de IA y privacidad') {
+                  if (ai == null ||
+                      auth?.active == null ||
+                      auth?.offline == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'La configuración de IA requiere cuenta y conexión.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Proveedores de IA'),
+                        ),
+                        body: SafeArea(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16),
+                            child: AiScreen(
+                              repository: ai!,
+                              member: auth!.active!,
+                              configurationOnly: true,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            } else {
-              model.navigate(option.$3);
-            }
-          },
-        ),
-    if (allowed('Hospitalización')) ...[
-      const Divider(),
-      Text(
-        'Alertas y recordatorios',
-        style: Theme.of(context).textTheme.titleLarge,
+                  );
+                } else {
+                  model.navigate(option.$3);
+                }
+              },
+            ),
+      ],
+    ),
+    if (allowed('Hospitalización'))
+      settingsCard(
+        context,
+        title: 'Alertas y recordatorios',
+        description: 'Avisos de tratamientos y pendientes del equipo.',
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+            child: AlertPreferencesPanel(alerts: hospitalAlerts),
+          ),
+        ],
       ),
-      AlertPreferencesPanel(alerts: hospitalAlerts),
-    ],
-    const AppVersionLabel(),
+    const SizedBox(height: 8),
+    const Center(child: AppVersionLabel()),
+    const SizedBox(height: 16),
   ];
 
   List<Widget> pending(BuildContext context) => [

@@ -530,6 +530,7 @@ class _SaleScreenState extends State<SaleScreen> {
               ),
               subtitle: Text('${p['stock_unit']} · stock ${p['stock']}'),
               trailing: IconButton(
+                tooltip: 'Agregar al carrito',
                 onPressed: busy ? null : () => addProduct(p),
                 icon: const Icon(Icons.add_shopping_cart),
               ),
@@ -570,6 +571,7 @@ class _SaleScreenState extends State<SaleScreen> {
                 '${entry.$1['name']} · ${displayMoney(entry.$1['price'])}',
               ),
               trailing: IconButton(
+                tooltip: 'Agregar producto',
                 onPressed: busy
                     ? null
                     : () {
@@ -600,6 +602,7 @@ class _SaleScreenState extends State<SaleScreen> {
                 '${lines[index]['lot_display'] ?? ''} · ${Money.parse(lines[index]['price']).times(Quantity.parse(lines[index]['quantity'])).display}',
               ),
               trailing: IconButton(
+                tooltip: 'Quitar',
                 onPressed: busy
                     ? null
                     : () {

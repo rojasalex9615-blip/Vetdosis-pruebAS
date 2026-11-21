@@ -134,11 +134,14 @@ class _ProductivityScreenState extends State<ProductivityScreen> {
     final tasks=rows('tasks');
     final completed=tasks.where((t)=>t['completed_at']!=null).length;
     final unassigned=tasks.where((t)=>t['assigned_to']==null&&t['completed_at']==null).length;
-    return ModulePage(embedded:widget.embedded,title:'Productividad y semana',actions:[IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh))],
+    return ModulePage(embedded:widget.embedded,title:'Productividad y semana',actions:[IconButton(
+      tooltip: 'Actualizar',onPressed:busy?null:load,icon:const Icon(Icons.refresh))],
       body:ListView(shrinkWrap:widget.embedded,physics:widget.embedded?const NeverScrollableScrollPhysics():null,padding:const EdgeInsets.all(16),children:[
-        Row(children:[IconButton(onPressed:busy?null:(){week=week.subtract(const Duration(days:7));load();},icon:const Icon(Icons.chevron_left)),
+        Row(children:[IconButton(
+          tooltip: 'Semana anterior',onPressed:busy?null:(){week=week.subtract(const Duration(days:7));load();},icon:const Icon(Icons.chevron_left)),
           Expanded(child:Text('${_date(week)} — ${_date(week.add(const Duration(days:6)))}',textAlign:TextAlign.center)),
-          IconButton(onPressed:busy?null:(){week=week.add(const Duration(days:7));load();},icon:const Icon(Icons.chevron_right))]),
+          IconButton(
+            tooltip: 'Semana siguiente',onPressed:busy?null:(){week=week.add(const Duration(days:7));load();},icon:const Icon(Icons.chevron_right))]),
         if(busy)const LinearProgressIndicator(),
         if(error!=null)Text(error!,style:TextStyle(color:Theme.of(context).colorScheme.error)),
         if(!busy&&error==null)...[
@@ -157,7 +160,8 @@ class _ProductivityScreenState extends State<ProductivityScreen> {
               TextButton.icon(onPressed:()=>routine(),icon:const Icon(Icons.add),label:const Text('Agregar rutina')),
               for(final r in rows('routines'))ListTile(title:Text('${r['title']} · ${r['estimated_minutes']} min'),
                 subtitle:Text((r['weekdays'] as List).map((d)=>_days[d as int]).join(', ')),
-                onTap:()=>routine(r),trailing:IconButton(icon:const Icon(Icons.archive_outlined),onPressed:()async{
+                onTap:()=>routine(r),trailing:IconButton(
+                  tooltip: 'Archivar',icon:const Icon(Icons.archive_outlined),onPressed:()async{
                   final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Archivar rutina'),content:Text('¿Archivar ${r['title']}? Se conservarán las tareas creadas.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Cancelar')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Archivar'))]));
                   if(yes==true)await perform('archive',{'id':r['id'],'version':r['version']});
                 })),

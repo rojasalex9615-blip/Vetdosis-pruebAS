@@ -108,7 +108,7 @@ class HomePracticeSelector extends StatelessWidget {
     children: [
       Text(
         'Selecciona tu tipo de práctica',
-        style: Theme.of(context).textTheme.labelLarge,
+        style: Theme.of(context).textTheme.titleSmall,
       ),
       const SizedBox(height: 12),
       LayoutBuilder(
@@ -158,7 +158,18 @@ class HomePracticeSelector extends StatelessWidget {
                                     _ => 'Producción y grandes especies',
                                   },
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.labelLarge,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(
+                                        fontSize: 13.5,
+                                        fontWeight: branch == selected
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        height: 1.25,
+                                      ),
                                 ),
                               ],
                             ),
@@ -241,8 +252,15 @@ class HomeModuleGrid extends StatelessWidget {
                           Text(
                             actions[i].$1,
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(fontSize: 12, letterSpacing: 0),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0,
+                                  height: 1.25,
+                                ),
                           ),
                         ],
                       ),
@@ -271,10 +289,16 @@ class HomeSummary extends StatelessWidget {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 4),
-        const Text('Datos consultados · según tus permisos'),
+        Text(
+          'Datos consultados · según tus permisos',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 16),
         if (metrics.isEmpty)
-          const Text('Elige un espacio con acceso para consultar su resumen.'),
+          Text(
+            'Elige un espacio con acceso para consultar su resumen.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         LayoutBuilder(
           builder: (context, constraints) {
             final columns =
@@ -330,10 +354,16 @@ class HomeSummary extends StatelessWidget {
         ),
         if (activity != null) ...[
           const SizedBox(height: 20),
-          const Text('Citas consultadas · últimos 7 días'),
+          Text(
+            'Citas consultadas · últimos 7 días',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 12),
           if (activity!.every((day) => day.$2 == 0))
-            const Text('Sin citas en los datos consultados de este periodo.')
+            Text(
+              'Sin citas en los datos consultados de este periodo.',
+              style: Theme.of(context).textTheme.bodySmall,
+            )
           else
             LayoutBuilder(
               builder: (context, constraints) {

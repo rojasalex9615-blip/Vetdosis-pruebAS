@@ -250,6 +250,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 child: const Text('CSV'),
               ),
               IconButton(
+                tooltip: 'Actualizar',
                 onPressed: busy ? null : load,
                 icon: const Icon(Icons.refresh),
               ),
@@ -276,6 +277,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 ),
                 trailing: model.canReconcile(admin)
                     ? IconButton(
+                      tooltip: 'Conciliar pendientes',
                         icon: const Icon(Icons.fact_check_outlined),
                         onPressed: busy ? null : () => reconcile(t),
                       )

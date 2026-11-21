@@ -324,6 +324,7 @@ class _DocumentFlowScreenState extends State<DocumentFlowScreen> {
       title: const Text('Revisión y firmas'),
       actions: [
         IconButton(
+          tooltip: 'Actualizar',
           onPressed: busy ? null : load,
           icon: const Icon(Icons.refresh),
         ),

@@ -104,6 +104,7 @@ class _InventoryInsightsScreenState extends State<InventoryInsightsScreen> {
       title: const Text('Existencias, caducidades y ventas'),
       actions: [
         IconButton(
+          tooltip: 'Actualizar',
           onPressed: busy ? null : load,
           icon: const Icon(Icons.refresh),
         ),

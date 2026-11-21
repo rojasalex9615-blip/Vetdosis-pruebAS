@@ -314,6 +314,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     title: 'Promociones y fidelidad',
     actions: [
       IconButton(
+        tooltip: 'Actualizar',
         onPressed: busy ? null : load,
         icon: const Icon(Icons.refresh),
       ),
@@ -611,6 +612,7 @@ class _LoyaltyAccountScreenState extends State<_LoyaltyAccountScreen> {
         title: Text('Recompensas · ${widget.owner['name']}'),
         actions: [
           IconButton(
+            tooltip: 'Actualizar',
             onPressed: busy ? null : load,
             icon: const Icon(Icons.refresh),
           ),

@@ -135,6 +135,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         if (model.busy || saving) const LinearProgressIndicator(),
         if (model.error != null) Text(model.error!),
         IconButton(
+          tooltip: 'Actualizar',
           onPressed: model.busy ? null : model.load,
           icon: const Icon(Icons.refresh),
         ),

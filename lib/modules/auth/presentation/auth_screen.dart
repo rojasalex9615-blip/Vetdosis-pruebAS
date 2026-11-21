@@ -47,34 +47,46 @@ class _AuthScreenState extends State<AuthScreen> {
                   model?.signedIn == true ? 'Tu clínica' : 'Bienvenido',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Conoce VetDosis Pro'),
-                        ),
-                        body: const SingleChildScrollView(
-                          padding: EdgeInsets.all(20),
-                          child: ProductScreen(),
+                const SizedBox(height: 4),
+                Text(
+                  model?.signedIn == true
+                      ? 'Elige el espacio donde vas a trabajar.'
+                      : 'Accede con tu cuenta para continuar en VetDosis Pro.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => Scaffold(
+                          appBar: AppBar(
+                            title: const Text('Conoce VetDosis Pro'),
+                          ),
+                          body: const SingleChildScrollView(
+                            padding: EdgeInsets.all(20),
+                            child: ProductScreen(),
+                          ),
                         ),
                       ),
                     ),
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text('Herramientas, planes y costos'),
                   ),
-                  child: const Text('Herramientas, planes y costos'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 if (!widget.configured) ...[
-                  const Text(
-                    'El acceso estará disponible cuando conectemos tu clínica.',
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Conexión pendiente. Tus datos aún no se envían a ningún servidor.',
+                  _AuthNotice(
+                    icon: Icons.cloud_off_outlined,
+                    text: 'El acceso estará disponible cuando conectemos tu '
+                        'clínica. Tus datos aún no se envían a ningún servidor.',
+                    color: Theme.of(context).colorScheme.tertiary,
                   ),
                 ] else if (model!.recoveringPassword) ...[
                   const Text('Elige una nueva contraseña.'),
+                  const SizedBox(height: 12),
                   Form(
                     key: _form,
                     child: Column(
@@ -104,6 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 20),
                   FilledButton(
                     onPressed: model.busy
                         ? null
@@ -114,6 +127,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           },
                     child: const Text('Actualizar contraseña'),
                   ),
+                  const SizedBox(height: 4),
                   TextButton(
                     onPressed: model.busy ? null : model.signOut,
                     child: const Text('Cancelar y cerrar sesión'),
@@ -183,11 +197,14 @@ class _AuthScreenState extends State<AuthScreen> {
                           : 'Ingresar',
                     ),
                   ),
-                  if (!_reset && model.googleEnabled)
-                    OutlinedButton(
+                  if (!_reset && model.googleEnabled) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
                       onPressed: model.busy ? null : model.googleSignIn,
-                      child: const Text('Continuar con Google'),
+                      icon: const Icon(Icons.account_circle_outlined),
+                      label: const Text('Continuar con Google'),
                     ),
+                  ],
                   TextButton(
                     onPressed: model.busy
                         ? null
@@ -283,13 +300,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                 if (model?.error != null)
-                  Text(
-                    model!.error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                  _AuthNotice(
+                    icon: Icons.error_outline,
+                    text: model!.error!,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                if (model?.message != null) Text(model!.message!),
+                if (model?.message != null)
+                  _AuthNotice(
+                    icon: Icons.check_circle_outline,
+                    text: model!.message!,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
               ],
             ),
           ),
@@ -496,4 +517,51 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
       );
     },
   );
+}
+
+/// Aviso de formulario con icono, color semántico y texto legible.
+class _AuthNotice extends StatelessWidget {
+  const _AuthNotice({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+  final IconData icon;
+  final String text;
+  final Color color;
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(
+            color.withValues(alpha: dark ? .18 : .08),
+            theme.colorScheme.surface,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: .3)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

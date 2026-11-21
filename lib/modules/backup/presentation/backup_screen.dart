@@ -714,6 +714,7 @@ class _BackupScreenState extends State<BackupScreen> {
               if (model.busy || working) const LinearProgressIndicator(),
               if (model.error != null) Text(model.error!),
               IconButton(
+                tooltip: 'Actualizar',
                 onPressed: working ? null : model.load,
                 icon: const Icon(Icons.refresh),
               ),

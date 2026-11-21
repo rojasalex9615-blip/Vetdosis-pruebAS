@@ -74,7 +74,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: Text(
                       title,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(fontSize: 18),
                     ),
                   ),
                   IconButton(
@@ -91,10 +95,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
   Widget unavailable(String name, bool loaded, Widget content) =>
       model.errors[name] != null
-      ? Text(model.errors[name]!)
+      ? Text(
+          model.errors[name]!,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.error,
+            height: 1.45,
+          ),
+        )
       : loaded
       ? content
-      : const Text('Resumen no disponible.');
+      : Text(
+          'Resumen no disponible.',
+          style: Theme.of(context).textTheme.bodySmall,
+        );
   Widget metrics(List<(String, String)> values) => LayoutBuilder(
     builder: (context, c) {
       final cols =
@@ -113,8 +126,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(v.$2, style: Theme.of(context).textTheme.titleLarge),
-                    Text(v.$1),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        v.$2,
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    Text(v.$1, style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),

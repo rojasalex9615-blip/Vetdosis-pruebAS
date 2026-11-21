@@ -223,6 +223,7 @@ class _AppointmentMessageScreenState extends State<AppointmentMessageScreen> {
       title: const Text('Mensajes de atención'),
       actions: [
         IconButton(
+          tooltip: 'Actualizar',
           onPressed: busy ? null : load,
           icon: const Icon(Icons.refresh),
         ),

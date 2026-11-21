@@ -339,6 +339,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
               child: const Text('PDF'),
             ),
             IconButton(
+              tooltip: 'Actualizar',
               onPressed: working ? null : model.load,
               icon: const Icon(Icons.refresh),
             ),
@@ -354,6 +355,7 @@ class _AttendanceScreenState extends State<AttendanceScreen>
             ),
             trailing: canManageWorkspace
                 ? IconButton(
+                  tooltip: 'Editar',
                     icon: const Icon(Icons.edit_note),
                     onPressed: () async {
                       await Navigator.push(

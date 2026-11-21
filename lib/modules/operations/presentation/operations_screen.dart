@@ -988,6 +988,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                   t['completed_at'] == null &&
                       canWrite('team.manage', legacy: !widget.member.isPersonal)
                   ? IconButton(
+                    tooltip: 'Completar pendiente',
                       icon: const Icon(Icons.check),
                       onPressed: () => form(
                         'Completar pendiente',

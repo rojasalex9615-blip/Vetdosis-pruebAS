@@ -472,6 +472,7 @@ class _AiScreenState extends State<AiScreen> {
               child: const Text('Nuevo chat'),
             ),
             IconButton(
+              tooltip: 'Actualizar',
               onPressed: working ? null : vm.load,
               icon: const Icon(Icons.refresh),
             ),
