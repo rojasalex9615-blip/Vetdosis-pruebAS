@@ -2121,7 +2121,9 @@ class CoreShell extends StatelessWidget {
               children: [
                 const Icon(VetIcons.brush, size: 20, color: VetColors.violet),
                 const SizedBox(width: 8),
-                Text('Estilo visual', style: theme.textTheme.titleLarge),
+                Expanded(
+                  child: Text('Estilo visual', style: theme.textTheme.titleLarge),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -2209,7 +2211,9 @@ class CoreShell extends StatelessWidget {
               children: [
                 const Icon(VetIcons.userCircle, size: 20, color: VetColors.turquoise),
                 const SizedBox(width: 8),
-                Text('Cuenta y espacio', style: theme.textTheme.titleLarge),
+                Expanded(
+                  child: Text('Cuenta y espacio', style: theme.textTheme.titleLarge),
+                ),
               ],
             ),
             const SizedBox(height: 8),

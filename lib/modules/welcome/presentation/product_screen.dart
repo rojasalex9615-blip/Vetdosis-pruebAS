@@ -170,10 +170,12 @@ class ProductScreen extends StatelessWidget {
           children: [
             const AccentIcon(VetIcons.certificate, size: 24),
             const SizedBox(width: 10),
-            Text(
-              'Planes y costos',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w800,
+            Expanded(
+              child: Text(
+                'Planes y costos',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],

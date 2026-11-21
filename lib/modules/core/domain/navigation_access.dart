@@ -19,6 +19,8 @@ bool navigationAllowed(
     // La edición sigue cerrada por los permisos de cada módulo
     // (PatientAccess, canManage, canCalculate) y por la autorización del
     // servidor; este filtro solo abre la navegación.
+    // La planeación financiera sigue siendo de la administración.
+    if (page == 'Planeación financiera') return false;
     return true;
   }
   return switch (page) {

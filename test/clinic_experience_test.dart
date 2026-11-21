@@ -265,6 +265,8 @@ void main() {
     await tester.scrollUntilVisible(
       group, 220, scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(group);
+    await tester.pumpAndSettle();
     await tester.tap(group);
     await tester.pumpAndSettle();
     final reset = find.text('Restablecer este módulo');
@@ -446,6 +448,8 @@ void main() {
     await tester.scrollUntilVisible(
       group, 220, scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(group);
+    await tester.pumpAndSettle();
     await tester.tap(group);
     await tester.pumpAndSettle();
     expect(find.text('Producción y grandes especies'), findsOneWidget);
