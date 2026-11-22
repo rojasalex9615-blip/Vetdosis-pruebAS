@@ -24,6 +24,7 @@ Criterio: se separan tres clases.
 | Producción → Avicultura → cálculo | «Fase 2 pendiente: redistribución, vínculo con medicación en agua/alimento y retiro del huevo. Estos cálculos no crean tratamientos.» | «Estos cálculos no crean tratamientos ni registros de granja.» |
 | Producción → Alimentación | «Las tablas por talla y temperatura de los apuntes aportados están pendientes de verificación…» | «Las tablas por talla y temperatura de la referencia están pendientes de verificación…» |
 | Producción → Porcinos → Semen | «Dilución y área de conteo por confirmar con el material del curso.» | «Dilución y área de conteo pendientes de verificación.» |
+| Avicultura → Datos pendientes e incubación | `fuente`: «Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)» | `fuente`: «Clase Prod. Avicola 15-sep-2026» |
 
 La hoja de ruta que se quitó de Avicultura (redistribución, vínculo con
 medicación en agua/alimento y retiro del huevo) queda registrada aquí como
@@ -40,7 +41,6 @@ trabajo futuro, no como texto de pantalla.
 | Producción → menú | «Las referencias de engorda son de clase (CUCBA; tabla Cobb) y están sin verificar.» | Procedencia + aviso | Igual que el anterior. |
 | Producción → Porcinos | «Cálculos de sesión con valores de referencia de clase. No guardan registros de granja y no son metas de rendimiento.» | Aviso | Delimita el alcance del cálculo. |
 | Producción → Porcinos → escenarios | «Valores de referencia de la clase (Pork School, ago-2026), no metas…» | Procedencia + aviso | Igual que el anterior. |
-| Avicultura → Datos pendientes e incubación | `fuente`: «Clase Prod. Avicola 15-sep-2026 (corregido por el profesor en clase)» | Procedencia | Es la fuente del valor mostrado; se conserva. Si se prefiere no nombrar al docente, se puede cambiar a «corregido en clase». |
 
 ## Notas internas que no se muestran
 
