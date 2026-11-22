@@ -9,6 +9,7 @@ import '../domain/auth_repository.dart';
 import '../domain/clinic_membership.dart';
 import '../domain/personal_profile.dart';
 import '../domain/personal_profile_repository.dart';
+import '../domain/team_message.dart';
 
 class SupabaseAuthRepository
     implements
@@ -18,6 +19,7 @@ class SupabaseAuthRepository
         TeamRepository,
         TeamDutyRepository,
         PersonalProfileRepository,
+        TeamMessageRepository,
         PermissionRepository {
   SupabaseAuthRepository(this.client, {this.existingSchema = false});
   final bool existingSchema;
@@ -248,6 +250,42 @@ class SupabaseAuthRepository
       for (final row in rows)
         PersonalProfile.fromJson(Map<String, dynamic>.from(row as Map)),
     ];
+  }
+
+  @override
+  Future<int> send(
+    String clinicId,
+    List<String> recipients,
+    String body,
+  ) async {
+    final result = await client.rpc(
+      'team_message_send',
+      params: {
+        'p_clinic': clinicId,
+        'p_recipients': recipients,
+        'p_body': body,
+      },
+    );
+    return result is int ? result : int.tryParse('$result') ?? 0;
+  }
+
+  @override
+  Future<List<TeamMessage>> inbox(String clinicId) async {
+    final rows =
+        await client.rpc('team_message_inbox', params: {'p_clinic': clinicId})
+            as List;
+    return [
+      for (final row in rows)
+        TeamMessage.fromJson(Map<String, dynamic>.from(row as Map)),
+    ];
+  }
+
+  @override
+  Future<void> markRead(String messageId) async {
+    await client.rpc(
+      'team_message_mark_read',
+      params: {'p_message': messageId},
+    );
   }
 
   @override
