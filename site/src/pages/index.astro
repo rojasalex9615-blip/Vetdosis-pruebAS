@@ -1,0 +1,71 @@
+---
+import "../styles/global.css";
+
+const modules = [
+  ["01", "Expediente clínico", "Información del paciente, antecedentes y seguimiento."],
+  ["02", "Cálculos y dosificación", "Herramientas de apoyo para cálculos y consulta de referencias."],
+  ["03", "Recetas y formatos", "Organización de indicaciones y documentos de atención."],
+  ["04", "Hospitalización", "Seguimiento de pacientes hospitalizados y sus cuidados."],
+  ["05", "Agenda y consultas", "Organización de actividades y atención clínica."],
+  ["06", "Inventario y operación", "Una vista ordenada de insumos y procesos cotidianos."]
+];
+---
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f5fb" />
+    <meta name="description" content="VetDosis Pro: herramientas digitales para organizar la práctica veterinaria." />
+    <title>VetDosis Pro — Tecnología para la práctica veterinaria</title>
+  </head>
+  <body>
+    <header class="header">
+      <a class="brand" href="/"> <span class="mark">V<span>+</span></span> VetDosis <b>Pro</b> </a>
+      <nav><a href="#herramientas">Herramientas</a><a href="#planes">Planes</a></nav>
+      <a class="button button-small" href="#acceso">Conocer la plataforma ↗</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">TECNOLOGÍA PENSADA PARA MEDICINA VETERINARIA</p>
+          <h1>Tu práctica veterinaria.<br /><em>Más conectada.</em></h1>
+          <p class="lead">Herramientas para organizar la atención, consultar información y acompañar el trabajo clínico desde un mismo entorno.</p>
+          <div class="actions"><a class="button" href="#herramientas">Explorar VetDosis Pro →</a><a class="quiet-link" href="#herramientas">Ver herramientas ↘</a></div>
+          <p class="disclaimer">Diseñada para acompañar el trabajo veterinario, no para sustituir el criterio profesional.</p>
+        </div>
+        <div class="visual" aria-label="Representación conceptual de VetDosis Pro">
+          <div class="glow"></div>
+          <div class="window">
+            <div class="window-head"><span class="mini-mark">V+</span><b>VetDosis Pro</b><span class="avatar">MV</span></div>
+            <p class="overline">ESPACIO DE TRABAJO</p><h2>Hola, equipo 👋</h2><p class="muted">Un vistazo a tu práctica.</p>
+            <div class="stats"><div><small>AGENDA</small><b>Hoy</b><span>Organiza tus consultas</span></div><div><small>PACIENTES</small><b>Activos</b><span>Consulta expedientes</span></div></div>
+            <h3>Herramientas</h3>
+            <div class="tool"><i>⌕</i><span><b>Expedientes</b><small>Información clínica</small></span><strong>↗</strong></div>
+            <div class="tool"><i>∑</i><span><b>Cálculos</b><small>Apoyo a la dosificación</small></span><strong>↗</strong></div>
+            <div class="tool"><i>▤</i><span><b>Documentos</b><small>Recetas y formatos</small></span><strong>↗</strong></div>
+          </div>
+          <span class="float float-a">✳ Clínica + organización</span><span class="float float-b">✓ Enfoque veterinario</span>
+        </div>
+      </section>
+
+      <section class="strip"><span>UN ENTORNO PARA EL DÍA A DÍA</span><b>Atención　·　Seguimiento　·　Organización　·　Consulta</b></section>
+
+      <section class="section" id="herramientas">
+        <div class="section-heading"><div><p class="eyebrow">UN MISMO ESPACIO, DISTINTAS TAREAS</p><h2>Todo empieza con<br /><em>una mejor organización.</em></h2></div><p>VetDosis Pro reúne herramientas que ayudan a dar estructura a distintos momentos de la práctica veterinaria.</p></div>
+        <div class="grid">{modules.map(([n, title, text]) => <article class="module"><div class="module-top"><span>{n}</span><span>VETDOSIS PRO</span></div><div class="symbol">{n === "02" ? "∑" : n === "04" ? "♡" : n === "05" ? "◷" : "⌕"}</div><h3>{title}</h3><p>{text}</p><span class="arrow">↗</span></article>)}</div>
+        <p class="footnote">La disponibilidad de herramientas puede variar según la etapa de desarrollo y el acceso habilitado.</p>
+      </section>
+
+      <section class="statement"><span>“</span><p>La tecnología debe hacer más claro el trabajo, <em>no complicarlo.</em></p><small>VETDOSIS PRO · PROPÓSITO</small></section>
+
+      <section class="section plans" id="planes">
+        <div><p class="eyebrow">CRECE A TU RITMO</p><h2>Una plataforma que<br /><em>evoluciona contigo.</em></h2><p class="muted">Estamos preparando modalidades para profesionales y equipos veterinarios. Los detalles y precios se comunicarán cuando estén confirmados.</p></div>
+        <div class="plan-list"><div><b>01　 Individual</b><span>En preparación</span></div><div><b>02　 Clínica</b><span>En preparación</span></div><div><b>03　 Acceso inicial</b><span>En preparación</span></div></div>
+      </section>
+
+      <section class="closing" id="acceso"><p class="eyebrow">VETDOSIS PRO</p><h2>El siguiente paso en tu práctica <em>empieza aquí.</em></h2><p>Estamos construyendo una experiencia digital centrada en las necesidades del trabajo veterinario.</p><span class="button button-light">Acceso próximamente ↗</span><small>Canal de contacto y acceso oficial por definir.</small></section>
+    </main>
+    <footer><a class="brand" href="/"> <span class="mark">V<span>+</span></span> VetDosis <b>Pro</b> </a><span>Herramientas digitales para la práctica veterinaria.</span><span>© {new Date().getFullYear()} VetDosis Pro</span></footer>
+  </body>
+</html>
