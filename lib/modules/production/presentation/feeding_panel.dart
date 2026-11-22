@@ -112,7 +112,7 @@ class _FeedingPanelState extends State<FeedingPanel> {
             ],
             const SizedBox(height: 12),
             const Text(
-              'Base: biomasa × tasa de alimentación. Las tablas por talla y temperatura de los apuntes aportados están pendientes de verificación; no se aplican automáticamente.',
+              'Base: biomasa × tasa de alimentación. Las tablas por talla y temperatura de la referencia están pendientes de verificación; no se aplican automáticamente.',
             ),
           ],
         ),
