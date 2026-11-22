@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../domain/beta_repository.dart';
 import 'platform_beta_screen.dart';
+import '../../legal/domain/legal_document.dart';
+import '../../legal/presentation/legal_scope.dart';
 
 class BetaBoundary extends StatefulWidget {
   const BetaBoundary({
@@ -347,7 +349,18 @@ class _BetaBoundaryState extends State<BetaBoundary> {
                       onPressed: () => setState(() => termsReadOnly = false),
                       child: const Text('Leer y aceptar términos actualizados'),
                     ),
-                  Expanded(child: widget.child),
+                  Expanded(
+                    child: LegalScope(
+                      // El par ya verificado por la puerta beta es el unico que
+                      // ven Inicio, Planes y los calculos: misma version y
+                      // misma huella que se acepta aqui.
+                      pair: LegalPair.fromServer({
+                        'terms': state?.terms,
+                        'privacy': state?.privacy,
+                      }),
+                      child: widget.child,
+                    ),
+                  ),
                 ],
               ),
             ),
