@@ -227,6 +227,23 @@ class _CalculationScreenState extends State<CalculationScreen> {
     _ => const SizedBox.shrink(),
   };
 
+  /// Entrada directa a la calculadora por agente farmacéutico desde la
+  /// biblioteca, sin pasar por el menú de herramientas.
+  void openDoseCalculator() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Dosis por agente farmacéutico')),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: DoseScreen(repository: widget.doses),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// El menu por rama es la entrada de «Calculos clinicos». Produccion y
   /// exoticos traen su propia lista de herramientas y abren directo en la
   /// suya, sin ofrecer las clinicas.
@@ -339,6 +356,8 @@ class _CalculationScreenState extends State<CalculationScreen> {
                       builder: (_) => ReferenceLibraryScreen(
                         repository: widget.referenceLibrary!,
                         clinicId: widget.clinicId!,
+                        canCalculate: true,
+                        onOpenDrugCalculator: openDoseCalculator,
                       ),
                     ),
                   ),
@@ -353,6 +372,8 @@ class _CalculationScreenState extends State<CalculationScreen> {
                         repository: widget.referenceLibrary!,
                         clinicId: widget.clinicId!,
                         initialSection: 'laboratorio',
+                        canCalculate: true,
+                        onOpenDrugCalculator: openDoseCalculator,
                       ),
                     ),
                   ),

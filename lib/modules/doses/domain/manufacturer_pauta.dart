@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'catalog.dart';
 
 /// Regla de dosificación documentada por el fabricante.
 ///
@@ -244,4 +245,50 @@ class ManufacturerPautaCatalog {
   /// ficha comercial). Devuelve lista vacía si el producto no tiene pauta.
   List<ManufacturerPauta> forProduct(String productUrl) =>
       pautas.where((p) => p.productUrl == productUrl).toList(growable: false);
+}
+
+/// Principio activo con las pautas que lo mencionan.
+///
+/// Es un índice de consulta, no una regla: agrupa por el texto de
+/// [ManufacturerPauta.ingredients] sin convertir la mezcla en dosis.
+class ManufacturerIngredient {
+  ManufacturerIngredient(this.name, this.pautas);
+  final String name;
+  final List<ManufacturerPauta> pautas;
+
+  Set<String> get products => {
+    for (final p in pautas) '${p.productName} · ${p.manufacturer}',
+  };
+}
+
+/// Agrupa las pautas por principio activo, de más a menos pautas.
+///
+/// Los ingredientes vienen como «A + B + C»; se separan por «+» y «/». No se
+/// parte por comas porque hay nombres con coma y quedarían fragmentos.
+List<ManufacturerIngredient> indexByIngredient(
+  Iterable<ManufacturerPauta> pautas,
+) {
+  final names = <String, String>{};
+  final groups = <String, List<ManufacturerPauta>>{};
+  for (final pauta in pautas) {
+    for (final raw in pauta.ingredients.split(RegExp(r'[+/]'))) {
+      final name = raw.trim().replaceAll(RegExp(r'^[\s-]+|[\s.;,]+$'), '');
+      if (name.length < 3 || name.toLowerCase() == 'no especificado') continue;
+      final key = normalizeDoseSearch(name);
+      if (key.isEmpty) continue;
+      names.putIfAbsent(key, () => name);
+      groups.putIfAbsent(key, () => []).add(pauta);
+    }
+  }
+  final result = [
+    for (final entry in groups.entries)
+      ManufacturerIngredient(names[entry.key]!, entry.value),
+  ];
+  result.sort((a, b) {
+    final byCount = b.pautas.length.compareTo(a.pautas.length);
+    return byCount != 0
+        ? byCount
+        : a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+  return result;
 }
