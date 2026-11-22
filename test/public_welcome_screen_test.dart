@@ -48,14 +48,8 @@ void main() {
     expect(find.text('Planes'), findsOneWidget);
     expect(find.text('Beta cerrada. Planes y precios por anunciar.'),
         findsOneWidget);
-    // Los planes conservan su lista y debajo llevan el mismo resumen
-    // numerado que la lamina anterior.
-    await tester.dragUntilVisible(
-      find.text('IA que asiste, no decide'),
-      find.byType(ListView).last,
-      const Offset(0, -200),
-    );
-    expect(find.text('5'), findsOneWidget);
+    // Los planes ya no repiten el resumen de la lamina anterior.
+    expect(find.text('IA que asiste, no decide'), findsNothing);
   });
 
   test('Cada tema tiene su video y su poster, y los archivos existen', () {

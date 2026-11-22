@@ -65,87 +65,88 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
     );
     return AccessBackdrop(
       child: Scaffold(
-      backgroundColor: AccessBackdrop.appliesTo(context)
-          ? Colors.transparent
-          : null,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 680),
-            child: Column(
-              children: [
-                Expanded(
-                  child: PageView(
-                    controller: _controller,
-                    onPageChanged: (page) => setState(() => _page = page),
-                    children: [
-                      slide(_welcomeChildren(theme)),
-                      slide(_descriptionChildren(theme)),
-                      slide(_plansChildren(theme)),
-                    ],
+        backgroundColor: AccessBackdrop.appliesTo(context)
+            ? Colors.transparent
+            : null,
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: PageView(
+                      controller: _controller,
+                      onPageChanged: (page) => setState(() => _page = page),
+                      children: [
+                        slide(_welcomeChildren(theme)),
+                        slide(_descriptionChildren(theme)),
+                        slide(_plansChildren(theme)),
+                      ],
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: _page > 0
-                            ? FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: TextButton(
-                                  onPressed: () => _turn(-1),
-                                  child: const Text('Anterior'),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (var i = 0; i < _pageCount; i++)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 3),
-                                child: Icon(
-                                  VetIcons.dot,
-                                  size: i == _page ? 10 : 8,
-                                  color: i == _page
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.outlineVariant,
-                                ),
-                              ),
-                          ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: _page > 0
+                              ? FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: TextButton(
+                                    onPressed: () => _turn(-1),
+                                    child: const Text('Anterior'),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
-                      ),
-                      Flexible(
-                        child: _page < _pageCount - 1
-                            ? FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: FilledButton.tonal(
-                                  onPressed: () => _turn(1),
-                                  child: const Text('Siguiente'),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              for (var i = 0; i < _pageCount; i++)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  child: Icon(
+                                    VetIcons.dot,
+                                    size: i == _page ? 10 : 8,
+                                    color: i == _page
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.outlineVariant,
+                                  ),
                                 ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: _page < _pageCount - 1
+                              ? FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: FilledButton.tonal(
+                                    onPressed: () => _turn(1),
+                                    child: const Text('Siguiente'),
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                  child: Text(
-                    _footer,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                    child: Text(
+                      _footer,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -172,12 +173,14 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       onPressed: () => _openAccess(context),
       icon: const Icon(VetIcons.login),
       label: const Text('Iniciar sesión'),
+      style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
     ),
     const SizedBox(height: 10),
     OutlinedButton(
       onPressed: widget.auth == null
           ? null
           : () => _openAccess(context, register: true),
+      style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
       child: const Text('Crear cuenta'),
     ),
     const SizedBox(height: 16),
@@ -200,7 +203,8 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       icon: VetIcons.tractor,
       accent: VetColors.mint,
       title: 'Producción animal',
-      description: 'Avicultura e incubación. Bovinos, ovinos y cerdos '
+      description:
+          'Avicultura e incubación. Bovinos, ovinos y cerdos '
           'próximamente.',
     ),
     const _FeatureCard(
@@ -252,9 +256,6 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       text: 'Beta cerrada. Planes y precios por anunciar.',
       icon: VetIcons.lock,
     ),
-    const SizedBox(height: 22),
-    const _GroupLabel('Administración clínica'),
-    const ClinicHighlights(),
     const SizedBox(height: 16),
   ];
 }
@@ -350,11 +351,7 @@ class _SoonList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  const Icon(
-                    VetIcons.clock,
-                    size: 20,
-                    color: VetColors.muted,
-                  ),
+                  const Icon(VetIcons.clock, size: 20, color: VetColors.muted),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(item, style: theme.textTheme.bodyMedium),
@@ -410,34 +407,34 @@ class _Plan extends StatelessWidget {
             ],
           ),
           child: VetCard(
-        radius: _radius,
-        child: Row(
-          children: [
-            VetIconBox(icon: icon, accent: accent),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+            radius: _radius,
+            child: Row(
+              children: [
+                VetIconBox(icon: icon, accent: accent),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: VetColors.muted,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: VetColors.muted,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
         ),
       ),
     );
