@@ -199,7 +199,11 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
             ],
             if (messages.isNotEmpty) ...[
               const SizedBox(height: 12),
-              for (final message in messages) _HelpBubble(message: message),
+              for (final message in messages)
+                _HelpBubble(
+                  message: message,
+                  onHumanSupport: widget.onHumanSupport,
+                ),
             ],
             const SizedBox(height: 12),
             Wrap(
@@ -273,12 +277,18 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
 }
 
 class _HelpBubble extends StatelessWidget {
-  const _HelpBubble({required this.message});
+  const _HelpBubble({required this.message, this.onHumanSupport});
   final Map<String, dynamic> message;
+  final VoidCallback? onHumanSupport;
+  static final _supportLink = RegExp(
+    r'\[Soporte humano\]\((?:#soporte-humano|soporte://humano)\)',
+  );
   @override
   Widget build(BuildContext context) {
     final user = message['role'] == 'user';
     final colors = Theme.of(context).colorScheme;
+    final body = message['body'] as String? ?? '';
+    final parts = user ? [body] : body.split(_supportLink);
     return Align(
       alignment: user ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -289,7 +299,22 @@ class _HelpBubble extends StatelessWidget {
           color: user ? colors.primaryContainer : colors.secondaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: SelectableText(message['body'] as String? ?? ''),
+        child: parts.length == 1
+            ? SelectableText(body)
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < parts.length; i++) ...[
+                    if (parts[i].isNotEmpty) SelectableText(parts[i]),
+                    if (i < parts.length - 1)
+                      TextButton.icon(
+                        onPressed: onHumanSupport,
+                        icon: const Icon(Icons.support_agent, size: 18),
+                        label: const Text('Abrir soporte humano'),
+                      ),
+                  ],
+                ],
+              ),
       ),
     );
   }

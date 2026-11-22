@@ -63,12 +63,13 @@ class StarterFake implements StarterAiRepository {
 /// Devuelve la respuesta que la ayuda incluida muestra en su propio panel.
 class StarterChatsFake extends AiFake {
   String? read;
+  String answer = 'Respuesta de la guía de uso';
   @override
   Future<List<Map<String, dynamic>>> messages(String chat) async {
     read = chat;
     return [
       {'role': 'user', 'body': 'tema enviado'},
-      {'role': 'assistant', 'body': 'Respuesta de la guía de uso'},
+      {'role': 'assistant', 'body': answer},
     ];
   }
 }
@@ -292,6 +293,44 @@ void main() {
       opened = false;
       await tester.ensureVisible(find.text('Soporte humano'));
       await tester.tap(find.text('Soporte humano'));
+      await tester.pumpAndSettle();
+      expect(opened, isTrue);
+    },
+  );
+  testWidgets(
+    'Included help renders the model human-support link as a button',
+    (tester) async {
+      final r = StarterFake();
+      final chats = StarterChatsFake()
+        ..answer = 'No tengo ese dato. [Soporte humano](#soporte-humano)';
+      var opened = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: StarterHelpPanel(
+                repository: r,
+                chats: chats,
+                clinic: 'c',
+                onHumanSupport: () => opened = true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), '¿Cómo hago algo?');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Enviar'));
+      await tester.tap(find.text('Enviar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir soporte humano'), findsOneWidget);
+      await tester.ensureVisible(find.text('Abrir soporte humano'));
+      await tester.tap(find.text('Abrir soporte humano'));
       await tester.pumpAndSettle();
       expect(opened, isTrue);
     },
