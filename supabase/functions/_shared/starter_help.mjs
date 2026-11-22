@@ -10,14 +10,34 @@ export const helpTopics = {
     "Cómo elegir privacidad y contexto de los chats y proteger mis datos.",
 };
 const facts =
-  `VetDosis Pro está en fase de pruebas. El menú abre Inicio guiado, Ajustes, Planes, Ayuda y soporte, Asistente IA, Inventario y los módulos que permite el rol. En Mi cuenta se puede crear un espacio personal o administrar la clínica según permisos. El rol viene del servidor; pagar no autoriza actos profesionales. Las recetas controladas y reportes reservados requieren MVZ responsable habilitado. Planes muestra precios propuestos y pagos de VetDosis; los cobros siguen desactivados hasta configurar servicios reales. Inventario contiene ventas, pagos manuales y cierre de caja de clientes; no necesita conectar una pasarela. En Hospitalización se activan avisos con permisos del dispositivo; en web hay avisos con la hoja abierta, los teléfonos requieren pruebas de app cerrada, batería y Focus. Los chats son privados y excluidos del contexto de otros chats por defecto; compartir y usar contexto son opciones independientes, limitadas por clínica y rol. Ayuda y soporte permite reportes privados con autorización, cinco archivos JPEG/PNG/PDF/TXT de hasta 5 MiB por reporte, mensajes y actualización manual; humanos y contactos requieren configuración real, sin prometer tiempo de respuesta. Las referencias clínicas requieren fuentes verificadas y no deben inventarse. No hay automatización activa de WhatsApp, Drive ni OCR. Esta ayuda incluida usa solo un tema predefinido: no envía texto personal, expedientes, otros chats ni archivos al proveedor.`;
-export function helpMessages(topic) {
-  if (!Object.hasOwn(helpTopics, topic)) throw new Error("invalid_help_topic");
-  return [{
+  `VetDosis Pro está en fase de pruebas. El menú abre Inicio guiado, Ajustes, Planes, Ayuda y soporte, Asistente IA, Inventario y los módulos que permite el rol. En Mi cuenta se puede crear un espacio personal o administrar la clínica según permisos. El rol viene del servidor; pagar no autoriza actos profesionales. Las recetas controladas y reportes reservados requieren MVZ responsable habilitado. Planes muestra precios propuestos y pagos de VetDosis; los cobros siguen desactivados hasta configurar servicios reales. Inventario contiene ventas, pagos manuales y cierre de caja de clientes; no necesita conectar una pasarela. En Hospitalización se activan avisos con permisos del dispositivo; en web hay avisos con la hoja abierta, los teléfonos requieren pruebas de app cerrada, batería y Focus. Los chats son privados y excluidos del contexto de otros chats por defecto; compartir y usar contexto son opciones independientes, limitadas por clínica y rol. Ayuda y soporte permite reportes privados con autorización, cinco archivos JPEG/PNG/PDF/TXT de hasta 5 MiB por reporte, mensajes y actualización manual; humanos y contactos requieren configuración real, sin prometer tiempo de respuesta. Las referencias clínicas requieren fuentes verificadas y no deben inventarse. No hay automatización activa de WhatsApp, Drive ni OCR. La ayuda incluida responde dudas de uso de la app: no envíes datos de pacientes, expedientes, adjuntos, claves ni otros chats. Si la pregunta pide datos clínicos, dosis, recetas o datos de pacientes, recházala y sugiere soporte humano.`;
+export function helpMessages(input) {
+  const system = {
     role: "system",
     content:
-      `Eres ayuda de uso de VetDosis Pro en español. Usa exclusivamente estos hechos. Responde con pasos breves y ofrece soporte humano si falta algo. No hagas recomendaciones clínicas, no solicites datos personales o claves, no afirmes configurar, cobrar, resolver ni enviar nada. No inventes botones ni funciones. La respuesta es orientativa y requiere revisión.\n${facts}`,
-  }, { role: "user", content: helpTopics[topic] }];
+      `Eres ayuda de uso de VetDosis Pro en español. Usa exclusivamente estos hechos. Responde con pasos breves. Si no puedes resolver la duda con estos hechos, dilo y termina con el enlace exacto [Soporte humano](#soporte-humano) para que el usuario pueda abrir el reporte. No hagas recomendaciones clínicas, no solicites datos personales o claves, no afirmes configurar, cobrar, resolver ni enviar nada. No inventes otros botones ni enlaces. La respuesta es orientativa y requiere revisión.\n${facts}`,
+  };
+  if (typeof input === "string") {
+    if (!Object.hasOwn(helpTopics, input)) {
+      throw new Error("invalid_help_topic");
+    }
+    return [system, { role: "user", content: helpTopics[input] }];
+  }
+  const history = input?.history;
+  if (!Array.isArray(history) || history.length < 1 || history.length > 24) {
+    throw new Error("invalid_help_history");
+  }
+  return [
+    system,
+    ...history.map((m) => {
+      if (
+        !m || (m.role !== "user" && m.role !== "assistant") ||
+        typeof m.content !== "string" || m.content.length < 1 ||
+        m.content.length > 12000
+      ) throw new Error("invalid_help_history");
+      return { role: m.role, content: m.content };
+    }),
+  ];
 }
 export function starterRuntime(env) {
   const provider = env("STARTER_AI_PROVIDER") || "google";

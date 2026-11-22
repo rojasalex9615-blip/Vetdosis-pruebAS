@@ -1861,36 +1861,20 @@ class CoreShell extends StatelessWidget {
                       ? SupportScreen(
                           repository: support!,
                           member: auth!.active!,
+                          mode: SupportMode.chat,
                           helpPanel:
                               ai is StarterAiRepository && ai != null
                               ? StarterHelpPanel(
                                   repository: ai as StarterAiRepository,
                                   chats: ai!,
                                   clinic: auth!.active!.clinicId,
+                                  onHumanSupport: () => openSupportForm(
+                                    context,
+                                    repository: support!,
+                                    member: auth!.active!,
+                                  ),
                                 )
                               : null,
-                          onAi: ai == null
-                              ? null
-                              : (draft) async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => Scaffold(
-                                        appBar: AppBar(
-                                          title: const Text('Ayuda con IA'),
-                                        ),
-                                        body: SingleChildScrollView(
-                                          padding: const EdgeInsets.all(16),
-                                          child: AiScreen(
-                                            repository: ai!,
-                                            member: auth!.active!,
-                                            initialDraft: draft,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
                         )
                       : const Text(
                           'El soporte requiere cuenta y conexión. Puedes consultar Producto y costos o Inicio guiado sin enviar datos.',

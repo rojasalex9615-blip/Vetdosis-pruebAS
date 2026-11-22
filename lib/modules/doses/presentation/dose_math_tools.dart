@@ -362,7 +362,8 @@ class _DoseMathToolsState extends State<DoseMathTools> {
         if (referenceStyle)
           NeuPrimaryButton(
             soft: true,
-            color: calculatorPastel(mode.name),
+            dense: true,
+            color: calculatorActionColor(context, mode.name),
             onPressed: widget.onChoosePatient,
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -402,7 +403,8 @@ class _DoseMathToolsState extends State<DoseMathTools> {
       if (referenceStyle)
         NeuPrimaryButton(
           soft: true,
-          color: calculatorPastel(mode.name),
+          dense: true,
+          color: calculatorActionColor(context, mode.name),
           onPressed: calculate,
           child: Row(
             mainAxisSize: MainAxisSize.min,

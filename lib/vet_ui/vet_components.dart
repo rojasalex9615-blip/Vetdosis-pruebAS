@@ -775,7 +775,9 @@ class VetDataRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Flexible(
+          // El valor comparte el ancho para poder partirse en vez de desbordar;
+          // el texto se alinea a la derecha, así las cifras quedan en el borde.
+          Expanded(
             child: Text(value, textAlign: TextAlign.right, style: valueStyle),
           ),
         ],
@@ -857,17 +859,21 @@ class VetEmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 28, color: muted),
-            const SizedBox(height: 8),
+            Icon(icon, size: 20, color: muted.withValues(alpha: .8)),
+            const SizedBox(height: 6),
           ],
           Text(
             text,
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(color: muted),
+            // 12 px es el suelo legible del proyecto; el peso visual baja
+            // por el tono y el icono, no por debajo de la escala.
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: muted.withValues(alpha: .85),
+            ),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 4),
