@@ -611,8 +611,9 @@ class _AiScreenState extends State<AiScreen> {
                                 final models = await widget.repository.models(
                                   id!,
                                 );
-                                if (mounted)
+                                if (mounted) {
                                   setState(() => modelOptions = models);
+                                }
                               });
                               refresh();
                             },
@@ -1214,7 +1215,7 @@ class _AiBubble extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (action != null) action!,
+                ?action,
               ],
             ),
           ),
