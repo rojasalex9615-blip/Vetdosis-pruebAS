@@ -26,6 +26,7 @@ class LongChatFake extends AiFake {
 
 class StarterFake implements StarterAiRepository {
   int calls = 0;
+  int used = 0;
   bool enabled = true;
   @override
   Future<Map<String, dynamic>> starterStatus(String clinic) async => {
@@ -33,7 +34,7 @@ class StarterFake implements StarterAiRepository {
     'provider': 'google',
     'model': 'gemini-2.5-flash',
     'limit': 5,
-    'used': 0,
+    'used': used,
   };
   @override
   Future<String> starterHelp(
@@ -257,6 +258,42 @@ void main() {
             .onPressed,
         isNull,
       );
+    },
+  );
+  testWidgets(
+    'Included help offers human support and asks after the daily quota',
+    (tester) async {
+      final r = StarterFake()..used = 5;
+      var opened = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: StarterHelpPanel(
+                repository: r,
+                chats: StarterChatsFake(),
+                clinic: 'c',
+                onHumanSupport: () => opened = true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('¿Se resolvió tu duda?'), findsOneWidget);
+      await tester.ensureVisible(find.text('No, abrir soporte'));
+      await tester.tap(find.text('No, abrir soporte'));
+      await tester.pumpAndSettle();
+      expect(opened, isTrue);
+      await tester.ensureVisible(find.text('Sí'));
+      await tester.tap(find.text('Sí'));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Se resolvió tu duda?'), findsNothing);
+      opened = false;
+      await tester.ensureVisible(find.text('Soporte humano'));
+      await tester.tap(find.text('Soporte humano'));
+      await tester.pumpAndSettle();
+      expect(opened, isTrue);
     },
   );
   testWidgets(

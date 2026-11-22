@@ -15,7 +15,7 @@ export function helpMessages(input) {
   const system = {
     role: "system",
     content:
-      `Eres ayuda de uso de VetDosis Pro en español. Usa exclusivamente estos hechos. Responde con pasos breves y ofrece soporte humano si falta algo. No hagas recomendaciones clínicas, no solicites datos personales o claves, no afirmes configurar, cobrar, resolver ni enviar nada. No inventes botones ni funciones. La respuesta es orientativa y requiere revisión.\n${facts}`,
+      `Eres ayuda de uso de VetDosis Pro en español. Usa exclusivamente estos hechos. Responde con pasos breves. Si no puedes resolver la duda con estos hechos, dilo y sugiere usar el botón «Soporte humano». No hagas recomendaciones clínicas, no solicites datos personales o claves, no afirmes configurar, cobrar, resolver ni enviar nada. No inventes botones ni funciones. La respuesta es orientativa y requiere revisión.\n${facts}`,
   };
   if (typeof input === "string") {
     if (!Object.hasOwn(helpTopics, input)) {

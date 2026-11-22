@@ -39,12 +39,14 @@ class StarterHelpPanel extends StatefulWidget {
     required this.repository,
     required this.chats,
     required this.clinic,
+    this.onHumanSupport,
   });
   final StarterAiRepository repository;
 
   /// Solo para leer la respuesta recién creada con [AiRepository.messages].
   final AiRepository chats;
   final String clinic;
+  final VoidCallback? onHumanSupport;
   @override
   State<StarterHelpPanel> createState() => _StarterHelpPanelState();
 }
@@ -54,9 +56,13 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
   final composer = TextEditingController();
   String? chat;
   List<Map<String, dynamic>> messages = [];
-  bool consent = false, busy = false;
+  bool consent = false, busy = false, resolved = false;
   String? error;
   String operation = newOperationId();
+  bool get exhausted {
+    final used = data?['used'], limit = data?['limit'];
+    return used is num && limit is num && used >= limit;
+  }
   @override
   void initState() {
     super.initState();
@@ -156,6 +162,41 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
               Text(
                 'Proveedor: ${aiProviderLabels[data!['provider']] ?? data!['provider']} · modelo: ${data!['model']} · intentos hoy (UTC): ${data!['used']} / ${data!['limit']}',
               ),
+            if (exhausted && !resolved) ...[
+              const SizedBox(height: 12),
+              Card(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '¿Se resolvió tu duda?',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Ya usaste los ${data!['limit']} intentos de ayuda incluida de hoy. Si no se resolvió, abre un reporte para soporte humano.',
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          FilledButton(
+                            onPressed: () => setState(() => resolved = true),
+                            child: const Text('Sí'),
+                          ),
+                          OutlinedButton(
+                            onPressed: widget.onHumanSupport,
+                            child: const Text('No, abrir soporte'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             if (messages.isNotEmpty) ...[
               const SizedBox(height: 12),
               for (final message in messages) _HelpBubble(message: message),
@@ -210,6 +251,12 @@ class _StarterHelpPanelState extends State<StarterHelpPanel> {
               TextButton(
                 onPressed: busy ? null : reset,
                 child: const Text('Nueva conversación'),
+              ),
+            if (widget.onHumanSupport != null)
+              OutlinedButton.icon(
+                onPressed: busy ? null : widget.onHumanSupport,
+                icon: const Icon(Icons.support_agent),
+                label: const Text('Soporte humano'),
               ),
             TextButton(
               onPressed: busy ? null : load,
