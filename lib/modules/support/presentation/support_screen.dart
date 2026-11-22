@@ -10,6 +10,8 @@ import 'support_operator_screen.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 
+enum SupportMode { chat, form }
+
 class SupportScreen extends StatefulWidget {
   const SupportScreen({
     super.key,
@@ -17,6 +19,7 @@ class SupportScreen extends StatefulWidget {
     required this.member,
     this.onAi,
     this.helpPanel,
+    this.mode = SupportMode.form,
   });
   final SupportRepository repository;
   final ClinicMembership member;
@@ -28,6 +31,7 @@ class SupportScreen extends StatefulWidget {
   /// IA: aquí se enseña, pero quien la construye es app.dart, que es quien ya
   /// sabe si hay repositorio de IA y cuál.
   final Widget? helpPanel;
+  final SupportMode mode;
   @override
   State<SupportScreen> createState() => _SupportScreenState();
 }
@@ -44,7 +48,7 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   void initState() {
     super.initState();
-    vm.load();
+    if (widget.mode == SupportMode.form) vm.load();
   }
 
   @override
@@ -131,7 +135,36 @@ class _SupportScreenState extends State<SupportScreen> {
     _ => 'Pendiente de atención humana',
   };
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
+  Widget build(BuildContext context) =>
+      widget.mode == SupportMode.chat ? _chat(context) : _form(context);
+
+  Widget _chat(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text('Ayuda y soporte', style: Theme.of(context).textTheme.headlineSmall),
+      const SizedBox(height: 12),
+      if (widget.helpPanel != null)
+        widget.helpPanel!
+      else
+        const Text('La ayuda incluida no está disponible en este momento.'),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
+        onPressed: () => openSupportForm(
+          context,
+          repository: widget.repository,
+          member: widget.member,
+        ),
+        icon: const Icon(Icons.support_agent),
+        label: const Text('Abrir reporte para soporte humano'),
+      ),
+      const VetNote(
+        text:
+            'Si la ayuda incluida no resuelve tu duda, abre un reporte para soporte humano. La atención humana requiere activar el servicio; todavía no hay un tiempo de respuesta comprometido.',
+      ),
+    ],
+  );
+
+  Widget _form(BuildContext context) => ListenableBuilder(
     listenable: vm,
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -140,14 +173,6 @@ class _SupportScreenState extends State<SupportScreen> {
           'Ayuda, contacto y reportes',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
-        // Primero la ayuda automática, que resuelve sola las dudas de uso, y
-        // después el ticket con persona. Al revés se abrirían tickets por cosas
-        // que la guía ya contesta.
-        if (widget.helpPanel != null) ...[
-          const SizedBox(height: 12),
-          widget.helpPanel!,
-          const SizedBox(height: 12),
-        ],
         const VetNote(
           text:
               'Este canal guarda tu solicitud y permite seguimiento. La atención humana requiere activar el servicio de soporte; todavía no hay un tiempo de respuesta comprometido. No se envían correos ni mensajes externos automáticamente.',
@@ -311,6 +336,28 @@ class _SupportScreenState extends State<SupportScreen> {
     ),
   );
 }
+
+Future<void> openSupportForm(
+  BuildContext context, {
+  required SupportRepository repository,
+  required ClinicMembership member,
+  Future<void> Function(String)? onAi,
+}) => Navigator.of(context).push(
+  MaterialPageRoute<void>(
+    builder: (_) => Scaffold(
+      appBar: AppBar(title: const Text('Soporte humano')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: SupportScreen(
+          repository: repository,
+          member: member,
+          mode: SupportMode.form,
+          onAi: onAi,
+        ),
+      ),
+    ),
+  ),
+);
 
 class SupportContactOptions extends StatelessWidget {
   const SupportContactOptions({super.key});

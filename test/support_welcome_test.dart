@@ -134,7 +134,7 @@ void main() {
     },
   );
   testWidgets(
-    'Support screen shows the injected app-help slot before the ticket form',
+    'Support chat shows the injected app-help slot and hides the ticket form',
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -143,6 +143,7 @@ void main() {
               child: SupportScreen(
                 repository: SupportFake(),
                 member: _member,
+                mode: SupportMode.chat,
                 helpPanel: const Text('Ayuda IA incluida'),
               ),
             ),
@@ -151,13 +152,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Ayuda IA incluida'), findsOneWidget);
-      // El panel va antes del formulario de ticket: primero lo que se resuelve
-      // solo, después la persona.
-      final helpY = tester.getTopLeft(find.text('Ayuda IA incluida')).dy;
-      final formY = tester
-          .getTopLeft(find.text('Ayuda, contacto y reportes'))
-          .dy;
-      expect(helpY, greaterThan(formY));
+      expect(find.text('Ayuda, contacto y reportes'), findsNothing);
+      expect(find.text('Abrir reporte para soporte humano'), findsOneWidget);
     },
   );
   testWidgets(

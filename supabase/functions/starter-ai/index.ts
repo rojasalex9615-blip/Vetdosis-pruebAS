@@ -12,6 +12,16 @@ const cors = {
     "authorization,apikey,content-type,x-client-info,x-vetdosis-build",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+async function helpChatHistory(user, chat) {
+  const { data, error } = await user.rpc("ai_messages_read", { p_chat: chat });
+  if (error) throw new Error("help_history_denied");
+  const rows = (data ?? []).filter((m) =>
+    m && (m.role === "user" || m.role === "assistant") &&
+    typeof m.body === "string" && m.body.length > 0
+  ).slice(-12).map((m) => ({ role: m.role, content: m.body }));
+  if (!rows.length) throw new Error("help_history_empty");
+  return rows;
+}
 Deno.serve(async (req) => {
   const reply = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {
@@ -65,25 +75,47 @@ Deno.serve(async (req) => {
           data.provider === runtime.provider && data.model === runtime.model,
       });
     }
+    const isChat = typeof input.message === "string";
     if (
       input.action !== "send" || input.consent !== true ||
       Object.keys(input).some((k) =>
-        !["action", "clinic", "topic", "operation", "consent"].includes(k)
+        ![
+          "action",
+          "clinic",
+          "topic",
+          "operation",
+          "consent",
+          "message",
+          "chat",
+        ].includes(k)
       )
     ) return reply({ error: "fixed_help_topics_only" }, 400);
+    if (
+      (input.message !== undefined && typeof input.message !== "string") ||
+      (isChat && (
+        input.message.trim().length < 1 || input.message.length > 1000 ||
+        (input.chat != null && typeof input.chat !== "string")
+      ))
+    ) return reply({ error: "invalid_help_message" }, 400);
     if (!runtime) return reply({ error: "starter_ai_not_configured" }, 503);
-    const { data: r, error: prepareError } = await user.rpc(
-      "starter_ai_prepare",
-      {
+    const { data: r, error: prepareError } = isChat
+      ? await user.rpc("starter_ai_prepare_chat", {
+        p_clinic: input.clinic,
+        p_chat: input.chat ?? null,
+        p_message: input.message,
+        p_operation: input.operation,
+      })
+      : await user.rpc("starter_ai_prepare", {
         p_clinic: input.clinic,
         p_topic: input.topic,
         p_operation: input.operation,
-      },
-    );
+      });
     if (prepareError) {
       return reply({
         error: prepareError.message.includes("daily_limit")
           ? "starter_ai_daily_limit"
+          : prepareError.message.includes("invalid_help_message")
+          ? "invalid_help_message"
           : "help_request_denied",
       }, 403);
     }
@@ -102,12 +134,15 @@ Deno.serve(async (req) => {
     if (
       snapshot.provider !== runtime.provider || snapshot.model !== runtime.model
     ) throw new Error("configuration_mismatch");
+    const messages = isChat
+      ? helpMessages({ history: await helpChatHistory(user, r.chat) })
+      : helpMessages(snapshot.topic);
     const request = limitedHelpRequest(
       providerRequest(
         runtime.provider,
         runtime.key,
         runtime.model,
-        helpMessages(snapshot.topic),
+        messages,
       ),
       runtime.provider,
     );
@@ -141,14 +176,18 @@ Deno.serve(async (req) => {
     );
     if (finishError) throw new Error("finish_failed");
     claimed = null;
-    const { data: state, error: stateError } = await user.rpc(
-      "starter_ai_prepare",
-      {
+    const { data: state, error: stateError } = isChat
+      ? await user.rpc("starter_ai_prepare_chat", {
+        p_clinic: input.clinic,
+        p_chat: r.chat,
+        p_message: input.message,
+        p_operation: input.operation,
+      })
+      : await user.rpc("starter_ai_prepare", {
         p_clinic: input.clinic,
         p_topic: input.topic,
         p_operation: input.operation,
-      },
-    );
+      });
     if (stateError || state.state !== "done") {
       return reply({ error: "access_changed" }, 409);
     }

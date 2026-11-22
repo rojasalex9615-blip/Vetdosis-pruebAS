@@ -38,3 +38,10 @@ le dio uno), área, aporte, evidencia (PR, SHA, issue, documento) y fecha.
   evidencia.
 - Cuando se construya la pantalla "Información de la app", generar la lista desde
   esta tabla.
+
+## Pantalla «Información de la app»
+
+La pantalla lee `assets/app/collaborators.v1.json`, que reproduce esta tabla.
+Al añadir o corregir una fila aquí, actualiza también el JSON. El registro de
+comentarios personales retirados del código está en
+`docs/comentarios-colaboradores.md`.

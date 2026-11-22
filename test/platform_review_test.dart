@@ -26,6 +26,7 @@ class LongChatFake extends AiFake {
 
 class StarterFake implements StarterAiRepository {
   int calls = 0;
+  int used = 0;
   bool enabled = true;
   @override
   Future<Map<String, dynamic>> starterStatus(String clinic) async => {
@@ -33,7 +34,7 @@ class StarterFake implements StarterAiRepository {
     'provider': 'google',
     'model': 'gemini-2.5-flash',
     'limit': 5,
-    'used': 0,
+    'used': used,
   };
   @override
   Future<String> starterHelp(
@@ -45,17 +46,30 @@ class StarterFake implements StarterAiRepository {
     expect(starterTopics.containsKey(topic), isTrue);
     return 'new-private-chat';
   }
+
+  @override
+  Future<String> starterChat(
+    String clinic,
+    String? chat,
+    String message,
+    String operation,
+  ) async {
+    calls++;
+    expect(message.trim(), isNotEmpty);
+    return 'new-private-chat';
+  }
 }
 
 /// Devuelve la respuesta que la ayuda incluida muestra en su propio panel.
 class StarterChatsFake extends AiFake {
   String? read;
+  String answer = 'Respuesta de la guía de uso';
   @override
   Future<List<Map<String, dynamic>>> messages(String chat) async {
     read = chat;
     return [
       {'role': 'user', 'body': 'tema enviado'},
-      {'role': 'assistant', 'body': 'Respuesta de la guía de uso'},
+      {'role': 'assistant', 'body': answer},
     ];
   }
 }
@@ -192,15 +206,23 @@ void main() {
       expect(
         tester
             .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Consultar ayuda incluida'),
+              find.widgetWithText(FilledButton, 'Enviar'),
             )
             .onPressed,
         isNull,
       );
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.ensureVisible(find.byType(CheckboxListTile));
       await tester.tap(find.byType(CheckboxListTile));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Consultar ayuda incluida'));
+      await tester.ensureVisible(find.byType(TextField));
+      await tester.enterText(
+        find.byType(TextField),
+        '¿Cómo empiezo a usar mi espacio personal?',
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Enviar'));
+      await tester.tap(find.text('Enviar'));
       await tester.pumpAndSettle();
       expect(r.calls, 1);
       // La respuesta se ve en el propio panel y no se entrega ningún id de chat
@@ -232,11 +254,85 @@ void main() {
       expect(
         tester
             .widget<FilledButton>(
-              find.widgetWithText(FilledButton, 'Consultar ayuda incluida'),
+              find.widgetWithText(FilledButton, 'Enviar'),
             )
             .onPressed,
         isNull,
       );
+    },
+  );
+  testWidgets(
+    'Included help offers human support and asks after the daily quota',
+    (tester) async {
+      final r = StarterFake()..used = 5;
+      var opened = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: StarterHelpPanel(
+                repository: r,
+                chats: StarterChatsFake(),
+                clinic: 'c',
+                onHumanSupport: () => opened = true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('¿Se resolvió tu duda?'), findsOneWidget);
+      await tester.ensureVisible(find.text('No, abrir soporte'));
+      await tester.tap(find.text('No, abrir soporte'));
+      await tester.pumpAndSettle();
+      expect(opened, isTrue);
+      await tester.ensureVisible(find.text('Sí'));
+      await tester.tap(find.text('Sí'));
+      await tester.pumpAndSettle();
+      expect(find.text('¿Se resolvió tu duda?'), findsNothing);
+      opened = false;
+      await tester.ensureVisible(find.text('Soporte humano'));
+      await tester.tap(find.text('Soporte humano'));
+      await tester.pumpAndSettle();
+      expect(opened, isTrue);
+    },
+  );
+  testWidgets(
+    'Included help renders the model human-support link as a button',
+    (tester) async {
+      final r = StarterFake();
+      final chats = StarterChatsFake()
+        ..answer = 'No tengo ese dato. [Soporte humano](#soporte-humano)';
+      var opened = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: StarterHelpPanel(
+                repository: r,
+                chats: chats,
+                clinic: 'c',
+                onHumanSupport: () => opened = true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byType(CheckboxListTile));
+      await tester.tap(find.byType(CheckboxListTile));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byType(TextField));
+      await tester.enterText(find.byType(TextField), '¿Cómo hago algo?');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Enviar'));
+      await tester.tap(find.text('Enviar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir soporte humano'), findsOneWidget);
+      await tester.ensureVisible(find.text('Abrir soporte humano'));
+      await tester.tap(find.text('Abrir soporte humano'));
+      await tester.pumpAndSettle();
+      expect(opened, isTrue);
     },
   );
   testWidgets(

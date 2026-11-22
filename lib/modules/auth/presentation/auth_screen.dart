@@ -51,7 +51,9 @@ class _AuthScreenState extends State<AuthScreen> {
       child: Scaffold(
       backgroundColor: veiled ? Colors.transparent : null,
       appBar: AppBar(
-        title: const Text('VetDosis Pro'),
+        // Con el velo de acceso la marca ya va en el bloque central: repetirla
+        // en la barra duplicaba «VetDosis Pro» y robaba alto a la pantalla.
+        title: veiled ? null : const Text('VetDosis Pro'),
         backgroundColor: veiled ? Colors.transparent : null,
         scrolledUnderElevation: veiled ? 0 : null,
       ),
@@ -60,11 +62,10 @@ class _AuthScreenState extends State<AuthScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: ListView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
               children: [
-                const SizedBox(height: 8),
                 const VetDosisBrand(large: true),
-                const SizedBox(height: 18),
+                const SizedBox(height: 10),
                 Text(
                   _reset || model?.recoveringPassword == true
                       ? 'Recuperar acceso'
@@ -74,9 +75,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       ? 'Registro de usuario'
                       : 'Inicio de sesión',
                   textAlign: veiled && entering ? TextAlign.center : null,
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   _reset || model?.recoveringPassword == true
                       ? 'Escribe tu correo y te enviaremos un enlace.'
@@ -85,11 +86,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       : _register
                       ? 'Crea tu cuenta para empezar a usar VetDosis Pro.'
                       : 'Entra con tu correo y contraseña para consultar tu clínica.',
+                  textAlign: veiled && entering ? TextAlign.center : null,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 if (!widget.configured) ...[
                   const Text(
                     'El acceso estará disponible cuando conectemos tu clínica.',
@@ -146,14 +148,17 @@ class _AuthScreenState extends State<AuthScreen> {
                 ] else if (model.loadingMemberships) ...[
                   const Center(child: CircularProgressIndicator()),
                 ] else if (!model.signedIn) ...[
-                  Text(
-                    'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
-                    textAlign: veiled ? TextAlign.center : null,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).hintColor,
+                  // En acceso, el subtítulo de arriba ya dice lo mismo. La
+                  // segunda línea solo hace falta en el estilo clásico.
+                  if (!veiled) ...[
+                    Text(
+                      'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).hintColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
+                  ],
                   Form(
                     key: _form,
                     child: Column(
@@ -174,7 +179,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ? null
                               : 'Ingresa un correo válido',
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         if (!_reset)
                           TextFormField(
                             controller: _password,
@@ -205,7 +210,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 18),
                   FilledButton(
                     onPressed: model.busy
                         ? null
@@ -697,7 +702,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                                     model.invite(_email.text, _role);
                                   }
                                 },
-                          icon: const Icon(VetIcons.mail, size: 18),
+                          icon: const Icon(VetIcons.paperPlane, size: 18),
                           label: const Text('Generar código de invitación'),
                         ),
                         if (model.invitation != null) ...[
@@ -736,7 +741,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                 if (!model.offline) ...[
                   VetCard(
                     child: ExpansionTile(
-                      leading: const Icon(VetIcons.plusSquare),
+                      leading: const Icon(VetIcons.plusCircle),
                       title: const Text(
                         'Agregar otra clínica',
                         style: TextStyle(fontWeight: FontWeight.w700),
@@ -802,7 +807,7 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                   VetCallout(
                     text: model.error!,
                     kind: VetBadgeKind.danger,
-                    icon: VetIcons.warningTriangle,
+                    icon: VetIcons.alertTriangle,
                   ),
                 ],
                 if (model.busy) ...[

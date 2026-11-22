@@ -36,7 +36,7 @@ const clinicHighlights = <(String, String)>[
   ),
 ];
 
-/// Lista numerada de [clinicHighlights], segun la referencia de Ale: numeral
+/// Lista numerada de [clinicHighlights], segun la referencia: numeral
 /// grande en degradado de marca y, cada tres, una tarjeta tenida para que la
 /// columna no sea una pila de cajas iguales.
 class ClinicHighlights extends StatelessWidget {

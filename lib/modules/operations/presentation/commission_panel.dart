@@ -132,7 +132,7 @@ class _CommissionPanelState extends State<CommissionPanel> {
             VetCallout(
               text: error!,
               kind: VetBadgeKind.danger,
-              icon: VetIcons.warningTriangle,
+              icon: VetIcons.alertTriangle,
             ),
           ],
           if (schedule != null) ...[

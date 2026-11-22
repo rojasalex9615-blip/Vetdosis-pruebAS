@@ -48,4 +48,10 @@ abstract interface class AiRepository {
 abstract interface class StarterAiRepository {
   Future<Map<String, dynamic>> starterStatus(String clinic);
   Future<String> starterHelp(String clinic, String topic, String operation);
+  Future<String> starterChat(
+    String clinic,
+    String? chat,
+    String message,
+    String operation,
+  );
 }

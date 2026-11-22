@@ -50,6 +50,7 @@ const sectionGroups = [
     'Producto y costos',
     'Inicio guiado',
     'Ayuda y soporte',
+    'Información de la app',
   ]),
 ];
 

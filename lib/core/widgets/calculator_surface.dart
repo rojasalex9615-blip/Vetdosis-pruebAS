@@ -15,11 +15,11 @@ import '../../vet_ui/vet_icons.dart';
     color: const Color(0xFF7BD8EA),
     icon: VetIcons.medicineBottle,
   ),
-  'withdrawals' => (color: const Color(0xFFAE9ACB), icon: VetIcons.clock),
-  'manufacturer' => (
-    color: const Color(0xFF8DADD8),
-    icon: VetIcons.medicineBottle,
+  'withdrawals' => (
+    color: const Color(0xFFAE9ACB),
+    icon: VetIcons.calendarClock,
   ),
+  'manufacturer' => (color: const Color(0xFF8DADD8), icon: VetIcons.book),
   'aviculture' => (color: const Color(0xFF7BCFEA), icon: VetIcons.chicken),
   'incubation' => (color: const Color(0xFFAA94D1), icon: VetIcons.egg),
   'broiler' => (color: const Color(0xFFE0A97B), icon: VetIcons.bird),
@@ -43,7 +43,7 @@ import '../../vet_ui/vet_icons.dart';
     icon: VetIcons.syringe,
   ),
   'conversion' => (color: const Color(0xFF7BD8EA), icon: VetIcons.swapHoriz),
-  _ => (color: const Color(0xFFAC96CF), icon: VetIcons.clock),
+  _ => (color: const Color(0xFFAC96CF), icon: VetIcons.calculator),
 };
 
 /// Persistent tool colors: independent of the user's global palette.
@@ -83,6 +83,18 @@ Color calculatorPastel(String id) => switch (id) {
 Color calculatorAccent(Color identity, Color background) =>
     readableOn(identity, background);
 
+/// Relleno de una accion de calculadora, distinto del lienzo pastel.
+///
+/// Las acciones usaban el mismo pastel que el fondo de la calculadora, asi
+/// que el boton se perdia. En claro se usa el tono de identidad; en oscuro se
+/// mezcla con el lienzo lo justo para separarse y mantener la tinta legible.
+Color calculatorActionColor(BuildContext context, String id) {
+  final identity = calculatorIdentity(id).color;
+  return Theme.of(context).brightness == Brightness.dark
+      ? Color.lerp(Theme.of(context).scaffoldBackgroundColor, identity, .9)!
+      : identity;
+}
+
 /// Insignia de una calculadora: su icono sobre una placa de su propio color.
 ///
 /// El color identifica a la calculadora y es el mismo en claro y en oscuro;
@@ -97,7 +109,7 @@ class CalculatorIcon extends StatelessWidget {
     // propio color, que aclara el fondo. Se compone primero esa placa y el
     // contraste se mide contra ella.
     // La placa se tine al 35%, no al 10%. Con los tonos cargados de antes un
-    // 10% ya se notaba; con la paleta palida que pidio Ale ese 10% dejaba la
+    // 10% ya se notaba; con la paleta palida ese 10% dejaba la
     // placa indistinguible del fondo y el icono parecia flotar suelto.
     final placa = composite(
       identity.color,
@@ -108,7 +120,7 @@ class CalculatorIcon extends StatelessWidget {
     return AccentGlow(
       color: color,
       radius: 12,
-      emphasis: 1, // Preserve the badge glow approved by Ale.
+      emphasis: 1, // Preserve the badge glow.
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -209,10 +221,10 @@ class CalculatorSurface extends StatelessWidget {
             // blanco dejaba el peor caso en 4.51:1, justo en el limite de
             // 4.5:1 que pide el texto: cualquier retoque posterior lo rompia.
             foregroundColor: inkOn(accent),
-            minimumSize: Size(0, referenceStyle ? 58 : 52),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            minimumSize: Size(0, referenceStyle ? 48 : 46),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(referenceStyle ? 32 : 16),
+              borderRadius: BorderRadius.circular(referenceStyle ? 24 : 16),
             ),
           ),
         ),
@@ -387,13 +399,8 @@ class CalculatorActionButton extends StatelessWidget {
       Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
       ? NeuPrimaryButton(
           soft: true,
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Color.lerp(
-                  Theme.of(context).scaffoldBackgroundColor,
-                  calculatorIdentity(id).color,
-                  .25,
-                )!
-              : calculatorPastel(id),
+          dense: true,
+          color: calculatorActionColor(context, id),
           onPressed: onPressed,
           child: DefaultTextStyle.merge(
             textAlign: TextAlign.center,

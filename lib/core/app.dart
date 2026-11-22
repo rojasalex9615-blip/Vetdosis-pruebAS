@@ -1,4 +1,5 @@
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
+import '../modules/about/presentation/app_info_screen.dart';
 import 'widgets/accent_glow.dart';
 import 'widgets/brand_gradient.dart';
 import 'widgets/contrast.dart';
@@ -132,8 +133,7 @@ Color _neuShadow(bool dark) =>
 
 /// Los cinco temas del selector de Ajustes, con nombre y semilla.
 ///
-/// El indice 0 es el verdeazulado, que es el tema por omision: Ale lo pidio
-/// asi el 11 de noviembre, viendo el morado ya aplicado.
+/// El indice 0 es el verdeazulado, el tema por omision.
 ///
 /// Conviene saber que esto revierte lo VISIBLE de 54bddae, que habia pasado
 /// el primario de verde a morado y esta fusionado en main. No se revierte el
@@ -316,7 +316,7 @@ class VetDosisApp extends StatelessWidget {
   ThemeData theme(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final neumorphic = model.settings.visualStyle == 'neu';
-    // Tonos tomados de las maquetas de modo oscuro que entrego Ale: grafito
+    // Tonos del modo oscuro: grafito
     // neutro con matiz violeta. Si se agrega un color oscuro nuevo, debe salir
     // de esta familia (#201F25, #25242A, #2A2932, #2E2D35, #34333B, #39383F) y
     // no del azul marino anterior, o la pantalla se vera de dos tonos.
@@ -348,8 +348,8 @@ class VetDosisApp extends StatelessWidget {
     // deriva y la prueba los verifica.
     //
     // Lo que el neu si conserva son las SUPERFICIES. El fondo, la placa y la
-    // tinta son el ESTILO y salen de las maquetas de Ale; el acento es otra
-    // decision, y es la que el selector debe mandar.
+    // tinta son el ESTILO; el acento es otra decision, y es la que el
+    // selector debe mandar.
     final scheme =
         ColorScheme.fromSeed(
           seedColor: paletteColors[model.settings.palette],
@@ -446,8 +446,8 @@ class VetDosisApp extends StatelessWidget {
       //
       // Lo que NO puede dar el tema es la sombra exterior: ver neuButtonStyle.
       //
-      // El OutlinedButton pierde el trazo y gana la placa, que es lo que Ale
-      // pidio para los cuatro accesos; el degradado sale de la superficie y no
+      // El OutlinedButton pierde el trazo y gana la placa, como los cuatro
+      // accesos; el degradado sale de la superficie y no
       // del primary porque un boton secundario no debe pesar como el primario.
       //
       // El TextButton se queda plano a proposito: es la accion de menor
@@ -525,7 +525,7 @@ class VetDosisApp extends StatelessWidget {
       navigationBarTheme: neumorphic
           // La pestana activa se rellena con el color de resalte en
           // translucido y lleva un halo leve del mismo tono, segun la
-          // referencia de Ale. Antes era una placa clara casi del color de
+          // referencia. Antes era una placa clara casi del color de
           // la barra: en el telefono costaba ver cual estaba elegida.
           ? NavigationBarThemeData(
               backgroundColor: surface,
@@ -1861,40 +1861,26 @@ class CoreShell extends StatelessWidget {
                       ? SupportScreen(
                           repository: support!,
                           member: auth!.active!,
+                          mode: SupportMode.chat,
                           helpPanel:
                               ai is StarterAiRepository && ai != null
                               ? StarterHelpPanel(
                                   repository: ai as StarterAiRepository,
                                   chats: ai!,
                                   clinic: auth!.active!.clinicId,
+                                  onHumanSupport: () => openSupportForm(
+                                    context,
+                                    repository: support!,
+                                    member: auth!.active!,
+                                  ),
                                 )
                               : null,
-                          onAi: ai == null
-                              ? null
-                              : (draft) async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => Scaffold(
-                                        appBar: AppBar(
-                                          title: const Text('Ayuda con IA'),
-                                        ),
-                                        body: SingleChildScrollView(
-                                          padding: const EdgeInsets.all(16),
-                                          child: AiScreen(
-                                            repository: ai!,
-                                            member: auth!.active!,
-                                            initialDraft: draft,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
                         )
                       : const Text(
                           'El soporte requiere cuenta y conexión. Puedes consultar Producto y costos o Inicio guiado sin enviar datos.',
                         )
+                else if (model.screen == 'Información de la app')
+                  const AppInfoScreen()
                 else if (model.screen == 'Ajustes')
                   ...settings(context)
                 else
@@ -2119,7 +2105,7 @@ class CoreShell extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(VetIcons.brush, size: 20, color: VetColors.violet),
+                const Icon(VetIcons.palette, size: 20, color: VetColors.violet),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('Estilo visual', style: theme.textTheme.titleLarge),
@@ -2177,7 +2163,7 @@ class CoreShell extends StatelessWidget {
               decoration: const InputDecoration(
                 labelText: 'Apariencia',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(VetIcons.sparkles, size: 20),
+                prefixIcon: Icon(VetIcons.sun, size: 20),
               ),
               items: const [
                 DropdownMenuItem(
@@ -2578,6 +2564,7 @@ class _ModuleSearchState extends State<_ModuleSearch> {
     'Pendientes del equipo',
     'Asistente IA',
     'Ayuda y soporte',
+    'Información de la app',
     'Ajustes',
     'Respaldo',
   ];

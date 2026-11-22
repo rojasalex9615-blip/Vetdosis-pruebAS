@@ -260,7 +260,7 @@ class _AvicultureScreenState extends State<AvicultureScreen> {
                 if (mode == 'equipo') ...[
                   const SizedBox(height: 12),
                   const Text(
-                    'Equipos: elige el aplicable al lote. Las etapas de estos apuntes son distintas de las bandas por semanas; se conservan tal como llegaron.',
+                    'Equipos: elige el aplicable al lote. Las etapas de esta referencia son distintas de las bandas por semanas.',
                   ),
                   for (final p in catalog.equipment) ...[
                     parameter(p),
@@ -307,7 +307,7 @@ class _AvicultureScreenState extends State<AvicultureScreen> {
                   ],
                 ),
                 const Text(
-                  'Fase 2 pendiente: redistribución, vínculo con medicación en agua/alimento y retiro del huevo. Estos cálculos no crean tratamientos.',
+                  'Estos cálculos no crean tratamientos ni registros de granja.',
                 ),
               ],
             ),

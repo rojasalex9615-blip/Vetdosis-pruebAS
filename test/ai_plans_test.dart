@@ -362,11 +362,12 @@ void main() {
         find.text('Usar chats compartidos autorizados para mi rol'),
         findsNothing,
       );
-      expect(find.text('Solicitar respuesta'), findsOneWidget);
-      final button = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'Solicitar respuesta'),
+      // El envío es el botón circular del composer; sin autorización,
+      // proveedor y modelo no tiene acción.
+      final send = tester.widget<InkWell>(
+        find.byKey(const ValueKey('ai-send')),
       );
-      expect(button.onPressed, isNull);
+      expect(send.onTap, isNull);
     },
   );
 
@@ -400,34 +401,33 @@ void main() {
     },
   );
 
-  testWidgets(
-    'A support/draft query does not share the app chat history',
-    (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: AiScreen(
-                repository: TwoChatFake(),
-                member: personal,
-                initialDraft: 'Ayúdame con un problema de uso de VetDosis Pro.',
-              ),
+  testWidgets('A support/draft query does not share the app chat history', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: AiScreen(
+              repository: TwoChatFake(),
+              member: personal,
+              initialDraft: 'Ayúdame con un problema de uso de VetDosis Pro.',
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Historial'), findsNothing);
-      expect(find.text('Nuevo chat'), findsNothing);
-      expect(find.byType(ChoiceChip), findsNothing);
-      expect(find.text('Chat privado'), findsNothing);
-      expect(find.text('Chat compartido'), findsNothing);
-    },
-  );
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Historial'), findsNothing);
+    expect(find.text('Nuevo chat'), findsNothing);
+    expect(find.byType(ChoiceChip), findsNothing);
+    expect(find.text('Chat privado'), findsNothing);
+    expect(find.text('Chat compartido'), findsNothing);
+  });
 
   testWidgets(
     'Assistant history leaves out the included help and support drafts',
@@ -480,45 +480,71 @@ void main() {
   );
 
   testWidgets(
-    'On a phone the history opens as a sliding side panel',
+    'Without an open chat the screen invites to start a conversation',
     (tester) async {
-      tester.view.physicalSize = const Size(400, 800);
+      tester.view.physicalSize = const Size(400, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final repository = TwoChatFake();
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
-              child: AiScreen(repository: repository, member: personal),
+              child: AiScreen(repository: AiFake(), member: personal),
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
-      // Narrow mode does not show the rail inline; the chips are gone too.
-      expect(find.byType(ChoiceChip), findsNothing);
-      expect(find.byType(ListTile), findsNothing);
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Historial'));
-      await tester.pumpAndSettle();
-      // The panel lists the assistant history.
-      expect(find.byType(ListTile), findsNWidgets(2));
-      await tester.tap(find.text('Chat compartido'));
-      await tester.pumpAndSettle();
-      expect(repository.opened, 'chat-shared');
-      expect(find.text('Mensaje del chat compartido'), findsOneWidget);
+      expect(find.textContaining('Inicia una conversación'), findsOneWidget);
+      expect(find.text('Nueva Conversación'), findsOneWidget);
+      expect(find.byKey(const ValueKey('ai-send')), findsNothing);
+      expect(tester.takeException(), isNull);
     },
   );
 
-  test('Opening a direct chat resolves it without adding it to the history', () async {
-    final vm = AiViewModel(MixedChatsFake(), 'personal');
-    await vm.load(chat: 'chat-support');
-    expect(vm.selected, 'chat-support');
-    expect(vm.chatById('chat-support')?['title'], 'Ayuda de soporte');
-    expect(vm.history.map((c) => c['id']), isNot(contains('chat-support')));
-    expect(vm.history.map((c) => c['id']), isNot(contains('chat-help')));
-    expect(vm.history.map((c) => c['id']), contains('chat-real'));
-    vm.dispose();
+  testWidgets('On a phone the history opens as a sliding side panel', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = TwoChatFake();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: AiScreen(repository: repository, member: personal),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Narrow mode does not show the rail inline; the chips are gone too.
+    expect(find.byType(ChoiceChip), findsNothing);
+    expect(find.byType(ListTile), findsNothing);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Historial'));
+    await tester.pumpAndSettle();
+    // The panel lists the assistant history.
+    expect(find.byType(ListTile), findsNWidgets(2));
+    await tester.tap(find.text('Chat compartido'));
+    await tester.pumpAndSettle();
+    expect(repository.opened, 'chat-shared');
+    expect(find.text('Mensaje del chat compartido'), findsOneWidget);
   });
+
+  test(
+    'Opening a direct chat resolves it without adding it to the history',
+    () async {
+      final vm = AiViewModel(MixedChatsFake(), 'personal');
+      await vm.load(chat: 'chat-support');
+      expect(vm.selected, 'chat-support');
+      expect(vm.chatById('chat-support')?['title'], 'Ayuda de soporte');
+      expect(vm.history.map((c) => c['id']), isNot(contains('chat-support')));
+      expect(vm.history.map((c) => c['id']), isNot(contains('chat-help')));
+      expect(vm.history.map((c) => c['id']), contains('chat-real'));
+      vm.dispose();
+    },
+  );
 }
