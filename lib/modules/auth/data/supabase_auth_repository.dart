@@ -7,6 +7,8 @@ import '../../offline/domain/offline_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/auth_repository.dart';
 import '../domain/clinic_membership.dart';
+import '../domain/personal_profile.dart';
+import '../domain/personal_profile_repository.dart';
 
 class SupabaseAuthRepository
     implements
@@ -15,6 +17,7 @@ class SupabaseAuthRepository
         PasswordRecoveryRepository,
         TeamRepository,
         TeamDutyRepository,
+        PersonalProfileRepository,
         PermissionRepository {
   SupabaseAuthRepository(this.client, {this.existingSchema = false});
   final bool existingSchema;
@@ -212,6 +215,39 @@ class SupabaseAuthRepository
       if (error.code == 'PGRST202') return null;
       rethrow;
     }
+  }
+
+  @override
+  Future<PersonalProfile?> read(String userId) async {
+    final data = await client.rpc(
+      'personal_profile_get',
+      params: {'p_user': userId},
+    );
+    if (data == null) return null;
+    return PersonalProfile.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  @override
+  Future<PersonalProfile> save(PersonalProfile profile) async {
+    final data = await client.rpc(
+      'personal_profile_save',
+      params: {'p_profile': profile.toJson(), 'p_revision': profile.revision},
+    );
+    return PersonalProfile.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  @override
+  Future<List<PersonalProfile>> teamProfiles(String clinicId) async {
+    final rows =
+        await client.rpc(
+              'personal_profile_team',
+              params: {'p_clinic': clinicId},
+            )
+            as List;
+    return [
+      for (final row in rows)
+        PersonalProfile.fromJson(Map<String, dynamic>.from(row as Map)),
+    ];
   }
 
   @override

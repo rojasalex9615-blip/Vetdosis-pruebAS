@@ -1,4 +1,8 @@
 import 'team_duty_screen.dart';
+import '../domain/personal_profile.dart';
+import '../domain/personal_profile_repository.dart';
+import 'profile_screen.dart';
+import '../../../vet_ui/vet_icons.dart';
 import 'package:flutter/material.dart';
 import '../domain/auth_repository.dart';
 import '../domain/clinic_membership.dart';
@@ -14,6 +18,7 @@ class TeamScreen extends StatefulWidget {
 
 class _TeamScreenState extends State<TeamScreen> {
   Map<String, dynamic>? snapshot;
+  List<PersonalProfile> profiles = const [];
   String? error;
   bool busy = false;
   TeamRepository get repository => widget.model.repository as TeamRepository;
@@ -40,7 +45,22 @@ class _TeamScreenState extends State<TeamScreen> {
     });
     try {
       final result = await repository.team(widget.clinic.clinicId);
-      if (mounted && allowed) setState(() => snapshot = result);
+      List<PersonalProfile> team = const [];
+      if (repository is PersonalProfileRepository) {
+        try {
+          team = await (repository as PersonalProfileRepository).teamProfiles(
+            widget.clinic.clinicId,
+          );
+        } catch (_) {
+          team = const [];
+        }
+      }
+      if (mounted && allowed) {
+        setState(() {
+          snapshot = result;
+          profiles = team;
+        });
+      }
     } catch (_) {
       if (mounted) {
         setState(
@@ -137,6 +157,36 @@ class _TeamScreenState extends State<TeamScreen> {
                     ),
                     child: const Text('Horarios, faltas y coberturas'),
                   ),
+                if (profiles.isNotEmpty) ...[
+                  const Text('Perfiles del equipo'),
+                  for (final profile in profiles)
+                    Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: profile.photoUrl == null
+                              ? null
+                              : NetworkImage(profile.photoUrl!),
+                          child: profile.photoUrl == null
+                              ? const Icon(VetIcons.userCircle)
+                              : null,
+                        ),
+                        title: Text(
+                          profile.displayName.isEmpty
+                              ? 'Sin nombre'
+                              : profile.displayName,
+                        ),
+                        subtitle: const Text('Ver perfil'),
+                        trailing: const Icon(VetIcons.chevronRight, size: 18),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                PersonalProfileViewScreen(profile: profile),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
                 const Text('Integrantes'),
                 for (final m in snapshot?['members'] as List? ?? [])
                   Card(
