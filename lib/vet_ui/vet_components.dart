@@ -775,10 +775,11 @@ class VetDataRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Sin Flexible: el valor no comparte el ancho con la etiqueta, así
-          // que las cifras quedan pegadas al borde derecho de la fila en vez
-          // de a media tarjeta.
-          Text(value, textAlign: TextAlign.right, style: valueStyle),
+          // El valor comparte el ancho para poder partirse en vez de desbordar;
+          // el texto se alinea a la derecha, así las cifras quedan en el borde.
+          Expanded(
+            child: Text(value, textAlign: TextAlign.right, style: valueStyle),
+          ),
         ],
       ),
     );
