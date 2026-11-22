@@ -146,4 +146,21 @@ void main() {
     expect(find.textContaining('productos comerciales'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('El vademécum cabe en un teléfono estrecho', (tester) async {
+    tester.view.physicalSize = const Size(320 * 3, 640 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumScreen(catalog: _EmptyCatalog(), pautas: catalog),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
 }
