@@ -11,6 +11,7 @@ import '../domain/clinical_record_fields.dart';
 import 'preventive_booklet.dart';
 import 'preventive_screen.dart';
 import '../domain/preventive_repository.dart';
+import '../../../core/widgets/workspace_panel.dart';
 import 'patient_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,11 +22,9 @@ import '../domain/patient_repository.dart';
 import 'patient_view_model.dart';
 import 'patient_form.dart';
 import 'event_form.dart';
-import 'signature_pad.dart'
+import 'signature_pad.dart';
 import 'weight_chart.dart';
-import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
-import '../../../vet_ui/vet_theme.dart';
 
 class PatientsScreen extends StatefulWidget {
   const PatientsScreen({
@@ -280,20 +279,20 @@ class _PatientsScreenState extends State<PatientsScreen>
             runSpacing: 8,
             children: [
               if (model.access.createPatient)
-                VetActionButton(
-                  label: 'Nuevo paciente',
-                  icon: VetIcons.paw,
+                FilledButton.icon(
                   onPressed: model.busy ? null : create,
+                  icon: const Icon(VetIcons.paw),
+                  label: const Text('Nuevo paciente'),
                 ),
-              VetSecondaryButton(
-                label: 'Actualizar',
-                icon: VetIcons.refresh,
+              OutlinedButton.icon(
                 onPressed: model.busy
                     ? null
                     : () async {
                         await model.load();
                         await activity?.load();
                       },
+                icon: const Icon(VetIcons.refresh),
+                label: const Text('Actualizar'),
               ),
             ],
           ),
@@ -303,9 +302,7 @@ class _PatientsScreenState extends State<PatientsScreen>
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 model.error!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ),
           if (activity != null) ...[
@@ -314,15 +311,12 @@ class _PatientsScreenState extends State<PatientsScreen>
               snapshot == null
                   ? 'Actividad de pacientes'
                   : 'Actividad · ${snapshot.day} · ${snapshot.timezone}',
-              style: Theme.of(context).textTheme.titleMedium,
             ),
             if (activity!.busy) const LinearProgressIndicator(),
-            if (activity!.error != null)
-              Text(activity!.error!, style: Theme.of(context).textTheme.bodySmall),
+            if (activity!.error != null) Text(activity!.error!),
             if (snapshot != null) ...[
-              Text(
+              const Text(
                 'Incluye hospitalización activa y atenciones pendientes de días anteriores. Contadores de pacientes cargados, sin duplicados.',
-                style: Theme.of(context).textTheme.bodySmall,
               ),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -365,14 +359,10 @@ class _PatientsScreenState extends State<PatientsScreen>
             onChanged: (s) => setState(() => query = patientSearchText(s)),
           ),
           if (model.patients.isEmpty && !model.busy && model.error == null)
-            Padding(
-              padding: const EdgeInsets.all(20),
+            const Padding(
+              padding: EdgeInsets.all(20),
               child: Text(
                 'Todavía no hay pacientes registrados en esta clínica.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
               ),
             ),
           if (!model.busy &&
@@ -403,28 +393,22 @@ class _PatientsScreenState extends State<PatientsScreen>
             const SizedBox(height: 12),
             Text(
               '${matches.length} coincidencias de ${model.patients.length} pacientes cargados',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
             ),
             if (matches.isEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   'No hay pacientes que coincidan con la búsqueda y la especie.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
                 ),
               ),
-              VetSecondaryButton(
-                label: 'Limpiar búsqueda y filtros',
+              TextButton(
                 onPressed: () => setState(() {
                   search.clear();
                   query = '';
                   species = null;
                   activityFilter = null;
                 }),
+                child: const Text('Limpiar búsqueda y filtros'),
               ),
             ],
           ],
@@ -481,7 +465,7 @@ class _PatientsScreenState extends State<PatientsScreen>
               ))
                 Text(
                   'Alergia registrada: ${allergy.data['substance']} · ${allergy.data['reaction']}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style: TextStyle(
                     color: Theme.of(context).colorScheme.error,
                     fontWeight: FontWeight.bold,
                   ),
@@ -521,12 +505,12 @@ class _PatientsScreenState extends State<PatientsScreen>
               ),
             if (model.access.clinical) ...[
               if (model.access.canAdd(EventKind.soap))
-                VetSecondaryButton(
-                  label: 'Registrar historia clínica',
-                  icon: VetIcons.clipboardList,
+                OutlinedButton.icon(
                   onPressed: model.busy
                       ? null
                       : () => add(EventKind.soap, history: true),
+                  icon: const Icon(VetIcons.clipboardList),
+                  label: const Text('Registrar historia clínica'),
                 ),
               for (final e in patientTimeline(model.events).where(
                 (e) =>
@@ -549,9 +533,11 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
               PreventiveBooklet(events: model.events),
               if (widget.repository is PreventiveRepository)
-                VetSecondaryButton(
-                  label: 'Abrir carnet · comprobantes y próximas citas',
-                  icon: VetIcons.book,
+                OutlinedButton.icon(
+                  icon: const Icon(VetIcons.book),
+                  label: const Text(
+                    'Abrir carnet · comprobantes y próximas citas',
+                  ),
                   onPressed: model.busy
                       ? null
                       : () async {
@@ -575,9 +561,9 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
 
               if (widget.onOpenLab != null)
-                VetSecondaryButton(
-                  label: 'Analíticas de laboratorio',
-                  icon: Icons.science_outlined,
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.science_outlined),
+                  label: const Text('Analíticas de laboratorio'),
                   onPressed: model.busy
                       ? null
                       : () async {
@@ -587,14 +573,14 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
 
               if (widget.onOpenClinical != null)
-                VetSecondaryButton(
-                  label: 'Casos clínicos / hoja quirúrgica',
+                OutlinedButton(
                   onPressed: model.busy
                       ? null
                       : () async {
                           await widget.onOpenClinical!(patient);
                           if (mounted) await model.select(patient);
                         },
+                  child: const Text('Casos clínicos / hoja quirúrgica'),
                 ),
               const SizedBox(height: 16),
               Wrap(
@@ -603,9 +589,9 @@ class _PatientsScreenState extends State<PatientsScreen>
                 children: [
                   for (final kind in EventKind.values)
                     if (model.access.canAdd(kind))
-                      VetSecondaryButton(
-                        label: 'Agregar ${kind.label.toLowerCase()}',
+                      OutlinedButton(
                         onPressed: model.busy ? null : () => add(kind),
+                        child: Text('Agregar ${kind.label.toLowerCase()}'),
                       ),
                 ],
               ),
@@ -624,7 +610,6 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ),
                 onChanged: (value) => setState(() => historyQuery = value),
               ),
-              const SizedBox(height: 12),
               DropdownButtonFormField<EventKind?>(
                 key: ValueKey(
                   'history-kind:${patient.id}:${historyKind?.name}',
@@ -642,7 +627,6 @@ class _PatientsScreenState extends State<PatientsScreen>
                 ],
                 onChanged: (value) => setState(() => historyKind = value),
               ),
-              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 children: [
@@ -660,30 +644,21 @@ class _PatientsScreenState extends State<PatientsScreen>
                   )),
                 ],
               ),
-              Text(
+              const Text(
                 'Orden por fecha clínica. Fechas preventivas desconocidas: se usa la fecha de registro. El motivo agrupa consultas, sin unir ni modificar documentos.',
-                style: Theme.of(context).textTheme.bodySmall,
               ),
               WeightChart(events: model.events),
               const Divider(height: 32),
               if (model.events.isEmpty && !model.busy)
-                Text(
-                  'Sin entradas clínicas registradas.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                const Text('Sin entradas clínicas registradas.'),
               if (model.events.isNotEmpty &&
                   patientTimeline(
                     model.events,
                     query: historyQuery,
                     kind: historyKind,
                   ).isEmpty)
-                Text(
+                const Text(
                   'Sin coincidencias para estos filtros; el expediente original se conserva.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
                 ),
               for (final event in patientTimeline(
                 model.events,
@@ -692,30 +667,30 @@ class _PatientsScreenState extends State<PatientsScreen>
                 oldestFirst: historyOldestFirst,
                 byReason: historyByReason,
               ))
-                VetCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.kind == EventKind.preventive
-                            ? '${event.kind.label} · ${preventiveDateLabel(event.data)}'
-                            : '${event.data['record_type'] == 'clinical_history'
-                                  ? 'Historia clínica'
-                                  : event.data['record_type'] == 'care_discharge'
-                                  ? 'Cierre de consulta e indicaciones'
-                                  : event.kind.label} · ${event.data['date']}',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      if (event.formDocumentId != null ||
-                          event.clinicalCaseId != null)
+                WorkspacePanel(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          'Vinculado a un formato clínico · consulta el documento y sus anexos en Casos clínicos.',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          event.kind == EventKind.preventive
+                              ? '${event.kind.label} · ${preventiveDateLabel(event.data)}'
+                              : '${event.data['record_type'] == 'clinical_history'
+                                    ? 'Historia clínica'
+                                    : event.data['record_type'] == 'care_discharge'
+                                    ? 'Cierre de consulta e indicaciones'
+                                    : event.kind.label} · ${event.data['date']}',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        if (event.formDocumentId != null ||
+                            event.clinicalCaseId != null)
+                          Text(
+                            'Vinculado a un formato clínico · consulta el documento y sus anexos en Casos clínicos.',
+                          ),
                         ...switch (event.kind) {
                           EventKind.soap => [
-                            Text('Motivo: ${event.data['reason']}', style: Theme.of(context).textTheme.bodyMedium),
+                            Text('Motivo: ${event.data['reason']}'),
                             for (final pair in <(String, String)>[
                               ('subjective', 'Subjetivo'),
                               ('objective', 'Objetivo'),
@@ -723,46 +698,46 @@ class _PatientsScreenState extends State<PatientsScreen>
                               ('plan', 'Plan'),
                             ])
                               if ((event.data[pair.$1] as String).isNotEmpty)
-                                Text('${pair.$2}: ${event.data[pair.$1]}', style: Theme.of(context).textTheme.bodyMedium),
+                                Text('${pair.$2}: ${event.data[pair.$1]}'),
                           ],
-                          EventKind.weight => [Text('${event.data['kg']} kg', style: Theme.of(context).textTheme.bodyMedium)],
+                          EventKind.weight => [Text('${event.data['kg']} kg')],
                           EventKind.allergy => [
                             Text(
                               '${event.data['substance']} · ${event.data['reaction']}',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Text(event.data['notes'] as String? ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                            Text(event.data['notes'] as String? ?? ''),
                           ],
                           EventKind.preventive => [
-                            Text(preventiveOriginLabel(event.data), style: Theme.of(context).textTheme.bodyMedium),
+                            Text(preventiveOriginLabel(event.data)),
                             if ('${event.data['coverage'] ?? ''}'.isNotEmpty)
                               Text(
                                 'Coberturas / tipo: ${event.data['coverage']}',
-                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             Text(
                               '${event.data['type']} · ${event.data['product']}',
-                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
-                            Text('Lote: ${event.data['batch'] ?? 'Pendiente'}', style: Theme.of(context).textTheme.bodyMedium),
+                            Text('Lote: ${event.data['batch'] ?? 'Pendiente'}'),
                             if (event.data['next_date'] != null) ...[
-                              Text('Próxima fecha: ${event.data['next_date']}', style: Theme.of(context).textTheme.bodyMedium),
+                              Text('Próxima fecha: ${event.data['next_date']}'),
                               if (owner != null)
-                                VetSecondaryButton(
-                                  label: 'Preparar recordatorio por WhatsApp',
-                                  icon: VetIcons.chat,
+                                TextButton.icon(
                                   onPressed: () => reminder(owner!, event),
+                                  icon: const Icon(VetIcons.chat),
+                                  label: const Text(
+                                    'Preparar recordatorio por WhatsApp',
+                                  ),
                                 ),
                             ],
-                            Text(event.data['notes'] as String? ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                            Text(event.data['notes'] as String? ?? ''),
                           ],
                           EventKind.consent => [
-                            Text(event.data['procedure'] as String, style: Theme.of(context).textTheme.bodyMedium),
-                            Text('Tutor firmante: ${event.data['signer']}', style: Theme.of(context).textTheme.bodyMedium),
-                            Text(event.data['text'] as String, style: Theme.of(context).textTheme.bodyMedium),
+                            Text(event.data['procedure'] as String),
+                            Text('Tutor firmante: ${event.data['signer']}'),
+                            Text(event.data['text'] as String),
                             SizedBox(
                               height: 120,
                               child: CustomPaint(
@@ -793,14 +768,10 @@ class _PatientsScreenState extends State<PatientsScreen>
                   ),
                 ),
             ] else
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   'Tu rol permite consultar datos generales del paciente. El expediente clínico requiere acceso de MVZ, admin o auxiliar.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ),
           // Espacio libre al final para que el botón flotante del

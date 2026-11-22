@@ -16,8 +16,6 @@ import '../domain/prescribing_repository.dart';
 import '../domain/prescribing_models.dart';
 import 'prescribing_view_model.dart';
 import 'rx_entry_screen.dart';
-import '../../../vet_ui/vet_components.dart';
-import '../../../vet_ui/vet_theme.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 class PrescribingScreen extends StatefulWidget {
@@ -263,103 +261,69 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
   }
 
   List<Widget> standingPanel() => [
-    const SizedBox(height: 16),
-    Text('Recetas ordinarias · casos seleccionados', style: Theme.of(context).textTheme.titleMedium),
-    const SizedBox(height: 4),
-    Text(
+    const Text('Recetas ordinarias · casos seleccionados'),
+    const Text(
       'Avisos dentro de la app. Se actualizan cada 30 segundos mientras esta pantalla permanece abierta; no son notificaciones con la app cerrada.',
-      style: Theme.of(context).textTheme.bodySmall,
     ),
-    if (model.standingError != null)
-      Text(model.standingError!, style: Theme.of(context).textTheme.bodyMedium),
-    const SizedBox(height: 12),
+    if (model.standingError != null) Text(model.standingError!),
     if (model.canOfferStanding)
-      VetActionButton(
-        label: 'Dejar a cargo',
+      FilledButton(
         onPressed: offerStanding,
-        fullWidth: true,
+        child: const Text('Dejar a cargo'),
       ),
     if (!model.busy &&
         model.standingOffers.any(
           (d) =>
               d['created_by'] == widget.member.userId && d['revoked'] != true,
-        )) ...[
-      const SizedBox(height: 8),
-      VetSecondaryButton(
-        label: 'Retomar revisión',
+        ))
+      OutlinedButton(
         onPressed: resumeStanding,
-        fullWidth: true,
+        child: const Text('Retomar revisión'),
       ),
-    ],
     for (final d in model.standingOffers)
-      VetCard(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              d['revoked'] == true
-                  ? 'Revocada'
-                  : d['active'] == true
-                      ? 'Activa y aceptada'
-                      : d['available'] == true
-                          ? 'Pendiente de aceptación'
-                          : 'No vigente',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Caso: ${d['case_id']}\nPersona: ${d['recipient_id']}\nVence: ${d['valid_until']}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            if (d['recipient_id'] == widget.member.userId &&
-                d['available'] == true &&
-                d['accepted'] != true) ...[
-              const SizedBox(height: 8),
-              VetSecondaryButton(
-                label: 'Aceptar',
-                onPressed: () => acceptStanding(d),
-                fullWidth: true,
-              ),
-            ],
-          ],
+      Card(
+        child: ListTile(
+          title: Text(
+            d['revoked'] == true
+                ? 'Revocada'
+                : d['active'] == true
+                ? 'Activa y aceptada'
+                : d['available'] == true
+                ? 'Pendiente de aceptación'
+                : 'No vigente',
+          ),
+          subtitle: Text(
+            'Caso: ${d['case_id']}\nPersona: ${d['recipient_id']}\nVence: ${d['valid_until']}',
+          ),
+          trailing:
+              d['recipient_id'] == widget.member.userId &&
+                  d['available'] == true &&
+                  d['accepted'] != true
+              ? TextButton(
+                  onPressed: () => acceptStanding(d),
+                  child: const Text('Aceptar'),
+                )
+              : null,
         ),
       ),
-    const SizedBox(height: 16),
     Text(
       'Revisiones pendientes: ${model.standingEvents.where((e) => e['reviewed'] != true).length}',
-      style: Theme.of(context).textTheme.titleMedium,
     ),
-    const SizedBox(height: 8),
     for (final e in model.standingEvents)
-      VetCard(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${e['patient_name']} · ${e['reviewed'] == true ? 'Revisada' : 'Pendiente de revisión posterior'}',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Emitida por ${e['recipient_id']} · ${e['created_at']}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            if (e['reviewed'] != true)
-              VetSecondaryButton(
-                label: 'Revisar',
-                onPressed: model.busy ? null : () => postReview(e),
-              )
-            else
-              const Icon(VetIcons.check, color: VetColors.success),
-          ],
+      Card(
+        child: ListTile(
+          title: Text(
+            '${e['patient_name']} · ${e['reviewed'] == true ? 'Revisada' : 'Pendiente de revisión posterior'}',
+          ),
+          subtitle: Text(
+            'Emitida por ${e['recipient_id']} · ${e['created_at']}',
+          ),
+          trailing: e['reviewed'] == true
+              ? const Icon(VetIcons.check)
+              : TextButton(
+                  onPressed: model.busy ? null : () => postReview(e),
+                  child: const Text('Revisar'),
+                ),
         ),
       ),
   ];
@@ -1432,25 +1396,18 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
           'Recetas y control de medicamentos',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
-        const SizedBox(height: 8),
-        Text(
+        const Text(
           'Aplicar, reportar, autorizar y emitir son actos separados. El puesto no sustituye la habilitación profesional ni los permisos necesarios.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
         ),
-        const SizedBox(height: 12),
-        VetSecondaryButton(
-          label: 'Actualizar',
-          icon: VetIcons.refresh,
+        OutlinedButton.icon(
           onPressed: model.busy ? null : () => model.load(),
+          icon: const Icon(VetIcons.refresh),
+          label: const Text('Actualizar'),
         ),
-        const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           key: ValueKey('prescribing-section-$section'),
           initialValue: section,
           decoration: const InputDecoration(labelText: 'Apartado'),
-          isExpanded: true,
           items: [
             for (final s in [
               'Perfil',
@@ -1465,17 +1422,16 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
           onChanged: model.busy ? null : (v) => setState(() => section = v!),
         ),
         if (model.standingEvents.any((e) => e['reviewed'] != true))
-          VetSecondaryButton(
-            label:
-                '${model.standingEvents.where((e) => e['reviewed'] != true).length} recetas pendientes de revisión posterior',
-            icon: VetIcons.bell,
+          TextButton.icon(
             onPressed: () => setState(() => section = 'A cargo'),
+            icon: const Icon(VetIcons.bell),
+            label: Text(
+              '${model.standingEvents.where((e) => e['reviewed'] != true).length} recetas pendientes de revisión posterior',
+            ),
           ),
         if (model.busy) const LinearProgressIndicator(),
-        if (model.error != null)
-          Text(model.error!, style: Theme.of(context).textTheme.bodyMedium),
-        if (['Recetas', 'Medicación'].contains(section)) ...[
-          const SizedBox(height: 12),
+        if (model.error != null) Text(model.error!),
+        if (['Recetas', 'Medicación'].contains(section))
           DropdownButtonFormField<String>(
             key: ValueKey('case-${model.caseId}-${model.cases.length}'),
             initialValue: model.caseId,
@@ -1489,77 +1445,59 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     '${c.patientName} · ${c.title}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
             ],
             onChanged: model.busy ? null : (id) => model.load(selectedCase: id),
           ),
-        ],
         if (section == 'Perfil') ...[
-          const SizedBox(height: 16),
           Text(
             model.ownProfile == null
                 ? 'Perfil pendiente'
                 : '${model.ownProfile!['name']} · cédula ${model.ownProfile!['license']} · versión ${model.ownProfile!['version']}',
-            style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 8),
           Text(
             model.professional
                 ? 'Habilitación profesional vigente en servidor'
                 : 'Habilitación profesional pendiente o no vigente. Capturar una cédula no la concede.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 12),
-          VetActionButton(
-            label: 'Editar mis datos / firma en nueva versión',
+          FilledButton(
             onPressed: model.busy ? null : profile,
-            fullWidth: true,
+            child: const Text('Editar mis datos / firma en nueva versión'),
           ),
-          if (model.professional && !model.prescriptionKnown) ...[
-            const SizedBox(height: 8),
-            VetSecondaryButton(
-              label: 'Compartir datos, firma o permisos ordinarios',
+          if (model.professional && !model.prescriptionKnown)
+            OutlinedButton(
               onPressed: model.busy ? null : delegate,
-              fullWidth: true,
+              child: const Text('Compartir datos, firma o permisos ordinarios'),
             ),
-          ],
           for (final d in model.delegations)
-            VetCard(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${model.prescriptionKnown ? 'Histórico: no habilita el nuevo flujo de recetas.\n' : ''}Receptor: ${d['recipient_id']}\nDatos: ${d['use_data']} · Firma: ${d['use_signature']}\nPreparar ordinaria: ${d['prepare_ordinary']} · Emitir ordinaria: ${d['issue_ordinary']}\nVigencia: ${d['valid_until']} · ${d['revoked'] == true ? 'Revocado' : 'Sin revocación registrada'}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  if (d['created_by'] == widget.member.userId &&
-                      d['revoked'] != true) ...[
-                    const SizedBox(height: 8),
-                    VetSecondaryButton(
-                      label: 'Revocar permiso',
-                      onPressed: model.busy ? null : () => revoke(d),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${model.prescriptionKnown ? 'Histórico: no habilita el nuevo flujo de recetas.\n' : ''}Receptor: ${d['recipient_id']}\nDatos: ${d['use_data']} · Firma: ${d['use_signature']}\nPreparar ordinaria: ${d['prepare_ordinary']} · Emitir ordinaria: ${d['issue_ordinary']}\nVigencia: ${d['valid_until']} · ${d['revoked'] == true ? 'Revocado' : 'Sin revocación registrada'}',
                     ),
+                    if (d['created_by'] == widget.member.userId &&
+                        d['revoked'] != true)
+                      TextButton(
+                        onPressed: model.busy ? null : () => revoke(d),
+                        child: const Text('Revocar permiso'),
+                      ),
                   ],
-                ],
+                ),
               ),
             ),
         ],
         if (section == 'A cargo') ...standingPanel(),
         if (section == 'Recetas') ...[
           if (model.products.isEmpty)
-            Text(
+            const Text(
               'No hay productos con clasificación publicada. Se pueden completar perfiles; faltan los datos de productos para preparar recetas.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
             ),
-          const SizedBox(height: 12),
-          VetActionButton(
-            label: 'Nueva receta del caso',
+          FilledButton(
             onPressed:
                 model.busy ||
                     model.caseId == null ||
@@ -1567,94 +1505,99 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     !model.canPreparePrescription
                 ? null
                 : createRx,
-            fullWidth: true,
+            child: const Text('Nueva receta del caso'),
           ),
-          const SizedBox(height: 16),
           for (final r in model.prescriptions.where(
             (r) => model.caseId == null || r['case_id'] == model.caseId,
           ))
-            VetCard(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${r['patient_name']} · ${r['controlled'] == true ? 'Restringida' : 'Ordinaria'} · ${rxState(r['state'])}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Folio capturado: ${r['official_folio'] == '' ? 'pendiente / no aplica' : r['official_folio']}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (r['state'] != 'awaiting_authorization')
-                        VetSecondaryButton(
-                          label:
-                              r['state'] == 'draft' ? 'Editar borrador' : 'Ver PDF / confirmar',
-                          onPressed:
-                              model.busy ||
-                                  (r['state'] == 'draft' &&
-                                      model.prescriptionKnown &&
-                                      !model.prescriptionAction(r, 'edit'))
-                              ? null
-                              : () => openRx(r),
-                        ),
-                      if (model.prescriptionAction(r, 'sign'))
-                        VetSecondaryButton(
-                          label: 'Firmar consulta realizada',
-                          onPressed: () => signConsultation(r),
-                        ),
-                      if (model.prescriptionAction(r, 'prepare_standing'))
-                        VetSecondaryButton(
-                          label: 'Preparar con autorización temporal',
-                          onPressed: () => prepare(r, standing: true),
-                        ),
-                      if (model.prescriptionAction(r, 'authorize'))
-                        VetSecondaryButton(
-                          label: 'Revisar y autorizar indicaciones',
-                          onPressed: () => authorizePrescription(r),
-                        ),
-                      if (model.prescriptionAction(r, 'correct'))
-                        VetSecondaryButton(
-                          label: 'Devolver a borrador',
-                          onPressed: () => returnPrescription(r),
-                        ),
-                      if (r['state'] == 'draft' &&
-                          (!model.prescriptionKnown ||
-                              model.prescriptionAction(r, 'prepare')))
-                        VetSecondaryButton(
-                          label: model.prescriptionKnown
-                              ? 'Preparar para autorización'
-                              : 'Preparar PDF con identidad y firma',
-                          onPressed: model.busy ? null : () => prepare(r),
-                        ),
-                      if (r['state'] == 'issued' &&
-                          r['responsible_id'] == widget.member.userId &&
-                          model.canScheduleMedication)
-                        VetSecondaryButton(
-                          label: 'Programar en hospitalización',
-                          onPressed: model.busy ? null : () => schedule(r),
-                        ),
-                      if (r['state'] == 'issued')
-                        VetSecondaryButton(
-                          label: 'Abrir WhatsApp con indicaciones',
-                          onPressed: model.busy ? null : () => whatsapp(r),
-                        ),
-                    ],
-                  ),
-                ],
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${r['patient_name']} · ${r['controlled'] == true ? 'Restringida' : 'Ordinaria'} · ${rxState(r['state'])}',
+                    ),
+                    Text(
+                      'Folio capturado: ${r['official_folio'] == '' ? 'pendiente / no aplica' : r['official_folio']}',
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        if (r['state'] != 'awaiting_authorization')
+                          TextButton(
+                            onPressed:
+                                model.busy ||
+                                    (r['state'] == 'draft' &&
+                                        model.prescriptionKnown &&
+                                        !model.prescriptionAction(r, 'edit'))
+                                ? null
+                                : () => openRx(r),
+                            child: Text(
+                              r['state'] == 'draft'
+                                  ? 'Editar borrador'
+                                  : 'Ver PDF / confirmar',
+                            ),
+                          ),
+                        if (model.prescriptionAction(r, 'sign'))
+                          TextButton(
+                            onPressed: () => signConsultation(r),
+                            child: const Text('Firmar consulta realizada'),
+                          ),
+                        if (model.prescriptionAction(r, 'prepare_standing'))
+                          OutlinedButton(
+                            onPressed: () => prepare(r, standing: true),
+                            child: const Text(
+                              'Preparar con autorización temporal',
+                            ),
+                          ),
+                        if (model.prescriptionAction(r, 'authorize'))
+                          TextButton(
+                            onPressed: () => authorizePrescription(r),
+                            child: const Text(
+                              'Revisar y autorizar indicaciones',
+                            ),
+                          ),
+                        if (model.prescriptionAction(r, 'correct'))
+                          TextButton(
+                            onPressed: () => returnPrescription(r),
+                            child: const Text('Devolver a borrador'),
+                          ),
+                        if (r['state'] == 'draft' &&
+                            (!model.prescriptionKnown ||
+                                model.prescriptionAction(r, 'prepare')))
+                          TextButton(
+                            onPressed: model.busy ? null : () => prepare(r),
+                            child: Text(
+                              model.prescriptionKnown
+                                  ? 'Preparar para autorización'
+                                  : 'Preparar PDF con identidad y firma',
+                            ),
+                          ),
+                        if (r['state'] == 'issued' &&
+                            r['responsible_id'] == widget.member.userId &&
+                            model.canScheduleMedication)
+                          TextButton(
+                            onPressed: model.busy ? null : () => schedule(r),
+                            child: const Text('Programar en hospitalización'),
+                          ),
+                        if (r['state'] == 'issued')
+                          TextButton(
+                            onPressed: model.busy ? null : () => whatsapp(r),
+                            child: const Text(
+                              'Abrir WhatsApp con indicaciones',
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
         ],
         if (section == 'Medicación') ...[
-          const SizedBox(height: 16),
-          VetActionButton(
-            label: 'Reportar aplicación realizada',
+          FilledButton(
             onPressed:
                 model.busy ||
                     model.caseId == null ||
@@ -1662,217 +1605,179 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
                     !model.canReportMedication
                 ? null
                 : () => medication(),
-            fullWidth: true,
+            child: const Text('Reportar aplicación realizada'),
           ),
-          const SizedBox(height: 16),
           for (final r in model.medications)
-            VetCard(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${r['product_name']} · ${r['quantity']} ${r['unit']} · lote ${r['lot']}',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${medicationState(r)}\nAplicó: ${r['performed_by']} · Reportó: ${r['reported_by']}\nObservada: ${r['observed_at']} · Servidor: ${r['reported_at']}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  if (r['review'] != null)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      'Validó: ${r['review']['validated_by']} · ${r['review']['validated_at']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      '${r['product_name']} · ${r['quantity']} ${r['unit']} · lote ${r['lot']}',
                     ),
-                  Text(
-                    'Dosis calculada como referencia: ${r['dose_reference'] ?? 'no disponible'}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  if (r['incidence'] != '')
                     Text(
-                      r['incidence'],
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
+                      '${medicationState(r)}\nAplicó: ${r['performed_by']} · Reportó: ${r['reported_by']}\nObservada: ${r['observed_at']} · Servidor: ${r['reported_at']}',
+                    ),
+                    if (r['review'] != null)
+                      Text(
+                        'Validó: ${r['review']['validated_by']} · ${r['review']['validated_at']}',
                       ),
-                    ),
-                  if (r['replaces_id'] != null)
                     Text(
-                      'Corrige: ${r['replaces_id']} · ${r['correction_reason']}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      'Dosis calculada como referencia: ${r['dose_reference'] ?? 'no disponible'}',
                     ),
-                  if (model.canCorrectMedication(r) &&
-                      r['superseded'] != true) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        VetSecondaryButton(
-                          label: 'Validar / solicitar corrección',
-                          onPressed: model.busy ? null : () => validate(r),
-                        ),
-                        if (model.canCorrectMedication(r))
-                          VetSecondaryButton(
-                            label: 'Anexar corrección',
-                            onPressed: model.busy
-                                ? null
-                                : () => medication(correction: r),
+                    if (r['incidence'] != '') Text(r['incidence']),
+                    if (r['replaces_id'] != null)
+                      Text(
+                        'Corrige: ${r['replaces_id']} · ${r['correction_reason']}',
+                      ),
+                    if (model.canCorrectMedication(r) &&
+                        r['superseded'] != true)
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          TextButton(
+                            onPressed: model.busy ? null : () => validate(r),
+                            child: const Text('Validar / solicitar corrección'),
                           ),
-                      ],
-                    ),
+                          if (model.canCorrectMedication(r))
+                            TextButton(
+                              onPressed: model.busy
+                                  ? null
+                                  : () => medication(correction: r),
+                              child: const Text('Anexar corrección'),
+                            ),
+                        ],
+                      ),
                   ],
-                ],
+                ),
               ),
             ),
         ],
         if (section == 'Frascos') ...[
-          const SizedBox(height: 16),
           if (model.canManageVials)
-            VetActionButton(
-              label: 'Abrir frasco',
+            FilledButton(
               onPressed: model.busy || model.products.isEmpty ? null : vial,
-              fullWidth: true,
+              child: const Text('Abrir frasco'),
             ),
           for (final v in model.vials)
-            VetCard(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${v['product_name']} · lote ${v['lot']}\nSaldo exacto registrado: ${v['balance']} ml · ${v['closed'] == true ? 'Cerrado' : 'Abierto'}',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  for (final m in v['movements'] as List? ?? [])
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      '${m['kind']} · ${m['delta']} ml · ${m['created_at']}\n${m['reason']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      '${v['product_name']} · lote ${v['lot']}\nSaldo exacto registrado: ${v['balance']} ml · ${v['closed'] == true ? 'Cerrado' : 'Abierto'}',
                     ),
-                  if (v['has_post_close_movements'] == true)
-                    Text(
-                      'Hay movimientos registrados después del cierre. La conciliación original se conserva; requiere revisión del MVZ responsable.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
+                    for (final m in v['movements'] as List? ?? [])
+                      Text(
+                        '${m['kind']} · ${m['delta']} ml · ${m['created_at']}\n${m['reason']}',
                       ),
-                    ),
-                  for (final incident
-                      in (v['incidents'] as List? ?? []).cast<Map>()) ...[
-                    Text(
-                      'Incidencia pendiente de revisión · ${incident['quantity']} ${incident['unit']}\nObservada: ${incident['observed_at']} · Registrada: ${incident['reported_at']}\n${incident['incidence']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    VetSecondaryButton(
-                      label: 'Ver caso de la incidencia',
-                      onPressed: model.busy
-                          ? null
-                          : () => openVialIncident('${incident['case_id']}'),
-                    ),
+                    if (v['has_post_close_movements'] == true)
+                      Text(
+                        'Hay movimientos registrados después del cierre. La conciliación original se conserva; requiere revisión del MVZ responsable.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    for (final incident
+                        in (v['incidents'] as List? ?? []).cast<Map>()) ...[
+                      Text(
+                        'Incidencia pendiente de revisión · ${incident['quantity']} ${incident['unit']}\nObservada: ${incident['observed_at']} · Registrada: ${incident['reported_at']}\n${incident['incidence']}',
+                      ),
+                      TextButton(
+                        onPressed: model.busy
+                            ? null
+                            : () => openVialIncident('${incident['case_id']}'),
+                        child: const Text('Ver caso de la incidencia'),
+                      ),
+                    ],
+                    if (v['more_incidents'] == true)
+                      const Text(
+                        'Se muestran las 100 incidencias accesibles más recientes. Consulta Medicación por caso para el historial completo.',
+                      ),
+                    if (v['closure'] != null)
+                      Text(
+                        'Conciliación al cierre: saldo registrado ${v['closure']['expected']} ml · medido ${v['closure']['measured']} ml\nDiferencia conservada: ${v['closure']['difference']} ml\nNota: ${v['closure']['reason']}',
+                      ),
+                    if (v['closed'] != true &&
+                        v['responsible_id'] == widget.member.userId &&
+                        model.canManageVials &&
+                        (!model.operationalKnown || v['can_adjust'] == true))
+                      TextButton(
+                        onPressed: model.busy ? null : () => adjustVial(v),
+                        child: const Text('Anexar merma / devolución / ajuste'),
+                      ),
+                    if (v['closed'] != true &&
+                        v['responsible_id'] == widget.member.userId &&
+                        model.canManageVials &&
+                        (!model.operationalKnown || v['can_manage'] == true))
+                      TextButton(
+                        onPressed: model.busy ? null : () => closeVial(v),
+                        child: const Text('Conciliar y cerrar'),
+                      ),
                   ],
-                  if (v['more_incidents'] == true)
-                    Text(
-                      'Se muestran las 100 incidencias accesibles más recientes. Consulta Medicación por caso para el historial completo.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  if (v['closure'] != null)
-                    Text(
-                      'Conciliación al cierre: saldo registrado ${v['closure']['expected']} ml · medido ${v['closure']['measured']} ml\nDiferencia conservada: ${v['closure']['difference']} ml\nNota: ${v['closure']['reason']}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  if (v['closed'] != true &&
-                      v['responsible_id'] == widget.member.userId &&
-                      model.canManageVials &&
-                      (!model.operationalKnown || v['can_adjust'] == true)) ...[
-                    const SizedBox(height: 8),
-                    VetSecondaryButton(
-                      label: 'Anexar merma / devolución / ajuste',
-                      onPressed: model.busy ? null : () => adjustVial(v),
-                    ),
-                  ],
-                  if (v['closed'] != true &&
-                      v['responsible_id'] == widget.member.userId &&
-                      model.canManageVials &&
-                      (!model.operationalKnown || v['can_manage'] == true)) ...[
-                    const SizedBox(height: 8),
-                    VetSecondaryButton(
-                      label: 'Conciliar y cerrar',
-                      onPressed: model.busy ? null : () => closeVial(v),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
         ],
         if (section == 'Reportes') ...[
-          const SizedBox(height: 16),
           if (model.prescriptionKnown && !model.reportKnown)
-            Text(
-              'Reportes no disponibles en este flujo.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            const Text('Reportes no disponibles en este flujo.'),
           if (model.canPrepareReport)
-            VetActionButton(
-              label: 'Crear corte del periodo',
+            FilledButton(
               onPressed: model.busy ? null : report,
-              fullWidth: true,
+              child: const Text('Crear corte del periodo'),
             ),
-          const SizedBox(height: 12),
-          Text(
+          const Text(
             'Los reportes incluyen solo aplicaciones validadas y conservan los pendientes al corte. Una validación posterior no cambia el archivo emitido.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
           ),
-          const SizedBox(height: 16),
           for (final r in model.reports)
-            VetCard(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${r['official'] == true ? 'Formato verificado' : 'Referencia · NO OFICIAL'} · ${r['complete'] == true ? 'Completo al corte' : 'INCOMPLETO'}\n${r['starts_at']} — ${r['ends_at']}\nPendientes: ${(r['pending_ids'] as List).length}',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      VetSecondaryButton(
-                        label: 'Ver PDF / confirmar',
-                        onPressed: model.busy
-                            ? null
-                            : () => review('report', r),
-                      ),
-                      if (r['state'] == 'issued')
-                        VetSecondaryButton(
-                          label: 'Exportar CSV para Excel',
-                          onPressed: model.busy ? null : () => csv(r),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${r['official'] == true ? 'Formato verificado' : 'Referencia · NO OFICIAL'} · ${r['complete'] == true ? 'Completo al corte' : 'INCOMPLETO'}\n${r['starts_at']} — ${r['ends_at']}\nPendientes: ${(r['pending_ids'] as List).length}',
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton(
+                          onPressed: model.busy
+                              ? null
+                              : () => review('report', r),
+                          child: const Text('Ver PDF / confirmar'),
                         ),
-                      if (r['state'] == 'issued')
-                        BrandedExportAction(
-                          repository: widget.identity,
-                          clinicId: widget.member.clinicId,
-                          clinicName: widget.member.clinicName,
-                          title:
-                              'Registro de control · basado en Anexo 5, no oficial · Exportación de consulta',
-                          fileName: 'control-${r["id"]}',
-                          rows: () async => csvRows(
-                            reportCsv(
-                              model.reportKnown
-                                  ? await model.reportExport(r['id'])
-                                  : r,
+                        if (r['state'] == 'issued')
+                          TextButton(
+                            onPressed: model.busy ? null : () => csv(r),
+                            child: const Text('Exportar CSV para Excel'),
+                          ),
+                        if (r['state'] == 'issued')
+                          BrandedExportAction(
+                            repository: widget.identity,
+                            clinicId: widget.member.clinicId,
+                            clinicName: widget.member.clinicName,
+                            title:
+                                'Registro de control · basado en Anexo 5, no oficial · Exportación de consulta',
+                            fileName: 'control-${r["id"]}',
+                            rows: () async => csvRows(
+                              reportCsv(
+                                model.reportKnown
+                                    ? await model.reportExport(r['id'])
+                                    : r,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
         ],

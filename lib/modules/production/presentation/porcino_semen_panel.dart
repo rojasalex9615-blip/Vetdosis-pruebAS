@@ -252,24 +252,10 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
                 label: 'Concentración (×10⁶/ml)',
                 onChanged: recalc,
               ),
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.16),
-                ),
-              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.biotech_outlined,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Text('Concentración usada', style: textTheme.bodyMedium),
                   ),
@@ -277,10 +263,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
                     usedConcentration == null
                         ? '—'
                         : '${_fmt(usedConcentration!)} ×10⁶/ml',
-                    style: textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                    style: textTheme.titleSmall,
                   ),
                 ],
               ),
@@ -315,7 +298,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
             ),
             if (quality != null)
               Padding(
-                padding: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.only(top: 6),
                 child: VetNotice(
                   text: quality!.verdict,
                   icon: quality!.isApt
@@ -526,31 +509,12 @@ class _Step extends StatelessWidget {
   final List<Widget> children;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 18),
+    padding: const EdgeInsets.only(top: 8),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 16,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.1,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
+        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 6),
         ...children,
       ],
     ),
@@ -607,7 +571,7 @@ class _Field extends StatelessWidget {
   final VoidCallback onChanged;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 7),
+    padding: const EdgeInsets.symmetric(vertical: 6),
     child: TextField(
       controller: controller,
       keyboardType: text

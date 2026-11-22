@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../domain/review_catalog_repository.dart';
-import '../../../vet_ui/vet_components.dart';
-import '../../../vet_ui/vet_theme.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 enum _ReviewScope { global, clinic, personal }
@@ -325,18 +323,16 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      VetCallout(
-        text: 'SIN VERIFICAR — solo revisión, no usar con pacientes',
-        kind: VetBadgeKind.warning,
+      Material(
+        color: Theme.of(context).colorScheme.errorContainer,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('SIN VERIFICAR — solo revisión, no usar con pacientes'),
+        ),
       ),
-      const SizedBox(height: VetSpacing.md),
+      const SizedBox(height: 12),
       if (widget.offline)
-        Text(
-          'El modo revisión requiere conexión y permisos vigentes.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        )
+        const Text('El modo revisión requiere conexión y permisos vigentes.')
       else ...[
         SegmentedButton<String>(
           key: const ValueKey('review-source'),
@@ -354,14 +350,10 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
           onSelectionChanged: (selection) => selectSource(selection.first),
         ),
         if (progress != null)
-          Text(
-            '${source == 'grok_pautas' ? 'Pautas' : 'Productos'}: '
-                '${progress!['total'] ?? 0} · Sin verificar: '
-                '${progress!['sin_verificar'] ?? 0} · En revisión: '
-                '${progress!['en_revision'] ?? 0}',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        const SizedBox(height: VetSpacing.md),
+          Text('${source == 'grok_pautas' ? 'Pautas' : 'Productos'}: '
+              '${progress!['total'] ?? 0} · Sin verificar: '
+              '${progress!['sin_verificar'] ?? 0} · En revisión: '
+              '${progress!['en_revision'] ?? 0}'),
         TextField(
           controller: search,
           decoration: InputDecoration(
@@ -372,19 +364,15 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
           ),
           onSubmitted: (_) => reload(),
         ),
-        if (error != null)
-          Text(error!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              )),
+        if (error != null) Text(error!,
+            style: TextStyle(color: Theme.of(context).colorScheme.error)),
         if (loading) const LinearProgressIndicator(),
         for (final item in items)
-          VetCard(
-            padding: const EdgeInsets.all(VetSpacing.md),
+          Card(child: Padding(
+            padding: const EdgeInsets.all(12),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: VetSpacing.xs),
-              Text(item.laboratory, style: Theme.of(context).textTheme.bodyMedium),
+              Text(item.laboratory),
               if (canManageGlobal)
                 statusPicker(
                   key: '${item.key}-global',
@@ -394,8 +382,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                   onChanged: (value) => confirmGlobalStatusChange(item, value),
                 )
               else
-                Text('Global (solo lectura): ${item.globalStatus}',
-                    style: Theme.of(context).textTheme.bodySmall),
+                Text('Global (solo lectura): ${item.globalStatus}'),
               if (widget.canManageClinic)
                 statusPicker(
                   key: '${item.key}-clinic',
@@ -409,8 +396,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                   ),
                 )
               else
-                Text('Clínica: ${item.status}',
-                    style: Theme.of(context).textTheme.bodySmall),
+                Text('Clínica: ${item.status}'),
               statusPicker(
                 key: '${item.key}-personal',
                 label: 'Mi estado personal',
@@ -423,31 +409,17 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                 ),
               ),
               if (item.doseText?.isNotEmpty == true)
-                Text('Posología documentada: ${item.doseText}',
-                    style: Theme.of(context).textTheme.bodyMedium),
-              if (item.ingredient?.isNotEmpty == true)
-                Text('Ingrediente: ${item.ingredient}',
-                    style: Theme.of(context).textTheme.bodyMedium),
-              if (item.presentation?.isNotEmpty == true)
-                Text('Presentación: ${item.presentation}',
-                    style: Theme.of(context).textTheme.bodyMedium),
-              Text(
-                'Fuente: ${item.source ?? 'No registrada'}'
-                    '${item.page == null ? '' : ', pág. ${item.page}'}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: VetSpacing.sm),
-              VetSecondaryButton(
-                label: 'Reportar error / comentar',
-                onPressed: () => report(item),
-              ),
+                Text('Posología documentada: ${item.doseText}'),
+              if (item.ingredient?.isNotEmpty == true) Text('Ingrediente: ${item.ingredient}'),
+              if (item.presentation?.isNotEmpty == true) Text('Presentación: ${item.presentation}'),
+              Text('Fuente: ${item.source ?? 'No registrada'}'
+                  '${item.page == null ? '' : ', pág. ${item.page}'}'),
+              TextButton(onPressed: () => report(item),
+                  child: const Text('Reportar error / comentar')),
             ]),
           )),
         if (more && !loading)
-          VetSecondaryButton(
-            label: 'Ver más',
-            onPressed: nextPage,
-          ),
+          TextButton(onPressed: nextPage, child: const Text('Ver más')),
       ],
     ],
   );
@@ -502,36 +474,22 @@ class _ReportDialogState extends State<_ReportDialog> {
     title: const Text('Reportar error / comentar'),
     content: SingleChildScrollView(child: Column(
       mainAxisSize: MainAxisSize.min, children: [
-        Text('${widget.item.title} · ${widget.item.version}',
-            style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: VetSpacing.md),
+        Text('${widget.item.title} · ${widget.item.version}'),
+        const SizedBox(height: 12),
         TextField(controller: expected, maxLength: 8000,
           decoration: const InputDecoration(labelText: 'Valor esperado (opcional)')),
-        const SizedBox(height: VetSpacing.md),
         TextField(controller: source, maxLength: 2000,
           decoration: const InputDecoration(labelText: 'Fuente y página (opcional)')),
-        const SizedBox(height: VetSpacing.md),
         TextField(controller: comment, maxLines: 3, maxLength: 8000,
           decoration: const InputDecoration(labelText: 'Comentario')),
-        if (error != null) ...[
-          const SizedBox(height: VetSpacing.sm),
-          Text(error!,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.error,
-            )),
-        ],
+        if (error != null) Text(error!,
+          style: TextStyle(color: Theme.of(context).colorScheme.error)),
       ],
     )),
     actions: [
-      VetSecondaryButton(
-        label: 'Cancelar',
-        onPressed: busy ? null : () => Navigator.pop(context),
-      ),
-      VetActionButton(
-        label: 'Enviar',
-        onPressed: busy ? null : send,
-        loading: busy,
-      ),
+      TextButton(onPressed: busy ? null : () => Navigator.pop(context),
+        child: const Text('Cancelar')),
+      TextButton(onPressed: busy ? null : send, child: const Text('Enviar')),
     ],
   );
 }

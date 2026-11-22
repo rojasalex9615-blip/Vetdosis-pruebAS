@@ -12,8 +12,6 @@ import '../domain/patient_models.dart';
 import '../domain/patient_timeline.dart';
 import '../domain/clinical_record_fields.dart';
 import 'preventive_preview.dart';
-import '../../../vet_ui/vet_components.dart';
-import '../../../vet_ui/vet_theme.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 class PreventiveScreen extends StatefulWidget {
@@ -305,14 +303,7 @@ class _PreventiveScreenState extends State<PreventiveScreen>
       builder: (context, _) {
         if (model.busy) return const Center(child: CircularProgressIndicator());
         if (model.data == null) {
-          return Center(
-            child: Text(
-              model.error ?? 'Carnet no disponible.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          );
+          return Center(child: Text(model.error ?? 'Carnet no disponible.'));
         }
         final events = patientTimeline(
           model.rows('events').map(PatientEvent.read).toList(),
@@ -320,244 +311,224 @@ class _PreventiveScreenState extends State<PreventiveScreen>
         );
         final retired = (model.data!['retired'] as List).toSet();
         return ListView(
-          padding: const EdgeInsets.all(VetSpacing.lg),
+          padding: const EdgeInsets.all(16),
           children: [
             Text(
               '${model.data!['patient_name']} · ${model.data!['species']}',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: VetSpacing.xs),
-            Text(
+            const Text(
               'Aplicaciones y antecedentes conservan su origen. Un comprobante adjunto no verifica automáticamente el registro ni acredita un esquema completo.',
-              style: Theme.of(context).textTheme.bodySmall,
             ),
-            const SizedBox(height: VetSpacing.md),
             Wrap(
-              spacing: VetSpacing.sm,
-              runSpacing: VetSpacing.sm,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                VetSecondaryButton(
-                  label: 'Revisar / compartir carnet',
-                  icon: VetIcons.pdf,
+                OutlinedButton.icon(
                   onPressed: share,
+                  icon: const Icon(VetIcons.pdf),
+                  label: const Text('Revisar / compartir carnet'),
                 ),
                 if (model.data!['can_confirm'] == true)
-                  VetSecondaryButton(
-                    label: 'Indicar próxima aplicación',
+                  OutlinedButton(
                     onPressed: () => plan(),
+                    child: const Text('Indicar próxima aplicación'),
                   ),
               ],
             ),
-            const SizedBox(height: VetSpacing.xl),
+            const SizedBox(height: 16),
             Text(
               'Próximas fechas confirmadas',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: VetSpacing.xs),
-            Text(
+            const Text(
               'Solo se confirman con autoridad veterinaria vigente. Retirar una indicación no cancela una cita en Agenda ni registra una aplicación.',
-              style: Theme.of(context).textTheme.bodySmall,
             ),
-            const SizedBox(height: VetSpacing.md),
             if (!model.rows('plans').any((p) => !retired.contains(p['id'])))
-              Text(
-                'Sin próximas fechas confirmadas en este apartado.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
+              const Text('Sin próximas fechas confirmadas en este apartado.'),
             for (final p
                 in model.rows('plans').where((p) => !retired.contains(p['id'])))
-              VetCard(
-                padding: const EdgeInsets.all(VetSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${p['due_date']} · ${p['type']} · ${p['coverage']}',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: VetSpacing.xs),
-                    Text(
-                      'Confirmada por veterinario autorizado. No equivale a aplicación.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    for (final link
-                        in model
-                            .rows('links')
-                            .where((l) => l['plan_id'] == p['id']))
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${p['due_date']} · ${p['type']} · ${p['coverage']}',
+                      ),
+                      const Text(
+                        'Confirmada por veterinario autorizado. No equivale a aplicación.',
+                      ),
+                      for (final link
+                          in model
+                              .rows('links')
+                              .where((l) => l['plan_id'] == p['id']))
                         Text(
                           'Cita vinculada: ${appointmentLabel(link['state'])}. Consulta el horario vigente en Agenda.',
-                          style: Theme.of(context).textTheme.bodySmall,
                         ),
-                    const SizedBox(height: VetSpacing.md),
-                    Wrap(
-                      spacing: VetSpacing.sm,
-                      runSpacing: VetSpacing.sm,
-                      children: [
-                        if (model.data!['can_schedule'] == true &&
-                            !model
-                                .rows('links')
-                                .any(
-                                  (l) =>
-                                      l['plan_id'] == p['id'] &&
-                                      l['state'] != 'cancelado',
-                                ))
-                          VetSecondaryButton(
-                            label: 'Agendar cita',
-                            onPressed: () => schedule(p),
-                          ),
-                        if (model.data!['can_confirm'] == true)
-                          VetSecondaryButton(
-                            label: 'Retirar indicación',
-                            onPressed: () => form(
-                              'Retirar indicación',
-                              const [
-                                RxField(
-                                  'reason',
-                                  'Motivo de retiro o corrección',
-                                  required: true,
-                                ),
-                              ],
-                              (d, op) => widget.repository.retirePlan(
-                                widget.clinic,
-                                widget.patient,
-                                p['id'] as String,
-                                textField(
-                                  d,
-                                  'reason',
-                                  required: true,
-                                  max: 1000,
-                                ),
-                                op,
-                              ),
-                              review:
-                                  'Se conservará el antecedente. Las citas vinculadas siguen en Agenda; revisa allí si deben modificarse.',
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (model.data!['can_schedule'] == true &&
+                              !model
+                                  .rows('links')
+                                  .any(
+                                    (l) =>
+                                        l['plan_id'] == p['id'] &&
+                                        l['state'] != 'cancelado',
+                                  ))
+                            TextButton(
+                              onPressed: () => schedule(p),
+                              child: const Text('Agendar cita'),
                             ),
-                          ),
-                      ],
-                    ),
-                  ],
+                          if (model.data!['can_confirm'] == true)
+                            TextButton(
+                              onPressed: () => form(
+                                'Retirar indicación',
+                                const [
+                                  RxField(
+                                    'reason',
+                                    'Motivo de retiro o corrección',
+                                    required: true,
+                                  ),
+                                ],
+                                (d, op) => widget.repository.retirePlan(
+                                  widget.clinic,
+                                  widget.patient,
+                                  p['id'] as String,
+                                  textField(
+                                    d,
+                                    'reason',
+                                    required: true,
+                                    max: 1000,
+                                  ),
+                                  op,
+                                ),
+                                review:
+                                    'Se conservará el antecedente. Las citas vinculadas siguen en Agenda; revisa allí si deben modificarse.',
+                              ),
+                              child: const Text('Retirar indicación'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            const SizedBox(height: VetSpacing.xl),
+            const SizedBox(height: 16),
             Text(
               'Historial del carnet',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: VetSpacing.xs),
-            Text(
+            const Text(
               'Consulta por separado las vacunas y las desparasitaciones. Cada ficha conserva fecha, producto o cobertura, lote y próxima fecha cuando esos datos fueron registrados.',
-              style: Theme.of(context).textTheme.bodySmall,
             ),
             for (final type in const ['vacuna', 'desparasitación'])
               ExpansionTile(
                 initiallyExpanded: true,
                 tilePadding: EdgeInsets.zero,
-                title: Text(
-                  type == 'vacuna' ? 'Vacunas' : 'Desparasitaciones',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                title: Text(type == 'vacuna' ? 'Vacunas' : 'Desparasitaciones'),
                 subtitle: Text(
                   '${events.where((e) => e.data['type'] == type).length} registros',
-                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 children: [
                   if (!events.any((e) => e.data['type'] == type))
-                    ListTile(
+                    const ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        'Sin registros en este apartado.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      title: Text('Sin registros en este apartado.'),
                       subtitle: Text(
                         'Esto no significa que no haya recibido aplicaciones.',
-                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
                   for (final event in events.where(
                     (e) => e.data['type'] == type,
                   ))
-                    VetCard(
-                      padding: const EdgeInsets.all(VetSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${event.data['coverage'] ?? event.data['product'] ?? (type == 'vacuna' ? 'Cobertura desconocida' : 'Tipo de desparasitación no especificado')}',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: VetSpacing.sm),
-                          _bookletDetail(context,
-                            'Fecha',
-                            preventiveDateLabel(event.data),
-                          ),
-                          _bookletDetail(context,
-                            'Origen',
-                            preventiveOriginLabel(event.data),
-                          ),
-                          if ('${event.data['product'] ?? ''}'.isNotEmpty)
-                            _bookletDetail(context,
-                              'Producto',
-                              '${event.data['product']}',
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${event.data['coverage'] ?? event.data['product'] ?? (type == 'vacuna' ? 'Cobertura desconocida' : 'Tipo de desparasitación no especificado')}',
+                              style: Theme.of(context).textTheme.titleSmall,
                             ),
-                          if ('${event.data['batch'] ?? ''}'.isNotEmpty)
-                            _bookletDetail(context,'Lote', '${event.data['batch']}'),
-                          if ('${event.data['performer'] ?? ''}'.isNotEmpty)
-                            _bookletDetail(context,
-                              'Aplicó',
-                              '${event.data['performer']}',
+                            const SizedBox(height: 8),
+                            _bookletDetail(
+                              'Fecha',
+                              preventiveDateLabel(event.data),
                             ),
-                          if ('${event.data['informant'] ?? ''}'.isNotEmpty)
-                            _bookletDetail(context,
-                              'Referido por',
-                              '${event.data['informant']}',
+                            _bookletDetail(
+                              'Origen',
+                              preventiveOriginLabel(event.data),
                             ),
-                          if (event.data['next_date'] != null)
-                            _bookletDetail(context,
-                              'Próxima fecha anotada',
-                              '${event.data['next_date']} · confirmar vigencia antes de agendar',
-                            ),
-                          if ('${event.data['next_date_by'] ?? ''}'
-                              .isNotEmpty)
-                            _bookletDetail(context,
-                              'Fecha indicada por',
-                              '${event.data['next_date_by']}',
-                            ),
-                          if (model.data!['can_confirm'] == true)
-                            VetSecondaryButton(
-                              label: 'Confirmar próxima fecha desde este antecedente',
-                              onPressed: () => plan(event),
-                            ),
-                          for (final file
-                              in model
-                                  .rows('evidence')
-                                  .where((f) => f['event_id'] == event.id))
-                            TextButton.icon(
-                              icon: const Icon(VetIcons.paperclip, size: 18),
-                              label: Text(
-                                '${file['label']} · ${(file['size'] as num) / 1024 ~/ 1} KB',
-                                style: Theme.of(context).textTheme.bodySmall,
+                            if ('${event.data['product'] ?? ''}'.isNotEmpty)
+                              _bookletDetail(
+                                'Producto',
+                                '${event.data['product']}',
                               ),
-                              onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PreventivePreview(
-                                    load: () => widget.repository.evidence(
-                                      widget.clinic,
-                                      widget.patient,
-                                      file['id'] as String,
+                            if ('${event.data['batch'] ?? ''}'.isNotEmpty)
+                              _bookletDetail('Lote', '${event.data['batch']}'),
+                            if ('${event.data['performer'] ?? ''}'.isNotEmpty)
+                              _bookletDetail(
+                                'Aplicó',
+                                '${event.data['performer']}',
+                              ),
+                            if ('${event.data['informant'] ?? ''}'.isNotEmpty)
+                              _bookletDetail(
+                                'Referido por',
+                                '${event.data['informant']}',
+                              ),
+                            if (event.data['next_date'] != null)
+                              _bookletDetail(
+                                'Próxima fecha anotada',
+                                '${event.data['next_date']} · confirmar vigencia antes de agendar',
+                              ),
+                            if ('${event.data['next_date_by'] ?? ''}'
+                                .isNotEmpty)
+                              _bookletDetail(
+                                'Fecha indicada por',
+                                '${event.data['next_date_by']}',
+                              ),
+                            if (model.data!['can_confirm'] == true)
+                              TextButton(
+                                onPressed: () => plan(event),
+                                child: const Text(
+                                  'Confirmar próxima fecha desde este antecedente',
+                                ),
+                              ),
+                            for (final file
+                                in model
+                                    .rows('evidence')
+                                    .where((f) => f['event_id'] == event.id))
+                              TextButton.icon(
+                                icon: const Icon(VetIcons.paperclip),
+                                label: Text(
+                                  '${file['label']} · ${(file['size'] as num) / 1024 ~/ 1} KB',
+                                ),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PreventivePreview(
+                                      load: () => widget.repository.evidence(
+                                        widget.clinic,
+                                        widget.patient,
+                                        file['id'] as String,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          if (model.data!['can_attach'] == true)
-                              VetSecondaryButton(
-                              label: 'Agregar foto o PDF escaneado',
-                              icon: VetIcons.image,
-                              onPressed: () => attach(event),
-                            ),
+                            if (model.data!['can_attach'] == true)
+                              TextButton.icon(
+                                onPressed: () => attach(event),
+                                icon: const Icon(VetIcons.image),
+                                label: const Text(
+                                  'Agregar foto o PDF escaneado',
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -571,12 +542,9 @@ class _PreventiveScreenState extends State<PreventiveScreen>
   );
 }
 
-Widget _bookletDetail(context,BuildContext context, String label, String value) => Padding(
+Widget _bookletDetail(String label, String value) => Padding(
   padding: const EdgeInsets.only(bottom: 4),
-  child: Text(
-    '$label: $value',
-    style: Theme.of(context).textTheme.bodySmall,
-  ),
+  child: Text('$label: $value'),
 );
 
 String appointmentLabel(dynamic state) => switch (state) {
