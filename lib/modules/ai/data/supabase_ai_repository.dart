@@ -44,6 +44,22 @@ class SupabaseAiRepository implements AiRepository, StarterAiRepository {
           }))['chat']
           as String;
   @override
+  Future<String> starterChat(
+    String clinic,
+    String? chat,
+    String message,
+    String operation,
+  ) async =>
+      (await starterCall({
+            'action': 'send',
+            'clinic': clinic,
+            'chat': chat,
+            'message': message,
+            'operation': operation,
+            'consent': true,
+          }))['chat']
+          as String;
+  @override
   Future<Map<String, dynamic>> dashboard(String clinic) async =>
       Map<String, dynamic>.from(
         await client.rpc('ai_dashboard', params: {'p_clinic': clinic}) as Map,

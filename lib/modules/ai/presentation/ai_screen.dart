@@ -40,6 +40,7 @@ class _AiScreenState extends State<AiScreen> {
   bool get canManageWorkspace =>
       widget.canManageWorkspace || vm.data['can_manage'] == true;
   final composer = TextEditingController();
+  final composerFocus = FocusNode();
   String? connection, model;
   List<Map<String, dynamic>> modelOptions = [];
   bool working = false, personal = false, team = false, consent = false;
@@ -95,6 +96,7 @@ class _AiScreenState extends State<AiScreen> {
   @override
   void dispose() {
     composer.dispose();
+    composerFocus.dispose();
     vm.dispose();
     super.dispose();
   }
@@ -166,41 +168,19 @@ class _AiScreenState extends State<AiScreen> {
   }
 
   Future<void> newChat() async {
-    final text = TextEditingController();
-    try {
-      final title = await showDialog<String>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Nuevo chat privado'),
-          content: TextField(
-            controller: text,
-            maxLength: 150,
-            decoration: const InputDecoration(labelText: 'Título'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(c, text.text.trim()),
-              child: const Text('Crear'),
-            ),
-          ],
-        ),
+    final now = DateTime.now();
+    String two(int value) => value.toString().padLeft(2, '0');
+    final title =
+        'Chat ${two(now.day)}/${two(now.month)} ${two(now.hour)}:${two(now.minute)}';
+    await run(() async {
+      final id = await widget.repository.create(
+        widget.member.clinicId,
+        title,
+        newOperationId(),
       );
-      if (title == null || title.isEmpty) return;
-      await run(() async {
-        final id = await widget.repository.create(
-          widget.member.clinicId,
-          title,
-          newOperationId(),
-        );
-        await vm.load(chat: id);
-      });
-    } finally {
-      text.dispose();
-    }
+      await vm.load(chat: id);
+    });
+    if (mounted) composerFocus.requestFocus();
   }
 
   Future<void> key() async {
@@ -707,6 +687,7 @@ class _AiScreenState extends State<AiScreen> {
           ),
           TextField(
             controller: composer,
+            focusNode: composerFocus,
             maxLength: 12000,
             maxLines: 4,
             enabled: !working,
