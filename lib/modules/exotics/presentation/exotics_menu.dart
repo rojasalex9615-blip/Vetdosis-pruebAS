@@ -60,6 +60,40 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
             'Mamíferos pequeños de compañía. Valores publicados en libros de texto: cada uno cita su obra y, si dos obras difieren, se muestran ambas.',
         large: true,
       ),
+      const VetSectionHeader(
+        title: 'Calculadora rápida',
+        subtitle: 'Peso metabólico: convierte el peso a la escala para comparar especies. No es una dosis.',
+      ),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: VetModuleTile(
+                title: 'Peso metabólico',
+                icon: VetIcons.scale,
+                accent: VetColors.violet,
+                onTap: () => Navigator.push<void>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CalculationScreen(
+                      initialTool: 'metabolic',
+                      tools: exoticCalculationTools,
+                      title: 'Peso metabólico en exóticos',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 20),
+      const VetSectionHeader(
+        title: 'Especies',
+        subtitle: 'Elige una especie para ver sus valores de referencia.',
+      ),
       for (final name in exoticSpecies)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -113,60 +147,6 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           ),
         ),
       const SizedBox(height: 12),
-      const VetSectionHeader(
-        title: 'Calculadora',
-        subtitle:
-            'Peso metabólico en exóticos: convierte el peso en la escala usada para comparar especies de tamaños muy distintos. No es una dosis.',
-      ),
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: VetCard(
-          padding: EdgeInsets.zero,
-          child: InkWell(
-            onTap: () => Navigator.push<void>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const CalculationScreen(
-                  initialTool: 'metabolic',
-                  tools: exoticCalculationTools,
-                  title: 'Peso metabólico en exóticos',
-                ),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const VetIconBox(
-                    icon: VetIcons.scale,
-                    accent: VetColors.violet,
-                    size: 52,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Peso metabólico', style: textTheme.titleMedium),
-                        const SizedBox(height: 2),
-                        Text(
-                          'kg^exponente con la referencia verificada que elijas.',
-                          style: textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(top: 14),
-                    child: Icon(VetIcons.chevronRight, color: VetColors.muted),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
       const VetSectionHeader(
         title: 'Previstos',
         subtitle: 'Todavía sin datos ni herramientas.',

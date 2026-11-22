@@ -75,6 +75,44 @@ class _ProductionMenuState extends State<ProductionMenu> {
           'Elige una especie o grupo. La clínica y tus permisos se conservan.',
       large: true,
     ),
+    if (allowed('Cálculos clínicos')) ...[
+      const VetSectionHeader(
+        title: 'Calculadoras rápidas',
+        subtitle: 'Sin elegir especie: por cabeza y lote, agua y alimento.',
+      ),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (id, label, toolIcon) in [
+            ('herd', 'Por cabeza y lote', VetIcons.cow),
+            ('water', 'Medicación en agua', VetIcons.waves),
+            ('feed', 'Medicación en alimento', VetIcons.feedBag),
+          ])
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: VetModuleTile(
+                  title: label,
+                  icon: toolIcon,
+                  accent: VetColors.turquoise,
+                  onTap: () => open(
+                    CalculationScreen(
+                      initialTool: id,
+                      tools: productionCalculationTools,
+                      title: 'Producción: $label',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 20),
+      const VetSectionHeader(
+        title: 'Especies',
+        subtitle: 'Elige una especie o grupo para ver sus herramientas.',
+      ),
+    ],
     for (final entry in productionSpecies.entries)
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
