@@ -70,6 +70,7 @@ begin
     jsonb_typeof(p_profile->'blood_type') <> 'string' or
     char_length(p_profile->>'blood_type') > 8 or
     (p_profile->'photo_url' is not null and
+      p_profile->'photo_url' <> 'null'::jsonb and
       (jsonb_typeof(p_profile->'photo_url') <> 'string' or
        char_length(p_profile->>'photo_url') > 500)) or
     jsonb_typeof(p_profile->'show_phone') <> 'boolean' or
