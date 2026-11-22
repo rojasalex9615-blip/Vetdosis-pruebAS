@@ -223,5 +223,12 @@
  "inbox": 59869,
  "key": 59870,
  "rule": 59871,
- "warning_triangle": 59872
+ "warning_triangle": 59872,
+ "alert_triangle": 59873,
+ "palette": 59874,
+ "paper_plane": 59875,
+ "plus_circle": 59876,
+ "smartphone": 59877,
+ "sun": 59878,
+ "volume": 59879
 }

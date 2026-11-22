@@ -148,7 +148,7 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
         VetCallout(
           text: error!,
           kind: VetBadgeKind.danger,
-          icon: VetIcons.warningTriangle,
+          icon: VetIcons.alertTriangle,
         ),
         const SizedBox(height: 12),
       ],

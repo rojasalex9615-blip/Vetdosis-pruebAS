@@ -175,7 +175,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             VetCallout(
               text: model.error!,
               kind: VetBadgeKind.danger,
-              icon: VetIcons.warningTriangle,
+              icon: VetIcons.alertTriangle,
             ),
           ],
           const SizedBox(height: 16),

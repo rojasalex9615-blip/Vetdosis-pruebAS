@@ -458,7 +458,7 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                   ? VetBadgeKind.danger
                   : VetBadgeKind.success,
               icon: message!.contains('No se pudo')
-                  ? VetIcons.warningTriangle
+                  ? VetIcons.alertTriangle
                   : VetIcons.checkCircle,
             ),
             const SizedBox(height: 12),
