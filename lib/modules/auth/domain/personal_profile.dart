@@ -162,3 +162,34 @@ class PersonalProfile {
     return born != null && born.month == date.month && born.day == date.day;
   }
 }
+
+/// Próximos cumpleaños dentro de [days] días, incluido hoy y ordenados por
+/// cercanía. Ignora perfiles sin fecha.
+List<PersonalProfile> upcomingBirthdays(
+  Iterable<PersonalProfile> profiles, {
+  required DateTime today,
+  int days = 30,
+}) {
+  final base = DateTime(today.year, today.month, today.day);
+  final result = <(int, PersonalProfile)>[];
+  for (final profile in profiles) {
+    final born = profile.birthday;
+    if (born == null) continue;
+    var next = DateTime(base.year, born.month, born.day);
+    if (next.isBefore(base))
+      next = DateTime(base.year + 1, born.month, born.day);
+    final diff = next.difference(base).inDays;
+    if (diff >= 0 && diff <= days) result.add((diff, profile));
+  }
+  result.sort((a, b) => a.$1.compareTo(b.$1));
+  return [for (final entry in result) entry.$2];
+}
+
+/// Perfiles que cumplen años en la fecha indicada.
+List<PersonalProfile> birthdaysOn(
+  Iterable<PersonalProfile> profiles,
+  DateTime date,
+) => [
+  for (final profile in profiles)
+    if (profile.celebratesOn(date)) profile,
+];

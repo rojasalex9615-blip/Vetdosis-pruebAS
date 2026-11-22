@@ -158,6 +158,48 @@ class _TeamScreenState extends State<TeamScreen> {
                     child: const Text('Horarios, faltas y coberturas'),
                   ),
                 if (profiles.isNotEmpty) ...[
+                  const Text('Cumpleaños'),
+                  Builder(
+                    builder: (context) {
+                      final today = DateTime.now();
+                      final upcoming = upcomingBirthdays(
+                        profiles,
+                        today: today,
+                        days: 30,
+                      );
+                      if (upcoming.isEmpty) {
+                        return const Text(
+                          'Sin cumpleaños en los próximos 30 días.',
+                        );
+                      }
+                      return Column(
+                        children: [
+                          for (final profile in upcoming)
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                profile.celebratesOn(today)
+                                    ? VetIcons.calendarCheck
+                                    : VetIcons.calendar,
+                              ),
+                              title: Text(
+                                profile.displayName.isEmpty
+                                    ? 'Sin nombre'
+                                    : profile.displayName,
+                              ),
+                              subtitle: Text(
+                                profile.celebratesOn(today)
+                                    ? 'Hoy'
+                                    : '${profile.birthday!.day.toString().padLeft(2, '0')}/'
+                                          '${profile.birthday!.month.toString().padLeft(2, '0')}',
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+                if (profiles.isNotEmpty) ...[
                   const Text('Perfiles del equipo'),
                   for (final profile in profiles)
                     Card(
