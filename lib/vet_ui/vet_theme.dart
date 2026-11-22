@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Identidad cromática consolidada de los HTML de Stitch. Sin dependencias web.
 abstract final class VetColors {
   static const canvas = Color(0xFFF1F4F8);
-  // Modo oscuro, medido de las maquetas que entrego Ale. Vive aqui para que
+  // Modo oscuro, medido de las maquetas. Vive aqui para que
   // el tema y las pruebas usen el mismo valor y no se separen.
   static const darkCanvas = Color(0xFF201F25);
   static const darkSurface = Color(0xFF25242A);
@@ -28,10 +28,9 @@ abstract final class VetColors {
   static const purple = Color(0xFF7C4DFF);
   static const purpleDeep = Color(0xFF632CE5);
 
-  // Recorrido de marca tomado pixel a pixel del boton «Iniciar Sesion» que
-  // entrego Ale: mas palido que el anterior y con un paso por azul en medio
-  // que antes no existia. Se guarda aqui para que tema y pruebas midan lo
-  // mismo.
+  // Recorrido de marca tomado pixel a pixel del boton «Iniciar Sesion»: mas
+  // palido que el anterior y con un paso por azul en medio que antes no
+  // existia. Se guarda aqui para que tema y pruebas midan lo mismo.
   static const brandAqua = Color(0xFF60E5E2);
   static const brandSky = Color(0xFF71AFE2);
   static const brandLilac = Color(0xFFAF84F0);

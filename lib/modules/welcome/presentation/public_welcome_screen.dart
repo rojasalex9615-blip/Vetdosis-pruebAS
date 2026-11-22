@@ -389,7 +389,7 @@ class _Plan extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       // Cada plan lleva el contorno y un halo leve de su propio color, segun
-      // la referencia de Ale: asi los tres se distinguen de un vistazo y la
+      // la referencia: asi los tres se distinguen de un vistazo y la
       // lamina de precios no es una pila de tarjetas iguales. El contorno va
       // en primer plano para no mover el contenido de la tarjeta.
       child: DecoratedBox(

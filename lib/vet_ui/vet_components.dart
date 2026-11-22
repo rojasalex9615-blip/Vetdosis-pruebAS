@@ -231,8 +231,15 @@ class VetModuleTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: .15),
                       borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: vividAccent(accent).withValues(alpha: .34),
+                          blurRadius: 18,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                    child: Icon(icon, color: accent),
+                    child: Icon(icon, color: vividAccent(accent)),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -380,15 +387,25 @@ class VetIconBox extends StatelessWidget {
   final Color accent;
   final double size;
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: accent.withValues(alpha: .15),
-      borderRadius: BorderRadius.circular(size * .32),
-    ),
-    child: Icon(icon, color: accent, size: size * .52),
-  );
+  Widget build(BuildContext context) {
+    final vivid = vividAccent(accent);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: .15),
+        borderRadius: BorderRadius.circular(size * .32),
+        boxShadow: [
+          BoxShadow(
+            color: vivid.withValues(alpha: .34),
+            blurRadius: size * .42,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Icon(icon, color: vivid, size: size * .52),
+    );
+  }
 }
 
 /// Título de pantalla o de bloque con una línea de apoyo opcional.
@@ -474,8 +491,8 @@ class VetSectionHeader extends StatelessWidget {
       ),
       _ => null,
     };
-    // Un paso numerado en Neu es una tarjeta, como en las referencias de
-    // Ale: el cuadro y el titulo arriba, y la explicacion debajo a todo el
+    // Un paso numerado en Neu es una tarjeta, como en las referencias:
+    // el cuadro y el titulo arriba, y la explicacion debajo a todo el
     // ancho en vez de apretada junto al cuadro. Los bloques sin numero
     // siguen siendo un titulo suelto.
     if (step != null &&
@@ -724,7 +741,7 @@ class VetReferenceCard extends StatelessWidget {
 /// Fila de dato: etiqueta a la izquierda (gris medio, normal) y valor a la
 /// derecha (color fuerte, semibold).
 ///
-/// Es el nivel 1 de la jerarquía visual de Ale. Antes cada pantalla ponía la
+/// Es el nivel 1 de la jerarquía visual. Antes cada pantalla ponía la
 /// etiqueta y el valor como dos `Text` seguidos del mismo tamaño y color, así
 /// que «Semana desde 2026-11-16» y una aclaración se leían igual. Aquí la
 /// separación la hace la alineación y el peso, no solo el texto.
@@ -839,7 +856,7 @@ class VetNote extends StatelessWidget {
 
 /// Estado vacío: centrado, chico y gris, con un link opcional debajo.
 ///
-/// Ale pidió tratar «No hay dosis futuras…» como nota, no como dato. Si hay
+/// «No hay dosis futuras…» es una nota, no un dato. Si hay
 /// algo que el usuario pueda hacer, se añade [action].
 class VetEmptyState extends StatelessWidget {
   const VetEmptyState({

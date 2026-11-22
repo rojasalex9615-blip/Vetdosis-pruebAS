@@ -48,7 +48,7 @@ una página, no aparece.
 | Estadísticas y reportes | Estadísticas |
 | Asistente IA | Asistente IA |
 | Revisión de catálogos | Modo revisión |
-| Cuenta y ajustes | Mi cuenta y clínicas · Ajustes · Respaldo · Planes · Producto y costos · Inicio guiado · Ayuda y soporte |
+| Cuenta y ajustes | Mi cuenta y clínicas · Ajustes · Respaldo · Planes · Producto y costos · Inicio guiado · Ayuda y soporte · Información de la app |
 
 ## 3. Pantalla por pantalla: ruta → widget → entradas y salidas
 
@@ -91,6 +91,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Producto y costos | `ProductScreen` | Grupo Cuenta | Funciones y límites antes de datos reales. |
 | Inicio guiado | `GuidedStartScreen` | Grupo Cuenta / aviso inicial | Guía por pasos. |
 | Ayuda y soporte | `SupportScreen` | Grupo Cuenta | Reportar problemas y seguir soporte. |
+| Información de la app | `AppInfoScreen` | Grupo Cuenta | Datos, privacidad, fuentes, licencias y colaboradores; solo consulta. |
 | Ajustes | `settings()` | Grupo Cuenta / cabecera | Paleta, apariencia clara/oscura, estilo Neu. |
 | Mi cuenta y clínicas | `AuthScreen` (cuenta) | Cabecera | Espacio personal o clínica del equipo; roles desde la cuenta. |
 | Modo revisión | `ReviewCatalogScreen` | Grupo Revisión | Catálogos con datos sin verificar; comenta errores por fila. |

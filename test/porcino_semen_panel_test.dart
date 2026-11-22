@@ -26,7 +26,7 @@ void main() {
     expect(find.textContaining('60.2 ×10⁹'), findsOneWidget);
     expect(find.textContaining('2200 ml'), findsOneWidget);
     expect(
-      find.textContaining('Dilución y área de conteo por confirmar'),
+      find.textContaining('Dilución y área de conteo pendientes de verificación'),
       findsWidgets,
     );
     expect(tester.takeException(), isNull);

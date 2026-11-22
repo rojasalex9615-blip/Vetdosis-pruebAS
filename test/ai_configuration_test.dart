@@ -62,7 +62,9 @@ void main() {
       child: AiScreen(repository: AiFake(), member: personal),
     ))));
     await tester.pumpAndSettle();
-    expect(find.text('Nuevo chat'), findsOneWidget);
+    // La accion de chat ahora es un boton con tooltip (riel e historial);
+    // lo que importa es que exista y que no aparezca la administracion.
+    expect(find.byTooltip('Nuevo chat'), findsWidgets);
     expect(find.text('Agregar proveedor / clave'), findsNothing);
     expect(find.text('Revocar'), findsNothing);
     expect(tester.takeException(), isNull);

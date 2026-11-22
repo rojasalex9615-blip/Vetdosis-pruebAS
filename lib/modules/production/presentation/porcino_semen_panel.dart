@@ -169,7 +169,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
           ),
           const VetNotice(
             text:
-                'Dilución y área de conteo por confirmar con el material del curso.',
+                'Dilución y área de conteo pendientes de verificación.',
             icon: Icons.rule_outlined,
             kind: VetBadgeKind.warning,
           ),
