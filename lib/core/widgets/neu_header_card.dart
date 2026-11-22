@@ -27,14 +27,14 @@ class NeuHeaderCard extends StatelessWidget {
     // El tono de la franja sale del color de la seccion, pero apagado: los
     // colores de marca son muy luminosos y al 20% dejaban la cabecera mas
     // cargada que el resto de la tarjeta. Se baja saturacion y luminosidad
-    // antes de mezclar, como en las cabeceras que Ale dio por buenas.
+    // antes de mezclar.
     final hsl = HSLColor.fromColor(color);
     final quiet = hsl
         .withSaturation(hsl.saturation.clamp(0, .6).toDouble())
         .withLightness(dark ? .62 : .42)
         .toColor();
     // El halo vive solo en la franja de la cabecera y muy tenue. La tarjeta
-    // entera ya no brilla: por indicacion de Ale el glow marca el titulo del
+    // entera ya no brilla: el glow marca el titulo del
     // apartado, no su contenido.
     return WorkspacePanel(
       radius: soft ? 32 : 24,

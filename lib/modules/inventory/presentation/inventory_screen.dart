@@ -1218,7 +1218,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
             ],
             if (section == 'cash') ...[
-              // Caja segun la maqueta de Ale: el resumen del dia y los
+              // Caja segun la maqueta: el resumen del dia y los
               // medios de pago como mosaicos, la venta nueva en el boton
               // redondo y lo demas en acciones secundarias. Los importes son
               // los mismos que ya entregaba el servidor en day_totals; solo

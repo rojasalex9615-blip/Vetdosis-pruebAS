@@ -17,9 +17,8 @@ const neuLilac = Color(0xFFC5A8EF);
 /// levantar una tarjeta sin recalcular los desplazamientos.
 List<BoxShadow> neuShadows(bool dark, {double depth = 1}) => [
   BoxShadow(
-    // Segunda vuelta con Ale. Primero pidio suavizar (la sombra iba al 50% y
-    // el brillo casi opaco, muy marcado frente a las maquetas) y se bajo al
-    // 28%. En el telefono eso «casi no se ve»: las tarjetas se confundian con
+    // La sombra iba al 50% y el brillo casi opaco, muy marcado; se bajo al
+    // 28%. En el telefono casi no se veia: las tarjetas se confundian con
     // el fondo. Queda en medio: sombra al 50% pero de un gris azulado mas
     // claro que el de la primera version, brillo al 90%, y un punto mas de
     // desplazamiento con algo menos de desenfoque para que el borde de la
@@ -36,7 +35,7 @@ List<BoxShadow> neuShadows(bool dark, {double depth = 1}) => [
 ];
 
 /// Recorrido del boton principal en Neu: el aqua → violeta de «Ingresar» y
-/// «Calcular» en las referencias de Ale.
+/// «Calcular» en las referencias.
 ///
 /// En claro va mas cargado que el degradado de marca porque encima lleva la
 /// etiqueta en blanco: con los tonos palidos de [brandGradientColors] el
@@ -381,7 +380,7 @@ Color neuGlow(bool dark) =>
 /// se envuelve a mano y por eso puede sacar la sombra fuera.
 ///
 /// Con [gradient] la placa lleva ese recorrido de lado a lado en vez del
-/// relieve de un solo tono: es el boton principal de las referencias de Ale
+/// relieve de un solo tono: es el boton principal de las referencias
 /// («Ingresar», «Calcular»), que va de aqua a violeta. [ink] es la tinta de
 /// su etiqueta, medida contra ese recorrido.
 ButtonStyle neuButtonStyle(

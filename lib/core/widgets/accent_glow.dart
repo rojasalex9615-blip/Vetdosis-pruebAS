@@ -12,6 +12,19 @@ class AccentGlowStyle extends ThemeExtension<AccentGlowStyle> {
       t < .5 ? this : other ?? this;
 }
 
+/// Tono vivo del acento para el icono y el halo de una forma translúcida.
+///
+/// El relleno de la forma sigue siendo el acento al 15 %; el icono y el halo
+/// usan este tono, más saturado y algo más claro, para que el resalte se
+/// distinga del fondo sin cambiar la paleta de la sección.
+Color vividAccent(Color color) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl
+      .withSaturation((hsl.saturation + .18).clamp(.65, 1.0))
+      .withLightness((hsl.lightness + .07).clamp(.38, .70))
+      .toColor();
+}
+
 /// Paint-only halo: does not alter layout, hit targets, text, or semantic states.
 class AccentGlow extends StatelessWidget {
   const AccentGlow({
@@ -35,8 +48,8 @@ class AccentGlow extends StatelessWidget {
     }
     final hsl = HSLColor.fromColor(color);
     final luminous = hsl
-        .withSaturation(hsl.saturation.clamp(.65, .85))
-        .withLightness(.55)
+        .withSaturation(hsl.saturation.clamp(.70, .92))
+        .withLightness(.56)
         .toColor();
     return CustomPaint(
       painter: _AccentHalo(luminous, radius, emphasis),
@@ -58,13 +71,13 @@ class _AccentHalo extends CustomPainter {
     canvas.drawRRect(
       shape.inflate(1),
       Paint()
-        ..color = color.withValues(alpha: .18 * emphasis)
+        ..color = color.withValues(alpha: .26 * emphasis)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
     canvas.drawRRect(
       shape,
       Paint()
-        ..color = color.withValues(alpha: .10 * emphasis)
+        ..color = color.withValues(alpha: .15 * emphasis)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
     );
   }
@@ -116,7 +129,7 @@ class _AccentChip extends StatelessWidget {
     return AccentGlow(
       color: Theme.of(context).colorScheme.primary,
       enabled: selected,
-      emphasis: .6,
+      emphasis: .85,
       radius: 16,
       child: child,
     );

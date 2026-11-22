@@ -1,5 +1,5 @@
 /// Valores de referencia de material de clase (Pork School, ago-2026) y de la
-/// asignatura Producción de Cerdos. Extraídos por Grok de los documentos de
+/// asignatura Producción de Cerdos. Extraídos de los documentos de
 /// Drive (Coordinacion_Agentes_VetDosis, CSV del 6-7 nov 2026). Son referencias
 /// de diseño y enseñanza: no son metas de rendimiento ni límites operativos, y
 /// no cuentan con validación externa independiente.

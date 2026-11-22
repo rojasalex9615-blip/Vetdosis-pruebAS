@@ -13,7 +13,7 @@ bool navigationAllowed(
   }
   final role = member.role;
   if (role == ClinicRole.revisor) {
-    // Decisión 2026-11-19 (Alejandra): el revisor ve todo y usa las
+    // Decisión 2026-11-19: el revisor ve todo y usa las
     // herramientas — Vademécum y cálculo de dosis del empaque para comprobar
     // que la pauta da el resultado correcto — sin editar datos de la clínica.
     // La edición sigue cerrada por los permisos de cada módulo

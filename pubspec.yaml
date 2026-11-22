@@ -49,6 +49,7 @@ flutter:
   assets:
     - assets/brand/
     - assets/fonts/
+    - assets/app/
     - assets/clinical/
     - assets/clinical/aviculture/
     - assets/clinical/incubation/
