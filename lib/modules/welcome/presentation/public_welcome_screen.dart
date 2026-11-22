@@ -91,12 +91,9 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
                     children: [
                       Flexible(
                         child: _page > 0
-                            ? FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: TextButton(
-                                  onPressed: () => _turn(-1),
-                                  child: const Text('Anterior'),
-                                ),
+                            ? VetSecondaryButton(
+                                label: 'Anterior',
+                                onPressed: () => _turn(-1),
                               )
                             : const SizedBox.shrink(),
                       ),
@@ -107,13 +104,17 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
                             for (var i = 0; i < _pageCount; i++)
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 3),
-                                child: Icon(
-                                  VetIcons.dot,
-                                  size: i == _page ? 10 : 8,
-                                  color: i == _page
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.outlineVariant,
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  width: i == _page ? 24 : 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: i == _page
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.outlineVariant,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
                                 ),
                               ),
                           ],
@@ -121,12 +122,9 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
                       ),
                       Flexible(
                         child: _page < _pageCount - 1
-                            ? FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: FilledButton.tonal(
-                                  onPressed: () => _turn(1),
-                                  child: const Text('Siguiente'),
-                                ),
+                            ? FilledButton.tonal(
+                                onPressed: () => _turn(1),
+                                child: const Text('Siguiente'),
                               )
                             : const SizedBox.shrink(),
                       ),
@@ -159,28 +157,30 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
     Text(
       'Bienvenido a VetDosis',
       textAlign: TextAlign.center,
-      style: theme.textTheme.headlineMedium,
+      style: VetTypography.headlineMedium,
     ),
     const SizedBox(height: 10),
     Text(
       'Dosis, expedientes y equipo de tu clínica, en un solo lugar.',
       textAlign: TextAlign.center,
-      style: theme.textTheme.titleMedium?.copyWith(color: VetColors.muted),
+      style: VetTypography.bodyLarge.copyWith(color: VetColors.muted),
     ),
-    const SizedBox(height: 22),
-    FilledButton.icon(
+    const SizedBox(height: VetSpacing.xl),
+    VetActionButton(
+      label: 'Iniciar sesión',
+      icon: VetIcons.login,
       onPressed: () => _openAccess(context),
-      icon: const Icon(VetIcons.login),
-      label: const Text('Iniciar sesión'),
+      fullWidth: true,
     ),
-    const SizedBox(height: 10),
-    OutlinedButton(
+    const SizedBox(height: VetSpacing.sm),
+    VetSecondaryButton(
+      label: 'Crear cuenta',
       onPressed: widget.auth == null
           ? null
           : () => _openAccess(context, register: true),
-      child: const Text('Crear cuenta'),
+      fullWidth: true,
     ),
-    const SizedBox(height: 16),
+    const SizedBox(height: VetSpacing.lg),
   ];
 
   List<Widget> _descriptionChildren(ThemeData theme) => [
