@@ -2,7 +2,7 @@
 /// `aquaculture_reference.dart`: conversión alimenticia y costo, recambio de
 /// agua, sal contra el nitrito y alimento medicado.
 ///
-/// Especificación de fórmulas y constantes: Claude (2026-11-16), a partir de las
+/// Especificación de fórmulas y constantes (2026-11-16), a partir de las
 /// 7 calculadoras de referencia de Artemio Lab. Fuentes primarias citadas en
 /// cada bloque. Puras y sin estado; no guardan registros ni recomiendan
 /// productos ni dosis clínicas.

@@ -101,8 +101,8 @@ class LabResult {
   /// rango mas amplio: el minimo de los minimos y el maximo de los maximos.
   /// Eso decide por el veterinario y ademas en la direccion permisiva, un
   /// valor que una fuente llama bajo se presentaba como normal, y la union
-  /// de los dos rangos no es un rango que ninguna fuente publique. Por
-  /// indicacion de Ale: se muestran los dos datos con su referencia y el
+  /// de los dos rangos no es un rango que ninguna fuente publique.
+  /// Se muestran los dos datos con su referencia y el
   /// profesional elige. Es la misma regla que ya siguen las referencias
   /// porcinas con la lactancia de 21 y 28 dias.
   List<LabReading> readings(String species, List<LabReferenceRange> ranges) {

@@ -15,11 +15,11 @@ import '../../vet_ui/vet_icons.dart';
     color: const Color(0xFF7BD8EA),
     icon: VetIcons.medicineBottle,
   ),
-  'withdrawals' => (color: const Color(0xFFAE9ACB), icon: VetIcons.clock),
-  'manufacturer' => (
-    color: const Color(0xFF8DADD8),
-    icon: VetIcons.medicineBottle,
+  'withdrawals' => (
+    color: const Color(0xFFAE9ACB),
+    icon: VetIcons.calendarClock,
   ),
+  'manufacturer' => (color: const Color(0xFF8DADD8), icon: VetIcons.book),
   'aviculture' => (color: const Color(0xFF7BCFEA), icon: VetIcons.chicken),
   'incubation' => (color: const Color(0xFFAA94D1), icon: VetIcons.egg),
   'broiler' => (color: const Color(0xFFE0A97B), icon: VetIcons.bird),
@@ -43,7 +43,7 @@ import '../../vet_ui/vet_icons.dart';
     icon: VetIcons.syringe,
   ),
   'conversion' => (color: const Color(0xFF7BD8EA), icon: VetIcons.swapHoriz),
-  _ => (color: const Color(0xFFAC96CF), icon: VetIcons.clock),
+  _ => (color: const Color(0xFFAC96CF), icon: VetIcons.calculator),
 };
 
 /// Persistent tool colors: independent of the user's global palette.
@@ -109,7 +109,7 @@ class CalculatorIcon extends StatelessWidget {
     // propio color, que aclara el fondo. Se compone primero esa placa y el
     // contraste se mide contra ella.
     // La placa se tine al 35%, no al 10%. Con los tonos cargados de antes un
-    // 10% ya se notaba; con la paleta palida que pidio Ale ese 10% dejaba la
+    // 10% ya se notaba; con la paleta palida ese 10% dejaba la
     // placa indistinguible del fondo y el icono parecia flotar suelto.
     final placa = composite(
       identity.color,
@@ -120,7 +120,7 @@ class CalculatorIcon extends StatelessWidget {
     return AccentGlow(
       color: color,
       radius: 12,
-      emphasis: 1, // Preserve the badge glow approved by Ale.
+      emphasis: 1, // Preserve the badge glow.
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(

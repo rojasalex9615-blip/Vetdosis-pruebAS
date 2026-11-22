@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "note": "Fuente: docs/colaboradores-y-aportes.md. Una fila por colaborador. Mantener ambos sincronizados.",
+  "collaborators": [
+    {
+      "name": "Alejandra Ivone Rojas Reyna (\"Ale\")",
+      "platform": "Todas",
+      "bot": "",
+      "status": "Activa",
+      "areas": "Dirección, concepto, contenido veterinario, decisiones y pruebas.",
+      "evidence": ""
+    },
+    {
+      "name": "Gemini (Google)",
+      "platform": "Google AI Studio",
+      "bot": "por confirmar",
+      "status": "Origen del proyecto",
+      "areas": "Primera versión de la app en Kotlin. Aportes posteriores por confirmar.",
+      "evidence": "por confirmar"
+    },
+    {
+      "name": "GPT-5.6 \"Sol\"",
+      "platform": "por confirmar (Codex / ChatGPT)",
+      "bot": "Sol",
+      "status": "Ya no colabora (2026-11-05)",
+      "areas": "Recap del padrón SENASICA grupo I, preservado en docs/regulatory/senasica/grupo-i/.",
+      "evidence": "issue #31; preparacion_provenance.json"
+    },
+    {
+      "name": "GPT-6 \"Sol\" (6 / 6.1)",
+      "platform": "Codex",
+      "bot": "Sol",
+      "status": "Ya no colabora (2026-11-05)",
+      "areas": "Pequeñas especies (PR #60) y contratos P0/P1 y Supabase (#63, #64, #65, #66).",
+      "evidence": "issue #31"
+    },
+    {
+      "name": "GPT-6 \"Astra\"",
+      "platform": "por confirmar",
+      "bot": "Astra",
+      "status": "Ya no colabora (2026-11-05)",
+      "areas": "por confirmar.",
+      "evidence": "por confirmar"
+    },
+    {
+      "name": "GPT-6 (coordinador de chat)",
+      "platform": "ChatGPT",
+      "bot": "por confirmar",
+      "status": "Ya no colabora",
+      "areas": "Coordinación y relevo entre chats (2026-10-26).",
+      "evidence": "issue #31"
+    },
+    {
+      "name": "Grok (xAI)",
+      "platform": "por confirmar",
+      "bot": "por confirmar",
+      "status": "Ya no colabora (por confirmar)",
+      "areas": "Evidencia documental y catálogo comercial en Drive (2026-10-27).",
+      "evidence": "issue #31"
+    },
+    {
+      "name": "CodeRabbit",
+      "platform": "GitHub (bot de revisión)",
+      "bot": "coderabbitai",
+      "status": "Revisor",
+      "areas": "Revisión de PRs e informe de hallazgos.",
+      "evidence": "PRs #26, #28, #60-#66"
+    },
+    {
+      "name": "Claude (Sonnet 5.5)",
+      "platform": "Claude Code, sesión en la nube (claude.ai)",
+      "bot": "por confirmar",
+      "status": "Activa desde 2026-11-05",
+      "areas": "Módulo porcino: tablas de producción por fases, flujo de bandas, mapa de contaminación de UPP y calculadoras de producción.",
+      "evidence": "registro del issue #31"
+    },
+    {
+      "name": "Claude (otras sesiones)",
+      "platform": "Claude (chat)",
+      "bot": "",
+      "status": "Aporte previo",
+      "areas": "Auditoría documental y Virbac (2026-10-27).",
+      "evidence": "issue #31, comentario del 2026-10-28"
+    },
+    {
+      "name": "Mistral (mistral-medium-latest)",
+      "platform": "Mistral AI / Vibe Code",
+      "bot": "Mistralin / Vibe Code",
+      "status": "Activa desde 2026-11-06",
+      "areas": "Coordinación Git, integración de cambios entre modelos, revisión de código y pruebas de integración.",
+      "evidence": "sesión de coordinación 2026-11-06 (SHA pendiente)"
+    },
+    {
+      "name": "DeepSeek V4.1 (openhands/deepseek-v4.1-flash)",
+      "platform": "OpenHands (agente)",
+      "bot": "Deepsec",
+      "status": "Activa desde 2026-11-13",
+      "areas": "Separación de la IA de soporte y el chat de IA, historial lateral en teléfono, pruebas SQL y Flutter, traslado del trabajo porcino.",
+      "evidence": "commits 6940377 y 2354c4d; supabase/proposed/16B_ai_chat_kinds.sql; issue #1 de GitLab"
+    },
+    {
+      "name": "OpenHands (agente)",
+      "platform": "OpenHands",
+      "bot": "",
+      "status": "Activa desde 2026-11-20",
+      "areas": "Dos vademécums (fármaco y nombre comercial), biblioteca de referencias, iconos por sección, glow de resaltados e Información de la app.",
+      "evidence": "commits de esta entrega en profesores"
+    }
+  ]
+}

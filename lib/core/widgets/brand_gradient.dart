@@ -101,7 +101,7 @@ class BrandGradientIcon extends StatelessWidget {
 
 /// Banda de cabecera de las pantallas: el recorrido de marca, palido.
 ///
-/// En las referencias de Ale cada pantalla abre con una franja aqua → lila y
+/// En las referencias cada pantalla abre con una franja aqua → lila y
 /// el contenido sube sobre ella como una hoja de esquinas redondeadas. Va de
 /// lado a lado, sin componente vertical, para que la barra y el tramo que
 /// asoma detras de la hoja casen sin costura aunque sean dos widgets.

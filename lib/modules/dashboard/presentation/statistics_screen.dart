@@ -21,7 +21,7 @@ import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_icons.dart';
 import 'dashboard_view_model.dart';
 
-/// Periodo de la caja: el selector lo aprobó Ale (semana/mes/año).
+/// Periodo de la caja: el selector aprobado (semana/mes/año).
 ///
 /// Las ventas netas salen de la serie mensual del servidor
 /// (`clinic_statistics`): el mes en curso y la suma de los 12 meses. El
@@ -121,7 +121,7 @@ List<ClinicalBranch> servedBranches(ClinicExperience? experience) {
   ];
 }
 
-/// Estadísticas de la clínica, en el orden aprobado por Ale:
+/// Estadísticas de la clínica, en el orden aprobado:
 ///
 /// 0. lo que tiene hoy, sin cambios; 1. Caja del periodo; 2. Citas por estado
 /// y responsable; 3. Hospitalización; 4. Inventario; 5. Producción M15;
@@ -152,7 +152,7 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
   bool _exporting = false;
   String? _exportMessage;
 
-  /// Filtro por defecto: una rama a la vez (decisión de Ale, 2026-11-17).
+  /// Filtro por defecto: una rama a la vez (2026-11-17).
   /// La primera rama que atiende la clínica (Pequeñas especies siempre).
   /// «Todas las ramas» sigue disponible como chip.
   @override

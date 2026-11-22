@@ -315,7 +315,7 @@ class _ClinicalVitalsScreenState extends State<ClinicalVitalsScreen> {
             : const Color(0xFFE4EDF3),
       ),
       // El par del sistema, no uno a mano. Estos valores (7/8 y 18 de
-      // desenfoque) son los de antes de que Ale pidiera el relieve mas suave:
+      // desenfoque) son los de antes del relieve mas suave:
       // neuShadows se bajo entonces a 3/3 y 14 y estos dos sitios se quedaron
       // con los duros, asi que la misma app tenia dos profundidades.
       boxShadow: neuShadows(dark, depth: 1.2),

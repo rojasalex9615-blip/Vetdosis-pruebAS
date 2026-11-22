@@ -5,7 +5,7 @@ import 'neu_identity.dart';
 import 'workspace_panel.dart';
 import '../../vet_ui/vet_icons.dart';
 
-/// Piezas del punto de venta segun las maquetas de «Caja» que entrego Ale:
+/// Piezas del punto de venta segun las maquetas de «Caja»:
 /// mosaicos de resumen, el boton redondo de «Nueva venta» y el teclado
 /// numerico. Solo dan forma; los importes y las acciones los pone quien llama.
 
