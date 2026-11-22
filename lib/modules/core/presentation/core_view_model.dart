@@ -53,11 +53,15 @@ class CoreViewModel extends ChangeNotifier {
     int? palette,
     String? brightness,
     String? visualStyle,
+    Set<String>? workAreas,
+    bool? includeAdmin,
   }) async {
     settings = AppSettings(
       palette: palette ?? settings.palette,
       visualStyle: visualStyle ?? settings.visualStyle,
       brightness: brightness ?? settings.brightness,
+      workAreas: workAreas ?? settings.workAreas,
+      includeAdmin: includeAdmin ?? settings.includeAdmin,
     );
     saveError = null;
     notifyListeners();

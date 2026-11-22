@@ -114,10 +114,12 @@ class _ModuleAccessBoundaryState extends State<ModuleAccessBoundary> {
                       ),
                     ),
                     TextButton(
-                      onPressed: loading ? null : () {
-                        setState(() => loading = true);
-                        load();
-                      },
+                      onPressed: loading
+                          ? null
+                          : () {
+                              setState(() => loading = true);
+                              load();
+                            },
                       child: const Text('Reintentar'),
                     ),
                   ],
@@ -125,10 +127,7 @@ class _ModuleAccessBoundaryState extends State<ModuleAccessBoundary> {
               ),
             ),
           ),
-        Expanded(
-          key: const ValueKey('module_access_content'),
-          child: content,
-        ),
+        Expanded(key: const ValueKey('module_access_content'), child: content),
       ],
     );
   }
