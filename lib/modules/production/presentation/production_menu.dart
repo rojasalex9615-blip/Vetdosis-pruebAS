@@ -1,4 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
+import '../../../core/widgets/neu_identity.dart';
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
@@ -230,16 +231,31 @@ class _ProductionMenuState extends State<ProductionMenu> {
               'Cálculo por cabeza y lote, medicación en agua y medicación en alimento.',
         ),
         if (allowed('Cálculos clínicos'))
-          for (final (id, label, toolIcon) in [
-            ('herd', 'Por cabeza y lote', VetIcons.cow),
-            ('water', 'Medicación en agua', VetIcons.waves),
-            ('feed', 'Medicación en alimento', VetIcons.feedBag),
-          ])
+          for (final (id, label, toolIcon, description) in [
+            (
+              'herd',
+              'Por cabeza y lote',
+              VetIcons.cow,
+              'Cálculo por cabeza y lote.',
+            ),
+            (
+              'water',
+              'Medicación en agua',
+              VetIcons.waves,
+              'Medicación en el agua de bebida.',
+            ),
+            (
+              'feed',
+              'Medicación en alimento',
+              VetIcons.feedBag,
+              'Medicación en el alimento.',
+            ),
+          ]) ...[
+            VetSectionHeader(title: label, subtitle: description),
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: VetActionButton(
-                icon: toolIcon,
-                label: label,
+              padding: const EdgeInsets.only(bottom: 12),
+              child: NeuPrimaryButton(
+                dense: true,
                 onPressed: () => open(
                   CalculationScreen(
                     initialTool: id,
@@ -247,8 +263,17 @@ class _ProductionMenuState extends State<ProductionMenu> {
                     title: 'Producción: $label',
                   ),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(toolIcon, size: 18),
+                    const SizedBox(width: 8),
+                    Text(label),
+                  ],
+                ),
               ),
-            )
+            ),
+          ]
         else
           const VetNotice(
             text: 'Tu acceso actual no incluye las calculadoras de producción.',
@@ -391,31 +416,34 @@ class _ProductionMenuState extends State<ProductionMenu> {
             ),
             const SizedBox(height: 24),
           ],
-      const VetSectionHeader(
-        title: 'Apartados previstos',
-        subtitle:
-            'Estos registros específicos están en preparación; las unidades de arriba sí se guardan.',
-      ),
-      for (final name in plannedProductionAreas[species]!)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: VetCard(
-            padding: EdgeInsets.zero,
-            radius: 18,
-            child: ListTile(
-              leading: VetIconBox(
-                icon: VetIcons.clock,
-                accent: accent,
-                size: 40,
-              ),
-              title: Text(name),
-              trailing: const VetStatusBadge(
-                label: 'En preparación',
-                kind: VetBadgeKind.unverified,
+      if (plannedProductionAreas[species] case final planned?
+          when planned.isNotEmpty) ...[
+        const VetSectionHeader(
+          title: 'Apartados previstos',
+          subtitle:
+              'Estos registros específicos están en preparación; las unidades de arriba sí se guardan.',
+        ),
+        for (final name in planned)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: VetCard(
+              padding: EdgeInsets.zero,
+              radius: 18,
+              child: ListTile(
+                leading: VetIconBox(
+                  icon: VetIcons.clock,
+                  accent: accent,
+                  size: 40,
+                ),
+                title: Text(name),
+                trailing: const VetStatusBadge(
+                  label: 'En preparación',
+                  kind: VetBadgeKind.unverified,
+                ),
               ),
             ),
           ),
-        ),
+      ],
       const SizedBox(height: 16),
       const VetSectionHeader(
         title: 'Herramientas del espacio',
