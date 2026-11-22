@@ -96,7 +96,7 @@ Color sectionAccent(String page) => switch (page) {
 
 IconData sectionIcon(String page) => switch (page) {
   'Inicio' => VetIcons.dashboard,
-  'Cálculos' || 'Cálculo rápido' => VetIcons.calculator,
+  'Cálculos' || 'Cálculo rápido' => VetIcons.gauge,
   'Vademécum' => VetIcons.pills,
   'Operaciones de dosis' => VetIcons.syringe,
   'Cálculos clínicos' => VetIcons.flask,
