@@ -136,7 +136,12 @@ jobs:
           else
             gh release create "$tag" --target "$GITHUB_SHA" --title "$title" --notes "$notes" --prerelease
           fi
-          gh release upload "$tag" build/app/outputs/flutter-apk/app-*-beta-release.apk build/app/outputs/flutter-apk/SHA256SUMS.txt build/app/outputs/flutter-apk/BUILD-INFO.json --clobber
+          # `--clobber` no reemplaza de forma fiable un APK ya publicado; borrar
+          # antes de subir y comparar el digest evita dejar el binario anterior.
+          for name in $(gh release view "$tag" --json assets --jq '.assets[].name'); do
+            gh release delete-asset "$tag" "$name" --yes || true
+          done
+          gh release upload "$tag" build/app/outputs/flutter-apk/app-*-beta-release.apk build/app/outputs/flutter-apk/SHA256SUMS.txt build/app/outputs/flutter-apk/BUILD-INFO.json
           # «Publicado» debe significar descargable: se comprueba que los archivos
           # de este commit quedaron adjuntos antes de dar el paso por bueno.
           assets="$(gh release view "$tag" --json assets --jq '.assets[].name')"
@@ -144,6 +149,12 @@ jobs:
             name="$(basename "$file")"
             if ! grep -qxF -- "$name" <<< "$assets"; then
               echo "::error::Falta $name en el release $tag."
+              exit 1
+            fi
+            local_digest="$(sha256sum "$file" | cut -d' ' -f1)"
+            remote_digest="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$tag" --jq ".assets[]|select(.name==\"$name\")|.digest" | sed 's/^sha256://')"
+            if [ "$local_digest" != "$remote_digest" ]; then
+              echo "::error::El asset $name no coincide con el archivo compilado ($local_digest != $remote_digest)."
               exit 1
             fi
           done
