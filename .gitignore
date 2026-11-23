@@ -83,3 +83,7 @@ token.json
 # Tokens y documentos con claves: nunca versionar
 Documento sin t*tulo.docx.txt
 *.docx.txt
+Copia de Documento*.docx
+
+# SDK de Flutter local para pruebas
+.tool/

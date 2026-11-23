@@ -88,7 +88,7 @@ void main() {
     tester,
   ) async {
     await _host(tester, const ExoticsMenu());
-    expect(find.text('Calculadora'), findsOneWidget);
+    expect(find.text('Calculadora rápida'), findsOneWidget);
     final tarjeta = find.text('Peso metabólico');
     expect(tarjeta, findsOneWidget);
     await tester.ensureVisible(tarjeta);
