@@ -22,7 +22,7 @@ const sectionGroups = [
     'Inventario',
     'Escanear producto',
   ]),
-  SectionGroup('Producción animal', ['Producción y grandes especies']),
+  SectionGroup('Producción animal', ['Producción y grandes especies', 'Dashboard Pecuario']),
   SectionGroup('Exóticos y silvestres', ['Exóticos']),
   SectionGroup('Administración y finanzas', [
     'Caja',

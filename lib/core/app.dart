@@ -948,7 +948,7 @@ class CoreShell extends StatelessWidget {
       'Vademécum' ||
       'Operaciones de dosis' ||
       'Cálculos clínicos' => 'Cálculos',
-      'Producción y grandes especies' || 'Exóticos' => 'Inicio',
+      'Producción y grandes especies' || 'Dashboard Pecuario' || 'Producción pecuaria' || 'Exóticos' => 'Inicio',
       _ => model.screen,
     };
     final selected = destinations.indexWhere((entry) => entry.$1 == page);
@@ -1318,6 +1318,8 @@ class CoreShell extends StatelessWidget {
                 else if (![
                   'Más',
                   'Producción y grandes especies',
+                  'Dashboard Pecuario',
+                  'Producción pecuaria',
                   'Exóticos',
                 ].contains(model.screen))
                   DropdownButtonFormField<ClinicalBranch>(
@@ -1405,13 +1407,14 @@ class CoreShell extends StatelessWidget {
                     experience: experience,
                     onNavigate: model.navigate,
                   )
-                else if (model.screen == 'Producción y grandes especies')
+                else if (model.screen == 'Producción y grandes especies' || model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria')
                   ProductionMenu(
                     member: auth?.active,
                     access: moduleAccess,
                     onNavigate: model.navigate,
                     porcino: porcino,
                     units: units,
+                    initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )
                 else if (model.screen == 'Exóticos')
                   ExoticsMenu(allowed: allowed('Exóticos'))
