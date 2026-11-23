@@ -1,4 +1,5 @@
 import '../../../core/widgets/accent_glow.dart';
+import '../../../core/widgets/neu_identity.dart';
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
@@ -84,10 +85,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
   void _openCalculator(String type, String currentSpecies) {
     showDialog<void>(
       context: context,
-      builder: (_) => ProductionCalculatorModal(
-        calcType: type,
-        species: currentSpecies,
-      ),
+      builder: (_) =>
+          ProductionCalculatorModal(calcType: type, species: currentSpecies),
     );
   }
 
@@ -98,7 +97,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
     );
   }
 
-  void _openPrescription({required bool quantified, required String currentSpecies}) {
+  void _openPrescription({
+    required bool quantified,
+    required String currentSpecies,
+  }) {
     showDialog<void>(
       context: context,
       builder: (_) => PecuariaPrescriptionModal(
@@ -111,7 +113,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
   }
 
   void _showVitalsDialog(String currentSpecies) {
-    final metrics = speciesDataCatalog[currentSpecies] ?? speciesDataCatalog['Bovinos']!;
+    final metrics =
+        speciesDataCatalog[currentSpecies] ?? speciesDataCatalog['Bovinos']!;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -128,17 +131,26 @@ class _ProductionMenuState extends State<ProductionMenu> {
             for (final v in metrics.vitals) ...[
               ListTile(
                 dense: true,
-                title: Text(v.parameter, style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text(
+                  v.parameter,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
                 trailing: Text(
                   '${v.range} ${v.unit}',
-                  style: const TextStyle(color: VetColors.turquoise, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: VetColors.turquoise,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cerrar'),
+          ),
         ],
       ),
     );
@@ -159,22 +171,31 @@ class _ProductionMenuState extends State<ProductionMenu> {
             TextField(
               controller: pesoCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Pesaje promedio del lote (kg o g)'),
+              decoration: const InputDecoration(
+                labelText: 'Pesaje promedio del lote (kg o g)',
+              ),
             ),
             TextField(
               controller: mortCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Mortalidad del día (cabezas)'),
+              decoration: const InputDecoration(
+                labelText: 'Mortalidad del día (cabezas)',
+              ),
             ),
             TextField(
               controller: consCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Consumo de alimento diario (kg)'),
+              decoration: const InputDecoration(
+                labelText: 'Consumo de alimento diario (kg)',
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -269,10 +290,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                     ),
                     Text(
                       'Pulso financiero, curvas teóricas vs reales, mapa de naves y dosificación.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: VetColors.muted,
-                      ),
+                      style: TextStyle(fontSize: 12, color: VetColors.muted),
                     ),
                   ],
                 ),
@@ -423,7 +441,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
     final (icon, accent) = speciesVisual(currentSpecies);
     final textTheme = Theme.of(context).textTheme;
     final activities = productionSpecies[currentSpecies]!;
-    final metrics = speciesDataCatalog[currentSpecies] ?? speciesDataCatalog['Bovinos']!;
+    final metrics =
+        speciesDataCatalog[currentSpecies] ?? speciesDataCatalog['Bovinos']!;
 
     const denied = VetNotice(
       text: 'Las calculadoras no están habilitadas para tu acceso actual.',
@@ -517,16 +536,31 @@ class _ProductionMenuState extends State<ProductionMenu> {
               'Cálculo por cabeza y lote, medicación en agua y medicación en alimento.',
         ),
         if (allowed('Cálculos clínicos'))
-          for (final (id, label, toolIcon) in [
-            ('herd', 'Por cabeza y lote', VetIcons.cow),
-            ('water', 'Medicación en agua', VetIcons.waves),
-            ('feed', 'Medicación en alimento', VetIcons.feedBag),
-          ])
+          for (final (id, label, toolIcon, description) in [
+            (
+              'herd',
+              'Por cabeza y lote',
+              VetIcons.cow,
+              'Cálculo por cabeza y lote.',
+            ),
+            (
+              'water',
+              'Medicación en agua',
+              VetIcons.waves,
+              'Medicación en el agua de bebida.',
+            ),
+            (
+              'feed',
+              'Medicación en alimento',
+              VetIcons.feedBag,
+              'Medicación en el alimento.',
+            ),
+          ]) ...[
+            VetSectionHeader(title: label, subtitle: description),
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: VetActionButton(
-                icon: toolIcon,
-                label: label,
+              padding: const EdgeInsets.only(bottom: 12),
+              child: NeuPrimaryButton(
+                dense: true,
                 onPressed: () => open(
                   CalculationScreen(
                     initialTool: id,
@@ -534,8 +568,17 @@ class _ProductionMenuState extends State<ProductionMenu> {
                     title: 'Producción: $label',
                   ),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(toolIcon, size: 18),
+                    const SizedBox(width: 8),
+                    Text(label),
+                  ],
+                ),
               ),
-            )
+            ),
+          ]
         else
           const VetNotice(
             text: 'Tu acceso actual no incluye las calculadoras de producción.',
@@ -640,7 +683,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
         else
           denied,
       ],
-      if (currentSpecies == 'Equinos' && activity == 'Reproducción y crianza') ...[
+      if (currentSpecies == 'Equinos' &&
+          activity == 'Reproducción y crianza') ...[
         const SizedBox(height: 16),
         if (allowed('Cálculos clínicos'))
           Padding(
@@ -746,11 +790,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             radius: 16,
             child: Row(
               children: [
-                VetIconBox(
-                  icon: icon,
-                  accent: accent,
-                  size: 40,
-                ),
+                VetIconBox(icon: icon, accent: accent, size: 40),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -758,11 +798,17 @@ class _ProductionMenuState extends State<ProductionMenu> {
                     children: [
                       Text(
                         b.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                       Text(
                         '${b.headcount} animales · Etapa: ${b.stage} (${b.daysInStage} días)',
-                        style: const TextStyle(fontSize: 12, color: VetColors.muted),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: VetColors.muted,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -797,7 +843,9 @@ class _ProductionMenuState extends State<ProductionMenu> {
                   a.type == 'withdrawal'
                       ? VetIcons.alertOctagon
                       : (a.type == 'birth' ? VetIcons.heart : VetIcons.bell),
-                  color: a.type == 'withdrawal' ? VetColors.danger : VetColors.warning,
+                  color: a.type == 'withdrawal'
+                      ? VetColors.danger
+                      : VetColors.warning,
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -805,15 +853,32 @@ class _ProductionMenuState extends State<ProductionMenu> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(a.subtitle, style: const TextStyle(fontSize: 12, color: VetColors.muted)),
+                      Text(
+                        a.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        a.subtitle,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: VetColors.muted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withValues(alpha: 0.12),
+                    color:
+                        (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning)
+                            .withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -821,7 +886,9 @@ class _ProductionMenuState extends State<ProductionMenu> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: a.daysLeft <= 2 ? VetColors.danger : VetColors.warning,
+                      color: a.daysLeft <= 2
+                          ? VetColors.danger
+                          : VetColors.warning,
                     ),
                   ),
                 ),
@@ -845,7 +912,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
               icon: VetIcons.document,
               label: 'Receta Simple',
               style: VetActionStyle.neutral,
-              onPressed: () => _openPrescription(quantified: false, currentSpecies: currentSpecies),
+              onPressed: () => _openPrescription(
+                quantified: false,
+                currentSpecies: currentSpecies,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -854,7 +924,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
               icon: VetIcons.documentCheck,
               label: 'Receta Cuantificada',
               style: VetActionStyle.primary,
-              onPressed: () => _openPrescription(quantified: true, currentSpecies: currentSpecies),
+              onPressed: () => _openPrescription(
+                quantified: true,
+                currentSpecies: currentSpecies,
+              ),
             ),
           ),
         ],
@@ -889,7 +962,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
       // 6. PRÓXIMAMENTE (en gris)
       const VetSectionHeader(
         title: 'Próximamente',
-        subtitle: 'Lo que aún está en desarrollo técnico y bioseguridad ambiental.',
+        subtitle:
+            'Lo que aún está en desarrollo técnico y bioseguridad ambiental.',
       ),
       const SizedBox(height: 8),
       Opacity(
@@ -909,7 +983,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
                       children: [
                         Text(
                           'Grandes Especies: Cirugía y Clínica Avanzada',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
                         ),
                         Text(
                           'Protocolos quirúrgicos de campo, cesáreas y laparotomía',
@@ -918,7 +995,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
                       ],
                     ),
                   ),
-                  VetStatusBadge(label: 'En desarrollo', kind: VetBadgeKind.unverified),
+                  VetStatusBadge(
+                    label: 'En desarrollo',
+                    kind: VetBadgeKind.unverified,
+                  ),
                 ],
               ),
             ),
@@ -936,7 +1016,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
                       children: [
                         Text(
                           'Manejo de Efluentes, Desechos y Bioseguridad',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
                         ),
                         Text(
                           'Lagunas de oxidación, compostaje de mortalidad y biodigestores',
@@ -945,7 +1028,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
                       ],
                     ),
                   ),
-                  VetStatusBadge(label: 'En desarrollo', kind: VetBadgeKind.unverified),
+                  VetStatusBadge(
+                    label: 'En desarrollo',
+                    kind: VetBadgeKind.unverified,
+                  ),
                 ],
               ),
             ),
@@ -953,32 +1039,34 @@ class _ProductionMenuState extends State<ProductionMenu> {
         ),
       ),
       const SizedBox(height: 24),
-
-      const VetSectionHeader(
-        title: 'Apartados previstos',
-        subtitle:
-            'Estos registros específicos están en preparación; las unidades de arriba sí se guardan.',
-      ),
-      for (final name in plannedProductionAreas[currentSpecies]!)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: VetCard(
-            padding: EdgeInsets.zero,
-            radius: 18,
-            child: ListTile(
-              leading: VetIconBox(
-                icon: VetIcons.clock,
-                accent: accent,
-                size: 40,
-              ),
-              title: Text(name),
-              trailing: const VetStatusBadge(
-                label: 'En preparación',
-                kind: VetBadgeKind.unverified,
+      if (plannedProductionAreas[species] case final planned?
+          when planned.isNotEmpty) ...[
+        const VetSectionHeader(
+          title: 'Apartados previstos',
+          subtitle:
+              'Estos registros específicos están en preparación; las unidades de arriba sí se guardan.',
+        ),
+        for (final name in planned)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: VetCard(
+              padding: EdgeInsets.zero,
+              radius: 18,
+              child: ListTile(
+                leading: VetIconBox(
+                  icon: VetIcons.clock,
+                  accent: accent,
+                  size: 40,
+                ),
+                title: Text(name),
+                trailing: const VetStatusBadge(
+                  label: 'En preparación',
+                  kind: VetBadgeKind.unverified,
+                ),
               ),
             ),
           ),
-        ),
+      ],
       const SizedBox(height: 16),
       const VetSectionHeader(
         title: 'Herramientas del espacio',
@@ -1063,9 +1151,9 @@ class _SpeciesCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     summary,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: VetColors.muted,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: VetColors.muted),
                   ),
                   if (badges.isNotEmpty) ...[
                     const SizedBox(height: 10),

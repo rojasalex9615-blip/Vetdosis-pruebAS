@@ -179,11 +179,12 @@ void main() {
     await tester.tap(find.text('Porcinos'));
     await tester.pumpAndSettle();
     expect(find.text('Maternidad y destete'), findsOneWidget);
-    expect(find.text('Reproductores y servicios'), findsOneWidget);
-    final tile = tester.widget<ListTile>(
-      find.widgetWithText(ListTile, 'Reproductores y servicios'),
+    await tester.tap(find.text('Maternidad y destete'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Silo para maternidad y destete'),
+      findsOneWidget,
     );
-    expect(tile.onTap, isNull);
     await tester.ensureVisible(find.text('Agenda del espacio'));
     await tester.tap(find.text('Agenda del espacio'));
     expect(opened, 'Agenda');
@@ -200,13 +201,18 @@ void main() {
       await tester.ensureVisible(find.text('Postura'));
       await tester.tap(find.text('Postura'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.text('Capacidad e instalaciones avícolas'),
+      );
       await tester.tap(find.text('Capacidad e instalaciones avícolas'));
       await tester.pumpAndSettle();
       expect(find.byType(AvicultureScreen), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Reproducción e incubación'));
       await tester.tap(find.text('Reproducción e incubación'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Abrir herramientas de incubación'));
       await tester.tap(find.text('Abrir herramientas de incubación'));
       await tester.pumpAndSettle();
       expect(find.byType(IncubationScreen), findsOneWidget);
