@@ -33,9 +33,8 @@ class NeuHeaderCard extends StatelessWidget {
         .withSaturation(hsl.saturation.clamp(0, .6).toDouble())
         .withLightness(dark ? .62 : .42)
         .toColor();
-    // El halo vive solo en la franja de la cabecera y muy tenue. La tarjeta
-    // entera ya no brilla: el glow marca el titulo del
-    // apartado, no su contenido.
+    final vivid = vividAccent(color);
+
     return WorkspacePanel(
       radius: soft ? 32 : 24,
       depth: soft ? 1.35 : 1,
@@ -45,28 +44,34 @@ class NeuHeaderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AccentGlow(
-              color: color,
-              radius: 0,
-              emphasis: .55,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Color.lerp(base, quiet, dark ? .26 : .2),
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleMedium,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Color.lerp(base, quiet, dark ? .22 : .12),
+              ),
+              child: Row(
+                children: [
+                  AccentGlow(
+                    color: vivid,
+                    radius: 12,
+                    emphasis: 0.8,
+                    child: Icon(
+                      icon,
+                      color: vivid,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    ?trailing,
-                  ],
-                ),
+                  ),
+                  ?trailing,
+                ],
               ),
             ),
             child,

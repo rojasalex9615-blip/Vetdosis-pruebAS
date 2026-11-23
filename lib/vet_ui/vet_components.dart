@@ -562,6 +562,7 @@ class VetNotice extends StatelessWidget {
       VetBadgeKind.danger => scheme.error,
       VetBadgeKind.unverified => scheme.onSurfaceVariant,
     };
+    final vivid = vividAccent(color);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -573,7 +574,12 @@ class VetNotice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: color),
+          AccentGlow(
+            color: vivid,
+            radius: 8,
+            emphasis: 0.7,
+            child: Icon(icon, size: 20, color: vivid),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
