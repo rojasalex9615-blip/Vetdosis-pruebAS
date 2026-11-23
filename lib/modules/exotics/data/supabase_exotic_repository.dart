@@ -2,10 +2,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/exotic_dashboard.dart';
 
-/// Lectura de los ejemplares exóticos y su historia.
+/// Lectura de los ejemplares exóticos, su ambiente y su historia.
 ///
-/// Solo lee. Quien da de alta pacientes, registra pesos o abre una estancia es
-/// el módulo clínico; el panel nada más refleja lo que ya hay.
+/// Solo lee. Las escrituras entran por los RPC `exotic_*` del servidor, que
+/// validan y dejan rastro en `audit_log`; en estas tablas `authenticated` no
+/// tiene INSERT ni UPDATE a propósito.
 ///
 /// Todas las consultas van acotadas por `clinic_id` además de por RLS: si una
 /// política se afloja, la consulta sigue sin cruzar datos de otra cuenta.
@@ -15,21 +16,53 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
 
   @override
   Future<ExoticSnapshot> load(String clinicId) async {
+    // Los recintos no dependen de que haya pacientes: un criadero puede tener
+    // terrarios montados antes de dar de alta al primer ejemplar.
+    final recintosPendiente = _recintos(clinicId);
+    final lecturasPendiente = _lecturas(clinicId);
+    final nidadasPendiente = _nidadas(clinicId);
     final ejemplares = await _ejemplares(clinicId);
-    if (ejemplares.isEmpty) return const ExoticSnapshot();
+
+    final recintos = await recintosPendiente;
+    final lecturas = await lecturasPendiente;
+    final nidadas = await nidadasPendiente;
+
+    if (ejemplares.isEmpty) {
+      return ExoticSnapshot(
+        enclosures: recintos,
+        readings: lecturas,
+        clutches: nidadas,
+      );
+    }
 
     final ids = ejemplares.map((e) => e.id).toList();
-    // Las dos lecturas no dependen entre si: se lanzan a la vez.
+    // Ninguna de estas lecturas depende de las otras: se lanzan a la vez.
     final eventosPendiente = _eventos(clinicId, ids);
     final estanciasPendiente = _estancias(clinicId, ids);
+    final marcajesPendiente = _marcajes(clinicId, ids);
+    final legalPendiente = _legal(clinicId, ids);
+    final tomasPendiente = _tomas(clinicId, ids);
+    final fisioPendiente = _fisiologicos(clinicId, ids);
+
     final eventos = await eventosPendiente;
     final estancias = await estanciasPendiente;
+    final marcajes = await marcajesPendiente;
+    final legal = await legalPendiente;
+    final tomas = await tomasPendiente;
+    final fisio = await fisioPendiente;
 
     return ExoticSnapshot(
       specimens: ejemplares,
       weights: _pesosDe(eventos),
       stays: estancias,
       events: eventos,
+      enclosures: recintos,
+      readings: lecturas,
+      identifiers: marcajes,
+      legal: legal,
+      feedings: tomas,
+      clutches: nidadas,
+      physioEvents: fisio,
     );
   }
 
@@ -53,10 +86,105 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
     }).toList();
   }
 
-  Future<List<ExoticEvent>> _eventos(
-    String clinicId,
-    List<String> ids,
-  ) async {
+  Future<List<ExoticEnclosure>> _recintos(String clinicId) async {
+    final rows = await client
+        .from('exotic_enclosures')
+        .select(
+          'id,nombre,tipo,especie,temp_caliente_min,temp_caliente_max,'
+          'temp_fria_min,temp_fria_max,humedad_min,humedad_max,uv_min,uv_max,'
+          'ph_min,ph_max,amoniaco_max,nitrito_max,salinidad_min,salinidad_max',
+        )
+        .eq('clinic_id', clinicId)
+        .eq('activo', true)
+        .order('nombre');
+    return rows
+        .map(
+          (r) => ExoticEnclosure(
+            id: '${r['id']}',
+            nombre: '${r['nombre'] ?? ''}',
+            tipo: '${r['tipo'] ?? ''}',
+            especie: '${r['especie'] ?? ''}',
+            tempCalienteMin: _num(r['temp_caliente_min']),
+            tempCalienteMax: _num(r['temp_caliente_max']),
+            tempFriaMin: _num(r['temp_fria_min']),
+            tempFriaMax: _num(r['temp_fria_max']),
+            humedadMin: _num(r['humedad_min']),
+            humedadMax: _num(r['humedad_max']),
+            uvMin: _num(r['uv_min']),
+            uvMax: _num(r['uv_max']),
+            phMin: _num(r['ph_min']),
+            phMax: _num(r['ph_max']),
+            amoniacoMax: _num(r['amoniaco_max']),
+            nitritoMax: _num(r['nitrito_max']),
+            salinidadMin: _num(r['salinidad_min']),
+            salinidadMax: _num(r['salinidad_max']),
+          ),
+        )
+        .toList();
+  }
+
+  /// Las lecturas recientes de todos los recintos.
+  ///
+  /// Se limita a 400: el panel solo necesita la última de cada recinto, y
+  /// traer el histórico entero haría lenta la pantalla sin aportar nada.
+  Future<List<ExoticReading>> _lecturas(String clinicId) async {
+    final rows = await client
+        .from('exotic_enclosure_readings')
+        .select(
+          'enclosure_id,medido_en,temp_caliente,temp_fria,humedad,uv_index,'
+          'ph,amoniaco,nitrito,salinidad',
+        )
+        .eq('clinic_id', clinicId)
+        .order('medido_en', ascending: false)
+        .limit(400);
+    return rows
+        .map(
+          (r) => ExoticReading(
+            enclosureId: '${r['enclosure_id']}',
+            medidoEn:
+                DateTime.tryParse('${r['medido_en'] ?? ''}') ?? DateTime.now(),
+            tempCaliente: _num(r['temp_caliente']),
+            tempFria: _num(r['temp_fria']),
+            humedad: _num(r['humedad']),
+            uvIndex: _num(r['uv_index']),
+            ph: _num(r['ph']),
+            amoniaco: _num(r['amoniaco']),
+            nitrito: _num(r['nitrito']),
+            salinidad: _num(r['salinidad']),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<ExoticClutch>> _nidadas(String clinicId) async {
+    final rows = await client
+        .from('exotic_clutches')
+        .select(
+          'id,especie,puesta_el,huevos,fertiles,temp_objetivo,'
+          'humedad_objetivo,eclosion_estimada,estado',
+        )
+        .eq('clinic_id', clinicId)
+        .order('eclosion_estimada');
+    return rows
+        .map(
+          (r) => ExoticClutch(
+            id: '${r['id']}',
+            especie: '${r['especie'] ?? ''}',
+            puestaEl:
+                DateTime.tryParse('${r['puesta_el'] ?? ''}') ?? DateTime.now(),
+            huevos: (r['huevos'] as num?)?.toInt() ?? 0,
+            estado: '${r['estado'] ?? ''}',
+            fertiles: (r['fertiles'] as num?)?.toInt(),
+            tempObjetivo: _num(r['temp_objetivo']),
+            humedadObjetivo: _num(r['humedad_objetivo']),
+            eclosionEstimada:
+                DateTime.tryParse('${r['eclosion_estimada'] ?? ''}'),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<ExoticEvent>> _eventos(String clinicId, List<String> ids) async {
     final rows = await client
         .from('vet_patient_events')
         .select('id,patient_id,kind,payload,created_at')
@@ -67,7 +195,7 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
       final payload = r['payload'];
       final mapa = payload is Map
           ? payload.map((k, v) => MapEntry('$k', v))
-          : const <String, dynamic>{};
+          : <String, dynamic>{};
       return ExoticEvent(
         id: '${r['id']}',
         specimenId: '${r['patient_id']}',
@@ -91,14 +219,121 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
         .inFilter('patient_id', ids)
         .isFilter('discharged_at', null)
         .order('admitted_at', ascending: false);
+    if (rows.isEmpty) return const [];
+
+    // Los días previstos de aislamiento viven en su propia tabla, porque
+    // `hospital_stays` es del módulo de hospital y no sabe de cuarentenas.
+    final planes = await client
+        .from('exotic_quarantine_plans')
+        .select('stay_id,dias')
+        .eq('clinic_id', clinicId)
+        .inFilter('stay_id', rows.map((r) => '${r['id']}').toList());
+    final diasPorEstancia = <String, int>{
+      for (final p in planes)
+        '${p['stay_id']}': (p['dias'] as num?)?.toInt() ?? 0,
+    };
+
     return rows
         .map(
           (r) => ExoticStay(
             id: '${r['id']}',
             specimenId: '${r['patient_id']}',
             ingreso:
-                DateTime.tryParse('${r['admitted_at'] ?? ''}') ?? DateTime.now(),
+                DateTime.tryParse('${r['admitted_at'] ?? ''}') ??
+                    DateTime.now(),
             recinto: '${r['cage'] ?? ''}',
+            diasAislamiento: diasPorEstancia['${r['id']}'],
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<ExoticIdentifier>> _marcajes(
+    String clinicId,
+    List<String> ids,
+  ) async {
+    final rows = await client
+        .from('exotic_identifiers')
+        .select('patient_id,tipo,codigo')
+        .eq('clinic_id', clinicId)
+        .eq('activo', true)
+        .inFilter('patient_id', ids);
+    return rows
+        .map(
+          (r) => ExoticIdentifier(
+            specimenId: '${r['patient_id']}',
+            tipo: '${r['tipo'] ?? ''}',
+            codigo: '${r['codigo'] ?? ''}',
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<ExoticLegalStatus>> _legal(
+    String clinicId,
+    List<String> ids,
+  ) async {
+    final rows = await client
+        .from('exotic_legal_status')
+        .select('patient_id,regimen,numero_registro,vigencia_hasta,documentada')
+        .eq('clinic_id', clinicId)
+        .inFilter('patient_id', ids);
+    return rows
+        .map(
+          (r) => ExoticLegalStatus(
+            specimenId: '${r['patient_id']}',
+            regimen: '${r['regimen'] ?? ''}',
+            numeroRegistro: '${r['numero_registro'] ?? ''}',
+            vigenciaHasta: DateTime.tryParse('${r['vigencia_hasta'] ?? ''}'),
+            documentada: r['documentada'] == true,
+          ),
+        )
+        .toList();
+  }
+
+  /// Las tomas recientes. Interesa la racha de rechazos del final, no el
+  /// histórico completo de alimentación del ejemplar.
+  Future<List<ExoticFeeding>> _tomas(String clinicId, List<String> ids) async {
+    final rows = await client
+        .from('exotic_feedings')
+        .select('patient_id,ofrecido_en,alimento,aceptado')
+        .eq('clinic_id', clinicId)
+        .inFilter('patient_id', ids)
+        .order('ofrecido_en', ascending: false)
+        .limit(400);
+    return rows
+        .map(
+          (r) => ExoticFeeding(
+            specimenId: '${r['patient_id']}',
+            ofrecidoEn:
+                DateTime.tryParse('${r['ofrecido_en'] ?? ''}') ??
+                    DateTime.now(),
+            alimento: '${r['alimento'] ?? ''}',
+            aceptado: r['aceptado'] == true,
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<ExoticPhysioEvent>> _fisiologicos(
+    String clinicId,
+    List<String> ids,
+  ) async {
+    final rows = await client
+        .from('exotic_events')
+        .select('patient_id,tipo,ocurrio_en,detalle')
+        .eq('clinic_id', clinicId)
+        .inFilter('patient_id', ids)
+        .order('ocurrio_en', ascending: false)
+        .limit(100);
+    return rows
+        .map(
+          (r) => ExoticPhysioEvent(
+            specimenId: '${r['patient_id']}',
+            tipo: '${r['tipo'] ?? ''}',
+            ocurrioEn:
+                DateTime.tryParse('${r['ocurrio_en'] ?? ''}') ?? DateTime.now(),
+            detalle: '${r['detalle'] ?? ''}',
           ),
         )
         .toList();
@@ -129,5 +364,12 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
         ? crudo.toDouble()
         : double.tryParse('$crudo'.replaceAll(',', '.'));
     return n == null ? null : n * 1000;
+  }
+
+  /// PostgREST devuelve los `numeric` como texto para no perder precisión.
+  double? _num(Object? v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse('$v');
   }
 }

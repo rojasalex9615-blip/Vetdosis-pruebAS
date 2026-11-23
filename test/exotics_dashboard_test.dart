@@ -282,4 +282,329 @@ void main() {
       expect(avisos.first.pesoActual, 88);
     });
   });
+
+  _registrarCasosDeTablasNuevas();
+}
+
+/// Casos de las tablas nuevas: ambiente, legal, alimentación e incubación.
+void _registrarCasosDeTablasNuevas() {
+  group('desviaciones de ambiente', () {
+    const terrario = ExoticEnclosure(
+      id: 'r1',
+      nombre: 'Terrario 1',
+      tipo: 'terrario',
+      tempCalienteMin: 38,
+      tempCalienteMax: 42,
+      tempFriaMin: 24,
+      tempFriaMax: 27,
+      humedadMin: 30,
+      humedadMax: 40,
+    );
+
+    test('marca el punto frío aunque el caliente esté bien', () {
+      // El error clasico: se calienta todo el terrario y el animal se queda
+      // sin zona fria. Con una media no se veria.
+      final s = ExoticSnapshot(
+        enclosures: const [terrario],
+        readings: [
+          ExoticReading(
+            enclosureId: 'r1',
+            medidoEn: DateTime(2026, 3, 1),
+            tempCaliente: 40,
+            tempFria: 33,
+            humedad: 35,
+          ),
+        ],
+      );
+      final fuera = s.desviaciones();
+      expect(fuera, hasLength(1));
+      expect(fuera.first.parametro, 'Punto frío');
+      expect(fuera.first.texto, contains('24-27'));
+    });
+
+    test('no inventa desviaciones de lo que el recinto no declara', () {
+      // El terrario no tiene rango de pH: una lectura de pH no debe avisar.
+      final s = ExoticSnapshot(
+        enclosures: const [terrario],
+        readings: [
+          ExoticReading(
+            enclosureId: 'r1',
+            medidoEn: DateTime(2026, 3, 1),
+            tempCaliente: 40,
+            tempFria: 25,
+            humedad: 35,
+            ph: 9,
+          ),
+        ],
+      );
+      expect(s.desviaciones(), isEmpty);
+    });
+
+    test('usa la lectura más reciente, no la primera', () {
+      final s = ExoticSnapshot(
+        enclosures: const [terrario],
+        readings: [
+          ExoticReading(
+            enclosureId: 'r1',
+            medidoEn: DateTime(2026, 3, 1),
+            tempFria: 50,
+          ),
+          ExoticReading(
+            enclosureId: 'r1',
+            medidoEn: DateTime(2026, 3, 2),
+            tempFria: 25,
+          ),
+        ],
+      );
+      expect(s.desviaciones(), isEmpty);
+    });
+
+    test('un recinto sin lectura no cuenta como correcto', () {
+      const s = ExoticSnapshot(enclosures: [terrario]);
+      expect(s.desviaciones(), isEmpty);
+      expect(s.ultimaLecturaDe('r1'), isNull);
+    });
+
+    test('la salinidad solo se juzga donde el recinto la declara', () {
+      // Mismo valor de salinidad en dos recintos: en el acuario marino esta
+      // fuera de rango, en el terrario no significa nada porque no lo declara.
+      const marino = ExoticEnclosure(
+        id: 'r2',
+        nombre: 'Acuario marino',
+        tipo: 'acuario',
+        salinidadMin: 33,
+        salinidadMax: 35,
+      );
+      final s = ExoticSnapshot(
+        enclosures: const [terrario, marino],
+        readings: [
+          ExoticReading(
+            enclosureId: 'r1',
+            medidoEn: DateTime(2026, 3, 1),
+            salinidad: 20,
+          ),
+          ExoticReading(
+            enclosureId: 'r2',
+            medidoEn: DateTime(2026, 3, 1),
+            salinidad: 20,
+          ),
+        ],
+      );
+      final fuera = s.desviaciones();
+      expect(fuera, hasLength(1));
+      expect(fuera.first.enclosure.id, 'r2');
+      expect(fuera.first.parametro, 'Salinidad');
+      expect(fuera.first.texto, contains('33-35'));
+    });
+
+    test('el amoniaco solo tiene techo, nunca piso', () {
+      // Cero amoniaco es lo ideal: avisar de "poco amoniaco" seria absurdo.
+      const acuario = ExoticEnclosure(
+        id: 'r3',
+        nombre: 'Acuaterrario',
+        tipo: 'acuaterrario',
+        amoniacoMax: 0.02,
+      );
+      final limpio = ExoticSnapshot(
+        enclosures: const [acuario],
+        readings: [
+          ExoticReading(
+            enclosureId: 'r3',
+            medidoEn: DateTime(2026, 3, 1),
+            amoniaco: 0,
+          ),
+        ],
+      );
+      expect(limpio.desviaciones(), isEmpty);
+
+      final sucio = ExoticSnapshot(
+        enclosures: const [acuario],
+        readings: [
+          ExoticReading(
+            enclosureId: 'r3',
+            medidoEn: DateTime(2026, 3, 1),
+            amoniaco: 0.5,
+          ),
+        ],
+      );
+      expect(sucio.desviaciones(), hasLength(1));
+      expect(sucio.desviaciones().first.parametro, 'Amoniaco');
+    });
+  });
+
+  group('vigencias legales', () {
+    final hoy = DateTime(2026, 11, 23);
+
+    test('separa vencido de por vencer', () {
+      final s = ExoticSnapshot(
+        legal: [
+          ExoticLegalStatus(
+            specimenId: 'p1',
+            regimen: 'cites',
+            vigenciaHasta: DateTime(2026, 11, 1),
+          ),
+          ExoticLegalStatus(
+            specimenId: 'p2',
+            regimen: 'semarnat',
+            vigenciaHasta: DateTime(2026, 12, 10),
+          ),
+          ExoticLegalStatus(
+            specimenId: 'p3',
+            regimen: 'uma',
+            vigenciaHasta: DateTime(2027, 6, 1),
+          ),
+        ],
+      );
+      final riesgo = s.legalEnRiesgo(hoy);
+      expect(riesgo, hasLength(2));
+      expect(riesgo.first.specimenId, 'p1');
+      expect(riesgo.first.vencido(hoy), isTrue);
+      expect(riesgo[1].porVencer(hoy), isTrue);
+    });
+
+    test('sin fecha de vigencia no se inventa una alerta', () {
+      const s = ExoticSnapshot(
+        legal: [ExoticLegalStatus(specimenId: 'p1', regimen: 'otro')],
+      );
+      expect(s.legalEnRiesgo(DateTime(2026, 11, 23)), isEmpty);
+    });
+  });
+
+  group('rechazos de alimento', () {
+    const ave = ExoticSpecimen(
+      id: 'p1',
+      nombre: 'Kiwi',
+      especie: 'Ninfa',
+      taxon: ExoticTaxon.aves,
+    );
+
+    test('cuenta solo la racha final, no los rechazos históricos', () {
+      final s = ExoticSnapshot(
+        specimens: const [ave],
+        feedings: [
+          ExoticFeeding(
+            specimenId: 'p1',
+            ofrecidoEn: DateTime(2026, 3, 1),
+            alimento: 'grillo',
+            aceptado: false,
+          ),
+          ExoticFeeding(
+            specimenId: 'p1',
+            ofrecidoEn: DateTime(2026, 3, 2),
+            alimento: 'grillo',
+            aceptado: true,
+          ),
+          ExoticFeeding(
+            specimenId: 'p1',
+            ofrecidoEn: DateTime(2026, 3, 3),
+            alimento: 'grillo',
+            aceptado: false,
+          ),
+          ExoticFeeding(
+            specimenId: 'p1',
+            ofrecidoEn: DateTime(2026, 3, 4),
+            alimento: 'grillo',
+            aceptado: false,
+          ),
+        ],
+      );
+      final r = s.rachaDeRechazos();
+      expect(r, hasLength(1));
+      expect(r.first.rechazos, 2);
+    });
+
+    test('si la última toma se aceptó no hay racha', () {
+      final s = ExoticSnapshot(
+        specimens: const [ave],
+        feedings: [
+          ExoticFeeding(
+            specimenId: 'p1',
+            ofrecidoEn: DateTime(2026, 3, 1),
+            alimento: 'grillo',
+            aceptado: false,
+          ),
+          ExoticFeeding(
+            specimenId: 'p1',
+            ofrecidoEn: DateTime(2026, 3, 2),
+            alimento: 'grillo',
+            aceptado: true,
+          ),
+        ],
+      );
+      expect(s.rachaDeRechazos(), isEmpty);
+    });
+  });
+
+  group('incubación y marcaje', () {
+    test('la cuenta regresiva no depende del reloj del móvil', () {
+      final c = ExoticClutch(
+        id: 'c1',
+        especie: 'Pogona vitticeps',
+        puestaEl: DateTime(2026, 11, 1),
+        huevos: 20,
+        estado: 'incubando',
+        eclosionEstimada: DateTime(2026, 12, 1),
+      );
+      expect(c.diasParaEclosion(DateTime(2026, 11, 23)), 8);
+      expect(c.diasParaEclosion(DateTime(2026, 12, 5)), -4);
+    });
+
+    test('solo se listan las nidadas en incubación', () {
+      final s = ExoticSnapshot(
+        clutches: [
+          ExoticClutch(
+            id: 'c1',
+            especie: 'A',
+            puestaEl: DateTime(2026, 1, 1),
+            huevos: 2,
+            estado: 'eclosionada',
+          ),
+          ExoticClutch(
+            id: 'c2',
+            especie: 'B',
+            puestaEl: DateTime(2026, 1, 1),
+            huevos: 2,
+            estado: 'incubando',
+          ),
+        ],
+      );
+      expect(s.incubando(), hasLength(1));
+      expect(s.incubando().first.id, 'c2');
+    });
+
+    test('se puede buscar al ejemplar por su microchip', () {
+      const ave = ExoticSpecimen(
+        id: 'p1',
+        nombre: 'Kiwi',
+        especie: 'Ninfa',
+        taxon: ExoticTaxon.aves,
+      );
+      const s = ExoticSnapshot(
+        specimens: [ave],
+        identifiers: [
+          ExoticIdentifier(
+            specimenId: 'p1',
+            tipo: 'microchip',
+            codigo: '982000123456789',
+          ),
+        ],
+      );
+      expect(s.buscar('982000123').single.id, 'p1');
+      expect(s.sinMarcaje(), isEmpty);
+    });
+
+    test('un ejemplar sin marcaje se reporta como pendiente', () {
+      const s = ExoticSnapshot(
+        specimens: [
+          ExoticSpecimen(
+            id: 'p9',
+            nombre: 'Sin chip',
+            especie: 'Iguana',
+            taxon: ExoticTaxon.reptiles,
+          ),
+        ],
+      );
+      expect(s.sinMarcaje(), hasLength(1));
+    });
+  });
 }
