@@ -41,24 +41,35 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
   }
 
   Future<void> save() async {
-    if (saving || widget.member.role != ClinicRole.admin || !widget.ready) return;
-    setState(() { saving = true; message = null; });
+    if (saving || widget.member.role != ClinicRole.admin || !widget.ready)
+      return;
+    setState(() {
+      saving = true;
+      message = null;
+    });
     try {
       final next = await widget.repository.save(widget.member.clinicId, draft);
       if (!mounted) return;
-      setState(() { draft = next; });
+      setState(() {
+        draft = next;
+      });
       final refreshed = await refreshBoundary();
       if (mounted) {
-        setState(() => message = refreshed
-            ? 'Preferencias guardadas para esta clínica.'
-            : 'Se guardaron los cambios, pero no fue posible actualizar la vista. Comprueba la conexión antes de continuar.');
+        setState(
+          () => message = refreshed
+              ? 'Preferencias guardadas para esta clínica.'
+              : 'Se guardaron los cambios, pero no fue posible actualizar la vista. Comprueba la conexión antes de continuar.',
+        );
       }
     } catch (_) {
       // A rejected write may be a conflict with another admin: read the
       // current server revision before letting this modal reopen.
       await refreshBoundary();
       if (mounted) {
-        setState(() => message = 'No se pudo guardar. Es posible que otro administrador haya actualizado las opciones: cierra y vuelve a abrir esta pantalla para revisar la última versión.');
+        setState(
+          () => message =
+              'No se pudo guardar. Es posible que otro administrador haya actualizado las opciones: cierra y vuelve a abrir esta pantalla para revisar la última versión.',
+        );
       }
     } finally {
       if (mounted) setState(() => saving = false);
@@ -68,7 +79,8 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final canEdit = widget.ready && widget.member.role == ClinicRole.admin && !saving;
+    final canEdit =
+        widget.ready && widget.member.role == ClinicRole.admin && !saving;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Personalización de clínica')),
@@ -118,7 +130,11 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(VetIcons.sliders, size: 20, color: VetColors.brandSky),
+                    const Icon(
+                      VetIcons.sliders,
+                      size: 20,
+                      color: VetColors.brandSky,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Perfil de clínica',
@@ -182,7 +198,84 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(VetIcons.grid, size: 20, color: VetColors.purple),
+                    const Icon(VetIcons.paw, size: 20, color: VetColors.mint),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Áreas de trabajo',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Elige las áreas que atiende la clínica. Las secciones de las demás se ocultan. La administración clínica va incluida con pequeñas y exóticos; en producción es opcional.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final (id, label, description) in [
+                  (
+                    'small',
+                    'Pequeñas especies',
+                    'Perro, gato y clínica general.',
+                  ),
+                  (
+                    'production',
+                    'Producción',
+                    'Aves, peces, bovinos, porcinos y equinos.',
+                  ),
+                  ('exotic', 'Exóticos', 'Mamíferos pequeños de compañía.'),
+                ])
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: draft.workAreas.contains(id),
+                    title: Text(label),
+                    subtitle: Text(description),
+                    onChanged: canEdit
+                        ? (value) {
+                            final next = {...draft.workAreas};
+                            if (value == true) {
+                              next.add(id);
+                            } else {
+                              next.remove(id);
+                            }
+                            setState(() => draft = draft.copy(workAreas: next));
+                          }
+                        : null,
+                  ),
+                if (draft.workAreas.contains('production'))
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: draft.includeAdmin,
+                    title: const Text('Incluir administración clínica'),
+                    subtitle: const Text(
+                      'Caja, finanzas y productividad. Con pequeñas o exóticos ya va incluida.',
+                    ),
+                    onChanged: canEdit
+                        ? (value) => setState(
+                            () =>
+                                draft = draft.copy(includeAdmin: value == true),
+                          )
+                        : null,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          VetCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      VetIcons.grid,
+                      size: 20,
+                      color: VetColors.purple,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Módulos y submódulos',
@@ -266,7 +359,11 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(VetIcons.arrowForward, size: 20, color: VetColors.turquoise),
+                    const Icon(
+                      VetIcons.arrowForward,
+                      size: 20,
+                      color: VetColors.turquoise,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Flujos de trabajo',
@@ -401,7 +498,11 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(VetIcons.sparkles, size: 20, color: VetColors.violet),
+                    const Icon(
+                      VetIcons.sparkles,
+                      size: 20,
+                      color: VetColors.violet,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Proveedor IA predeterminado',
