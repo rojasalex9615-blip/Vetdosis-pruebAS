@@ -34,7 +34,11 @@ class FakeAuth implements AuthRepository {
   }
 
   @override
-  Future<void> register(String email, String password) async {}
+  Future<void> register(
+    String email,
+    String password, {
+    String? referral,
+  }) async {}
   @override
   Future<void> googleSignIn() async {}
   @override

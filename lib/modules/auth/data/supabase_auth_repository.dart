@@ -100,11 +100,17 @@ class SupabaseAuthRepository
   }
 
   @override
-  Future<void> register(String email, String password) async {
+  Future<void> register(
+    String email,
+    String password, {
+    String? referral,
+  }) async {
+    final source = referral?.trim() ?? '';
     await client.auth.signUp(
       email: email.trim(),
       password: password,
       emailRedirectTo: redirect,
+      data: {if (source.isNotEmpty) 'referral': source},
     );
   }
 
