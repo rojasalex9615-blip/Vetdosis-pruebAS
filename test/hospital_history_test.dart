@@ -409,7 +409,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final button = find.text('Consultar hospitalizaciones dadas de alta');
+      final button = find.text('Altas');
       await tester.ensureVisible(button);
       await tester.tap(button);
       await tester.pumpAndSettle();

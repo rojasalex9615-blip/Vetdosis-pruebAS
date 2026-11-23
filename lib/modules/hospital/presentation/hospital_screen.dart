@@ -1,3 +1,4 @@
+import '../../../vet_ui/vet_components.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_header_card.dart';
 import '../../../core/widgets/workspace_panel.dart';
@@ -709,83 +710,131 @@ class _HospitalScreenState extends State<HospitalScreen> {
               ),
             ),
           if (model.snapshot.dutyRouting)
-            const Text(
-              'Avisos por turnos: el servidor selecciona a quienes trabajan. El plan de alarmas locales se retira al actualizar esta hoja.',
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: VetNotice(
+                icon: VetIcons.clock,
+                text:
+                    'Avisos por turnos: el servidor selecciona a quienes trabajan. El plan de alarmas locales se retira al actualizar esta hoja.',
+                kind: VetBadgeKind.information,
+              ),
             ),
-          Text(widget.alerts.status),
-          Text(widget.alerts.backend.timingNotice),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          if (widget.alerts.status.isNotEmpty ||
+              widget.alerts.backend.timingNotice.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: VetNotice(
+                icon: VetIcons.bell,
+                text: [
+                  if (widget.alerts.status.isNotEmpty) widget.alerts.status,
+                  if (widget.alerts.backend.timingNotice.isNotEmpty)
+                    widget.alerts.backend.timingNotice,
+                ].join(' '),
+                kind: VetBadgeKind.warning,
+              ),
+            ),
+          Row(
             children: [
-              if (widget.alerts.backend.supported)
-                OutlinedButton(
-                  onPressed: () async {
-                    await widget.alerts.enable();
-                    await model.refresh();
-                  },
-                  child: const Text('Activar / revisar permisos de avisos'),
-                ),
-              if (widget.alerts.enabled)
-                TextButton(
-                  onPressed: widget.alerts.disable,
-                  child: const Text('Desactivar avisos'),
-                ),
               if (model.canManageAdmission)
-                FilledButton.icon(
-                  onPressed: model.busy ? null : admit,
-                  icon: const Icon(VetIcons.add),
-                  label: const Text('Ingresar paciente'),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: model.busy ? null : admit,
+                    icon: const Icon(VetIcons.add),
+                    label: const Text('Ingresar paciente'),
+                  ),
                 ),
-              OutlinedButton(
-                onPressed: model.busy ? null : () => model.refresh(),
-                child: const Text('Actualizar hoja'),
+              if (model.canManageAdmission) const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: model.busy ? null : () => model.refresh(),
+                  icon: const Icon(VetIcons.refresh),
+                  label: const Text('Actualizar hoja'),
+                ),
               ),
             ],
           ),
-          if (widget.repository is HospitalHistoryRepository &&
-              model.snapshot.permissions?['hospital.read'] == true)
-            OutlinedButton(
-              onPressed: model.busy
-                  ? null
-                  : () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => HospitalHistoryScreen(
-                          repository:
-                              widget.repository as HospitalHistoryRepository,
-                          clinic: widget.member.clinicId,
-                          identityChanges:
-                              widget.sessionChanges ?? widget.alerts,
-                          isCurrent: () =>
-                              mounted &&
-                              (widget.contextIsCurrent?.call(widget.member) ??
-                                  true),
-                        ),
-                      ),
-                    ),
-              child: const Text('Consultar hospitalizaciones dadas de alta'),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                if (widget.alerts.backend.supported) ...[
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await widget.alerts.enable();
+                      await model.refresh();
+                    },
+                    icon: const Icon(VetIcons.bell, size: 16),
+                    label: const Text('Permisos de avisos'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (widget.alerts.enabled) ...[
+                  TextButton.icon(
+                    onPressed: widget.alerts.disable,
+                    icon: const Icon(VetIcons.close, size: 16),
+                    label: const Text('Desactivar avisos'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (model.snapshot.automationEnabled &&
+                    widget.repository is HospitalAutomationRepository) ...[
+                  OutlinedButton.icon(
+                    onPressed: model.busy ? null : () => automation(null),
+                    icon: const Icon(VetIcons.checklist, size: 16),
+                    label: const Text('Órdenes diarias'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (model.snapshot.isolationEnabled &&
+                    widget.repository is HospitalIsolationRepository) ...[
+                  OutlinedButton.icon(
+                    onPressed: model.busy
+                        ? null
+                        : () => isolationActions.history(context, null),
+                    icon: const Icon(VetIcons.shieldBug, size: 16),
+                    label: const Text('Bitácora aislamiento'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (model.snapshot.careResultsEnabled &&
+                    widget.repository is HospitalCareResultRepository) ...[
+                  OutlinedButton.icon(
+                    onPressed: model.busy ? null : () => careResults(null),
+                    icon: const Icon(VetIcons.history, size: 16),
+                    label: const Text('Historial de cuidados'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (widget.repository is HospitalHistoryRepository &&
+                    model.snapshot.permissions?['hospital.read'] == true) ...[
+                  OutlinedButton.icon(
+                    onPressed: model.busy
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => HospitalHistoryScreen(
+                                repository:
+                                    widget.repository as HospitalHistoryRepository,
+                                clinic: widget.member.clinicId,
+                                identityChanges:
+                                    widget.sessionChanges ?? widget.alerts,
+                                isCurrent: () =>
+                                    mounted &&
+                                    (widget.contextIsCurrent?.call(widget.member) ??
+                                        true),
+                              ),
+                            ),
+                          ),
+                    icon: const Icon(VetIcons.clipboardCheck, size: 16),
+                    label: const Text('Altas'),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
             ),
-          if (model.snapshot.automationEnabled &&
-              widget.repository is HospitalAutomationRepository)
-            OutlinedButton(
-              onPressed: model.busy ? null : () => automation(null),
-              child: const Text('Órdenes diarias y avisos del servidor'),
-            ),
-          if (model.snapshot.isolationEnabled &&
-              widget.repository is HospitalIsolationRepository)
-            OutlinedButton(
-              onPressed: model.busy
-                  ? null
-                  : () => isolationActions.history(context, null),
-              child: const Text('Bitácora de aislamiento'),
-            ),
-          if (model.snapshot.careResultsEnabled &&
-              widget.repository is HospitalCareResultRepository)
-            OutlinedButton(
-              onPressed: model.busy ? null : () => careResults(null),
-              child: const Text('Historial de resultados de cuidados'),
-            ),
+          ),
           for (final area in model.snapshot.isolationAreas.where(
             (a) => a.ready,
           ))
@@ -823,33 +872,37 @@ class _HospitalScreenState extends State<HospitalScreen> {
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            children: [
-              TextButton.icon(
-                onPressed: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: day,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (date != null && mounted) setState(() => day = date);
-                },
-                icon: const Icon(VetIcons.calendar),
-                label: Text('Fecha: ${day.toIso8601String().substring(0, 10)}'),
-              ),
-              glowChip(ChoiceChip(
-                label: const Text('Fichas por jaula'),
-                selected: !table,
-                onSelected: (_) => setState(() => table = false),
-              )),
-              glowChip(ChoiceChip(
-                label: const Text('Paciente × hora'),
-                selected: table,
-                onSelected: (_) => setState(() => table = true),
-              )),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: day,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (date != null && mounted) setState(() => day = date);
+                  },
+                  icon: const Icon(VetIcons.calendar, size: 18),
+                  label: Text('Fecha: ${day.toIso8601String().substring(0, 10)}'),
+                ),
+                const SizedBox(width: 8),
+                glowChip(ChoiceChip(
+                  label: const Text('Fichas por jaula'),
+                  selected: !table,
+                  onSelected: (_) => setState(() => table = false),
+                )),
+                const SizedBox(width: 8),
+                glowChip(ChoiceChip(
+                  label: const Text('Paciente × hora'),
+                  selected: table,
+                  onSelected: (_) => setState(() => table = true),
+                )),
+              ],
+            ),
           ),
           if (visibleStays.isEmpty && !model.busy && model.error == null)
             const Padding(

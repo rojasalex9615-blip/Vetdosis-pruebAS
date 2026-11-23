@@ -119,6 +119,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Vademécum por fármaco'), findsOneWidget);
+    await tester.ensureVisible(find.text('Vademécum por nombre comercial'));
     await tester.tap(find.text('Vademécum por nombre comercial'));
     await tester.pumpAndSettle();
     expect(find.textContaining('productos comerciales'), findsOneWidget);
