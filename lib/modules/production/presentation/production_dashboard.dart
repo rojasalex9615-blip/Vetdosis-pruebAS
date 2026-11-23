@@ -625,10 +625,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: facility.sanitaryStatus == 'critical'
-                    ? VetColors.danger.withOpacity(0.12)
+                    ? VetColors.danger.withValues(alpha: 0.12)
                     : (facility.sanitaryStatus == 'warning'
-                        ? VetColors.warning.withOpacity(0.12)
-                        : VetColors.success.withOpacity(0.12)),
+                        ? VetColors.warning.withValues(alpha: 0.12)
+                        : VetColors.success.withValues(alpha: 0.12)),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -788,9 +788,9 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: VetColors.success.withOpacity(0.08),
+          color: VetColors.success.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetColors.success.withOpacity(0.3)),
+          border: Border.all(color: VetColors.success.withValues(alpha: 0.3)),
         ),
         child: const Row(
           children: [
@@ -814,9 +814,9 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetColors.danger.withOpacity(0.08),
+        color: VetColors.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: VetColors.danger.withOpacity(0.35)),
+        border: Border.all(color: VetColors.danger.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -889,7 +889,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: VetColors.danger.withOpacity(0.15),
+                      color: VetColors.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -1014,7 +1014,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: VetColors.turquoise.withOpacity(0.15),
+                      color: VetColors.turquoise.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -1593,7 +1593,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withOpacity(0.12),
+                      color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -1856,7 +1856,7 @@ class _PerformanceCurvePainter extends CustomPainter {
     final double range = (maxVal - minVal) > 0 ? (maxVal - minVal) : 1.0;
 
     final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.18)
+      ..color = Colors.grey.withValues(alpha: 0.18)
       ..strokeWidth = 1;
 
     // Líneas horizontales de guía
@@ -1879,7 +1879,7 @@ class _PerformanceCurvePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accentColor.withOpacity(0.25), accentColor.withOpacity(0.0)],
+        colors: [accentColor.withValues(alpha: 0.25), accentColor.withValues(alpha: 0.0)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
@@ -2184,9 +2184,9 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: VetColors.turquoise.withOpacity(0.12),
+                color: VetColors.turquoise.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetColors.turquoise.withOpacity(0.4)),
+                border: Border.all(color: VetColors.turquoise.withValues(alpha: 0.4)),
               ),
               child: Text(
                 _result,
@@ -2322,9 +2322,9 @@ class MassMedicationModalState extends State<MassMedicationModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: VetColors.violet.withOpacity(0.12),
+                color: VetColors.violet.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetColors.violet.withOpacity(0.35)),
+                border: Border.all(color: VetColors.violet.withValues(alpha: 0.35)),
               ),
               child: Text(
                 _calcOutput,
@@ -2376,7 +2376,7 @@ class ProductionVademecumModal extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: VetColors.danger.withOpacity(0.12),
+                    color: VetColors.danger.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -2450,7 +2450,7 @@ class PecuariaPrescriptionModalState extends State<PecuariaPrescriptionModal> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.08),
+                color: Colors.grey.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(

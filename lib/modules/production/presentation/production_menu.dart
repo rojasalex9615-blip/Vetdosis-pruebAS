@@ -813,7 +813,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withOpacity(0.12),
+                    color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
