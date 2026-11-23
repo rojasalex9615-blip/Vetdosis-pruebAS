@@ -9,6 +9,22 @@ import '../domain/navigation_access.dart';
 import '../domain/section_catalog.dart';
 import '../../../vet_ui/vet_icons.dart';
 
+/// Icono característico para cada grupo del menú, sin repetir los iconos
+/// de las secciones hijas.
+IconData sectionGroupIcon(String groupTitle) => switch (groupTitle) {
+  'Atención y expedientes' => VetIcons.crossPaw,
+  'Medicamentos y herramientas' => VetIcons.firstAidKit,
+  'Producción animal' => VetIcons.cow,
+  'Exóticos y silvestres' => VetIcons.turtle,
+  'Administración y finanzas' => VetIcons.wallet,
+  'Equipo y comunicación' => VetIcons.team,
+  'Estadísticas y reportes' => VetIcons.pieChart,
+  'Asistente IA' => VetIcons.aiSpark,
+  'Revisión de catálogos' => VetIcons.verified,
+  'Cuenta y ajustes' => VetIcons.settings,
+  _ => VetIcons.grid,
+};
+
 class SectionMenu extends StatefulWidget {
   const SectionMenu({
     super.key,
@@ -86,9 +102,7 @@ class _SectionMenuState extends State<SectionMenu> {
                 child: ExpansionTile(
                   key: ValueKey((group.title, query, widget.initialGroup)),
                   leading: VetIconBox(
-                    icon: group.pages.isNotEmpty
-                        ? sectionIcon(group.pages.first)
-                        : VetIcons.clock,
+                    icon: sectionGroupIcon(group.title),
                     accent: _groupAccents[index % _groupAccents.length],
                   ),
                   title: Text(
@@ -181,7 +195,7 @@ class CalculationMenu extends StatelessWidget {
         ),
         if (experience?.visible('Vademécum') ?? true)
           _CalculationChoice(
-            icon: VetIcons.book,
+            icon: VetIcons.pills,
             title: 'Vademécum',
             description:
                 'Consulta fichas de la app, compartidas con la clínica y personales.',
@@ -189,7 +203,7 @@ class CalculationMenu extends StatelessWidget {
           ),
         if (canDose)
           _CalculationChoice(
-            icon: VetIcons.capsule,
+            icon: VetIcons.gauge,
             title: 'Calcular dosis de un producto',
             description:
                 'Usa un catálogo con fuente y concentración por presentación; requiere revisión y confirmación.',
@@ -198,7 +212,7 @@ class CalculationMenu extends StatelessWidget {
         if (navigationAllowed('Operaciones de dosis', member, access) &&
             (experience?.visible('Operaciones de dosis') ?? true))
           _CalculationChoice(
-            icon: VetIcons.calculator,
+            icon: VetIcons.syringe,
             title: 'Otras operaciones de dosis',
             description:
                 'Regla de tres, concentración tras reconstitución, UI y conversión métrica con parámetros explícitos.',
@@ -206,7 +220,7 @@ class CalculationMenu extends StatelessWidget {
           ),
         if (canClinical)
           _CalculationChoice(
-            icon: VetIcons.heartPulse,
+            icon: VetIcons.flask,
             title: 'Cálculos clínicos',
             description:
                 'Fluidos, constantes, protocolos, peso metabólico, retiros y otras herramientas disponibles.',

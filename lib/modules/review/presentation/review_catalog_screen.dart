@@ -285,20 +285,29 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
     required String value,
     required List<String> statuses,
     required ValueChanged<String> onChanged,
+    IconData? icon,
   }) =>
-      DropdownButtonFormField<String>(
-        key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
-        initialValue: value,
-        decoration: InputDecoration(labelText: label, isDense: true),
-        items: statuses
-            .map((status) => DropdownMenuItem(
-                  value: status,
-                  child: Text(status),
-                ))
-            .toList(),
-        onChanged: (next) {
-          if (next != null && next != value) onChanged(next);
-        },
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: DropdownButtonFormField<String>(
+          key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
+          initialValue: value,
+          isDense: true,
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: icon != null ? Icon(icon, size: 18) : null,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          ),
+          items: statuses
+              .map((status) => DropdownMenuItem(
+                    value: status,
+                    child: Text(status),
+                  ))
+              .toList(),
+          onChanged: (next) {
+            if (next != null && next != value) onChanged(next);
+          },
+        ),
       );
   Future<void> report(ReviewCatalogItem item) async {
     final clinic = widget.clinic, user = widget.user;
@@ -323,14 +332,36 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Material(
-        color: Theme.of(context).colorScheme.errorContainer,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('SIN VERIFICAR — solo revisión, no usar con pacientes'),
+      Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              VetIcons.alertTriangle,
+              size: 20,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'SIN VERIFICAR — solo revisión, no usar con pacientes',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      const SizedBox(height: 12),
       if (widget.offline)
         const Text('El modo revisión requiere conexión y permisos vigentes.')
       else ...[
@@ -350,14 +381,37 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
           onSelectionChanged: (selection) => selectSource(selection.first),
         ),
         if (progress != null)
-          Text('${source == 'grok_pautas' ? 'Pautas' : 'Productos'}: '
-              '${progress!['total'] ?? 0} · Sin verificar: '
-              '${progress!['sin_verificar'] ?? 0} · En revisión: '
-              '${progress!['en_revision'] ?? 0}'),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Icon(
+                  VetIcons.info,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${source == 'grok_pautas' ? 'Pautas' : 'Productos'}: '
+                    '${progress!['total'] ?? 0} · Sin verificar: '
+                    '${progress!['sin_verificar'] ?? 0} · En revisión: '
+                    '${progress!['en_revision'] ?? 0}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 11.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 4),
         TextField(
           controller: search,
           decoration: InputDecoration(
             labelText: 'Buscar producto, laboratorio o ingrediente',
+            prefixIcon: const Icon(VetIcons.search, size: 20),
             suffixIcon: IconButton(
               tooltip: 'Buscar', icon: const Icon(VetIcons.search), onPressed: reload,
             ),
@@ -368,56 +422,158 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
             style: TextStyle(color: Theme.of(context).colorScheme.error)),
         if (loading) const LinearProgressIndicator(),
         for (final item in items)
-          Card(child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(item.title, style: Theme.of(context).textTheme.titleMedium),
-              Text(item.laboratory),
-              if (canManageGlobal)
+          Card(
+            margin: const EdgeInsets.only(top: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                  item.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.laboratory,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (canManageGlobal)
+                  statusPicker(
+                    key: '${item.key}-global',
+                    label: 'Estado global (todas las clínicas)',
+                    value: item.globalStatus,
+                    statuses: _globalReviewStatuses,
+                    icon: VetIcons.cloudCheck,
+                    onChanged: (value) => confirmGlobalStatusChange(item, value),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(VetIcons.cloudCheck, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Text('Global (solo lectura): ${item.globalStatus}', style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                if (widget.canManageClinic)
+                  statusPicker(
+                    key: '${item.key}-clinic',
+                    label: 'Estado de esta clínica',
+                    value: item.status,
+                    statuses: _clinicPersonalReviewStatuses,
+                    icon: VetIcons.clinic,
+                    onChanged: (value) => changeStatus(
+                      item,
+                      value,
+                      scope: _ReviewScope.clinic,
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(VetIcons.clinic, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Text('Clínica: ${item.status}', style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
                 statusPicker(
-                  key: '${item.key}-global',
-                  label: 'Estado global (todas las clínicas)',
-                  value: item.globalStatus,
-                  statuses: _globalReviewStatuses,
-                  onChanged: (value) => confirmGlobalStatusChange(item, value),
-                )
-              else
-                Text('Global (solo lectura): ${item.globalStatus}'),
-              if (widget.canManageClinic)
-                statusPicker(
-                  key: '${item.key}-clinic',
-                  label: 'Estado de esta clínica',
-                  value: item.status,
+                  key: '${item.key}-personal',
+                  label: 'Mi estado personal',
+                  value: item.personalStatus,
                   statuses: _clinicPersonalReviewStatuses,
+                  icon: VetIcons.user,
                   onChanged: (value) => changeStatus(
                     item,
                     value,
-                    scope: _ReviewScope.clinic,
+                    scope: _ReviewScope.personal,
                   ),
-                )
-              else
-                Text('Clínica: ${item.status}'),
-              statusPicker(
-                key: '${item.key}-personal',
-                label: 'Mi estado personal',
-                value: item.personalStatus,
-                statuses: _clinicPersonalReviewStatuses,
-                onChanged: (value) => changeStatus(
-                  item,
-                  value,
-                  scope: _ReviewScope.personal,
                 ),
-              ),
-              if (item.doseText?.isNotEmpty == true)
-                Text('Posología documentada: ${item.doseText}'),
-              if (item.ingredient?.isNotEmpty == true) Text('Ingrediente: ${item.ingredient}'),
-              if (item.presentation?.isNotEmpty == true) Text('Presentación: ${item.presentation}'),
-              Text('Fuente: ${item.source ?? 'No registrada'}'
-                  '${item.page == null ? '' : ', pág. ${item.page}'}'),
-              TextButton(onPressed: () => report(item),
-                  child: const Text('Reportar error / comentar')),
-            ]),
-          )),
+                const SizedBox(height: 8),
+                if (item.doseText?.isNotEmpty == true)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(VetIcons.pills, size: 14, color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text('Posología documentada: ${item.doseText}', style: Theme.of(context).textTheme.bodySmall),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (item.ingredient?.isNotEmpty == true)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(VetIcons.flask, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Ingrediente: ${item.ingredient}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (item.presentation?.isNotEmpty == true)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        Icon(VetIcons.medicineBottle, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Presentación: ${item.presentation}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Icon(VetIcons.book, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Fuente: ${item.source ?? 'No registrada'}${item.page == null ? '' : ', pág. ${item.page}'}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => report(item),
+                    icon: const Icon(VetIcons.megaphone, size: 16),
+                    label: const Text('Reportar error / comentar'),
+                  ),
+                ),
+              ]),
+            ),
+          ),
         if (more && !loading)
           TextButton(onPressed: nextPage, child: const Text('Ver más')),
       ],

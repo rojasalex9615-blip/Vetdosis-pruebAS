@@ -277,19 +277,22 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           children: [
             Text('Sección', style: textTheme.titleSmall),
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final g in groups)
-                  glowChip(
-                    ChoiceChip(
-                      label: Text(g.label),
-                      selected: g == current,
-                      onSelected: (_) => setState(() => group = g),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final (i, g) in groups.indexed) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    glowChip(
+                      ChoiceChip(
+                        label: Text(g.label),
+                        selected: g == current,
+                        onSelected: (_) => setState(() => group = g),
+                      ),
                     ),
-                  ),
-              ],
+                  ],
+                ],
+              ),
             ),
           ],
         ),
