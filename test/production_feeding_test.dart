@@ -90,14 +90,17 @@ void main() {
       ),
     );
     await tester.pumpWidget(app(admin));
+    await tester.ensureVisible(find.text('Peces'));
     await tester.tap(find.text('Peces'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Tilapia'));
     await tester.tap(find.text('Tilapia'));
     await tester.pumpAndSettle();
     expect(find.byType(AquacultureSeedPanel), findsOneWidget);
     await tester.pumpWidget(app(member));
     await tester.pumpAndSettle();
     expect(find.byType(AquacultureSeedPanel), findsNothing);
+    await tester.ensureVisible(find.text('Volver a especies'));
     await tester.tap(find.text('Volver a especies'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Porcinos'));

@@ -194,8 +194,10 @@ void main() {
     'Avian routes reuse existing tools and preserve activity on return',
     (tester) async {
       await host(tester, ProductionMenu(member: admin, onNavigate: (_) {}));
+      await tester.ensureVisible(find.text('Aves'));
       await tester.tap(find.text('Aves'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Postura'));
       await tester.tap(find.text('Postura'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Capacidad e instalaciones avícolas'));
