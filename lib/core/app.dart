@@ -32,6 +32,7 @@ import '../vet_ui/vet_components.dart';
 import 'widgets/neu_identity.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
+import '../modules/legal/presentation/legal_links.dart';
 import '../modules/identity/domain/identity_repository.dart';
 import '../modules/identity/presentation/identity_panel.dart';
 import '../modules/dashboard/presentation/alert_preferences_panel.dart';
@@ -101,6 +102,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../modules/core/presentation/core_view_model.dart';
 import '../modules/auth/presentation/auth_view_model.dart';
 import '../modules/auth/presentation/auth_screen.dart';
+import '../modules/auth/domain/personal_profile_repository.dart';
+import '../modules/auth/presentation/birthday_banner.dart';
 import '../vet_ui/vet_icons.dart';
 
 /// Linea de un control de seleccion en estilo neumorfico.
@@ -109,8 +112,7 @@ import '../vet_ui/vet_icons.dart';
 /// tiene el foco, que es cuando conviene senalarlo—, y es la del primario.
 /// En reposo no lleva ninguna: lo que lo separa del fondo es el relieve.
 BorderSide? Function(Set<WidgetState>) _neuSide(Color primary) =>
-    (states) =>
-        states.contains(WidgetState.disabled)
+    (states) => states.contains(WidgetState.disabled)
         ? BorderSide.none
         : states.contains(WidgetState.selected) ||
               states.contains(WidgetState.pressed) ||
@@ -170,15 +172,15 @@ class SessionRouteGuard extends StatefulWidget {
   final Widget Function(
     BuildContext context,
     GlobalKey<NavigatorState> navigatorKey,
-  ) builder;
+  )
+  builder;
 
   @override
   State<SessionRouteGuard> createState() => _SessionRouteGuardState();
 }
 
 class _SessionRouteGuardState extends State<SessionRouteGuard> {
-  final GlobalKey<NavigatorState> _navigatorKey =
-      GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   String? _sessionFingerprint;
 
   String _fingerprint(AuthViewModel? auth) {
@@ -231,8 +233,7 @@ class _SessionRouteGuardState extends State<SessionRouteGuard> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      widget.builder(context, _navigatorKey);
+  Widget build(BuildContext context) => widget.builder(context, _navigatorKey);
 }
 
 /// Raiz de la aplicacion: arma el tema, decide si hay que autenticar y
@@ -310,6 +311,7 @@ class VetDosisApp extends StatelessWidget {
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
   final InboxSeenStore? inboxSeenStore;
+
   /// Nulo cuando no hay sesion de Supabase: sin el, el expediente no
   /// ofrece las analiticas en vez de ofrecerlas y fallar al abrirlas.
   final LabRepository? laboratory;
@@ -544,9 +546,7 @@ class VetDosisApp extends StatelessWidget {
               backgroundColor: surface,
               surfaceTintColor: Colors.transparent,
               dayShape: WidgetStatePropertyAll(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               dayBackgroundColor: WidgetStateProperty.resolveWith(
                 (states) => states.contains(WidgetState.selected)
@@ -959,9 +959,7 @@ class CoreShell extends StatelessWidget {
     // la raiz; a esas pantallas se llega por el cajon.
     final respaldo = destinations.indexWhere((entry) => entry.$1 == 'Más');
     return NavigationBar(
-      selectedIndex: selected >= 0
-          ? selected
-          : (respaldo >= 0 ? respaldo : 0),
+      selectedIndex: selected >= 0 ? selected : (respaldo >= 0 ? respaldo : 0),
       onDestinationSelected: (index) => model.navigate(destinations[index].$1),
       destinations: [
         for (final entry in destinations)
@@ -976,7 +974,12 @@ class CoreShell extends StatelessWidget {
                     emphasis: .75,
                   )
                 : Icon(entry.$2),
-            label: entry.$1,
+            // «Asistente IA» no cabe en el hueco de 72 px de un telefono y
+            // se recortaba contra el borde de la pantalla. El destino es el
+            // mismo; solo cambia la etiqueta visible, y el tooltip conserva
+            // el nombre completo para lectores de pantalla.
+            label: entry.$1 == 'Asistente IA' ? 'Asistente' : entry.$1,
+            tooltip: entry.$1 == 'Asistente IA' ? 'Asistente IA' : null,
           ),
       ],
     );
@@ -1146,10 +1149,8 @@ class CoreShell extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (_) => TeamDutyScreen(
-                        model: auth!,
-                        clinic: auth!.active!,
-                      ),
+                      builder: (_) =>
+                          TeamDutyScreen(model: auth!, clinic: auth!.active!),
                     ),
                   );
                 }
@@ -1231,6 +1232,9 @@ class CoreShell extends StatelessWidget {
                   member: auth?.active,
                   access: moduleAccess,
                   experience: experience,
+                  workAreas: experience?.workAreas ?? model.settings.workAreas,
+                  includeAdmin:
+                      experience?.includeAdmin ?? model.settings.includeAdmin,
                   onNavigate: (page) {
                     Navigator.pop(context);
                     model.navigate(page);
@@ -1374,7 +1378,8 @@ class CoreShell extends StatelessWidget {
                           clinic: auth!.active!.clinicId,
                           user: auth!.active!.userId,
                           offline: auth!.offline,
-                          canManageClinic: auth!.active!.role == ClinicRole.admin,
+                            canManageClinic:
+                                auth!.active!.role == ClinicRole.admin,
                         )
                       : const Text(
                           'El modo revisión requiere una cuenta autorizada y conexión.',
@@ -1384,11 +1389,18 @@ class CoreShell extends StatelessWidget {
                     member: auth?.active,
                     access: moduleAccess,
                     experience: experience,
+                      workAreas:
+                          experience?.workAreas ?? model.settings.workAreas,
+                      includeAdmin:
+                          experience?.includeAdmin ??
+                          model.settings.includeAdmin,
                     initialGroup: model.branch == ClinicalBranch.management
                         ? 'Administración y finanzas'
                         : null,
                     onNavigate: model.navigate,
-                    onAccount: auth == null ? null : () => openAccount(context),
+                      onAccount: auth == null
+                          ? null
+                          : () => openAccount(context),
                   )
                 else if (model.screen == 'Planeación financiera')
                   allowed('Planeación financiera')
@@ -1484,7 +1496,8 @@ class CoreShell extends StatelessWidget {
                             ClinicRole.mvz,
                           ].contains(auth!.active?.role)
                       ? DoseMathTools(
-                          visualReference: model.settings.visualStyle == 'neu',
+                            visualReference:
+                                model.settings.visualStyle == 'neu',
                           onChoosePatient: canChooseDosePatient
                               ? () => chooseDosePatient(context)
                               : null,
@@ -1541,7 +1554,8 @@ class CoreShell extends StatelessWidget {
                                 repository: patients!,
                                 member: auth!.active!,
                                 canOpenActivity: allowed,
-                                onOpenActivity: (destination, patientId) async {
+                                  onOpenActivity:
+                                      (destination, patientId) async {
                                   if (allowed(destination)) {
                                     model.navigate(
                                       destination,
@@ -1630,7 +1644,8 @@ class CoreShell extends StatelessWidget {
                       : const Text(
                           'Conecta tu cuenta y verifica el acceso a inventario para escanear productos.',
                         )
-                else if (model.screen == 'Inventario' || model.screen == 'Caja')
+                  else if (model.screen == 'Inventario' ||
+                      model.screen == 'Caja')
                   inventory != null && auth?.active != null
                       ? auth!.offline
                             ? const Text(
@@ -1848,7 +1863,8 @@ class CoreShell extends StatelessWidget {
                   ProductScreen(onNavigate: model.navigate)
                 else if (model.screen == 'Inicio guiado')
                   GuidedStartScreen(
-                    scope: '${auth?.active?.userId}:${auth?.active?.clinicId}',
+                      scope:
+                          '${auth?.active?.userId}:${auth?.active?.clinicId}',
                     onNavigate: (page) {
                       if (page == 'Mi cuenta' && auth != null) {
                         openAccount(context);
@@ -1865,8 +1881,7 @@ class CoreShell extends StatelessWidget {
                           repository: support!,
                           member: auth!.active!,
                           mode: SupportMode.chat,
-                          helpPanel:
-                              ai is StarterAiRepository && ai != null
+                            helpPanel: ai is StarterAiRepository && ai != null
                               ? StarterHelpPanel(
                                   repository: ai as StarterAiRepository,
                                   chats: ai!,
@@ -1888,6 +1903,19 @@ class CoreShell extends StatelessWidget {
                   ...settings(context)
                 else
                   ...pending(context),
+                // Términos y aviso acompañan al acceso, Inicio, Planes y las
+                // pantallas de cálculo con la misma versión que sirvió la
+                // puerta beta; no se repiten en Ajustes ni en el menú.
+                if (auth?.active != null &&
+                    const {
+                      'Inicio',
+                      'Planes',
+                      'Cálculo rápido',
+                      'Cálculos',
+                      'Cálculos clínicos',
+                      'Operaciones de dosis',
+                    }.contains(model.screen))
+                  const LegalSmallPrint(),
               ],
             ),
           ),
@@ -1949,6 +1977,17 @@ class CoreShell extends StatelessWidget {
           moduleAccess: moduleAccess,
         ),
         offline: auth?.offline ?? false,
+        header:
+            auth?.active == null ||
+                model.repository is! PersonalProfileRepository
+            ? null
+            : BirthdayBanner(
+                repository: model.repository as PersonalProfileRepository,
+                userId: auth!.active!.userId,
+                clinicId: auth!.active!.isPersonal
+                    ? null
+                    : auth!.active!.clinicId,
+              ),
         // El Inicio Neu es el predeterminado de la linea nueva; el piloto
         // sigue pudiendo apagarse con --dart-define=HOME_PILOT=false.
         homePilot: const bool.fromEnvironment('HOME_PILOT', defaultValue: true),
@@ -2020,9 +2059,7 @@ class CoreShell extends StatelessWidget {
                 context,
                 MaterialPageRoute<void>(
                   builder: (_) => Scaffold(
-                    appBar: AppBar(
-                      title: const Text('Registrar medicación'),
-                    ),
+                    appBar: AppBar(title: const Text('Registrar medicación')),
                     body: SingleChildScrollView(
                       padding: const EdgeInsets.all(20),
                       child: PrescribingScreen(
@@ -2085,10 +2122,7 @@ class CoreShell extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Ajustes',
-                  style: theme.textTheme.headlineMedium,
-                ),
+                Text('Ajustes', style: theme.textTheme.headlineMedium),
                 const SizedBox(height: 4),
                 Text(
                   'Personaliza la interfaz visual, gestiona tu cuenta y configura tus herramientas.',
@@ -2111,7 +2145,10 @@ class CoreShell extends StatelessWidget {
                 const Icon(VetIcons.palette, size: 20, color: VetColors.violet),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Estilo visual', style: theme.textTheme.titleLarge),
+                  child: Text(
+                    'Estilo visual',
+                    style: theme.textTheme.titleLarge,
+                  ),
                 ),
               ],
             ),
@@ -2198,10 +2235,78 @@ class CoreShell extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(VetIcons.userCircle, size: 20, color: VetColors.turquoise),
+                const Icon(VetIcons.paw, size: 20, color: VetColors.mint),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Cuenta y espacio', style: theme.textTheme.titleLarge),
+                  child: Text(
+                    'Áreas de trabajo',
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Elige las áreas que quieres ver. Las secciones de las demás se ocultan del menú.',
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            for (final (id, label, description) in [
+              ('small', 'Pequeñas especies', 'Perro, gato y clínica general.'),
+              (
+                'production',
+                'Producción',
+                'Aves, peces, bovinos, porcinos y equinos.',
+              ),
+              ('exotic', 'Exóticos', 'Mamíferos pequeños de compañía.'),
+            ])
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: model.settings.workAreas.contains(id),
+                title: Text(label),
+                subtitle: Text(description),
+                onChanged: (value) {
+                  final next = {...model.settings.workAreas};
+                  if (value == true) {
+                    next.add(id);
+                  } else {
+                    next.remove(id);
+                  }
+                  model.updateSettings(workAreas: next);
+                },
+              ),
+            if (model.settings.workAreas.contains('production'))
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: model.settings.includeAdmin,
+                title: const Text('Incluir administración clínica'),
+                subtitle: const Text(
+                  'Caja, finanzas y productividad. Con pequeñas o exóticos ya va incluida.',
+                ),
+                onChanged: (value) =>
+                    model.updateSettings(includeAdmin: value == true),
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      VetCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  VetIcons.userCircle,
+                  size: 20,
+                  color: VetColors.turquoise,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Cuenta y espacio',
+                    style: theme.textTheme.titleLarge,
+                  ),
                 ),
               ],
             ),
@@ -2211,7 +2316,9 @@ class CoreShell extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 leading: const AccentIcon(VetIcons.userCircle, size: 24),
                 title: const Text('Mi cuenta y clínicas'),
-                subtitle: const Text('Mi espacio personal, clínicas e invitaciones'),
+                subtitle: const Text(
+                  'Mi espacio personal, clínicas e invitaciones',
+                ),
                 trailing: const Icon(VetIcons.chevronRight, size: 18),
                 onTap: () => openAccount(context),
               ),
@@ -2264,7 +2371,8 @@ class CoreShell extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => ClinicExperienceScreen(
                               member: auth!.active!,
-                              initial: experience ?? ClinicExperience.defaults(),
+                              initial:
+                                  experience ?? ClinicExperience.defaults(),
                               repository: experienceRepository!,
                               ready: experienceReady,
                               onSaved: onExperienceSaved,
@@ -2343,7 +2451,11 @@ class CoreShell extends StatelessWidget {
                 'Reportes, archivos y seguimiento.',
                 'Ayuda y soporte',
               ),
-              ('Primeros pasos', 'Retoma la guía de configuración.', 'Inicio guiado'),
+              (
+                'Primeros pasos',
+                'Retoma la guía de configuración.',
+                'Inicio guiado',
+              ),
             ])
               if (allowed(option.$3)) ...[
                 ListTile(
@@ -2369,7 +2481,9 @@ class CoreShell extends StatelessWidget {
                   trailing: const Icon(VetIcons.chevronRight, size: 18),
                   onTap: () {
                     if (option.$1 == 'Proveedor de IA y privacidad') {
-                      if (ai == null || auth?.active == null || auth?.offline == true) {
+                      if (ai == null ||
+                          auth?.active == null ||
+                          auth?.offline == true) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
@@ -2383,7 +2497,9 @@ class CoreShell extends StatelessWidget {
                         context,
                         MaterialPageRoute<void>(
                           builder: (_) => Scaffold(
-                            appBar: AppBar(title: const Text('Proveedores de IA')),
+                            appBar: AppBar(
+                              title: const Text('Proveedores de IA'),
+                            ),
                             body: SafeArea(
                               child: SingleChildScrollView(
                                 padding: const EdgeInsets.all(16),
@@ -2391,7 +2507,8 @@ class CoreShell extends StatelessWidget {
                                   repository: ai!,
                                   member: auth!.active!,
                                   configurationOnly: true,
-                                  preferredProvider: experience?.defaultAiProvider,
+                                  preferredProvider:
+                                      experience?.defaultAiProvider,
                                 ),
                               ),
                             ),
@@ -2406,7 +2523,9 @@ class CoreShell extends StatelessWidget {
                           builder: (routeContext) => Scaffold(
                             appBar: AppBar(
                               title: Text(
-                                option.$3 == 'Receta' ? 'Recetas' : 'Hospitalización',
+                                option.$3 == 'Receta'
+                                    ? 'Recetas'
+                                    : 'Hospitalización',
                               ),
                             ),
                             body: option.$3 == 'Receta'

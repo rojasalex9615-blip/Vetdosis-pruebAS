@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import '../../../vet_ui/vet_components.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -775,9 +776,9 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
             child: Text(m.errors['Estadísticas']!),
           )
         else if (stats == null)
-          const Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: Text('Resumen no disponible.'),
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
           )
         else ...[
           const SizedBox(height: 16),
@@ -886,7 +887,10 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         if (m.errors['Agenda'] != null)
           Text(m.errors['Agenda']!)
         else if (m.agenda == null)
-          const Text('Resumen no disponible.')
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
+          )
         else ...[
           for (final state in _appointmentStates)
             _metric(
@@ -907,7 +911,10 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         if (m.errors['Hospitalización'] != null)
           Text(m.errors['Hospitalización']!)
         else if (m.ward == null)
-          const Text('Resumen no disponible.')
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
+          )
         else ...[
           _metric('Internados ahora', '${_stays.length}'),
           _metric(
@@ -947,7 +954,10 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         if (m.errors['Inventario'] != null)
           Text(m.errors['Inventario']!)
         else if (m.stock == null)
-          const Text('Resumen no disponible.')
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
+          )
         else ...[
           const Text('Stock bajo'),
           if (m.lowStock.isEmpty)

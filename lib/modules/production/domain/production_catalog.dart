@@ -27,33 +27,11 @@ const productionSpecies = <String, List<String>>{
 };
 
 const plannedProductionAreas = <String, List<String>>{
-  'Bovinos': [
-    'Animales y hatos/lotes',
-    'Reproducción y alimentación',
-    'Indicadores por unidad',
-  ],
+  'Bovinos': ['Reproducción y alimentación', 'Indicadores por unidad'],
   'Ovinos / caprinos': [
     'Animales y rebaños',
     'Carne, leche y fibra según actividad',
     'Reproducción y alimentación',
   ],
-  // Parvadas, casetas, registros productivos y eventos ya estan disponibles en
-  // el modulo M15; quedan pendientes los indicadores exportables.
-  'Aves': ['Indicadores y reportes'],
-  'Peces': [
-    'Lotes y unidades de cultivo',
-    'Calidad del agua y alimentación',
-    'Biomasa y ciclos',
-  ],
-  'Abejas': [
-    'Apiarios y colmenas',
-    'Revisiones y sanidad',
-    'Cosechas y seguimiento',
-  ],
-  'Porcinos': [
-    'Reproductores y servicios',
-    'Camadas y alimentación',
-    'Engorda e indicadores',
-  ],
-  'Equinos': ['Atención y seguimiento individual', 'Reproducción y crianza'],
+  'Abejas': ['Revisiones y sanidad', 'Cosechas y seguimiento'],
 };

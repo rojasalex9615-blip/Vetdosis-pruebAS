@@ -3,6 +3,7 @@ import '../../../core/widgets/workspace_panel.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../data/settings_repository.dart';
 import '../domain/module_access.dart';
 import '../../clinic_experience/domain/clinic_experience.dart';
 import '../domain/navigation_access.dart';
@@ -34,6 +35,8 @@ class SectionMenu extends StatefulWidget {
     this.experience,
     this.onAccount,
     this.initialGroup,
+    this.workAreas = defaultWorkAreas,
+    this.includeAdmin = true,
   });
   final ValueChanged<String> onNavigate;
   final ClinicMembership? member;
@@ -41,6 +44,8 @@ class SectionMenu extends StatefulWidget {
   final ClinicExperience? experience;
   final VoidCallback? onAccount;
   final String? initialGroup;
+  final Set<String> workAreas;
+  final bool includeAdmin;
   @override
   State<SectionMenu> createState() => _SectionMenuState();
 }
@@ -51,6 +56,16 @@ class _SectionMenuState extends State<SectionMenu> {
   Widget build(BuildContext context) {
     final filtered = <SectionGroup>[];
     for (final group in sectionGroups) {
+      if (group.area == 'admin') {
+        final adminIncluded =
+            widget.includeAdmin ||
+            widget.workAreas.contains('small') ||
+            widget.workAreas.contains('exotic');
+        if (!adminIncluded) continue;
+      } else if (group.area != 'core' &&
+          !widget.workAreas.contains(group.area)) {
+        continue;
+      }
       final authorized = group.pages
           .where(
             (page) =>
@@ -185,9 +200,11 @@ class CalculationMenu extends StatelessWidget {
   final ClinicExperience? experience;
   @override
   Widget build(BuildContext context) {
-    final canDose = navigationAllowed('Cálculo rápido', member, access) &&
+    final canDose =
+        navigationAllowed('Cálculo rápido', member, access) &&
         (experience?.visible('Cálculo rápido') ?? true);
-    final canClinical = navigationAllowed('Cálculos clínicos', member, access) &&
+    final canClinical =
+        navigationAllowed('Cálculos clínicos', member, access) &&
         (experience?.visible('Cálculos clínicos') ?? true);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

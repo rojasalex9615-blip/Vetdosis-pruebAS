@@ -37,6 +37,7 @@ class DashboardScreen extends StatefulWidget {
     this.isVisible,
     this.identity,
     this.experience,
+    this.header,
   });
   final DashboardViewModel model;
   final ValueChanged<String> onNavigate;
@@ -45,6 +46,9 @@ class DashboardScreen extends StatefulWidget {
   final bool Function(String)? isVisible;
   final IdentityRepository? identity;
   final ClinicExperience? experience;
+
+  /// Contenido opcional sobre el resumen (por ejemplo, el saludo de cumpleaños).
+  final Widget? header;
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -122,7 +126,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ? Text(model.errors[name]!)
       : loaded
       ? content
-      : const Text('Resumen no disponible.');
+      : const VetEmptyState(
+          text: 'Resumen no disponible.',
+          icon: VetIcons.info,
+        );
   Widget metrics(List<(String, String)> values) => LayoutBuilder(
     builder: (context, c) {
       final cols =
@@ -284,6 +291,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.header != null) ...[
+            widget.header!,
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               Expanded(
@@ -445,16 +456,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: VetCard(
                   padding: EdgeInsets.zero,
                   child: Theme(
-                    data: Theme.of(context).copyWith(
-                      dividerColor: Colors.transparent,
-                    ),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
                       shape: const Border(),
                       collapsedShape: const Border(),
                       leading: const Icon(VetIcons.barChart, size: 20),
                       title: const Text(
                         'Ver estadísticas',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                       children: [
                         Padding(
@@ -509,17 +523,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           for (final t in m.overdue.take(3))
                             ListTile(
                               dense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                              leading: const Icon(VetIcons.clock, size: 18, color: VetColors.danger),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              leading: const Icon(
+                                VetIcons.clock,
+                                size: 18,
+                                color: VetColors.danger,
+                              ),
                               title: Text(
                                 '${m.patient(t)} · ${t.label}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
                               ),
                               subtitle: Text(
                                 'Horario: ${time(m.effectiveTime(t))}',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              trailing: const Icon(VetIcons.chevronRight, size: 16),
+                              trailing: const Icon(
+                                VetIcons.chevronRight,
+                                size: 16,
+                              ),
                               onTap: () => openPage('Hospitalización'),
                             ),
                         ],
@@ -558,17 +584,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           for (final p in m.lowStock.take(3))
                             ListTile(
                               dense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                              leading: const Icon(VetIcons.alertOctagon, size: 18, color: VetColors.warning),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              leading: const Icon(
+                                VetIcons.alertOctagon,
+                                size: 18,
+                                color: VetColors.warning,
+                              ),
                               title: Text(
                                 '${p['nombre']}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
                               ),
                               subtitle: Text(
                                 'Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              trailing: const Icon(VetIcons.chevronRight, size: 16),
+                              trailing: const Icon(
+                                VetIcons.chevronRight,
+                                size: 16,
+                              ),
                               onTap: () => openPage('Inventario'),
                             ),
                         ],
@@ -654,7 +692,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       if (m.recent.isEmpty)
                         const VetEmptyState(
-                          text: 'No hay citas recientes en los datos consultados.',
+                          text:
+                              'No hay citas recientes en los datos consultados.',
                           icon: VetIcons.calendarClock,
                         ),
                       for (final a in m.recent.take(3))
@@ -1007,7 +1046,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     },
   );
 }
-
 
 /// Botón en cápsula simétrica de 2x2 para las acciones rápidas del Inicio
 /// (Formatos, Estadísticas, Cálculos clínicos, Escáner), con relieve neu

@@ -106,6 +106,10 @@ class AppointmentDetails extends StatelessWidget {
     final date = DateTime.parse(appointment['starts_at'] as String).toLocal();
     final local = MaterialLocalizations.of(context);
     final theme = Theme.of(context);
+    // Algunos registros viejos traen la cadena «null» en notas. Se pintaba
+    // como una linea suelta debajo del estado de la cita.
+    final notes = (appointment['notes']?.toString() ?? '').trim();
+    final hasNotes = notes.isNotEmpty && notes.toLowerCase() != 'null';
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Column(
@@ -134,10 +138,10 @@ class AppointmentDetails extends StatelessWidget {
               ),
             ],
           ),
-          if ((appointment['notes'] as String? ?? '').isNotEmpty)
+          if (hasNotes)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(appointment['notes'] as String),
+              child: Text(notes),
             ),
         ],
       ),

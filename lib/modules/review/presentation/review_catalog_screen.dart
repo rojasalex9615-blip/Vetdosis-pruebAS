@@ -19,6 +19,23 @@ const _clinicPersonalReviewStatuses = [
   'rechazado',
 ];
 
+/// Los estados viven en la base como claves tecnicas (`sin_verificar`). En
+/// pantalla se leian tal cual, con guion bajo incluido; esta es la etiqueta
+/// que ve la persona.
+const _reviewStatusLabels = {
+  'sin_verificar': 'Sin verificar',
+  'revisar_conflicto': 'Revisar conflicto',
+  'validado': 'Validado',
+  'descartado': 'Descartado',
+  'en_revision': 'En revisión',
+  'verificado': 'Verificado',
+  'corregido': 'Corregido',
+  'rechazado': 'Rechazado',
+};
+
+String reviewStatusLabel(String status) =>
+    _reviewStatusLabels[status] ?? status;
+
 class ReviewCatalogScreen extends StatefulWidget {
   const ReviewCatalogScreen({
     super.key,
@@ -293,6 +310,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
           key: ValueKey('$key-$value-${pickerRevision[key] ?? 0}'),
           initialValue: value,
           isDense: true,
+          isExpanded: true,
           decoration: InputDecoration(
             labelText: label,
             prefixIcon: icon != null ? Icon(icon, size: 18) : null,
@@ -301,7 +319,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
           items: statuses
               .map((status) => DropdownMenuItem(
                     value: status,
-                    child: Text(status),
+                    child: Text(reviewStatusLabel(status)),
                   ))
               .toList(),
           onChanged: (next) {
@@ -458,7 +476,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                       children: [
                         Icon(VetIcons.cloudCheck, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
-                        Text('Global (solo lectura): ${item.globalStatus}', style: Theme.of(context).textTheme.bodySmall),
+                        Text('Global (solo lectura): ${reviewStatusLabel(item.globalStatus)}', style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
                   ),
@@ -482,7 +500,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                       children: [
                         Icon(VetIcons.clinic, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
-                        Text('Clínica: ${item.status}', style: Theme.of(context).textTheme.bodySmall),
+                        Text('Clínica: ${reviewStatusLabel(item.status)}', style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
                   ),
