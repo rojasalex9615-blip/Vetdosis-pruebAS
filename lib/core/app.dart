@@ -101,6 +101,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '../modules/core/presentation/core_view_model.dart';
 import '../modules/auth/presentation/auth_view_model.dart';
 import '../modules/auth/presentation/auth_screen.dart';
+import '../modules/auth/domain/personal_profile_repository.dart';
+import '../modules/auth/presentation/birthday_banner.dart';
 import '../vet_ui/vet_icons.dart';
 
 /// Linea de un control de seleccion en estilo neumorfico.
@@ -1956,6 +1958,17 @@ class CoreShell extends StatelessWidget {
           moduleAccess: moduleAccess,
         ),
         offline: auth?.offline ?? false,
+        header:
+            auth?.active == null ||
+                model.repository is! PersonalProfileRepository
+            ? null
+            : BirthdayBanner(
+                repository: model.repository as PersonalProfileRepository,
+                userId: auth!.active!.userId,
+                clinicId: auth!.active!.isPersonal
+                    ? null
+                    : auth!.active!.clinicId,
+              ),
         // El Inicio Neu es el predeterminado de la linea nueva; el piloto
         // sigue pudiendo apagarse con --dart-define=HOME_PILOT=false.
         homePilot: const bool.fromEnvironment('HOME_PILOT', defaultValue: true),
@@ -2264,6 +2277,14 @@ class CoreShell extends StatelessWidget {
           children: [
             Row(
               children: [
+                const Icon(
+                  VetIcons.userCircle,
+                  size: 20,
+                  color: VetColors.turquoise,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
                 const Icon(
                   VetIcons.userCircle,
                   size: 20,

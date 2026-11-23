@@ -1,4 +1,8 @@
 import 'team_duty_screen.dart';
+import '../domain/personal_profile_repository.dart';
+import 'profile_screen.dart';
+import 'messages_screen.dart';
+import '../domain/team_message.dart';
 import '../../../core/widgets/brand_gradient.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/google_mark.dart';
@@ -465,6 +469,74 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
               children: [
                 if (widget.identityBuilder != null) ...[
                   widget.identityBuilder!(context),
+                  const SizedBox(height: 16),
+                ],
+                if (model.repository is PersonalProfileRepository &&
+                    model.repository.userId != null) ...[
+                  AccentGlow(
+                    color: theme.colorScheme.primary,
+                    radius: 24,
+                    emphasis: 0.45,
+                    child: VetCard(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const AccentIcon(
+                          VetIcons.userCircle,
+                          size: 28,
+                        ),
+                        title: const Text(
+                          'Mi perfil personal',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: const Text(
+                          'Nombre, cumpleaños, contacto, alergias y qué ve el equipo',
+                        ),
+                        trailing: const Icon(VetIcons.chevronRight),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PersonalProfileScreen(
+                              repository:
+                                  model.repository as PersonalProfileRepository,
+                              userId: model.repository.userId!,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (model.repository is TeamMessageRepository &&
+                    model.repository is PersonalProfileRepository &&
+                    model.active != null &&
+                    !model.active!.isPersonal) ...[
+                  VetCard(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const AccentIcon(VetIcons.mail, size: 28),
+                      title: const Text(
+                        'Mensajes del equipo',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: const Text(
+                        'Avisos a una persona o a todo el equipo',
+                      ),
+                      trailing: const Icon(VetIcons.chevronRight),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => MessagesLoader(
+                            messages: model.repository as TeamMessageRepository,
+                            profiles:
+                                model.repository as PersonalProfileRepository,
+                            clinicId: model.active!.clinicId,
+                            userId: model.active!.userId,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                 ],
                 if (widget.personalSpaceBuilder != null) ...[
