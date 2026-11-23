@@ -179,6 +179,7 @@ void main() {
     await tester.tap(find.text('Porcinos'));
     await tester.pumpAndSettle();
     expect(find.text('Maternidad y destete'), findsOneWidget);
+    await tester.ensureVisible(find.text('Maternidad y destete'));
     await tester.tap(find.text('Maternidad y destete'));
     await tester.pumpAndSettle();
     expect(

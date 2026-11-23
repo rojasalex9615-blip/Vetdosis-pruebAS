@@ -2304,14 +2304,6 @@ class CoreShell extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                const Icon(
-                  VetIcons.userCircle,
-                  size: 20,
-                  color: VetColors.turquoise,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
                     'Cuenta y espacio',
                     style: theme.textTheme.titleLarge,
                   ),

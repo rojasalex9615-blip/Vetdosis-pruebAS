@@ -85,7 +85,7 @@ class _BirthdayBannerState extends State<BirthdayBanner> {
     }
     final next = upcomingBirthdays(
       [
-        if (mine != null) mine,
+        ?mine,
         for (final profile in team)
           if (profile.userId != widget.userId) profile,
       ],

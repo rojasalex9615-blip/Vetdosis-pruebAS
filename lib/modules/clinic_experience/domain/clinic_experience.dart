@@ -288,8 +288,9 @@ class ClinicExperience {
       final parsed = ClinicalFlowMode.values
           .where((m) => m.name == entry.value)
           .firstOrNull;
-      if (parsed == null)
+      if (parsed == null) {
         throw const FormatException('Modo de trabajo inválido.');
+      }
       parsedModes[entry.key] = parsed;
     }
     final ai = settings['default_ai_provider'];

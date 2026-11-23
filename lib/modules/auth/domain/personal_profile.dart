@@ -176,8 +176,9 @@ List<PersonalProfile> upcomingBirthdays(
     final born = profile.birthday;
     if (born == null) continue;
     var next = DateTime(base.year, born.month, born.day);
-    if (next.isBefore(base))
+    if (next.isBefore(base)) {
       next = DateTime(base.year + 1, born.month, born.day);
+    }
     final diff = next.difference(base).inDays;
     if (diff >= 0 && diff <= days) result.add((diff, profile));
   }

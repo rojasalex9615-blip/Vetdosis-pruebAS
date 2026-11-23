@@ -41,8 +41,9 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
   }
 
   Future<void> save() async {
-    if (saving || widget.member.role != ClinicRole.admin || !widget.ready)
+    if (saving || widget.member.role != ClinicRole.admin || !widget.ready) {
       return;
+    }
     setState(() {
       saving = true;
       message = null;
