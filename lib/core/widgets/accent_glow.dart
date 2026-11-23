@@ -71,14 +71,14 @@ class _AccentHalo extends CustomPainter {
     canvas.drawRRect(
       shape.inflate(1),
       Paint()
-        ..color = color.withValues(alpha: .26 * emphasis)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+        ..color = color.withValues(alpha: .12 * emphasis)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
     canvas.drawRRect(
       shape,
       Paint()
-        ..color = color.withValues(alpha: .15 * emphasis)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+        ..color = color.withValues(alpha: .06 * emphasis)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
   }
 
@@ -145,7 +145,7 @@ class _AccentChip extends StatelessWidget {
 class GlowRoundedBorder extends RoundedRectangleBorder {
   const GlowRoundedBorder({
     required this.glow,
-    this.blur = 9,
+    this.blur = 6,
     super.side,
     super.borderRadius,
   });

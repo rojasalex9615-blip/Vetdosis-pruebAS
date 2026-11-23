@@ -347,7 +347,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (widget.homePilot) ...[
               Text(
                 'Módulos principales',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
               HomeModuleGrid(

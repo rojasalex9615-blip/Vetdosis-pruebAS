@@ -533,7 +533,7 @@ class VetDosisApp extends StatelessWidget {
               backgroundColor: surface,
               indicatorColor: primary.withValues(alpha: dark ? .26 : .18),
               indicatorShape: GlowRoundedBorder(
-                glow: primary.withValues(alpha: dark ? .42 : .34),
+                glow: primary.withValues(alpha: dark ? .26 : .20),
                 borderRadius: BorderRadius.circular(18),
               ),
               elevation: 0,
