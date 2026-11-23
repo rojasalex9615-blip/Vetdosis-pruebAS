@@ -297,7 +297,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           children: [
                             GoogleMark(size: 18),
                             SizedBox(width: 10),
-                            Text('Continuar con Google'),
+                            Flexible(child: Text('Continuar con Google')),
                           ],
                         ),
                       ),

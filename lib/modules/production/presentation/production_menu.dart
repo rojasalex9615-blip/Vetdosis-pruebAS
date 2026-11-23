@@ -122,7 +122,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
           children: [
             const Icon(VetIcons.heartPulse, color: VetColors.turquoise),
             const SizedBox(width: 8),
-            Text('Constantes: $currentSpecies'),
+            Expanded(child: Text('Constantes: $currentSpecies')),
           ],
         ),
         content: Column(
@@ -573,7 +573,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                   children: [
                     Icon(toolIcon, size: 18),
                     const SizedBox(width: 8),
-                    Text(label),
+                    Flexible(child: Text(label)),
                   ],
                 ),
               ),
@@ -713,7 +713,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
         physics: const NeverScrollableScrollPhysics(),
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 1.35,
+        // 1.35 dejaba la celda en 118 dp y el rotulo a dos lineas no cabia.
+        childAspectRatio: 1.2,
         children: [
           ProductionToolTile(
             title: 'Calculadora de Ración',

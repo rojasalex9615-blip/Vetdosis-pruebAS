@@ -94,10 +94,12 @@ class _AlertPreferencesPanelState extends State<AlertPreferencesPanel> {
             children: [
               const Icon(VetIcons.clock, size: 18),
               const SizedBox(width: 8),
-              Text(
-                'Anticipación de avisos de hospitalización',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  'Anticipación de avisos de hospitalización',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],

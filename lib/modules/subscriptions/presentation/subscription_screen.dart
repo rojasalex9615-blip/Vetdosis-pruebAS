@@ -386,10 +386,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     children: [
                       const Icon(VetIcons.gift, size: 20),
                       const SizedBox(width: 8),
-                      Text(
-                        'Beneficios y accesos de cortesía',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                      Expanded(
+                        child: Text(
+                          'Beneficios y accesos de cortesía',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],

@@ -354,11 +354,13 @@ class _PersonalSpaceScreenState extends State<PersonalSpaceScreen> {
                 children: [
                   const Icon(VetIcons.calendar, size: 16),
                   const SizedBox(width: 6),
-                  Text(
-                    day.value,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                  Expanded(
+                    child: Text(
+                      day.value,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                   ),
                 ],
               ),

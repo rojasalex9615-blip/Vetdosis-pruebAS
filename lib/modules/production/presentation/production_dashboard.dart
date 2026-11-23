@@ -764,7 +764,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                                 : VetColors.muted,
                           ),
                           const SizedBox(width: 6),
-                          Text(sp),
+                          Flexible(child: Text(sp)),
                         ],
                       ),
                     ),
@@ -825,16 +825,21 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
             children: [
               const Icon(VetIcons.alertOctagon, color: VetColors.danger, size: 22),
               const SizedBox(width: 8),
-              const Text(
-                'ALERTA CRÍTICA: TIEMPOS DE RETIRO ACTIVOS',
-                style: TextStyle(
-                  color: VetColors.danger,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  letterSpacing: 0.2,
+              const Expanded(
+                child: Text(
+                  'ALERTA CRÍTICA: TIEMPOS DE RETIRO ACTIVOS',
+                  style: TextStyle(
+                    color: VetColors.danger,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
-              const Spacer(),
+              // El Spacer sobra desde que el titulo es Expanded: con los dos,
+              // el reparto flexible era mitad y mitad y el rotulo caia a
+              // cuatro lineas en vez de ocupar el hueco que queda libre.
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
@@ -1042,24 +1047,39 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // Las dos leyendas suman mas que el ancho util de la tarjeta en
+              // un telefono de 360 dp, asi que en Row se cortaba la segunda.
+              // En Wrap bajan a un segundo renglon y se leen completas.
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 16,
+                runSpacing: 6,
                 children: [
-                  Container(
-                    width: 12,
-                    height: 3,
-                    color: Colors.grey.shade400,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 3,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 4),
+                      const Text('Tabla Genética Teórica', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  const Text('Tabla Genética Teórica', style: TextStyle(fontSize: 12, color: VetColors.muted)),
-                  const SizedBox(width: 16),
-                  Container(
-                    width: 12,
-                    height: 3,
-                    color: specAccent,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 3,
+                        color: specAccent,
+                      ),
+                      const SizedBox(width: 4),
+                      const Text('Rendimiento Real en Granja', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  const Text('Rendimiento Real en Granja', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 ],
               ),
             ],
@@ -1107,7 +1127,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(silo.phase, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          Expanded(
+                            child: Text(silo.phase, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          ),
+                          const SizedBox(width: 8),
                           Text(
                             '${silo.stockTon} / ${silo.capacityTon} Ton (${(silo.percentage * 100).toStringAsFixed(0)}%)',
                             style: const TextStyle(fontSize: 12, color: VetColors.muted),
@@ -1130,18 +1153,26 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Consumo: ${(silo.dailyConsumptionKg).toStringAsFixed(0)} kg/día',
-                            style: const TextStyle(fontSize: 12, color: VetColors.muted),
+                          Expanded(
+                            child: Text(
+                              'Consumo: ${(silo.dailyConsumptionKg).toStringAsFixed(0)} kg/día',
+                              style: const TextStyle(fontSize: 12, color: VetColors.muted),
+                            ),
                           ),
-                          Text(
-                            silo.autonomyDays <= 5
-                                ? 'Autonomía: ${silo.autonomyDays} días ⚠️ ¡URGENTE!'
-                                : 'Autonomía: ${silo.autonomyDays} días',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: silo.autonomyDays <= 5 ? VetColors.danger : VetColors.success,
+                          const SizedBox(width: 8),
+                          // Con el aviso de urgencia esta linea pasa de 294 dp
+                          // y antes se cortaba justo en «¡URGENTE!».
+                          Flexible(
+                            child: Text(
+                              silo.autonomyDays <= 5
+                                  ? 'Autonomía: ${silo.autonomyDays} días ⚠️ ¡URGENTE!'
+                                  : 'Autonomía: ${silo.autonomyDays} días',
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: silo.autonomyDays <= 5 ? VetColors.danger : VetColors.success,
+                              ),
                             ),
                           ),
                         ],
@@ -1227,21 +1258,32 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Edad / Ciclo:', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                        // La celda de la rejilla deja 133 dp: la etiqueta cede
+                        // el espacio que pida el dato en vez de empujarlo fuera.
+                        const Expanded(
+                          child: Text('Edad / Ciclo:', style: TextStyle(fontSize: 12, color: VetColors.muted), overflow: TextOverflow.ellipsis),
+                        ),
+                        const SizedBox(width: 6),
                         Text('${f.ageDays} d', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Densidad:', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                        const Expanded(
+                          child: Text('Densidad:', style: TextStyle(fontSize: 12, color: VetColors.muted), overflow: TextOverflow.ellipsis),
+                        ),
+                        const SizedBox(width: 6),
                         Text('${f.density} ${f.densityUnit}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Mortalidad:', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                        const Expanded(
+                          child: Text('Mortalidad:', style: TextStyle(fontSize: 12, color: VetColors.muted), overflow: TextOverflow.ellipsis),
+                        ),
+                        const SizedBox(width: 6),
                         Text('${f.mortalityRate}%', style: TextStyle(fontSize: 12, color: f.mortalityRate > 2.0 ? VetColors.danger : VetColors.ink)),
                       ],
                     ),
@@ -1354,7 +1396,8 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
-          childAspectRatio: 1.35,
+          // 1.35 dejaba la celda en 118 dp y el rotulo a dos lineas no cabia.
+          childAspectRatio: 1.2,
           children: [
             ProductionToolTile(
               title: 'Calculadora de Ración',
@@ -1426,7 +1469,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           children: [
             const Icon(VetIcons.heartPulse, color: VetColors.turquoise),
             const SizedBox(width: 8),
-            Text('Constantes: $_selectedSpecies'),
+            Expanded(child: Text('Constantes: $_selectedSpecies')),
           ],
         ),
         content: Column(
@@ -1958,19 +2001,23 @@ class ProductionToolTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             VetIconBox(icon: icon, accent: accent, size: 36),
+            // En un telefono de 360 dp la celda deja 133 dp de texto util, y
+            // con una sola linea se cortaban casi todos los rotulos:
+            // «Capacidad de Caseta/Nave» mide 153 dp y «Factor conversion
+            // alimenticia», 174. Con dos lineas caben enteros.
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   subtitle,
                   style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
