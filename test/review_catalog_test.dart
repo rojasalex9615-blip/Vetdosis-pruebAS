@@ -193,7 +193,7 @@ void main() {
     expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(3));
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('validado').last);
+    await tester.tap(find.text('Validado').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Cambiar estado global'), findsOneWidget);
@@ -204,7 +204,7 @@ void main() {
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('validado').last);
+    await tester.tap(find.text('Validado').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirmar cambio global'));
     await tester.pumpAndSettle();
@@ -221,11 +221,11 @@ void main() {
     await pumpReviewScreen(tester, repository, member: administrator);
 
     expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
-    expect(find.text('Global (solo lectura): revisar_conflicto'), findsOneWidget);
+    expect(find.text('Global (solo lectura): Revisar conflicto'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('en_revision').last);
+    await tester.tap(find.text('En revisión').last);
     await tester.pumpAndSettle();
 
     expect(repository.clinicChanges, 1);
@@ -234,7 +234,7 @@ void main() {
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('rechazado').last);
+    await tester.tap(find.text('Rechazado').last);
     await tester.pumpAndSettle();
 
     expect(repository.personalChanges, 1);
@@ -248,11 +248,11 @@ void main() {
     await pumpReviewScreen(tester, repository);
 
     expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
-    expect(find.text('Global (solo lectura): revisar_conflicto'), findsOneWidget);
+    expect(find.text('Global (solo lectura): Revisar conflicto'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<String>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('verificado').last);
+    await tester.tap(find.text('Verificado').last);
     await tester.pumpAndSettle();
 
     expect(repository.globalChanges, 0);
@@ -268,7 +268,7 @@ void main() {
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('verificado').last);
+    await tester.tap(find.text('Verificado').last);
     await tester.pumpAndSettle();
 
     expect(repository.clinicChanges, 1);

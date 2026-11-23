@@ -54,11 +54,14 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
   List<Widget> _speciesList(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return [
-      const VetSectionHeader(
-        title: 'Exóticos',
-        subtitle:
-            'Mamíferos pequeños de compañía. Valores publicados en libros de texto: cada uno cita su obra y, si dos obras difieren, se muestran ambas.',
-        large: true,
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          'Mamíferos pequeños de compañía. Valores publicados en libros de texto: cada uno cita su obra y, si dos obras difieren, se muestran ambas.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
       const VetSectionHeader(
         title: 'Calculadora rápida',
@@ -257,19 +260,22 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           children: [
             Text('Sección', style: textTheme.titleSmall),
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final g in groups)
-                  glowChip(
-                    ChoiceChip(
-                      label: Text(g.label),
-                      selected: g == current,
-                      onSelected: (_) => setState(() => group = g),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final (i, g) in groups.indexed) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    glowChip(
+                      ChoiceChip(
+                        label: Text(g.label),
+                        selected: g == current,
+                        onSelected: (_) => setState(() => group = g),
+                      ),
                     ),
-                  ),
-              ],
+                  ],
+                ],
+              ),
             ),
           ],
         ),

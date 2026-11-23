@@ -4,7 +4,7 @@ abstract interface class AuthRepository {
   String? get userId;
   Stream<void> get changes;
   Future<void> signIn(String email, String password);
-  Future<void> register(String email, String password);
+  Future<void> register(String email, String password, {String? referral});
   Future<void> googleSignIn();
   Future<void> signOut();
   Future<List<ClinicMembership>> memberships();
@@ -37,6 +37,7 @@ abstract interface class TeamRepository {
 abstract interface class TeamDutyRepository {
   /// Loads visible shifts, absences, coverage, and editing permissions.
   Future<Map<String, dynamic>> dutyWorkspace(String clinic);
+
   /// Saves a shift or absence, optionally replacing the entry in `replaces_id`.
   ///
   /// [data] uses calendar dates, minutes since midnight, and an IANA time zone.
@@ -47,6 +48,7 @@ abstract interface class TeamDutyRepository {
     Map<String, dynamic> data,
     String operation,
   );
+
   /// Records cancellation with a reason while preserving the original entry.
   ///
   /// Reuse [operation] for an identical retry. Server errors propagate.

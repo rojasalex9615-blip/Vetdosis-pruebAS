@@ -1,7 +1,12 @@
 import 'team_duty_screen.dart';
+import '../domain/personal_profile_repository.dart';
+import 'profile_screen.dart';
+import 'messages_screen.dart';
+import '../domain/team_message.dart';
 import '../../../core/widgets/brand_gradient.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/google_mark.dart';
+import '../../legal/presentation/legal_links.dart';
 import '../../permissions/domain/permission_repository.dart';
 import '../../permissions/presentation/permission_screen.dart';
 import '../domain/auth_repository.dart';
@@ -15,7 +20,12 @@ import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key, required this.model, this.configured = true, this.initialRegister = false});
+  const AuthScreen({
+    super.key,
+    required this.model,
+    this.configured = true,
+    this.initialRegister = false,
+  });
   final AuthViewModel? model;
   final bool configured;
   final bool initialRegister;
@@ -28,13 +38,14 @@ class _AuthScreenState extends State<AuthScreen> {
   final _password = TextEditingController();
   final _clinic = TextEditingController();
   final _code = TextEditingController();
+  final _referral = TextEditingController();
   final _form = GlobalKey<FormState>();
   late bool _register = widget.initialRegister;
   bool _reset = false;
   bool _showPassword = false;
   @override
   void dispose() {
-    for (final field in [_email, _password, _clinic, _code]) {
+    for (final field in [_email, _password, _clinic, _code, _referral]) {
       field.dispose();
     }
     super.dispose();
@@ -49,335 +60,356 @@ class _AuthScreenState extends State<AuthScreen> {
     final entering = model?.signedIn != true;
     return AccessBackdrop(
       child: Scaffold(
-      backgroundColor: veiled ? Colors.transparent : null,
-      appBar: AppBar(
-        // Con el velo de acceso la marca ya va en el bloque central: repetirla
-        // en la barra duplicaba «VetDosis Pro» y robaba alto a la pantalla.
-        title: veiled ? null : const Text('VetDosis Pro'),
         backgroundColor: veiled ? Colors.transparent : null,
-        scrolledUnderElevation: veiled ? 0 : null,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
-              children: [
-                const VetDosisBrand(large: true),
-                const SizedBox(height: 10),
-                Text(
-                  _reset || model?.recoveringPassword == true
-                      ? 'Recuperar acceso'
-                      : model?.signedIn == true
-                      ? 'Tu clínica'
-                      : _register
-                      ? 'Registro de usuario'
-                      : 'Inicio de sesión',
-                  textAlign: veiled && entering ? TextAlign.center : null,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _reset || model?.recoveringPassword == true
-                      ? 'Escribe tu correo y te enviaremos un enlace.'
-                      : model?.signedIn == true
-                      ? 'Consulta y cambia la clínica con la que trabajas.'
-                      : _register
-                      ? 'Crea tu cuenta para empezar a usar VetDosis Pro.'
-                      : 'Entra con tu correo y contraseña para consultar tu clínica.',
-                  textAlign: veiled && entering ? TextAlign.center : null,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+        appBar: AppBar(
+          // Con el velo de acceso la marca ya va en el bloque central: repetirla
+          // en la barra duplicaba «VetDosis Pro» y robaba alto a la pantalla.
+          title: veiled ? null : const Text('VetDosis Pro'),
+          backgroundColor: veiled ? Colors.transparent : null,
+          scrolledUnderElevation: veiled ? 0 : null,
+        ),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 4, 24, 24),
+                children: [
+                  const VetDosisBrand(large: true),
+                  const SizedBox(height: 10),
+                  Text(
+                    _reset || model?.recoveringPassword == true
+                        ? 'Recuperar acceso'
+                        : model?.signedIn == true
+                        ? 'Tu clínica'
+                        : _register
+                        ? 'Registro de usuario'
+                        : 'Inicio de sesión',
+                    textAlign: veiled && entering ? TextAlign.center : null,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                ),
-                const SizedBox(height: 10),
-                if (!widget.configured) ...[
-                  const Text(
-                    'El acceso estará disponible cuando conectemos tu clínica.',
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Conexión pendiente. Tus datos aún no se envían a ningún servidor.',
-                  ),
-                ] else if (model!.recoveringPassword) ...[
-                  const Text('Elige una nueva contraseña.'),
-                  Form(
-                    key: _form,
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: _password,
-                          obscureText: true,
-                          enabled: !model.busy,
-                          autofillHints: const [AutofillHints.newPassword],
-                          decoration: const InputDecoration(
-                            labelText: 'Nueva contraseña',
-                          ),
-                          validator: (value) => (value?.length ?? 0) >= 8
-                              ? null
-                              : 'Usa al menos 8 caracteres',
-                        ),
-                        TextFormField(
-                          obscureText: true,
-                          enabled: !model.busy,
-                          decoration: const InputDecoration(
-                            labelText: 'Confirma la contraseña',
-                          ),
-                          validator: (value) => value == _password.text
-                              ? null
-                              : 'Las contraseñas no coinciden',
-                        ),
-                      ],
+                  const SizedBox(height: 4),
+                  Text(
+                    _reset || model?.recoveringPassword == true
+                        ? 'Escribe tu correo y te enviaremos un enlace.'
+                        : model?.signedIn == true
+                        ? 'Consulta y cambia la clínica con la que trabajas.'
+                        : _register
+                        ? 'Crea tu cuenta para empezar a usar VetDosis Pro.'
+                        : 'Entra con tu correo y contraseña para consultar tu clínica.',
+                    textAlign: veiled && entering ? TextAlign.center : null,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  NeuPrimaryButton(
-                    onPressed: model.busy
-                        ? null
-                        : () {
-                            if (_form.currentState!.validate()) {
-                              model.completePasswordRecovery(_password.text);
-                            }
-                          },
-                    child: const Text('Actualizar contraseña'),
-                  ),
-                  TextButton(
-                    onPressed: model.busy ? null : model.signOut,
-                    child: const Text('Cancelar y cerrar sesión'),
-                  ),
-                ] else if (model.loadingMemberships) ...[
-                  const Center(child: CircularProgressIndicator()),
-                ] else if (!model.signedIn) ...[
-                  // En acceso, el subtítulo de arriba ya dice lo mismo. La
-                  // segunda línea solo hace falta en el estilo clásico.
-                  if (!veiled) ...[
-                    Text(
-                      'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).hintColor,
-                      ),
+                  const SizedBox(height: 10),
+                  if (!widget.configured) ...[
+                    const Text(
+                      'El acceso estará disponible cuando conectemos tu clínica.',
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                  Form(
-                    key: _form,
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          decoration: const InputDecoration(
-                            labelText: 'Correo electrónico',
-                            prefixIcon: Icon(VetIcons.mail),
-                          ),
-                          validator: (value) =>
-                              value != null &&
-                                  RegExp(
-                                    r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-                                  ).hasMatch(value.trim())
-                              ? null
-                              : 'Ingresa un correo válido',
-                        ),
-                        const SizedBox(height: 12),
-                        if (!_reset)
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Conexión pendiente. Tus datos aún no se envían a ningún servidor.',
+                    ),
+                  ] else if (model!.recoveringPassword) ...[
+                    const Text('Elige una nueva contraseña.'),
+                    Form(
+                      key: _form,
+                      child: Column(
+                        children: [
                           TextFormField(
                             controller: _password,
-                            obscureText: !_showPassword,
-                            autofillHints: const [AutofillHints.password],
-                            decoration: InputDecoration(
-                              labelText: 'Contraseña',
-                              prefixIcon: const Icon(VetIcons.lock),
-                              suffixIcon: IconButton(
-                                tooltip: _showPassword
-                                    ? 'Ocultar contraseña'
-                                    : 'Mostrar contraseña',
-                                onPressed: () => setState(
-                                  () => _showPassword = !_showPassword,
-                                ),
-                                icon: Icon(
-                                  _showPassword
-                                      ? VetIcons.eye
-                                      : VetIcons.eyeOff,
-                                ),
+                            obscureText: true,
+                            enabled: !model.busy,
+                            autofillHints: const [AutofillHints.newPassword],
+                            decoration: const InputDecoration(
+                              labelText: 'Nueva contraseña',
+                            ),
+                            validator: (value) => (value?.length ?? 0) >= 8
+                                ? null
+                                : 'Usa al menos 8 caracteres',
+                          ),
+                          TextFormField(
+                            obscureText: true,
+                            enabled: !model.busy,
+                            decoration: const InputDecoration(
+                              labelText: 'Confirma la contraseña',
+                            ),
+                            validator: (value) => value == _password.text
+                                ? null
+                                : 'Las contraseñas no coinciden',
+                          ),
+                          if (_register) ...[
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _referral,
+                              enabled: !model.busy,
+                              decoration: const InputDecoration(
+                                labelText: '¿Cómo encontró la app? (opcional)',
+                                prefixIcon: Icon(VetIcons.search),
                               ),
                             ),
-                            validator: (value) =>
-                                (value?.length ?? 0) >= (_register ? 8 : 1)
-                                ? null
-                                : 'Revisa la contraseña (mínimo 8 caracteres al registrarte)',
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  FilledButton(
-                    onPressed: model.busy
-                        ? null
-                        : () {
-                            if (!_form.currentState!.validate()) return;
-                            if (_reset) {
-                              model.requestPasswordRecovery(_email.text);
-                            } else if (_register) {
-                              model.register(_email.text, _password.text);
-                            } else {
-                              model.signIn(_email.text, _password.text);
-                            }
-                          },
-                    child: Text(
-                      _reset
-                          ? 'Enviar enlace de recuperación'
-                          : _register
-                          ? 'Crear cuenta'
-                          : 'Ingresar',
-                    ),
-                  ),
-                  if (!_reset && model.googleEnabled) ...[
-                    const SizedBox(height: 14),
-                    const Row(
-                      children: [
-                        Expanded(child: Divider()),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text('O ingresa con'),
-                        ),
-                        Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    OutlinedButton(
-                      onPressed: model.busy ? null : model.googleSignIn,
-                      // En Neu el acceso con Google va en placa oscura, como
-                      // en la referencia: es el unico boton de la pantalla
-                      // que no es de la marca y asi no compite con «Ingresar».
-                      style: veiled
-                          ? OutlinedButton.styleFrom(
-                              backgroundBuilder: plainButtonLayer,
-                              backgroundColor: const Color(0xFF2B2B31),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(0x662B2B31),
-                              side: BorderSide.none,
-                              minimumSize: const Size(0, 48),
-                            )
-                          : null,
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GoogleMark(size: 18),
-                          SizedBox(width: 10),
-                          Text('Continuar con Google'),
+                          ],
                         ],
                       ),
                     ),
-                  ],
-                  TextButton(
-                    onPressed: model.busy
-                        ? null
-                        : () => setState(() {
-                            if (_reset) {
-                              _reset = false;
-                            } else {
-                              _register = !_register;
-                            }
-                            _password.clear();
-                          }),
-                    child: Text(
-                      _reset
-                          ? 'Volver al ingreso'
-                          : _register
-                          ? 'Ya tengo cuenta'
-                          : 'Crear una cuenta',
-                    ),
-                  ),
-                  if (!_reset && model.recoveryAvailable)
-                    TextButton(
+                    NeuPrimaryButton(
                       onPressed: model.busy
                           ? null
-                          : () => setState(() {
-                              _reset = true;
-                              _register = false;
-                              _password.clear();
-                            }),
-                      child: const Text('Olvidé mi contraseña'),
+                          : () {
+                              if (_form.currentState!.validate()) {
+                                model.completePasswordRecovery(_password.text);
+                              }
+                            },
+                      child: const Text('Actualizar contraseña'),
                     ),
-                ] else ...[
-                  if (model.error == null) ...[
-                    if (model.personalAvailable)
-                      FilledButton.icon(
-                        onPressed: model.busy
-                            ? null
-                            : model.createPersonalWorkspace,
-                        icon: const Icon(VetIcons.user),
-                        label: const Text('Usar mi área de trabajo personal'),
+                    TextButton(
+                      onPressed: model.busy ? null : model.signOut,
+                      child: const Text('Cancelar y cerrar sesión'),
+                    ),
+                  ] else if (model.loadingMemberships) ...[
+                    const Center(child: CircularProgressIndicator()),
+                  ] else if (!model.signedIn) ...[
+                    // En acceso, el subtítulo de arriba ya dice lo mismo. La
+                    // segunda línea solo hace falta en el estilo clásico.
+                    if (!veiled) ...[
+                      Text(
+                        'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).hintColor,
+                        ),
                       ),
-                    const Text(
-                      'Crea una clínica o ingresa el código que te compartió su administrador.',
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _clinic,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre de la nueva clínica',
+                      const SizedBox(height: 16),
+                    ],
+                    Form(
+                      key: _form,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _email,
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
+                            decoration: const InputDecoration(
+                              labelText: 'Correo electrónico',
+                              prefixIcon: Icon(VetIcons.mail),
+                            ),
+                            validator: (value) =>
+                                value != null &&
+                                    RegExp(
+                                      r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                                    ).hasMatch(value.trim())
+                                ? null
+                                : 'Ingresa un correo válido',
+                          ),
+                          const SizedBox(height: 12),
+                          if (!_reset)
+                            TextFormField(
+                              controller: _password,
+                              obscureText: !_showPassword,
+                              autofillHints: const [AutofillHints.password],
+                              decoration: InputDecoration(
+                                labelText: 'Contraseña',
+                                prefixIcon: const Icon(VetIcons.lock),
+                                suffixIcon: IconButton(
+                                  tooltip: _showPassword
+                                      ? 'Ocultar contraseña'
+                                      : 'Mostrar contraseña',
+                                  onPressed: () => setState(
+                                    () => _showPassword = !_showPassword,
+                                  ),
+                                  icon: Icon(
+                                    _showPassword
+                                        ? VetIcons.eye
+                                        : VetIcons.eyeOff,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) =>
+                                  (value?.length ?? 0) >= (_register ? 8 : 1)
+                                  ? null
+                                  : 'Revisa la contraseña (mínimo 8 caracteres al registrarte)',
+                            ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 18),
                     FilledButton(
                       onPressed: model.busy
                           ? null
                           : () {
-                              if (_clinic.text.trim().length >= 2 &&
-                                  _clinic.text.trim().length <= 120) {
-                                model.createClinic(_clinic.text);
+                              if (!_form.currentState!.validate()) return;
+                              if (_reset) {
+                                model.requestPasswordRecovery(_email.text);
+                              } else if (_register) {
+                                model.register(
+                                  _email.text,
+                                  _password.text,
+                                  referral: _referral.text,
+                                );
+                              } else {
+                                model.signIn(_email.text, _password.text);
                               }
                             },
-                      child: const Text('Crear clínica'),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _code,
-                      autocorrect: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Código de invitación',
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, 48),
+                      ),
+                      child: Text(
+                        _reset
+                            ? 'Enviar enlace de recuperación'
+                            : _register
+                            ? 'Crear cuenta'
+                            : 'Ingresar',
                       ),
                     ),
-                    OutlinedButton(
+                    if (!_reset && model.googleEnabled) ...[
+                      const SizedBox(height: 14),
+                      const Row(
+                        children: [
+                          Expanded(child: Divider()),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Text('O ingresa con'),
+                          ),
+                          Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      OutlinedButton(
+                        onPressed: model.busy ? null : model.googleSignIn,
+                        // En Neu el acceso con Google va en placa oscura, como
+                        // en la referencia: es el unico boton de la pantalla
+                        // que no es de la marca y asi no compite con «Ingresar».
+                        style: veiled
+                            ? OutlinedButton.styleFrom(
+                                backgroundBuilder: plainButtonLayer,
+                                backgroundColor: const Color(0xFF2B2B31),
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: const Color(
+                                  0x662B2B31,
+                                ),
+                                side: BorderSide.none,
+                                minimumSize: const Size(0, 48),
+                              )
+                            : null,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GoogleMark(size: 18),
+                            SizedBox(width: 10),
+                            Text('Continuar con Google'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    TextButton(
                       onPressed: model.busy
                           ? null
-                          : () {
-                              if (_code.text.trim().isNotEmpty) {
-                                model.joinClinic(_code.text);
+                          : () => setState(() {
+                              if (_reset) {
+                                _reset = false;
+                              } else {
+                                _register = !_register;
                               }
-                            },
-                      child: const Text('Unirme a una clínica'),
+                              _password.clear();
+                            }),
+                      child: Text(
+                        _reset
+                            ? 'Volver al ingreso'
+                            : _register
+                            ? 'Ya tengo cuenta'
+                            : 'Crear una cuenta',
+                      ),
+                    ),
+                    if (!_reset && model.recoveryAvailable)
+                      TextButton(
+                        onPressed: model.busy
+                            ? null
+                            : () => setState(() {
+                                _reset = true;
+                                _register = false;
+                                _password.clear();
+                              }),
+                        child: const Text('Olvidé mi contraseña'),
+                      ),
+                  const LegalSmallPrint(preLogin: true),
+                  ] else ...[
+                    if (model.error == null) ...[
+                      if (model.personalAvailable)
+                        FilledButton.icon(
+                          onPressed: model.busy
+                              ? null
+                              : model.createPersonalWorkspace,
+                          icon: const Icon(VetIcons.user),
+                          label: const Text('Usar mi área de trabajo personal'),
+                        ),
+                      const Text(
+                        'Crea una clínica o ingresa el código que te compartió su administrador.',
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _clinic,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre de la nueva clínica',
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: model.busy
+                            ? null
+                            : () {
+                                if (_clinic.text.trim().length >= 2 &&
+                                    _clinic.text.trim().length <= 120) {
+                                  model.createClinic(_clinic.text);
+                                }
+                              },
+                        child: const Text('Crear clínica'),
+                      ),
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: _code,
+                        autocorrect: false,
+                        decoration: const InputDecoration(
+                          labelText: 'Código de invitación',
+                        ),
+                      ),
+                      OutlinedButton(
+                        onPressed: model.busy
+                            ? null
+                            : () {
+                                if (_code.text.trim().isNotEmpty) {
+                                  model.joinClinic(_code.text);
+                                }
+                              },
+                        child: const Text('Unirme a una clínica'),
+                      ),
+                    ],
+                    TextButton(
+                      onPressed: model.busy ? null : model.refresh,
+                      child: const Text('Volver a verificar acceso'),
+                    ),
+                    TextButton(
+                      onPressed: model.busy ? null : model.signOut,
+                      child: const Text('Cerrar sesión'),
                     ),
                   ],
-                  TextButton(
-                    onPressed: model.busy ? null : model.refresh,
-                    child: const Text('Volver a verificar acceso'),
-                  ),
-                  TextButton(
-                    onPressed: model.busy ? null : model.signOut,
-                    child: const Text('Cerrar sesión'),
-                  ),
-                ],
-                if (model?.busy == true)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                if (model?.error != null)
-                  Text(
-                    model!.error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                  if (model?.busy == true)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
-                  ),
-                if (model?.message != null) Text(model!.message!),
-              ],
+                  if (model?.error != null)
+                    Text(
+                      model!.error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  if (model?.message != null) Text(model!.message!),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -441,6 +473,74 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                   widget.identityBuilder!(context),
                   const SizedBox(height: 16),
                 ],
+                if (model.repository is PersonalProfileRepository &&
+                    model.repository.userId != null) ...[
+                  AccentGlow(
+                    color: theme.colorScheme.primary,
+                    radius: 24,
+                    emphasis: 0.45,
+                    child: VetCard(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const AccentIcon(
+                          VetIcons.userCircle,
+                          size: 28,
+                        ),
+                        title: const Text(
+                          'Mi perfil personal',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: const Text(
+                          'Nombre, cumpleaños, contacto, alergias y qué ve el equipo',
+                        ),
+                        trailing: const Icon(VetIcons.chevronRight),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => PersonalProfileScreen(
+                              repository:
+                                  model.repository as PersonalProfileRepository,
+                              userId: model.repository.userId!,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (model.repository is TeamMessageRepository &&
+                    model.repository is PersonalProfileRepository &&
+                    model.active != null &&
+                    !model.active!.isPersonal) ...[
+                  VetCard(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const AccentIcon(VetIcons.mail, size: 28),
+                      title: const Text(
+                        'Mensajes del equipo',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: const Text(
+                        'Avisos a una persona o a todo el equipo',
+                      ),
+                      trailing: const Icon(VetIcons.chevronRight),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => MessagesLoader(
+                            messages: model.repository as TeamMessageRepository,
+                            profiles:
+                                model.repository as PersonalProfileRepository,
+                            clinicId: model.active!.clinicId,
+                            userId: model.active!.userId,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 if (widget.personalSpaceBuilder != null) ...[
                   AccentGlow(
                     color: theme.colorScheme.primary,
@@ -449,7 +549,10 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                     child: VetCard(
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const AccentIcon(VetIcons.userCircle, size: 28),
+                        leading: const AccentIcon(
+                          VetIcons.userCircle,
+                          size: 28,
+                        ),
                         title: const Text(
                           'Mi espacio personal',
                           style: TextStyle(fontWeight: FontWeight.w700),
@@ -516,10 +619,11 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                               width: 42,
                               height: 42,
                               decoration: BoxDecoration(
-                                color: (model.active == member
-                                        ? VetColors.success
-                                        : theme.colorScheme.primary)
-                                    .withValues(alpha: 0.12),
+                                color:
+                                    (model.active == member
+                                            ? VetColors.success
+                                            : theme.colorScheme.primary)
+                                        .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -539,9 +643,8 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                                 children: [
                                   Text(
                                     member.displayName,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
@@ -603,10 +706,8 @@ class _ClinicAccountScreenState extends State<ClinicAccountScreen> {
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (_) => TeamDutyScreen(
-                          model: model,
-                          clinic: model.active!,
-                        ),
+                        builder: (_) =>
+                            TeamDutyScreen(model: model, clinic: model.active!),
                       ),
                     ),
                     icon: const Icon(VetIcons.clock),

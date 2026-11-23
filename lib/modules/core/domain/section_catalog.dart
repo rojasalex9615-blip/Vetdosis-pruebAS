@@ -1,9 +1,17 @@
 /// Destinations reuse the host routes; this catalog does not grant permissions.
 class SectionGroup {
-  const SectionGroup(this.title, this.pages, {this.planned = const []});
+  const SectionGroup(
+    this.title,
+    this.pages, {
+    this.planned = const [],
+    this.area = 'core',
+  });
   final String title;
   final List<String> pages;
   final List<String> planned;
+
+  /// small, production o exotic. Las de core se ven siempre.
+  final String area;
 }
 
 const sectionGroups = [
@@ -22,8 +30,11 @@ const sectionGroups = [
     'Inventario',
     'Escanear producto',
   ]),
-  SectionGroup('Producción animal', ['Producción y grandes especies']),
-  SectionGroup('Exóticos y silvestres', ['Exóticos']),
+  SectionGroup('Producción animal', [
+    'Producción y grandes especies',
+    'Dashboard Pecuario',
+  ], area: 'production'),
+  SectionGroup('Exóticos y silvestres', ['Exóticos'], area: 'exotic'),
   SectionGroup('Administración y finanzas', [
     'Caja',
     'Planeación financiera',
@@ -31,7 +42,7 @@ const sectionGroups = [
     'Proveedores',
     'Promociones',
     'Productividad y semana',
-  ]),
+  ], area: 'admin'),
   SectionGroup('Equipo y comunicación', [
     'Agenda telefónica',
     'Equipo y avisos',

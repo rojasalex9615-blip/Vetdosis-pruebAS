@@ -932,25 +932,36 @@ class _InventoryScreenState extends State<InventoryScreen> {
             'Inventario y ventas',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          Wrap(
-            spacing: 8,
+          VetCard(
+            radius: 18,
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextButton.icon(
+                const Text(
+                  'Acciones del inventario',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
                 onPressed: model.busy ? null : model.load,
-                icon: const Icon(VetIcons.refresh),
+                  icon: const Icon(VetIcons.refresh, size: 18),
                 label: const Text('Actualizar'),
               ),
-              if (model.canPrepareOrder || model.canReadFinance)
-                TextButton.icon(
+                if (model.canPrepareOrder || model.canReadFinance) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
                   onPressed: inventoryIdeas,
-                  icon: const Icon(VetIcons.sparkles),
+                    icon: const Icon(VetIcons.sparkles, size: 18),
                   label: const Text(
                     'Analizar existencias, caducidades y ventas',
                   ),
                 ),
-              if (model.canManage)
-                TextButton.icon(
-                  icon: const Icon(VetIcons.clock),
+                ],
+                if (model.canManage) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    icon: const Icon(VetIcons.clock, size: 18),
                   onPressed: model.busy
                       ? null
                       : () => entry(
@@ -977,12 +988,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   label: const Text('Zona horaria'),
                 ),
             ],
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
           if (model.busy) const LinearProgressIndicator(),
           if (model.error != null) Text(model.error!),
           if (model.dashboard != null) ...[
-            TextButton.icon(
-              icon: const Icon(VetIcons.truck),
+            OutlinedButton.icon(
+              icon: const Icon(VetIcons.truck, size: 18),
               onPressed: () async {
                 await Navigator.push<void>(
                   context,
@@ -1001,7 +1015,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             if (!model.managementKnown ||
                 model.canCollect ||
                 model.canReadFinance)
-              TextButton.icon(
+              OutlinedButton.icon(
                 onPressed: model.busy
                     ? null
                     : () => Navigator.push(
@@ -1014,12 +1028,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                         ),
                       ),
-                icon: const Icon(VetIcons.coins),
+                icon: const Icon(VetIcons.coins, size: 18),
                 label: const Text('Cobros, pagos y referencias externas'),
               ),
 
-            Text(
-              'Fecha del servidor en clínica: ${model.dashboard!['today']} · ${model.dashboard!['timezone']}',
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Text(
+                'Fecha del servidor en clínica: '
+                '${model.dashboard!['today']} · '
+                '${model.dashboard!['timezone']}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
             DropdownButtonFormField<String>(
               isExpanded: true,

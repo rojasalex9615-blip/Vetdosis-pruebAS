@@ -329,28 +329,51 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Referencias para consulta y evaluación. Los intervalos pendientes '
-          'no clasifican pacientes ni alimentan recetas o calculadoras. En '
-          'laboratorio, usa el intervalo del método y analizador que emitió '
-          'el resultado.',
-        ),
-        const SizedBox(height: 12),
-        if (widget.showSections) ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final option in _sections)
-                glowChip(
-                  ChoiceChip(
-                    avatar: Icon(option.$3, size: 18),
-                    label: Text(option.$2),
-                    selected: section == option.$1,
-                    onSelected: (_) => selectSection(option.$1),
+              Icon(
+                VetIcons.info,
+                size: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Referencias para consulta y evaluación. Los intervalos pendientes '
+                  'no clasifican pacientes ni alimentan recetas o calculadoras. En '
+                  'laboratorio, usa el intervalo del método y analizador que emitió '
+                  'el resultado.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
                   ),
                 ),
+              ),
             ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (widget.showSections) ...[
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final (i, option) in _sections.indexed) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  glowChip(
+                    ChoiceChip(
+                      avatar: Icon(option.$3, size: 18),
+                      label: Text(option.$2),
+                      selected: section == option.$1,
+                      onSelected: (_) => selectSection(option.$1),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
         ],

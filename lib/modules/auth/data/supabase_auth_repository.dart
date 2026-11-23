@@ -7,6 +7,9 @@ import '../../offline/domain/offline_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/auth_repository.dart';
 import '../domain/clinic_membership.dart';
+import '../domain/personal_profile.dart';
+import '../domain/personal_profile_repository.dart';
+import '../domain/team_message.dart';
 
 class SupabaseAuthRepository
     implements
@@ -15,6 +18,8 @@ class SupabaseAuthRepository
         PasswordRecoveryRepository,
         TeamRepository,
         TeamDutyRepository,
+        PersonalProfileRepository,
+        TeamMessageRepository,
         PermissionRepository {
   SupabaseAuthRepository(this.client, {this.existingSchema = false});
   final bool existingSchema;
@@ -100,11 +105,17 @@ class SupabaseAuthRepository
   }
 
   @override
-  Future<void> register(String email, String password) async {
+  Future<void> register(
+    String email,
+    String password, {
+    String? referral,
+  }) async {
+    final source = referral?.trim() ?? '';
     await client.auth.signUp(
       email: email.trim(),
       password: password,
       emailRedirectTo: redirect,
+      data: {if (source.isNotEmpty) 'referral': source},
     );
   }
 
@@ -212,6 +223,75 @@ class SupabaseAuthRepository
       if (error.code == 'PGRST202') return null;
       rethrow;
     }
+  }
+
+  @override
+  Future<PersonalProfile?> read(String userId) async {
+    final data = await client.rpc(
+      'personal_profile_get',
+      params: {'p_user': userId},
+    );
+    if (data == null) return null;
+    return PersonalProfile.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  @override
+  Future<PersonalProfile> save(PersonalProfile profile) async {
+    final data = await client.rpc(
+      'personal_profile_save',
+      params: {'p_profile': profile.toJson(), 'p_revision': profile.revision},
+    );
+    return PersonalProfile.fromJson(Map<String, dynamic>.from(data as Map));
+  }
+
+  @override
+  Future<List<PersonalProfile>> teamProfiles(String clinicId) async {
+    final rows =
+        await client.rpc(
+              'personal_profile_team',
+              params: {'p_clinic': clinicId},
+            )
+            as List;
+    return [
+      for (final row in rows)
+        PersonalProfile.fromJson(Map<String, dynamic>.from(row as Map)),
+    ];
+  }
+
+  @override
+  Future<int> send(
+    String clinicId,
+    List<String> recipients,
+    String body,
+  ) async {
+    final result = await client.rpc(
+      'team_message_send',
+      params: {
+        'p_clinic': clinicId,
+        'p_recipients': recipients,
+        'p_body': body,
+      },
+    );
+    return result is int ? result : int.tryParse('$result') ?? 0;
+  }
+
+  @override
+  Future<List<TeamMessage>> inbox(String clinicId) async {
+    final rows =
+        await client.rpc('team_message_inbox', params: {'p_clinic': clinicId})
+            as List;
+    return [
+      for (final row in rows)
+        TeamMessage.fromJson(Map<String, dynamic>.from(row as Map)),
+    ];
+  }
+
+  @override
+  Future<void> markRead(String messageId) async {
+    await client.rpc(
+      'team_message_mark_read',
+      params: {'p_message': messageId},
+    );
   }
 
   @override

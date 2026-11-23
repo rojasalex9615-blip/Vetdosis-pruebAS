@@ -39,6 +39,29 @@ abstract final class VetColors {
   static const danger = Color(0xFFB42318);
   static const warning = Color(0xFF9A6700);
   static const success = Color(0xFF087F5B);
+
+  // Los mismos semánticos, aclarados para el lienzo oscuro (#201F25): los de
+  // arriba estan medidos sobre blanco y como texto sobre la superficie oscura
+  // se quedaban entre 2.2:1 y 3.4:1, por debajo del minimo legible. No cambian
+  // el tono, solo la luminosidad, para que el estado se siga leyendo igual.
+  static const darkSuccess = Color(0xFF7DE1B8);
+  static const darkWarning = Color(0xFFFFD580);
+  static const darkDanger = Color(0xFFFFA79C);
+
+  static bool _dark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  /// Semantico de exito legible en el modo activo.
+  static Color successOn(BuildContext context) =>
+      _dark(context) ? darkSuccess : success;
+
+  /// Semantico de advertencia legible en el modo activo.
+  static Color warningOn(BuildContext context) =>
+      _dark(context) ? darkWarning : warning;
+
+  /// Semantico de peligro legible en el modo activo.
+  static Color dangerOn(BuildContext context) =>
+      _dark(context) ? darkDanger : danger;
 }
 
 /// Espaciado y radios consistentes para toda la app.

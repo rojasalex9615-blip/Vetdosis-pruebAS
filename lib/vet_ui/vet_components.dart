@@ -557,11 +557,14 @@ class VetNotice extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final color = switch (kind) {
       VetBadgeKind.information => scheme.primary,
-      VetBadgeKind.success => VetColors.success,
-      VetBadgeKind.warning => VetColors.warning,
+      // Aclarados en modo oscuro: los tonos de marca medidos sobre blanco
+      // quedaban por debajo del contraste mínimo como texto.
+      VetBadgeKind.success => VetColors.successOn(context),
+      VetBadgeKind.warning => VetColors.warningOn(context),
       VetBadgeKind.danger => scheme.error,
       VetBadgeKind.unverified => scheme.onSurfaceVariant,
     };
+    final vivid = vividAccent(color);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
@@ -573,7 +576,12 @@ class VetNotice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: color),
+          AccentGlow(
+            color: vivid,
+            radius: 8,
+            emphasis: 0.7,
+            child: Icon(icon, size: 20, color: vivid),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(text, style: Theme.of(context).textTheme.bodyMedium),

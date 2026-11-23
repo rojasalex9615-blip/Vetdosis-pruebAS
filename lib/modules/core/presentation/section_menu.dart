@@ -3,11 +3,28 @@ import '../../../core/widgets/workspace_panel.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../data/settings_repository.dart';
 import '../domain/module_access.dart';
 import '../../clinic_experience/domain/clinic_experience.dart';
 import '../domain/navigation_access.dart';
 import '../domain/section_catalog.dart';
 import '../../../vet_ui/vet_icons.dart';
+
+/// Icono característico para cada grupo del menú, sin repetir los iconos
+/// de las secciones hijas.
+IconData sectionGroupIcon(String groupTitle) => switch (groupTitle) {
+  'Atención y expedientes' => VetIcons.crossPaw,
+  'Medicamentos y herramientas' => VetIcons.firstAidKit,
+  'Producción animal' => VetIcons.cow,
+  'Exóticos y silvestres' => VetIcons.turtle,
+  'Administración y finanzas' => VetIcons.wallet,
+  'Equipo y comunicación' => VetIcons.team,
+  'Estadísticas y reportes' => VetIcons.pieChart,
+  'Asistente IA' => VetIcons.aiSpark,
+  'Revisión de catálogos' => VetIcons.verified,
+  'Cuenta y ajustes' => VetIcons.settings,
+  _ => VetIcons.grid,
+};
 
 class SectionMenu extends StatefulWidget {
   const SectionMenu({
@@ -18,6 +35,8 @@ class SectionMenu extends StatefulWidget {
     this.experience,
     this.onAccount,
     this.initialGroup,
+    this.workAreas = defaultWorkAreas,
+    this.includeAdmin = true,
   });
   final ValueChanged<String> onNavigate;
   final ClinicMembership? member;
@@ -25,6 +44,8 @@ class SectionMenu extends StatefulWidget {
   final ClinicExperience? experience;
   final VoidCallback? onAccount;
   final String? initialGroup;
+  final Set<String> workAreas;
+  final bool includeAdmin;
   @override
   State<SectionMenu> createState() => _SectionMenuState();
 }
@@ -35,6 +56,16 @@ class _SectionMenuState extends State<SectionMenu> {
   Widget build(BuildContext context) {
     final filtered = <SectionGroup>[];
     for (final group in sectionGroups) {
+      if (group.area == 'admin') {
+        final adminIncluded =
+            widget.includeAdmin ||
+            widget.workAreas.contains('small') ||
+            widget.workAreas.contains('exotic');
+        if (!adminIncluded) continue;
+      } else if (group.area != 'core' &&
+          !widget.workAreas.contains(group.area)) {
+        continue;
+      }
       final authorized = group.pages
           .where(
             (page) =>
@@ -56,10 +87,14 @@ class _SectionMenuState extends State<SectionMenu> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const VetSectionHeader(
-          title: 'Secciones',
-          subtitle: 'Herramientas y gestión de tu espacio.',
-          large: true,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Herramientas y gestión de tu espacio.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
         TextField(
           decoration: const InputDecoration(
@@ -86,9 +121,7 @@ class _SectionMenuState extends State<SectionMenu> {
                 child: ExpansionTile(
                   key: ValueKey((group.title, query, widget.initialGroup)),
                   leading: VetIconBox(
-                    icon: group.pages.isNotEmpty
-                        ? sectionIcon(group.pages.first)
-                        : VetIcons.clock,
+                    icon: sectionGroupIcon(group.title),
                     accent: _groupAccents[index % _groupAccents.length],
                   ),
                   title: Text(
@@ -167,21 +200,27 @@ class CalculationMenu extends StatelessWidget {
   final ClinicExperience? experience;
   @override
   Widget build(BuildContext context) {
-    final canDose = navigationAllowed('Cálculo rápido', member, access) &&
+    final canDose =
+        navigationAllowed('Cálculo rápido', member, access) &&
         (experience?.visible('Cálculo rápido') ?? true);
-    final canClinical = navigationAllowed('Cálculos clínicos', member, access) &&
+    final canClinical =
+        navigationAllowed('Cálculos clínicos', member, access) &&
         (experience?.visible('Cálculos clínicos') ?? true);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const VetSectionHeader(
-          title: 'Calculadoras',
-          subtitle: 'Elige la operación que necesitas.',
-          large: true,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Elige la operación que necesitas.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
         if (experience?.visible('Vademécum') ?? true)
           _CalculationChoice(
-            icon: VetIcons.book,
+            icon: VetIcons.pills,
             title: 'Vademécum',
             description:
                 'Consulta fichas de la app, compartidas con la clínica y personales.',
@@ -189,7 +228,7 @@ class CalculationMenu extends StatelessWidget {
           ),
         if (canDose)
           _CalculationChoice(
-            icon: VetIcons.capsule,
+            icon: VetIcons.gauge,
             title: 'Calcular dosis de un producto',
             description:
                 'Usa un catálogo con fuente y concentración por presentación; requiere revisión y confirmación.',
@@ -198,7 +237,7 @@ class CalculationMenu extends StatelessWidget {
         if (navigationAllowed('Operaciones de dosis', member, access) &&
             (experience?.visible('Operaciones de dosis') ?? true))
           _CalculationChoice(
-            icon: VetIcons.calculator,
+            icon: VetIcons.syringe,
             title: 'Otras operaciones de dosis',
             description:
                 'Regla de tres, concentración tras reconstitución, UI y conversión métrica con parámetros explícitos.',
@@ -206,7 +245,7 @@ class CalculationMenu extends StatelessWidget {
           ),
         if (canClinical)
           _CalculationChoice(
-            icon: VetIcons.heartPulse,
+            icon: VetIcons.flask,
             title: 'Cálculos clínicos',
             description:
                 'Fluidos, constantes, protocolos, peso metabólico, retiros y otras herramientas disponibles.',

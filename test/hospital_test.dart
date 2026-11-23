@@ -432,6 +432,7 @@ void main() {
       expect(find.textContaining('actor-servidor'), findsOneWidget);
       expect(find.text('Ingresar paciente'), findsNothing);
       expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Paciente × hora'));
       await tester.tap(find.text('Paciente × hora'));
       await tester.pumpAndSettle();
       expect(find.byType(Table), findsOneWidget);

@@ -700,9 +700,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                         TextButton.icon(
                           onPressed: () => reminderWithAi(a),
                           icon: const Icon(VetIcons.sparkles),
-                          label: const Text(
-                            'Recordatorio / seguimiento y autorización',
-                          ),
+                          label: const Text('Recordatorio y seguimiento'),
                         ),
                       if (a['patient_id'] != null &&
                           widget.onOpenPatient != null &&
@@ -710,9 +708,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                               model.allowed('patient.read')))
                         TextButton.icon(
                           icon: const Icon(VetIcons.folder),
-                          label: const Text(
-                            'Abrir expediente / registrar evolución',
-                          ),
+                          label: const Text('Abrir expediente'),
                           onPressed: () =>
                               openPatient(a['patient_id'] as String),
                         ),

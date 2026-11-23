@@ -42,7 +42,8 @@ class AuthViewModel extends ChangeNotifier {
   final Map<String, bool> _workspaceManagers = {};
   int get accessRevision => _revision;
   bool get signedIn => repository.userId != null;
-  bool canManageWorkspace(String clinicId) => _workspaceManagers[clinicId] == true;
+  bool canManageWorkspace(String clinicId) =>
+      _workspaceManagers[clinicId] == true;
   bool get canManageActiveWorkspace =>
       active != null && canManageWorkspace(active!.clinicId);
   Future<void> start() async {
@@ -109,7 +110,9 @@ class AuthViewModel extends ChangeNotifier {
           }
           try {
             final explicit = await team.canManageWorkspace(member.clinicId);
-            if (_disposed || revision != _revision || userId != repository.userId) {
+            if (_disposed ||
+                revision != _revision ||
+                userId != repository.userId) {
               return;
             }
             // Legacy compatibility exists only while the explicit RPC is absent.
@@ -302,10 +305,12 @@ class AuthViewModel extends ChangeNotifier {
     await repository.signIn(email, password);
     await refresh();
   });
-  Future<void> register(String email, String password) => _run(() async {
-    await repository.register(email, password);
-    message = 'Revisa tu correo para confirmar la cuenta antes de ingresar.';
-  });
+  Future<void> register(String email, String password, {String? referral}) =>
+      _run(() async {
+        await repository.register(email, password, referral: referral);
+        message =
+            'Revisa tu correo para confirmar la cuenta antes de ingresar.';
+      });
   Future<void> googleSignIn() => _run(repository.googleSignIn);
   bool get personalAvailable => repository is PersonalWorkspaceRepository;
   Future<void> createPersonalWorkspace() => _run(() async {

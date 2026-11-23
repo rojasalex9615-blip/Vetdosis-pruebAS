@@ -1,4 +1,4 @@
-import '../../../core/widgets/contrast.dart';
+import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/neu_header_card.dart';
 import 'home_pilot.dart';
@@ -37,6 +37,7 @@ class DashboardScreen extends StatefulWidget {
     this.isVisible,
     this.identity,
     this.experience,
+    this.header,
   });
   final DashboardViewModel model;
   final ValueChanged<String> onNavigate;
@@ -45,6 +46,9 @@ class DashboardScreen extends StatefulWidget {
   final bool Function(String)? isVisible;
   final IdentityRepository? identity;
   final ClinicExperience? experience;
+
+  /// Contenido opcional sobre el resumen (por ejemplo, el saludo de cumpleaños).
+  final Widget? header;
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -122,7 +126,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ? Text(model.errors[name]!)
       : loaded
       ? content
-      : const Text('Resumen no disponible.');
+      : const VetEmptyState(
+          text: 'Resumen no disponible.',
+          icon: VetIcons.info,
+        );
   Widget metrics(List<(String, String)> values) => LayoutBuilder(
     builder: (context, c) {
       final cols =
@@ -284,6 +291,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.header != null) ...[
+            widget.header!,
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               Expanded(
@@ -445,16 +456,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: VetCard(
                   padding: EdgeInsets.zero,
                   child: Theme(
-                    data: Theme.of(context).copyWith(
-                      dividerColor: Colors.transparent,
-                    ),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
                       shape: const Border(),
                       collapsedShape: const Border(),
                       leading: const Icon(VetIcons.barChart, size: 20),
                       title: const Text(
                         'Ver estadísticas',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                       children: [
                         Padding(
@@ -509,17 +523,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           for (final t in m.overdue.take(3))
                             ListTile(
                               dense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                              leading: const Icon(VetIcons.clock, size: 18, color: VetColors.danger),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              leading: const Icon(
+                                VetIcons.clock,
+                                size: 18,
+                                color: VetColors.danger,
+                              ),
                               title: Text(
                                 '${m.patient(t)} · ${t.label}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
                               ),
                               subtitle: Text(
                                 'Horario: ${time(m.effectiveTime(t))}',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              trailing: const Icon(VetIcons.chevronRight, size: 16),
+                              trailing: const Icon(
+                                VetIcons.chevronRight,
+                                size: 16,
+                              ),
                               onTap: () => openPage('Hospitalización'),
                             ),
                         ],
@@ -558,17 +584,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           for (final p in m.lowStock.take(3))
                             ListTile(
                               dense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-                              leading: const Icon(VetIcons.alertOctagon, size: 18, color: VetColors.warning),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              leading: const Icon(
+                                VetIcons.alertOctagon,
+                                size: 18,
+                                color: VetColors.warning,
+                              ),
                               title: Text(
                                 '${p['nombre']}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
                               ),
                               subtitle: Text(
                                 'Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}',
                                 style: const TextStyle(fontSize: 12),
                               ),
-                              trailing: const Icon(VetIcons.chevronRight, size: 16),
+                              trailing: const Icon(
+                                VetIcons.chevronRight,
+                                size: 16,
+                              ),
                               onTap: () => openPage('Inventario'),
                             ),
                         ],
@@ -654,7 +692,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       if (m.recent.isEmpty)
                         const VetEmptyState(
-                          text: 'No hay citas recientes en los datos consultados.',
+                          text:
+                              'No hay citas recientes en los datos consultados.',
                           icon: VetIcons.calendarClock,
                         ),
                       for (final a in m.recent.take(3))
@@ -1008,7 +1047,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   );
 }
 
-
 /// Botón en cápsula simétrica de 2x2 para las acciones rápidas del Inicio
 /// (Formatos, Estadísticas, Cálculos clínicos, Escáner), con relieve neu
 /// suave y tonalidad lavanda armónica.
@@ -1030,18 +1068,13 @@ class _DashboardActionCapsule extends StatelessWidget {
     final neu = theme.extension<WorkspaceStyle>()?.neumorphic == true;
     final accent = sectionAccent(page);
 
-    final surface = Color.lerp(
-      theme.scaffoldBackgroundColor,
-      const Color(0xFFC5A8EF),
-      dark ? 0.18 : 0.22,
-    )!;
+    final vivid = vividAccent(accent);
+    // Color de panel claro u oscuro con relieve neu y sin el morado anterior
+    final surface = dark
+        ? VetColors.darkSurface
+        : (neu ? neuBackground : VetColors.surface);
 
-    final iconColor = readableOn(accent, surface, objetivo: 3);
-    final textColor = readableOn(
-      dark ? const Color(0xFFE2D9FA) : const Color(0xFF4C387B),
-      surface,
-      objetivo: 4.5,
-    );
+    final textColor = dark ? const Color(0xFFE2E5EE) : const Color(0xFF1E2638);
 
     return Container(
       height: 48,
@@ -1050,11 +1083,19 @@ class _DashboardActionCapsule extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: dark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.8),
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.85),
           width: 1.2,
         ),
-        boxShadow: neu ? neuShadows(dark, depth: 0.5) : null,
+        boxShadow: neu ? neuShadows(dark, depth: 0.65) : null,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(surface, Colors.white, dark ? 0.04 : 0.45)!,
+            surface,
+          ],
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1068,7 +1109,16 @@ class _DashboardActionCapsule extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(sectionIcon(page), size: 19, color: iconColor),
+                AccentGlow(
+                  color: vivid,
+                  radius: 10,
+                  emphasis: 0.75,
+                  child: Icon(
+                    sectionIcon(page),
+                    size: 19,
+                    color: vivid,
+                  ),
+                ),
                 const SizedBox(width: 7),
                 Flexible(
                   child: Text(

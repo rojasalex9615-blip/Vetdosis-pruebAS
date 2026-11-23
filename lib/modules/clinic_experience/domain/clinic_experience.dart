@@ -1,3 +1,4 @@
+import '../../core/data/settings_repository.dart';
 import '../../core/domain/section_catalog.dart';
 
 /// Pages that can be configured per clinic. This intentionally includes routes
@@ -58,16 +59,25 @@ class ClinicExperience {
     required this.defaultAiProvider,
     required this.hospitalNoticeDelivery,
     required this.revision,
+    Set<String> workAreas = defaultWorkAreas,
+    this.includeAdmin = true,
   }) : hiddenPages = Set.unmodifiable(hiddenPages),
-       flowModes = Map.unmodifiable(flowModes);
+       flowModes = Map.unmodifiable(flowModes),
+       workAreas = Set.unmodifiable(workAreas);
 
   final ClinicPreset preset;
   final Set<String> hiddenPages;
   final Map<String, ClinicalFlowMode> flowModes;
+
   /// Provider identifier, not a credential or key.
   final String? defaultAiProvider;
   final HospitalNoticeDelivery hospitalNoticeDelivery;
   final int revision;
+
+  /// Areas de trabajo de la clinica; en produccion la administracion clinica
+  /// es opcional.
+  final Set<String> workAreas;
+  final bool includeAdmin;
 
   static ClinicExperience defaults() => ClinicExperience(
     preset: ClinicPreset.general,
@@ -90,24 +100,37 @@ class ClinicExperience {
     }
     final enabledGroups = switch (preset) {
       ClinicPreset.smallAnimals => <String>{
-        'Atención y expedientes', 'Medicamentos y herramientas',
+        'Atención y expedientes',
+        'Medicamentos y herramientas',
         'Exóticos y silvestres',
-        'Administración y finanzas', 'Equipo y comunicación',
-        'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
+        'Administración y finanzas',
+        'Equipo y comunicación',
+        'Cuenta y ajustes',
+        'Asistente IA',
+        'Revisión de catálogos',
       },
       ClinicPreset.hospital => <String>{
-        'Atención y expedientes', 'Medicamentos y herramientas',
+        'Atención y expedientes',
+        'Medicamentos y herramientas',
         'Exóticos y silvestres',
-        'Administración y finanzas', 'Equipo y comunicación',
-        'Estadísticas y reportes', 'Cuenta y ajustes', 'Asistente IA',
+        'Administración y finanzas',
+        'Equipo y comunicación',
+        'Estadísticas y reportes',
+        'Cuenta y ajustes',
+        'Asistente IA',
         'Revisión de catálogos',
       },
       ClinicPreset.production => <String>{
-        'Atención y expedientes', 'Medicamentos y herramientas',
-        'Producción animal', 'Exóticos y silvestres',
+        'Atención y expedientes',
+        'Medicamentos y herramientas',
+        'Producción animal',
+        'Exóticos y silvestres',
         'Administración y finanzas',
-        'Equipo y comunicación', 'Estadísticas y reportes',
-        'Cuenta y ajustes', 'Asistente IA', 'Revisión de catálogos',
+        'Equipo y comunicación',
+        'Estadísticas y reportes',
+        'Cuenta y ajustes',
+        'Asistente IA',
+        'Revisión de catálogos',
       },
       ClinicPreset.general || ClinicPreset.custom => <String>{
         for (final group in experienceVisibilityGroups) group.title,
@@ -128,8 +151,11 @@ class ClinicExperience {
       hiddenPages: hide,
       flowModes: previous?.flowModes ?? {},
       defaultAiProvider: previous?.defaultAiProvider,
-      hospitalNoticeDelivery: previous?.hospitalNoticeDelivery ?? HospitalNoticeDelivery.phone,
+      hospitalNoticeDelivery:
+          previous?.hospitalNoticeDelivery ?? HospitalNoticeDelivery.phone,
       revision: previous?.revision ?? 0,
+      workAreas: previous?.workAreas ?? defaultWorkAreas,
+      includeAdmin: previous?.includeAdmin ?? true,
     );
   }
 
@@ -159,9 +185,9 @@ class ClinicExperience {
     );
     if (groups.isEmpty) return this;
 
-    final targetPages = groups.first.pages.where(
-      configurableExperiencePages.contains,
-    ).toSet();
+    final targetPages = groups.first.pages
+        .where(configurableExperiencePages.contains)
+        .toSet();
     if (targetPages.isEmpty) return this;
 
     final updated = Set<String>.from(hiddenPages)..removeAll(targetPages);
@@ -192,13 +218,20 @@ class ClinicExperience {
     bool clearProvider = false,
     HospitalNoticeDelivery? hospitalNoticeDelivery,
     int? revision,
+    Set<String>? workAreas,
+    bool? includeAdmin,
   }) => ClinicExperience(
     preset: preset ?? this.preset,
     hiddenPages: hiddenPages ?? this.hiddenPages,
     flowModes: flowModes ?? this.flowModes,
-    defaultAiProvider: clearProvider ? null : defaultAiProvider ?? this.defaultAiProvider,
-    hospitalNoticeDelivery: hospitalNoticeDelivery ?? this.hospitalNoticeDelivery,
+    defaultAiProvider: clearProvider
+        ? null
+        : defaultAiProvider ?? this.defaultAiProvider,
+    hospitalNoticeDelivery:
+        hospitalNoticeDelivery ?? this.hospitalNoticeDelivery,
     revision: revision ?? this.revision,
+    workAreas: workAreas ?? this.workAreas,
+    includeAdmin: includeAdmin ?? this.includeAdmin,
   );
 
   Map<String, dynamic> toJson() => {
@@ -208,11 +241,15 @@ class ClinicExperience {
     'workflow_modes': flowModes.map((key, mode) => MapEntry(key, mode.name)),
     'default_ai_provider': defaultAiProvider,
     'hospital_notice_delivery': hospitalNoticeDelivery.name,
+    'work_areas': workAreas.toList()..sort(),
+    'include_admin': includeAdmin,
   };
 
   factory ClinicExperience.fromServer(Map<String, dynamic> data) {
-    if (data['schema_version'] != 1 || data['revision'] is! int ||
-        (data['revision'] as int) < 0 || data['settings'] is! Map) {
+    if (data['schema_version'] != 1 ||
+        data['revision'] is! int ||
+        (data['revision'] as int) < 0 ||
+        data['settings'] is! Map) {
       throw const FormatException('Contrato de personalización desconocido.');
     }
     final settings = Map<String, dynamic>.from(data['settings'] as Map);
@@ -222,43 +259,71 @@ class ClinicExperience {
         settings['workflow_modes'] is! Map) {
       throw const FormatException('Preferencias de clínica inválidas.');
     }
-    final preset = ClinicPreset.values.where((p) => p.name == settings['preset']).firstOrNull;
+    final preset = ClinicPreset.values
+        .where((p) => p.name == settings['preset'])
+        .firstOrNull;
     if (preset == null) throw const FormatException('Perfil desconocido.');
     final rawPages = settings['hidden_pages'] as List;
     // Accept legacy hidden-page entries for newly protected routes, then
     // normalize them to visible. This avoids breaking existing clinic settings.
     final knownExperiencePages = experienceVisibilityGroups
-        .expand((group) => group.pages).toSet();
-    if (rawPages.any((value) => value is! String ||
-        !knownExperiencePages.contains(value)) ||
+        .expand((group) => group.pages)
+        .toSet();
+    if (rawPages.any(
+          (value) => value is! String || !knownExperiencePages.contains(value),
+        ) ||
         rawPages.toSet().length != rawPages.length) {
       throw const FormatException('Submódulos desconocidos.');
     }
-    final normalizedHiddenPages = rawPages.cast<String>()
-        .where((page) => !protectedExperiencePages.contains(page)).toSet();
+    final normalizedHiddenPages = rawPages
+        .cast<String>()
+        .where((page) => !protectedExperiencePages.contains(page))
+        .toSet();
     final modes = Map<String, dynamic>.from(settings['workflow_modes'] as Map);
     final parsedModes = <String, ClinicalFlowMode>{};
     for (final entry in modes.entries) {
       if (!configurableFlows.containsKey(entry.key) || entry.value is! String) {
         throw const FormatException('Flujo desconocido.');
       }
-      final parsed = ClinicalFlowMode.values.where((m) => m.name == entry.value).firstOrNull;
-      if (parsed == null) throw const FormatException('Modo de trabajo inválido.');
+      final parsed = ClinicalFlowMode.values
+          .where((m) => m.name == entry.value)
+          .firstOrNull;
+      if (parsed == null) {
+        throw const FormatException('Modo de trabajo inválido.');
+      }
       parsedModes[entry.key] = parsed;
     }
     final ai = settings['default_ai_provider'];
-    if (ai != null && (ai is! String || !aiExperienceProviders.containsKey(ai))) {
+    if (ai != null &&
+        (ai is! String || !aiExperienceProviders.containsKey(ai))) {
       throw const FormatException('Proveedor predeterminado desconocido.');
     }
     final rawDelivery = settings['hospital_notice_delivery'] ?? 'phone';
     if (rawDelivery is! String) {
       throw const FormatException('Canal de hospitalización inválido.');
     }
-    final delivery = HospitalNoticeDelivery.values.where(
-      (channel) => channel.name == rawDelivery,
-    ).firstOrNull;
+    final delivery = HospitalNoticeDelivery.values
+        .where((channel) => channel.name == rawDelivery)
+        .firstOrNull;
     if (delivery == null) {
       throw const FormatException('Canal de hospitalización desconocido.');
+    }
+    final rawAreas = settings['work_areas'];
+    final parsedAreas = <String>{};
+    if (rawAreas != null) {
+      if (rawAreas is! List) {
+        throw const FormatException('Areas de trabajo invalidas.');
+      }
+      for (final value in rawAreas) {
+        if (value is! String || !allWorkAreas.contains(value)) {
+          throw const FormatException('Area de trabajo desconocida.');
+        }
+        parsedAreas.add(value);
+      }
+    }
+    final rawIncludeAdmin = settings['include_admin'];
+    if (rawIncludeAdmin != null && rawIncludeAdmin is! bool) {
+      throw const FormatException('Preferencia de administracion invalida.');
     }
     return ClinicExperience(
       preset: preset,
@@ -267,6 +332,8 @@ class ClinicExperience {
       defaultAiProvider: ai as String?,
       hospitalNoticeDelivery: delivery,
       revision: data['revision'] as int,
+      workAreas: rawAreas == null ? defaultWorkAreas : parsedAreas,
+      includeAdmin: rawIncludeAdmin as bool? ?? true,
     );
   }
 }

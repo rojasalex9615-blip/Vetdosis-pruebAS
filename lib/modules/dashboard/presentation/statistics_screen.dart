@@ -1,8 +1,10 @@
+import '../../../core/widgets/accent_glow.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import '../../../vet_ui/vet_components.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -105,6 +107,15 @@ ClinicalBranch? branchForSpecies(String species) {
 /// animal» habilita Producción, «Exóticos y silvestres» habilita Exóticos y
 /// «Administración y finanzas» habilita Gestión clínica. Pequeñas especies
 /// siempre está. Sin experiencia cargada se ofrecen las cuatro.
+
+IconData _branchIcon(ClinicalBranch? branch) => switch (branch) {
+  null => VetIcons.layers,
+  ClinicalBranch.small => VetIcons.paw,
+  ClinicalBranch.exotic => VetIcons.rabbit,
+  ClinicalBranch.production => VetIcons.barn,
+  ClinicalBranch.management => VetIcons.clinic,
+};
+
 List<ClinicalBranch> servedBranches(ClinicExperience? experience) {
   if (experience == null) return ClinicalBranch.values.toList();
   bool groupVisible(String title) {
@@ -711,27 +722,52 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         const SizedBox(height: 16),
         Text('Rama de trabajo', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            ChoiceChip(
-              label: const Text('Todas las ramas'),
-              selected: _branch == null,
-              onSelected: (_) => setState(() => _branch = null),
-            ),
-            for (final b in branches)
-              ChoiceChip(
-                label: Text(b.label),
-                selected: _branch == b,
-                onSelected: (_) => setState(() => _branch = b),
-              ),
-          ],
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              glowChip(ChoiceChip(
+                avatar: const Icon(VetIcons.layers, size: 16),
+                label: const Text('Todas las ramas'),
+                selected: _branch == null,
+                onSelected: (_) => setState(() => _branch = null),
+              )),
+              for (final b in branches) ...[
+                const SizedBox(width: 8),
+                glowChip(ChoiceChip(
+                  avatar: Icon(_branchIcon(b), size: 16),
+                  label: Text(b.label),
+                  selected: _branch == b,
+                  onSelected: (_) => setState(() => _branch = b),
+                )),
+              ],
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'El filtro por rama aplica a citas, hospitalización y producción '
-          'M15. Caja e inventario son datos de toda la clínica.',
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                VetIcons.info,
+                size: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'El filtro por rama aplica a citas, hospitalización y producción '
+                  'M15. Caja e inventario son datos de toda la clínica.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         // 0. Lo que tiene hoy, sin cambios.
         if (m.errors['Estadísticas'] != null)
@@ -740,14 +776,34 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
             child: Text(m.errors['Estadísticas']!),
           )
         else if (stats == null)
-          const Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: Text('Resumen no disponible.'),
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
           )
         else ...[
           const SizedBox(height: 16),
-          const Text(
-            'Ventas mensuales netas de devoluciones · MXN. No representan utilidad neta.',
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  VetIcons.info,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Ventas mensuales netas de devoluciones · MXN. No representan utilidad neta.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           for (final s in m
               .rows(stats, 'sales')
@@ -759,7 +815,23 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
               trailing: Text(money(s['amount'])),
             ),
           if (widget.statisticsOnly) ...[
-            const Text('Citas no canceladas del mes por especie'),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    VetIcons.paw,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Citas no canceladas del mes por especie',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ],
+              ),
+            ),
             for (final s in m.rows(stats, 'species'))
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -815,7 +887,10 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         if (m.errors['Agenda'] != null)
           Text(m.errors['Agenda']!)
         else if (m.agenda == null)
-          const Text('Resumen no disponible.')
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
+          )
         else ...[
           for (final state in _appointmentStates)
             _metric(
@@ -836,7 +911,10 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         if (m.errors['Hospitalización'] != null)
           Text(m.errors['Hospitalización']!)
         else if (m.ward == null)
-          const Text('Resumen no disponible.')
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
+          )
         else ...[
           _metric('Internados ahora', '${_stays.length}'),
           _metric(
@@ -876,7 +954,10 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
         if (m.errors['Inventario'] != null)
           Text(m.errors['Inventario']!)
         else if (m.stock == null)
-          const Text('Resumen no disponible.')
+          const VetEmptyState(
+            text: 'Resumen no disponible.',
+            icon: VetIcons.info,
+          )
         else ...[
           const Text('Stock bajo'),
           if (m.lowStock.isEmpty)
