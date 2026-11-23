@@ -23,6 +23,9 @@ import '../domain/production_write_repository.dart';
 import '../../reproduction/domain/gestation.dart';
 import '../../reproduction/domain/gestation_write_repository.dart';
 import '../../reproduction/presentation/gestation_panel.dart';
+import '../domain/feed_inventory.dart';
+import '../domain/feed_write_repository.dart';
+import 'feed_inventory_panel.dart';
 import '../domain/aquaculture_species.dart';
 import '../domain/production_catalog.dart';
 import '../domain/production_unit_repository.dart';
@@ -45,6 +48,8 @@ class ProductionMenu extends StatefulWidget {
     this.farmWrite,
     this.gestation,
     this.gestationWrite,
+    this.feed,
+    this.feedWrite,
     this.units,
     this.initialSpecies,
     this.initialViewDashboard = false,
@@ -64,6 +69,8 @@ class ProductionMenu extends StatefulWidget {
   /// del paciente, no del modulo.
   final GestationRepository? gestation;
   final GestationWriteRepository? gestationWrite;
+  final FeedInventoryRepository? feed;
+  final FeedWriteRepository? feedWrite;
 
   /// Donde se guardan las unidades de produccion.
   ///
@@ -83,7 +90,7 @@ class ProductionMenu extends StatefulWidget {
 
 class _ProductionMenuState extends State<ProductionMenu> {
   String? species, activity;
-  late int _viewMode; // 0: Catálogo y Especies, 1: Dashboard Pecuario
+  late int _viewMode; // 0: Catálogo, 1: Dashboard, 2: Reproducción, 3: Alimento
 
   @override
   void initState() {
@@ -261,6 +268,11 @@ class _ProductionMenuState extends State<ProductionMenu> {
                   label: Text('Reproducción'),
                   icon: Icon(VetIcons.heart),
                 ),
+                ButtonSegment(
+                  value: 3,
+                  label: Text('Alimento'),
+                  icon: Icon(VetIcons.feedBag),
+                ),
               ],
               selected: {_viewMode},
               onSelectionChanged: (val) =>
@@ -285,6 +297,14 @@ class _ProductionMenuState extends State<ProductionMenu> {
             member: widget.member,
             repository: widget.gestation,
             writeRepository: widget.gestationWrite,
+          )
+        else if (_viewMode == 3)
+          // El inventario de alimento solo vive aqui: en exoticos la racion
+          // es individual y ya se anota en exotic_feedings.
+          FeedInventoryPanel(
+            member: widget.member,
+            repository: widget.feed,
+            writeRepository: widget.feedWrite,
           )
         else
           ..._speciesList(context),

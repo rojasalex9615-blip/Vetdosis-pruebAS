@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -13,103 +12,17 @@ import '../domain/production_unit_repository.dart';
 
 /// Datos zootécnicos y analíticos por especie para el dashboard de producción.
 class SpeciesMetrics {
-  const SpeciesMetrics({
-    required this.costMetricTitle,
-    required this.costUnit,
-    required this.costValue,
-    required this.costDiff,
-    required this.costDiffPositive,
-    required this.fcaValue,
-    required this.fcaUnit,
-    required this.totalHeads,
-    required this.biomassTonnes,
-    required this.curveMetricTitle,
-    required this.curveUnit,
-    required this.theoreticalPoints,
-    required this.realPoints,
-    required this.silos,
-    required this.facilities,
-    required this.calendarEvents,
-    required this.vitals,
-    required this.withdrawals,
-    required this.batches,
-    required this.alerts,
-  });
+  const SpeciesMetrics({required this.vitals});
 
-  final String costMetricTitle;
-  final String costUnit;
-  final double costValue;
-  final String costDiff;
-  final bool costDiffPositive;
-  final double fcaValue;
-  final String fcaUnit;
-  final int totalHeads;
-  final double biomassTonnes;
-  final String curveMetricTitle;
-  final String curveUnit;
-  final List<double> theoreticalPoints;
-  final List<double> realPoints;
-  final List<SiloData> silos;
-  final List<FacilityData> facilities;
-  final List<CalendarEvent> calendarEvents;
+  /// Rangos de referencia por especie. Es lo unico de este catalogo que es un
+  /// dato real y general: no depende de la granja de nadie.
+  ///
+  /// Aqui vivian ademas unos costos, una conversion alimenticia, unos silos y
+  /// unos lotes de una granja inventada de 480 vacas. Ya no se pintaban en
+  /// ningun lado, pero seguian escritos, y lo que esta escrito acaba
+  /// enchufandose. Lo real vive ahora en el inventario de alimento y en los
+  /// lotes de Supabase.
   final List<VitalSign> vitals;
-  final List<WithdrawalAlert> withdrawals;
-  final List<BatchData> batches;
-  final List<ProductionAlert> alerts;
-}
-
-class SiloData {
-  const SiloData({
-    required this.phase,
-    required this.stockTon,
-    required this.capacityTon,
-    required this.dailyConsumptionKg,
-  });
-  final String phase;
-  final double stockTon;
-  final double capacityTon;
-  final double dailyConsumptionKg;
-
-  int get autonomyDays =>
-      dailyConsumptionKg > 0 ? (stockTon * 1000 / dailyConsumptionKg).floor() : 0;
-  double get percentage =>
-      capacityTon > 0 ? (stockTon / capacityTon).clamp(0.0, 1.0) : 0.0;
-}
-
-class FacilityData {
-  const FacilityData({
-    required this.id,
-    required this.batchId,
-    required this.ageDays,
-    required this.density,
-    required this.densityUnit,
-    required this.mortalityRate,
-    required this.sanitaryStatus, // 'stable', 'warning', 'critical'
-    required this.sanitaryNote,
-  });
-  final String id;
-  final String batchId;
-  final int ageDays;
-  final double density;
-  final String densityUnit;
-  final double mortalityRate;
-  final String sanitaryStatus;
-  final String sanitaryNote;
-}
-
-class CalendarEvent {
-  const CalendarEvent({
-    required this.title,
-    required this.batch,
-    required this.dateStr,
-    required this.category,
-    this.completed = false,
-  });
-  final String title;
-  final String batch;
-  final String dateStr;
-  final String category;
-  final bool completed;
 }
 
 class VitalSign {
@@ -123,398 +36,61 @@ class VitalSign {
   final String unit;
 }
 
-class WithdrawalAlert {
-  const WithdrawalAlert({
-    required this.facility,
-    required this.batch,
-    required this.drug,
-    required this.daysRemaining,
-    required this.totalWithdrawalDays,
-    required this.destination,
-  });
-  final String facility;
-  final String batch;
-  final String drug;
-  final int daysRemaining;
-  final int totalWithdrawalDays;
-  final String destination;
-}
-
-class BatchData {
-  const BatchData({
-    required this.name,
-    required this.headcount,
-    required this.stage,
-    required this.daysInStage,
-    required this.lastRecordDate,
-    required this.lastRecordDetail,
-  });
-  final String name;
-  final int headcount;
-  final String stage;
-  final int daysInStage;
-  final String lastRecordDate;
-  final String lastRecordDetail;
-}
-
-class ProductionAlert {
-  const ProductionAlert({
-    required this.title,
-    required this.subtitle,
-    required this.type, // 'vaccine', 'withdrawal', 'birth'
-    required this.daysLeft,
-  });
-  final String title;
-  final String subtitle;
-  final String type;
-  final int daysLeft;
-}
-
 /// Diccionario de métricas y datos operativos zootécnicos por especie
 final Map<String, SpeciesMetrics> speciesDataCatalog = {
   'Bovinos': const SpeciesMetrics(
-    costMetricTitle: 'Costo por Litro de Leche',
-    costUnit: '\$/L',
-    costValue: 6.85,
-    costDiff: '-1.4% vs presupuesto',
-    costDiffPositive: true,
-    fcaValue: 1.45,
-    fcaUnit: 'kg MS / L',
-    totalHeads: 480,
-    biomassTonnes: 264.0,
-    curveMetricTitle: 'Producción Láctea Promedio (L/vaca/día)',
-    curveUnit: 'L/día',
-    theoreticalPoints: [22.0, 26.5, 30.0, 32.5, 31.0, 29.0, 27.0, 24.5],
-    realPoints: [21.5, 27.0, 31.2, 33.0, 31.8, 29.5, 27.2, 25.0],
-    silos: [
-      SiloData(phase: 'Silo Ensilado Maíz', stockTon: 85.0, capacityTon: 120.0, dailyConsumptionKg: 4800),
-      SiloData(phase: 'Concentrado Alta Producción', stockTon: 9.5, capacityTon: 25.0, dailyConsumptionKg: 1900),
-      SiloData(phase: 'Heno Alfalfa / Forraje', stockTon: 32.0, capacityTon: 40.0, dailyConsumptionKg: 1400),
-    ],
-    facilities: [
-      FacilityData(id: 'Establo 1', batchId: 'Lote Alta Prod', ageDays: 120, density: 14.5, densityUnit: 'm²/vaca', mortalityRate: 0.5, sanitaryStatus: 'stable', sanitaryNote: 'Sin novedades'),
-      FacilityData(id: 'Establo 2', batchId: 'Lote Media Prod', ageDays: 210, density: 16.0, densityUnit: 'm²/vaca', mortalityRate: 0.8, sanitaryStatus: 'stable', sanitaryNote: 'Alimentación ajustada'),
-      FacilityData(id: 'Corral Preparto', batchId: 'Transición B-1', ageDays: 265, density: 22.0, densityUnit: 'm²/vaca', mortalityRate: 0.0, sanitaryStatus: 'warning', sanitaryNote: '3 vacas próximas a parto'),
-      FacilityData(id: 'Cunas Terneras', batchId: 'Crianza C-26', ageDays: 35, density: 4.5, densityUnit: 'm²/becerra', mortalityRate: 1.2, sanitaryStatus: 'critical', sanitaryNote: 'Tratamiento diarrea neonatal en curso'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Vacunación Clostridiosis y Pasteurelosis', batch: 'Lote Transición', dateStr: 'Hoy · 09:00', category: 'Vacuna'),
-      CalendarEvent(title: 'Revisión ginecológica y eco de preñez', batch: 'Lote Alta Prod', dateStr: 'Mañana · 07:30', category: 'Servicio'),
-      CalendarEvent(title: 'Desparasitación lote vaquillas', batch: 'Vaquillas V-2', dateStr: 'En 3 días', category: 'Sanidad'),
-    ],
     vitals: [
       VitalSign(parameter: 'Temperatura rectal', range: '38.0 - 39.3', unit: '°C'),
       VitalSign(parameter: 'Frecuencia cardíaca', range: '60 - 80', unit: 'lpm'),
       VitalSign(parameter: 'Frecuencia respiratoria', range: '15 - 35', unit: 'rpm'),
       VitalSign(parameter: 'Movimientos ruminales', range: '2 - 3', unit: 'mov / 2 min'),
     ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Establo 1 / Vaca #402', batch: 'Lote Alta Prod', drug: 'Ceftiofur sódico 50mg/mL', daysRemaining: 2, totalWithdrawalDays: 3, destination: 'Leche (0 d) / Carne (3 d)'),
-      WithdrawalAlert(facility: 'Corral 3 / Toro #18', batch: 'Sementales', drug: 'Ivermectina 1%', daysRemaining: 18, totalWithdrawalDays: 35, destination: 'Carne'),
-    ],
-    batches: [
-      BatchData(name: 'Hato Lechero Lote 1', headcount: 140, stage: 'Lactancia Temprana', daysInStage: 65, lastRecordDate: 'Hoy 06:00', lastRecordDetail: '3,850 L ordeña matutina'),
-      BatchData(name: 'Hato Lechero Lote 2', headcount: 180, stage: 'Lactancia Media', daysInStage: 160, lastRecordDate: 'Hoy 06:00', lastRecordDetail: '4,120 L ordeña matutina'),
-      BatchData(name: 'Vaquillas de Reemplazo', headcount: 85, stage: 'Crecimiento', daysInStage: 280, lastRecordDate: 'Ayer', lastRecordDetail: 'Pesaje promedio 345 kg'),
-      BatchData(name: 'Vacas Secas y Retiro', headcount: 45, stage: 'Periodo Seco', daysInStage: 42, lastRecordDate: 'Hace 2 días', lastRecordDetail: 'Aplicación sellador pezones'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Partos próximos (48h)', subtitle: '3 vacas en corral de maternidad preparto', type: 'birth', daysLeft: 2),
-      ProductionAlert(title: 'Retiro de Ceftiofur en curso', subtitle: 'Vaca #402: faltan 2 días para liberar a rastro', type: 'withdrawal', daysLeft: 2),
-      ProductionAlert(title: 'Revacunación Carbunco Sintomático', subtitle: 'Lote Vaquillas de Reemplazo', type: 'vaccine', daysLeft: 5),
-    ],
   ),
   'Porcinos': const SpeciesMetrics(
-    costMetricTitle: 'Costo por Kg Cerdo en Pie',
-    costUnit: '\$/kg',
-    costValue: 34.20,
-    costDiff: '+2.1% vs presupuesto',
-    costDiffPositive: false,
-    fcaValue: 2.58,
-    fcaUnit: 'kg alim / kg gdp',
-    totalHeads: 1850,
-    biomassTonnes: 148.5,
-    curveMetricTitle: 'Ganancia Diaria de Peso - GDP (g/día)',
-    curveUnit: 'g/día',
-    theoreticalPoints: [380, 520, 680, 790, 890, 950, 980, 960],
-    realPoints: [375, 530, 695, 805, 880, 940, 975, 965],
-    silos: [
-      SiloData(phase: 'Silo Preiniciador / Destete', stockTon: 4.8, capacityTon: 10.0, dailyConsumptionKg: 650),
-      SiloData(phase: 'Silo Crecimiento / Desarrollo', stockTon: 8.2, capacityTon: 25.0, dailyConsumptionKg: 2100),
-      SiloData(phase: 'Silo Finalizador Engorda', stockTon: 22.5, capacityTon: 30.0, dailyConsumptionKg: 3200),
-    ],
-    facilities: [
-      FacilityData(id: 'Nave Maternidad', batchId: 'Camadas Semana 46', ageDays: 18, density: 1.0, densityUnit: 'hembra+camada', mortalityRate: 4.5, sanitaryStatus: 'stable', sanitaryNote: '11.8 lechones destetados/hembra'),
-      FacilityData(id: 'Nave Destete 1', batchId: 'Lote Des-204', ageDays: 45, density: 0.35, densityUnit: 'm²/lechón', mortalityRate: 1.1, sanitaryStatus: 'stable', sanitaryNote: 'Consumo normal 780g/día'),
-      FacilityData(id: 'Nave Engorda A', batchId: 'Lote Eng-102', ageDays: 110, density: 0.85, densityUnit: 'm²/cerdo', mortalityRate: 1.8, sanitaryStatus: 'warning', sanitaryNote: 'Monitoreo de tos matutina'),
-      FacilityData(id: 'Nave Engorda B', batchId: 'Lote Eng-103', ageDays: 140, density: 0.95, densityUnit: 'm²/cerdo', mortalityRate: 2.2, sanitaryStatus: 'critical', sanitaryNote: 'Medicación en agua con Tilosina activa'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Vacunación Mycoplasma + PCV2', batch: 'Lote Des-204', dateStr: 'Hoy · 11:00', category: 'Vacuna'),
-      CalendarEvent(title: 'Destete programado 28 camadas', batch: 'Maternidad Sala 2', dateStr: 'Jueves · 06:00', category: 'Destete'),
-      CalendarEvent(title: 'Inseminación Artificial lote 35 cerdas', batch: 'Gestación 1', dateStr: 'Viernes · 07:00', category: 'Servicio'),
-      CalendarEvent(title: 'Movimiento a Finalizador (Nave 4)', batch: 'Lote Crec-88', dateStr: 'Sábado', category: 'Movimiento'),
-    ],
     vitals: [
       VitalSign(parameter: 'Temperatura rectal', range: '38.5 - 39.5', unit: '°C'),
       VitalSign(parameter: 'Frecuencia cardíaca', range: '70 - 100', unit: 'lpm'),
       VitalSign(parameter: 'Frecuencia respiratoria', range: '20 - 40', unit: 'rpm'),
       VitalSign(parameter: 'Consumo diario agua', range: '8 - 15', unit: 'L / cerdo final'),
     ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Nave Engorda B', batch: 'Lote Eng-103', drug: 'Tilosina tartrato en agua', daysRemaining: 5, totalWithdrawalDays: 7, destination: 'Carne'),
-      WithdrawalAlert(facility: 'Corral Enfermería 2', batch: 'Lote Tratados', drug: 'Florfenicol 300mg', daysRemaining: 14, totalWithdrawalDays: 28, destination: 'Carne'),
-    ],
-    batches: [
-      BatchData(name: 'Lote Engorda Final 101', headcount: 520, stage: 'Finalizador Engorda', daysInStage: 42, lastRecordDate: 'Hoy', lastRecordDetail: 'Peso prom: 104 kg · Consumo: 2.9 kg/d'),
-      BatchData(name: 'Lote Engorda A 102', headcount: 490, stage: 'Crecimiento', daysInStage: 28, lastRecordDate: 'Ayer', lastRecordDetail: 'Peso prom: 72 kg · ICA: 2.45'),
-      BatchData(name: 'Lote Destete 204', headcount: 560, stage: 'Destete / Transición', daysInStage: 21, lastRecordDate: 'Hace 2 días', lastRecordDetail: 'Peso prom: 19.8 kg'),
-      BatchData(name: 'Plantel Reproductoras', headcount: 280, stage: 'Gestación / Maternidad', daysInStage: 80, lastRecordDate: 'Hoy', lastRecordDetail: 'Condición corporal: 3.25'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Tilosina activa en Nave B', subtitle: 'Lote Eng-103 con 5 días restantes de resguardo cárnico', type: 'withdrawal', daysLeft: 5),
-      ProductionAlert(title: 'Inseminación masiva de cerdas', subtitle: 'Lote 14 hembras post-destete detectadas en celo', type: 'birth', daysLeft: 1),
-      ProductionAlert(title: 'Vacuna Parvovirus / Leptospira', subtitle: 'Hembras de reemplazo a los 6 meses de edad', type: 'vaccine', daysLeft: 7),
-    ],
   ),
   'Aves': const SpeciesMetrics(
-    costMetricTitle: 'Costo por Kg Pollo / Docena Huevo',
-    costUnit: '\$/kg',
-    costValue: 24.80,
-    costDiff: '-3.2% vs lote previo',
-    costDiffPositive: true,
-    fcaValue: 1.68,
-    fcaUnit: 'kg alim / kg carne',
-    totalHeads: 42000,
-    biomassTonnes: 92.4,
-    curveMetricTitle: 'Curva de Postura (%) / Peso acumulado pollo (g)',
-    curveUnit: 'g peso',
-    theoreticalPoints: [180, 460, 920, 1500, 2150, 2750, 3100],
-    realPoints: [185, 475, 940, 1530, 2180, 2730, 3080],
-    silos: [
-      SiloData(phase: 'Iniciador Parrillero', stockTon: 14.0, capacityTon: 20.0, dailyConsumptionKg: 1800),
-      SiloData(phase: 'Crecimiento Aviar', stockTon: 18.5, capacityTon: 35.0, dailyConsumptionKg: 4200),
-      SiloData(phase: 'Finalizador Engorda (Retiro)', stockTon: 8.0, capacityTon: 40.0, dailyConsumptionKg: 5800),
-    ],
-    facilities: [
-      FacilityData(id: 'Caseta 01 (Túnel)', batchId: 'Parvada Ross-308 #12', ageDays: 35, density: 13.5, densityUnit: 'aves/m²', mortalityRate: 2.1, sanitaryStatus: 'stable', sanitaryNote: 'Ventilación y cama óptimas'),
-      FacilityData(id: 'Caseta 02 (Túnel)', batchId: 'Parvada Ross-308 #13', ageDays: 28, density: 14.0, densityUnit: 'aves/m²', mortalityRate: 1.8, sanitaryStatus: 'stable', sanitaryNote: 'Ganancia 85g/día'),
-      FacilityData(id: 'Caseta 03 (Abierta)', batchId: 'Postura Lohmann #4', ageDays: 196, density: 8.2, densityUnit: 'aves/m²', mortalityRate: 0.9, sanitaryStatus: 'stable', sanitaryNote: 'Postura al 93.4%'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Vacunación Gumboro cepa intermedia en agua', batch: 'Caseta 02', dateStr: 'Hoy · 06:30', category: 'Vacuna'),
-      CalendarEvent(title: 'Pase a alimento finalizador sin coccidiostato', batch: 'Caseta 01', dateStr: 'En 2 días', category: 'Alimento'),
-      CalendarEvent(title: 'Muestreo de serología Salmonella e Influenza', batch: 'Todas las casetas', dateStr: 'En 4 días', category: 'Sanidad'),
-    ],
     vitals: [
       VitalSign(parameter: 'Temperatura corporal', range: '40.6 - 41.7', unit: '°C'),
       VitalSign(parameter: 'Frecuencia respiratoria', range: '25 - 40', unit: 'rpm'),
       VitalSign(parameter: 'Frecuencia cardíaca', range: '250 - 400', unit: 'lpm'),
       VitalSign(parameter: 'Relación agua:alimento', range: '1.8 : 1 a 2.0 : 1', unit: 'L / kg'),
     ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Caseta 01', batch: 'Parvada Ross-308 #12', drug: 'Enrofloxacina 10% oral', daysRemaining: 4, totalWithdrawalDays: 7, destination: 'Carne (huevo no permitido)'),
-    ],
-    batches: [
-      BatchData(name: 'Parvada Engorda Caseta 1', headcount: 18000, stage: 'Finalizador Engorda', daysInStage: 35, lastRecordDate: 'Hoy', lastRecordDetail: 'Peso promedio 2,210 g'),
-      BatchData(name: 'Parvada Engorda Caseta 2', headcount: 18000, stage: 'Crecimiento', daysInStage: 28, lastRecordDate: 'Ayer', lastRecordDetail: 'Peso promedio 1,530 g'),
-      BatchData(name: 'Lote Ponedoras Caseta 3', headcount: 6000, stage: 'Pico de Postura', daysInStage: 120, lastRecordDate: 'Hoy 10:00', lastRecordDetail: '5,604 huevos recolectados (93.4%)'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Retiro Enrofloxacina en Caseta 01', subtitle: '4 días restantes de resguardo antes de salida al rastro', type: 'withdrawal', daysLeft: 4),
-      ProductionAlert(title: 'Cambio de fase alimenticia Caseta 2', subtitle: 'Transición a alimento finalizador programada', type: 'feed', daysLeft: 2),
-      ProductionAlert(title: 'Inspección de bioseguridad arcos sanitarios', subtitle: 'Revisión periódica de desinfectante y registros', type: 'sanitary', daysLeft: 3),
-    ],
   ),
   'Ovinos / caprinos': const SpeciesMetrics(
-    costMetricTitle: 'Costo por Kg Cordero en Pie',
-    costUnit: '\$/kg',
-    costValue: 46.50,
-    costDiff: '+1.1% vs presupuesto',
-    costDiffPositive: false,
-    fcaValue: 4.80,
-    fcaUnit: 'kg MS / kg carne',
-    totalHeads: 620,
-    biomassTonnes: 27.9,
-    curveMetricTitle: 'Ganancia de Peso Cordero Engorda (g/día)',
-    curveUnit: 'g/día',
-    theoreticalPoints: [180, 240, 290, 320, 310, 280],
-    realPoints: [175, 245, 295, 315, 305, 275],
-    silos: [
-      SiloData(phase: 'Concentrado Ovinos Engorda', stockTon: 8.5, capacityTon: 15.0, dailyConsumptionKg: 650),
-      SiloData(phase: 'Pacas Henil Avena/Alfalfa', stockTon: 16.0, capacityTon: 25.0, dailyConsumptionKg: 900),
-    ],
-    facilities: [
-      FacilityData(id: 'Corral Engorda 1', batchId: 'Lote Corderos Dorper A', ageDays: 85, density: 1.8, densityUnit: 'm²/cordero', mortalityRate: 0.8, sanitaryStatus: 'stable', sanitaryNote: 'Ganancia 305g/d'),
-      FacilityData(id: 'Corral Hembras Gestantes', batchId: 'Hato Cría Katahdin', ageDays: 115, density: 3.2, densityUnit: 'm²/oveja', mortalityRate: 0.2, sanitaryStatus: 'warning', sanitaryNote: 'Partos programados semana próxima'),
-      FacilityData(id: 'Área Ordeña Caprina', batchId: 'Hato Saanen / Alpino', ageDays: 140, density: 4.0, densityUnit: 'm²/cabra', mortalityRate: 0.5, sanitaryStatus: 'stable', sanitaryNote: '2.8 L/cabra/día'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Vacuna Clostridial 8 vías + Tétanos', batch: 'Corderos Destetados', dateStr: 'Mañana · 08:00', category: 'Vacuna'),
-      CalendarEvent(title: 'Diagnóstico de preñez por ultrasonido', batch: 'Hato Dorper', dateStr: 'En 3 días', category: 'Servicio'),
-      CalendarEvent(title: 'Recorte de pezuñas y pediluvio sulfato', batch: 'Todo el rebaño', dateStr: 'En 5 días', category: 'Manejo'),
-    ],
     vitals: [
       VitalSign(parameter: 'Temperatura rectal', range: '38.5 - 40.0', unit: '°C'),
       VitalSign(parameter: 'Frecuencia cardíaca', range: '70 - 90', unit: 'lpm'),
       VitalSign(parameter: 'Frecuencia respiratoria', range: '16 - 34', unit: 'rpm'),
       VitalSign(parameter: 'Movimientos ruminales', range: '2 - 3', unit: 'mov / 2 min'),
     ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Corral Engorda 1', batch: 'Corderos Dorper A', drug: 'Levamisol 12%', daysRemaining: 6, totalWithdrawalDays: 14, destination: 'Carne'),
-    ],
-    batches: [
-      BatchData(name: 'Lote Corderos Engorda 1', headcount: 220, stage: 'Finalización Engorda', daysInStage: 60, lastRecordDate: 'Hoy', lastRecordDetail: 'Peso promedio 41.5 kg'),
-      BatchData(name: 'Rebaño Cría Katahdin', headcount: 280, stage: 'Gestación Avanzada', daysInStage: 118, lastRecordDate: 'Ayer', lastRecordDetail: 'Calificación FAMACHA grado 1-2'),
-      BatchData(name: 'Hato Lechero Caprino Saanen', headcount: 120, stage: 'Lactancia', daysInStage: 90, lastRecordDate: 'Hoy 07:00', lastRecordDetail: 'Producción 336 L leche'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Resguardo de Levamisol en Engorda', subtitle: '6 días restantes de retiro para lote Dorper A', type: 'withdrawal', daysLeft: 6),
-      ProductionAlert(title: 'Partos programados próxima semana', subtitle: '18 ovejas multíparas en lote gestación', type: 'birth', daysLeft: 4),
-      ProductionAlert(title: 'Desparasitación estratégica FAMACHA', subtitle: 'Revisión y dosificación selectiva de hembras', type: 'sanitary', daysLeft: 7),
-    ],
   ),
   'Peces': const SpeciesMetrics(
-    costMetricTitle: 'Costo por Kg Pescado Eviscerado',
-    costUnit: '\$/kg',
-    costValue: 39.40,
-    costDiff: '-2.0% vs ciclo previo',
-    costDiffPositive: true,
-    fcaValue: 1.32,
-    fcaUnit: 'kg alim / kg pez',
-    totalHeads: 68000,
-    biomassTonnes: 34.0,
-    curveMetricTitle: 'Crecimiento de Biomasa Acuícola (g/pez)',
-    curveUnit: 'g/pez',
-    theoreticalPoints: [25, 75, 160, 270, 390, 520],
-    realPoints: [28, 80, 168, 285, 405, 535],
-    silos: [
-      SiloData(phase: 'Alimento Extruido 32% Prot (Crecimiento)', stockTon: 12.0, capacityTon: 20.0, dailyConsumptionKg: 680),
-      SiloData(phase: 'Alimento Extruido 28% Prot (Engorda)', stockTon: 18.5, capacityTon: 30.0, dailyConsumptionKg: 1020),
-    ],
-    facilities: [
-      FacilityData(id: 'Estanque R-01 (Geomembrana)', batchId: 'Tilapia GIFT #09', ageDays: 110, density: 24.5, densityUnit: 'kg/m³', mortalityRate: 1.5, sanitaryStatus: 'stable', sanitaryNote: 'Oxígeno disuelto 6.2 mg/L'),
-      FacilityData(id: 'Estanque R-02 (Geomembrana)', batchId: 'Tilapia GIFT #10', ageDays: 75, density: 14.0, densityUnit: 'kg/m³', mortalityRate: 1.2, sanitaryStatus: 'stable', sanitaryNote: 'Temp 27.5 °C'),
-      FacilityData(id: 'Estanque R-03 (Tierra)', batchId: 'Bagre Canal #03', ageDays: 140, density: 8.5, densityUnit: 'kg/m³', mortalityRate: 2.8, sanitaryStatus: 'warning', sanitaryNote: 'Oxígeno bajo al amanecer (3.8 mg/L)'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Biometría y pesaje quincenal lote R-01', batch: 'Estanque R-01', dateStr: 'Hoy · 08:30', category: 'Biometría'),
-      CalendarEvent(title: 'Limpieza y purga de filtros sedimentadores', batch: 'Módulos RAS', dateStr: 'Mañana', category: 'Mantenimiento'),
-      CalendarEvent(title: 'Desdoble y selección por tallas', batch: 'Estanque R-02', dateStr: 'En 3 días', category: 'Manejo'),
-    ],
     vitals: [
       VitalSign(parameter: 'Oxígeno disuelto ideal', range: '> 5.0', unit: 'mg/L'),
       VitalSign(parameter: 'Temperatura de agua (Tilapia)', range: '26.0 - 30.0', unit: '°C'),
       VitalSign(parameter: 'pH del agua', range: '6.5 - 8.5', unit: 'pH'),
       VitalSign(parameter: 'Amonio total (TAN)', range: '< 0.05', unit: 'mg/L tóxico'),
     ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Estanque R-03', batch: 'Bagre Canal #03', drug: 'Florfenicol acuícola 50%', daysRemaining: 7, totalWithdrawalDays: 15, destination: 'Carne filete'),
-    ],
-    batches: [
-      BatchData(name: 'Lote Tilapia Estanque 1', headcount: 25000, stage: 'Engorda Final', daysInStage: 110, lastRecordDate: 'Hoy', lastRecordDetail: 'Peso prom: 535 g · Biomasa: 13.37 Ton'),
-      BatchData(name: 'Lote Tilapia Estanque 2', headcount: 28000, stage: 'Crecimiento', daysInStage: 75, lastRecordDate: 'Ayer', lastRecordDetail: 'Peso prom: 285 g · Biomasa: 7.98 Ton'),
-      BatchData(name: 'Lote Alevines Módulo A', headcount: 15000, stage: 'Alevinaje / Cría', daysInStage: 35, lastRecordDate: 'Hace 3 días', lastRecordDetail: 'Peso prom: 28 g'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Retiro activo Florfenicol Estanque 3', subtitle: '7 días de resguardo antes de cosecha para fileteo', type: 'withdrawal', daysLeft: 7),
-      ProductionAlert(title: 'Alerta de Oxígeno bajo Estanque 3', subtitle: 'Incrementar aireación suplementaria nocturna', type: 'sanitary', daysLeft: 0),
-      ProductionAlert(title: 'Próxima cosecha programada', subtitle: 'Lote Estanque 1 listo para planta procesadora', type: 'harvest', daysLeft: 12),
-    ],
   ),
   'Abejas': const SpeciesMetrics(
-    costMetricTitle: 'Costo por Kg Miel Cosechada',
-    costUnit: '\$/kg',
-    costValue: 48.20,
-    costDiff: '-4.5% vs temporada previa',
-    costDiffPositive: true,
-    fcaValue: 0.0,
-    fcaUnit: 'N/A',
-    totalHeads: 120,
-    biomassTonnes: 0.0,
-    curveMetricTitle: 'Producción de Miel por Colmena (kg/caja)',
-    curveUnit: 'kg/caja',
-    theoreticalPoints: [5.0, 12.0, 22.0, 34.0, 42.0],
-    realPoints: [4.8, 13.5, 24.2, 36.0, 44.5],
-    silos: [
-      SiloData(phase: 'Jarabe de Azúcar / Estimulación (Litros)', stockTon: 1.8, capacityTon: 3.0, dailyConsumptionKg: 80),
-      SiloData(phase: 'Torta Proteica / Sustituto Polen (Kg)', stockTon: 0.6, capacityTon: 1.0, dailyConsumptionKg: 25),
-    ],
-    facilities: [
-      FacilityData(id: 'Apiario 1 - Las Lomas', batchId: '45 Colmenas Dobles', ageDays: 180, density: 45, densityUnit: 'colmenas/apiario', mortalityRate: 2.2, sanitaryStatus: 'stable', sanitaryNote: 'Floración de mezquite activa'),
-      FacilityData(id: 'Apiario 2 - El Valle', batchId: '40 Colmenas Langstroth', ageDays: 150, density: 40, densityUnit: 'colmenas/apiario', mortalityRate: 1.5, sanitaryStatus: 'stable', sanitaryNote: 'Alzas melarias al 80%'),
-      FacilityData(id: 'Apiario 3 - Reserva', batchId: '35 Núcleos de Cría', ageDays: 60, density: 35, densityUnit: 'núcleos/apiario', mortalityRate: 3.0, sanitaryStatus: 'warning', sanitaryNote: 'Tratamiento orgánico de Varroa'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Muestreo de infestación Varroa (conteo azúcar)', batch: 'Apiario 1', dateStr: 'Hoy · 09:00', category: 'Sanidad'),
-      CalendarEvent(title: 'Colocación de alzas melarias adicionales', batch: 'Apiario 2', dateStr: 'En 2 días', category: 'Manejo'),
-      CalendarEvent(title: 'Cambio de reinas fecundadas F1', batch: 'Apiario 3', dateStr: 'En 6 días', category: 'Genética'),
-    ],
     vitals: [
       VitalSign(parameter: 'Temperatura en cámara de cría', range: '34.5 - 35.5', unit: '°C'),
       VitalSign(parameter: 'Humedad relativa en colmena', range: '55 - 65', unit: '%'),
       VitalSign(parameter: 'Postura diaria reina', range: '1,500 - 2,000', unit: 'huevos/día'),
     ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Apiario 3', batch: '35 Núcleos de Cría', drug: 'Ácido Oxálico por sublimación', daysRemaining: 0, totalWithdrawalDays: 0, destination: 'Miel (orgánico sin residuo en alzas vacías)'),
-    ],
-    batches: [
-      BatchData(name: 'Apiario 1 Las Lomas', headcount: 45, stage: 'Flujo Melario Principal', daysInStage: 35, lastRecordDate: 'Hoy', lastRecordDetail: '32 alzas operculadas listas'),
-      BatchData(name: 'Apiario 2 El Valle', headcount: 40, stage: 'Llenado de Alzas', daysInStage: 21, lastRecordDate: 'Hace 2 días', lastRecordDetail: 'Entrada fuerte de néctar'),
-      BatchData(name: 'Apiario 3 Núcleos', headcount: 35, stage: 'Multiplicación / Cría', daysInStage: 45, lastRecordDate: 'Hace 4 días', lastRecordDetail: 'Aceptación de reinas 92%'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Monitoreo de Varroa en Apiario 3', subtitle: 'Revisión posterior a tratamiento orgánico', type: 'sanitary', daysLeft: 2),
-      ProductionAlert(title: 'Cosecha y centrifugado de miel', subtitle: 'Corte de miel de primavera en Apiario 1', type: 'harvest', daysLeft: 5),
-    ],
   ),
   'Equinos': const SpeciesMetrics(
-    costMetricTitle: 'Costo Diario de Ración y Mantenimiento',
-    costUnit: '\$/caballo/día',
-    costValue: 128.00,
-    costDiff: '+1.5% vs mes anterior',
-    costDiffPositive: false,
-    fcaValue: 0.0,
-    fcaUnit: 'N/A',
-    totalHeads: 42,
-    biomassTonnes: 21.0,
-    curveMetricTitle: 'Condición Corporal Promedio (Escala Henneke 1-9)',
-    curveUnit: 'Escala 1-9',
-    theoreticalPoints: [5.0, 5.2, 5.5, 5.5, 5.6, 5.5],
-    realPoints: [5.1, 5.3, 5.4, 5.5, 5.7, 5.6],
-    silos: [
-      SiloData(phase: 'Concentrado Equino Balanceado 14% (Ton)', stockTon: 4.5, capacityTon: 10.0, dailyConsumptionKg: 210),
-      SiloData(phase: 'Heno de Avena y Alfalfa Seleccionada (Pacas)', stockTon: 8.0, capacityTon: 15.0, dailyConsumptionKg: 350),
-    ],
-    facilities: [
-      FacilityData(id: 'Cuadra A (Caballerizas)', batchId: 'Sementales y Entrenamiento', ageDays: 180, density: 16.0, densityUnit: 'm²/caballeriza', mortalityRate: 0.0, sanitaryStatus: 'stable', sanitaryNote: 'Paja limpia y desinfectada'),
-      FacilityData(id: 'Cuadra B (Yeguas)', batchId: 'Yeguas Gestantes / Lactantes', ageDays: 240, density: 20.0, densityUnit: 'm²/box', mortalityRate: 0.0, sanitaryStatus: 'stable', sanitaryNote: '2 potros nacidos saludables'),
-      FacilityData(id: 'Potrero 1 (Pastoreo)', batchId: 'Destetes y Añejos', ageDays: 320, density: 5000.0, densityUnit: 'm²/potro', mortalityRate: 0.0, sanitaryStatus: 'stable', sanitaryNote: 'Agua corriente y sombra'),
-    ],
-    calendarEvents: [
-      CalendarEvent(title: 'Vacuna Influenza Equina + Tétanos', batch: 'Cuadra A y B', dateStr: 'Hoy · 10:30', category: 'Vacuna'),
-      CalendarEvent(title: 'Desparasitación rotativa con Ivermectina + Praziquantel', batch: 'Todos los equinos', dateStr: 'En 3 días', category: 'Sanidad'),
-      CalendarEvent(title: 'Evaluación seminal semental estrella', batch: 'Semental "Azteca"', dateStr: 'En 5 días', category: 'Genética'),
-    ],
     vitals: [
       VitalSign(parameter: 'Temperatura rectal', range: '37.2 - 38.3', unit: '°C'),
       VitalSign(parameter: 'Frecuencia cardíaca en reposo', range: '28 - 44', unit: 'lpm'),
       VitalSign(parameter: 'Frecuencia respiratoria', range: '8 - 16', unit: 'rpm'),
       VitalSign(parameter: 'Tiempo de llenado capilar (TLLC)', range: '< 2', unit: 'segundos'),
-    ],
-    withdrawals: [
-      WithdrawalAlert(facility: 'Cuadra A / Box 4', batch: 'Caballo Deporte #04', drug: 'Flunixin Meglumine 50mg/mL', daysRemaining: 3, totalWithdrawalDays: 7, destination: 'Control antidopaje deportivo'),
-    ],
-    batches: [
-      BatchData(name: 'Lote Sementales Activos', headcount: 6, stage: 'Monta y Extracción Seminal', daysInStage: 120, lastRecordDate: 'Hoy', lastRecordDetail: 'Colecta seminal 85% motilidad progresiva'),
-      BatchData(name: 'Lote Yeguas Gestantes', headcount: 16, stage: 'Último tercio gestación', daysInStage: 290, lastRecordDate: 'Ayer', lastRecordDetail: 'Monitoreo de ubre y pezones'),
-      BatchData(name: 'Lote Potros Crecimiento', headcount: 14, stage: 'Añejos 1-2 años', daysInStage: 180, lastRecordDate: 'Hace 3 días', lastRecordDetail: 'Alzada promedio 1.48 m'),
-      BatchData(name: 'Lote Trabajo / Deporte', headcount: 6, stage: 'Entrenamiento diario', daysInStage: 90, lastRecordDate: 'Hoy', lastRecordDetail: 'Rutina matutina completada'),
-    ],
-    alerts: [
-      ProductionAlert(title: 'Control antidopaje Box 4', subtitle: 'Flunixin meglumine: 3 días restantes de ventana de detección', type: 'withdrawal', daysLeft: 3),
-      ProductionAlert(title: 'Partos equinos próximos (72h)', subtitle: 'Yegua "Gitana" en monitoreo de calcio en leche', type: 'birth', daysLeft: 3),
-      ProductionAlert(title: 'Desparasitación masiva de cuadras', subtitle: 'Rotación semestral de principio activo', type: 'sanitary', daysLeft: 3),
     ],
   ),
 };

@@ -51,6 +51,10 @@ import 'modules/reproduction/domain/gestation.dart';
 import 'modules/reproduction/domain/gestation_write_repository.dart';
 import 'modules/reproduction/data/supabase_gestation_repository.dart';
 import 'modules/reproduction/data/supabase_gestation_write_repository.dart';
+import 'modules/production/domain/feed_inventory.dart';
+import 'modules/production/domain/feed_write_repository.dart';
+import 'modules/production/data/supabase_feed_inventory_repository.dart';
+import 'modules/production/data/supabase_feed_write_repository.dart';
 import 'modules/aviculture/domain/aviculture_records_repository.dart';
 import 'modules/aviculture/data/supabase_aviculture_records_repository.dart';
 import 'modules/calculations/data/reference_library_repository.dart';
@@ -130,6 +134,8 @@ Future<void> main() async {
   ProductionWriteRepository? farmWrite;
   GestationRepository? gestation;
   GestationWriteRepository? gestationWrite;
+  FeedInventoryRepository? feed;
+  FeedWriteRepository? feedWrite;
   ExoticDashboardRepository? exotics;
   ExoticWriteRepository? exoticsWrite;
   ProductionUnitRepository? productionUnits;
@@ -169,6 +175,8 @@ Future<void> main() async {
     farmWrite = SupabaseProductionWriteRepository(Supabase.instance.client);
     gestation = SupabaseGestationRepository(Supabase.instance.client);
     gestationWrite = SupabaseGestationWriteRepository(Supabase.instance.client);
+    feed = SupabaseFeedInventoryRepository(Supabase.instance.client);
+    feedWrite = SupabaseFeedWriteRepository(Supabase.instance.client);
     exotics = SupabaseExoticRepository(Supabase.instance.client);
     exoticsWrite = SupabaseExoticWriteRepository(Supabase.instance.client);
     aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
@@ -276,6 +284,8 @@ Future<void> main() async {
       farmWrite: farmWrite,
       gestation: gestation,
       gestationWrite: gestationWrite,
+      feed: feed,
+      feedWrite: feedWrite,
       exotics: exotics,
       exoticsWrite: exoticsWrite,
       aviculture: aviculture,

@@ -32,6 +32,8 @@ import '../modules/production/domain/production_unit_repository.dart';
 import '../modules/production/domain/production_write_repository.dart';
 import '../modules/reproduction/domain/gestation.dart';
 import '../modules/reproduction/domain/gestation_write_repository.dart';
+import '../modules/production/domain/feed_inventory.dart';
+import '../modules/production/domain/feed_write_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
 import '../vet_ui/vet_components.dart';
@@ -278,6 +280,8 @@ class VetDosisApp extends StatelessWidget {
     this.farmWrite,
     this.gestation,
     this.gestationWrite,
+    this.feed,
+    this.feedWrite,
     this.exotics,
     this.exoticsWrite,
     this.units,
@@ -322,6 +326,8 @@ class VetDosisApp extends StatelessWidget {
   /// Gestaciones. Son compartidas: las usan produccion y exoticos.
   final GestationRepository? gestation;
   final GestationWriteRepository? gestationWrite;
+  final FeedInventoryRepository? feed;
+  final FeedWriteRepository? feedWrite;
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
@@ -672,6 +678,8 @@ class VetDosisApp extends StatelessWidget {
               farmWrite: farmWrite,
               gestation: gestation,
               gestationWrite: gestationWrite,
+              feed: feed,
+              feedWrite: feedWrite,
               exotics: exotics,
               exoticsWrite: exoticsWrite,
               aviculture: aviculture,
@@ -745,6 +753,8 @@ class CoreShell extends StatelessWidget {
     this.farmWrite,
     this.gestation,
     this.gestationWrite,
+    this.feed,
+    this.feedWrite,
     this.exotics,
     this.exoticsWrite,
     this.units,
@@ -794,6 +804,8 @@ class CoreShell extends StatelessWidget {
   /// Gestaciones. Son compartidas: las usan produccion y exoticos.
   final GestationRepository? gestation;
   final GestationWriteRepository? gestationWrite;
+  final FeedInventoryRepository? feed;
+  final FeedWriteRepository? feedWrite;
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
@@ -1481,6 +1493,8 @@ class CoreShell extends StatelessWidget {
                     farmWrite: farmWrite,
                     gestation: gestation,
                     gestationWrite: gestationWrite,
+                    feed: feed,
+                    feedWrite: feedWrite,
                     units: units,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )

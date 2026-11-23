@@ -356,4 +356,31 @@ void main() {
       expect(proximos.first.subtipo, 'nuevo');
     });
   });
+
+  group('El catálogo por especie ya no guarda cifras inventadas', () {
+    test('SpeciesMetrics solo conserva las constantes vitales', () {
+      // El catalogo tenia costos, conversion alimenticia, silos, lotes y
+      // alertas de una granja de ejemplo. No se pintaban, pero seguian ahi,
+      // y un dato inventado que vive en el codigo acaba enchufandose a una
+      // pantalla. Lo real sale del inventario de alimento y de los lotes.
+      for (final entrada in speciesDataCatalog.entries) {
+        expect(
+          entrada.value.vitals,
+          isNotEmpty,
+          reason: '${entrada.key} se quedó sin rangos de referencia',
+        );
+      }
+      expect(speciesDataCatalog.length, 7);
+    });
+
+    test('Las constantes vitales siguen siendo rangos de verdad', () {
+      // Esto si es un dato general y real: no depende de la granja de nadie.
+      final bovinos = speciesDataCatalog['Bovinos']!.vitals;
+      expect(
+        bovinos.any((v) => v.parameter.toLowerCase().contains('temperatura')),
+        isTrue,
+      );
+      expect(bovinos.every((v) => v.range.isNotEmpty && v.unit.isNotEmpty), isTrue);
+    });
+  });
 }
