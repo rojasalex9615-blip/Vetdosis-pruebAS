@@ -169,18 +169,19 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       style: theme.textTheme.titleMedium?.copyWith(color: VetColors.muted),
     ),
     const SizedBox(height: 22),
+    // Los dos van sin alto forzado, con los 40 de Material 3. A 48 se veian
+    // hinchados y desparejos frente al resto de botones de la app, que si
+    // usan el valor por omision.
     FilledButton.icon(
       onPressed: () => _openAccess(context),
       icon: const Icon(VetIcons.login),
       label: const Text('Iniciar sesión'),
-      style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
     ),
     const SizedBox(height: 10),
     OutlinedButton(
       onPressed: widget.auth == null
           ? null
           : () => _openAccess(context, register: true),
-      style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
       child: const Text('Crear cuenta'),
     ),
     const SizedBox(height: 16),
@@ -193,6 +194,10 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       large: true,
     ),
     const _GroupLabel('Especies'),
+    // Las tres iban en turquesa, menta y cian: 172°, 178° y 186° de matiz, o
+    // sea 14° entre las tres, y a ese paso los cuadros se leen como el mismo
+    // color repetido. Se reparten por la rueda dejando el aqua de marca en la
+    // especie principal: 178°, 242° y 326°.
     const _FeatureCard(
       icon: VetIcons.paw,
       accent: VetColors.turquoise,
@@ -201,7 +206,7 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
     ),
     const _FeatureCard(
       icon: VetIcons.tractor,
-      accent: VetColors.mint,
+      accent: VetColors.violet,
       title: 'Producción animal',
       description:
           'Avicultura e incubación. Bovinos, ovinos y cerdos '
@@ -209,7 +214,7 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
     ),
     const _FeatureCard(
       icon: VetIcons.leaf,
-      accent: VetColors.cyan,
+      accent: VetColors.pink,
       title: 'Exóticos',
       description: 'Próximamente.',
     ),
@@ -245,9 +250,12 @@ class _PublicWelcomeScreenState extends State<PublicWelcomeScreen> {
       name: 'Individual',
       description: 'Para el MVZ independiente.',
     ),
+    // Individual y Clinica iban en violeta y morado, 242° y 256°: 14° de
+    // separacion, el mismo problema que en Especies. Clinica pasa al rosa
+    // para que los tres planes se distingan por color.
     const _Plan(
       icon: VetIcons.usersGroup,
-      accent: VetColors.purple,
+      accent: VetColors.pink,
       name: 'Clínica',
       description: 'Para todo tu equipo.',
     ),
