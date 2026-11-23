@@ -22,6 +22,7 @@ import 'widgets/app_version_label.dart';
 import '../modules/finance/presentation/financial_planning_panel.dart';
 import '../modules/operations/presentation/productivity_screen.dart';
 import '../modules/core/presentation/section_menu.dart';
+import '../modules/exotics/domain/exotic_dashboard.dart';
 import '../modules/exotics/presentation/exotics_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/production/domain/porcino_repository.dart';
@@ -270,6 +271,7 @@ class VetDosisApp extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.farm,
+    this.exotics,
     this.units,
     this.aviculture,
     this.inboxSeenStore,
@@ -305,6 +307,9 @@ class VetDosisApp extends StatelessWidget {
 
   /// Los lotes, eventos y registros reales de la granja.
   final ProductionFarmRepository? farm;
+
+  /// Los ejemplares exoticos reales, para el dashboard y el panel.
+  final ExoticDashboardRepository? exotics;
 
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
@@ -648,6 +653,7 @@ class VetDosisApp extends StatelessWidget {
               reviewCatalog: reviewCatalog,
               porcino: porcino,
               farm: farm,
+              exotics: exotics,
               aviculture: aviculture,
               units: units,
               inboxSeenStore: inboxSeenStore,
@@ -716,6 +722,7 @@ class CoreShell extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.farm,
+    this.exotics,
     this.units,
     this.aviculture,
     this.inboxSeenStore,
@@ -756,6 +763,9 @@ class CoreShell extends StatelessWidget {
 
   /// Los lotes, eventos y registros reales de la granja.
   final ProductionFarmRepository? farm;
+
+  /// Los ejemplares exoticos reales, para el dashboard y el panel.
+  final ExoticDashboardRepository? exotics;
 
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
@@ -958,7 +968,7 @@ class CoreShell extends StatelessWidget {
       'Vademécum' ||
       'Operaciones de dosis' ||
       'Cálculos clínicos' => 'Cálculos',
-      'Producción y grandes especies' || 'Dashboard Pecuario' || 'Producción pecuaria' || 'Exóticos' => 'Inicio',
+      'Producción y grandes especies' || 'Dashboard Pecuario' || 'Producción pecuaria' || 'Exóticos' || 'Dashboard Exóticos' => 'Inicio',
       _ => model.screen,
     };
     final selected = destinations.indexWhere((entry) => entry.$1 == page);
@@ -1439,8 +1449,21 @@ class CoreShell extends StatelessWidget {
                     units: units,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )
-                else if (model.screen == 'Exóticos')
-                  ExoticsMenu(allowed: allowed('Exóticos'))
+                else if (model.screen == 'Exóticos' ||
+                    model.screen == 'Dashboard Exóticos')
+                  ExoticsMenu(
+                    allowed: allowed('Exóticos'),
+                    repository: exotics,
+                    member: auth?.active,
+                    initialViewDashboard:
+                        model.screen == 'Dashboard Exóticos',
+                    onNavigate: model.navigate,
+                    // El puente entre paneles solo se ofrece a quien de verdad
+                    // lleva las dos areas; al resto no le aparece.
+                    tambienPecuario:
+                        (experience?.workAreas ?? model.settings.workAreas)
+                            .contains('production'),
+                  )
                 else if (model.screen == 'Cálculo rápido')
                   auth == null ||
                           [
