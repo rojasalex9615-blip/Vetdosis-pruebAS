@@ -7,6 +7,8 @@ import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/module_access.dart';
 import '../domain/production_farm.dart';
+import '../domain/production_write_repository.dart';
+import 'production_capture_forms.dart';
 import '../domain/production_unit_repository.dart';
 
 /// Datos zootécnicos y analíticos por especie para el dashboard de producción.
@@ -526,6 +528,7 @@ class ProductionDashboard extends StatefulWidget {
     this.access,
     this.units,
     this.farm,
+    this.farmWrite,
     this.initialSpecies = 'Bovinos',
   });
 
@@ -539,6 +542,13 @@ class ProductionDashboard extends StatefulWidget {
   /// Si no se pasa, el panel no inventa una granja de ejemplo: se queda sin
   /// datos y lo dice. Las pruebas pueden entregar uno falso para no tocar red.
   final ProductionFarmRepository? farm;
+
+  /// Por donde se guardan lotes, registros y eventos.
+  ///
+  /// Va aparte de [farm] a proposito: el panel es de lectura y solo las
+  /// pantallas que capturan necesitan poder escribir. Si no se pasa, los
+  /// botones de captura no se dibujan.
+  final ProductionWriteRepository? farmWrite;
   final String initialSpecies;
 
   @override
@@ -756,6 +766,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
 
     if (granja.sinDatos) {
       return [
+        _barraDeCaptura(granja),
         _buildFarmEmptyCard(),
         const SizedBox(height: 24),
       ];
@@ -763,6 +774,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
 
     final ahora = DateTime.now();
     return [
+      _barraDeCaptura(granja),
       _buildRealKpis(granja),
       const SizedBox(height: 20),
       _buildRealBatches(granja, ahora),
@@ -770,6 +782,78 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       _buildRealAlerts(granja, ahora),
       const SizedBox(height: 24),
     ];
+  }
+
+  // -------------------------------------------------------------------
+  // Captura
+  // -------------------------------------------------------------------
+
+  /// Los botones que faltaban. Solo se dibujan si hay con que escribir y el
+  /// rol lo permite; [ProductionCaptureBar] se encarga de lo segundo.
+  Widget _barraDeCaptura(FarmSnapshot granja) {
+    final repo = widget.farmWrite;
+    final clinicId = widget.member?.clinicId;
+    if (repo == null || clinicId == null || clinicId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return ProductionCaptureBar(
+      member: widget.member,
+      onNuevoLote: () => _abrirLote(repo, clinicId),
+      onRegistro: () => _abrirRegistro(repo, clinicId, granja),
+      onEvento: () => _abrirEvento(repo, clinicId, granja),
+    );
+  }
+
+  /// Tras guardar se vuelve a leer: lo que se acaba de capturar tiene que
+  /// verse en el panel sin que nadie tenga que salir y entrar.
+  Future<void> _trasGuardar(bool guardado, String mensaje) async {
+    if (!guardado || !mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
+    await _cargarGranja();
+  }
+
+  Future<void> _abrirLote(
+    ProductionWriteRepository repo,
+    String clinicId,
+  ) async {
+    final guardado = await capturarLote(
+      context,
+      clinicId: clinicId,
+      repo: repo,
+      especiesPermitidas: codigosDeEspecie[_selectedSpecies] ?? const [],
+    );
+    await _trasGuardar(guardado, 'Lote guardado');
+  }
+
+  Future<void> _abrirRegistro(
+    ProductionWriteRepository repo,
+    String clinicId,
+    FarmSnapshot granja,
+  ) async {
+    final guardado = await capturarRegistro(
+      context,
+      clinicId: clinicId,
+      repo: repo,
+      lotes: granja.batches,
+      metricas: granja.metricDefs,
+    );
+    await _trasGuardar(guardado, 'Registro guardado');
+  }
+
+  Future<void> _abrirEvento(
+    ProductionWriteRepository repo,
+    String clinicId,
+    FarmSnapshot granja,
+  ) async {
+    final guardado = await capturarEvento(
+      context,
+      clinicId: clinicId,
+      repo: repo,
+      lotes: granja.batches,
+    );
+    await _trasGuardar(guardado, 'Evento guardado');
   }
 
   /// El estado vacio de verdad: ni una cifra inventada.
@@ -797,10 +881,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
             especieSinCatalogo
                 ? 'Esta especie todavía no forma parte del catálogo '
                     'productivo, así que no hay lotes ni registros que mostrar.'
-                : 'Cuando des de alta un lote y las calculadoras empiecen a '
-                    'guardar registros, aquí aparecerán tus costos, curvas, '
-                    'inventarios y alertas. No mostramos cifras de ejemplo '
-                    'para que nada se confunda con datos de tu granja.',
+                : 'Empieza con «Nuevo lote» y captura su registro diario: '
+                    'aquí irán apareciendo tus cabezas, curvas y eventos. No '
+                    'mostramos cifras de ejemplo para que nada se confunda '
+                    'con datos de tu granja.',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12, color: VetColors.muted),
           ),

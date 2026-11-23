@@ -19,6 +19,7 @@ import '../../core/domain/navigation_access.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../domain/porcino_repository.dart';
 import '../domain/production_farm.dart';
+import '../domain/production_write_repository.dart';
 import '../domain/aquaculture_species.dart';
 import '../domain/production_catalog.dart';
 import '../domain/production_unit_repository.dart';
@@ -38,6 +39,7 @@ class ProductionMenu extends StatefulWidget {
     this.access,
     this.porcino,
     this.farm,
+    this.farmWrite,
     this.units,
     this.initialSpecies,
     this.initialViewDashboard = false,
@@ -49,6 +51,9 @@ class ProductionMenu extends StatefulWidget {
 
   /// Datos reales de la granja para el Dashboard Pecuario.
   final ProductionFarmRepository? farm;
+
+  /// Por donde se guardan lotes, registros y eventos de manejo.
+  final ProductionWriteRepository? farmWrite;
 
   /// Donde se guardan las unidades de produccion.
   ///
@@ -249,6 +254,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             access: widget.access,
             units: widget.units,
             farm: widget.farm,
+            farmWrite: widget.farmWrite,
             initialSpecies: 'Bovinos',
           )
         else
@@ -387,45 +393,52 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ),
   ];
 
-  List<Widget> _speciesBadges(String name) => switch (name) {
-    'Peces' => const [
-      VetStatusBadge(
-        label: 'Calculadora de biomasa y ración',
-        kind: VetBadgeKind.success,
-      ),
-      VetStatusBadge(
-        label: 'Registros en preparación',
-        kind: VetBadgeKind.unverified,
-      ),
-    ],
-    'Porcinos' => const [
-      VetStatusBadge(
-        label: 'Calculadora de crecimiento y engorda',
-        kind: VetBadgeKind.success,
-      ),
-      VetStatusBadge(
-        label: 'Registros en preparación',
-        kind: VetBadgeKind.unverified,
-      ),
-    ],
-    'Aves' => const [
-      VetStatusBadge(
-        label: 'Capacidad e incubación según acceso',
-        kind: VetBadgeKind.success,
-      ),
-      VetStatusBadge(
-        label: 'Parvadas y producción',
-        kind: VetBadgeKind.success,
-      ),
-    ],
-    _ => const [
-      VetStatusBadge(label: 'Organización de actividades'),
-      VetStatusBadge(
-        label: 'Registros en preparación',
-        kind: VetBadgeKind.unverified,
-      ),
-    ],
-  };
+  /// Las insignias de cada especie.
+  ///
+  /// La segunda sale de [codigosDeEspecie], no de una lista escrita a mano:
+  /// si la especie esta en el catalogo productivo, ya se le pueden dar de
+  /// alta lotes y capturar registros y eventos, y decir «en preparacion»
+  /// seria mentir. Equinos, que no esta en el catalogo, es el unico caso en
+  /// que la insignia gris sigue siendo cierta.
+  List<Widget> _speciesBadges(String name) {
+    final enCatalogo = (codigosDeEspecie[name] ?? const []).isNotEmpty;
+    final registros = enCatalogo
+        ? const VetStatusBadge(
+            label: 'Lotes y registros productivos',
+            kind: VetBadgeKind.success,
+          )
+        : const VetStatusBadge(
+            label: 'Registros en preparación',
+            kind: VetBadgeKind.unverified,
+          );
+    return switch (name) {
+      'Peces' => [
+        const VetStatusBadge(
+          label: 'Calculadora de biomasa y ración',
+          kind: VetBadgeKind.success,
+        ),
+        registros,
+      ],
+      'Porcinos' => [
+        const VetStatusBadge(
+          label: 'Calculadora de crecimiento y engorda',
+          kind: VetBadgeKind.success,
+        ),
+        registros,
+      ],
+      'Aves' => const [
+        VetStatusBadge(
+          label: 'Capacidad e incubación según acceso',
+          kind: VetBadgeKind.success,
+        ),
+        VetStatusBadge(
+          label: 'Parvadas y producción',
+          kind: VetBadgeKind.success,
+        ),
+      ],
+      _ => [const VetStatusBadge(label: 'Organización de actividades'), registros],
+    };
+  }
 
   /// Paneles de peces: un apartado por especie, con las calculadoras dentro.
   List<Widget> _fishPanels(Widget denied) {
@@ -954,7 +967,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
         const VetSectionHeader(
           title: 'Apartados previstos',
           subtitle:
-              'Estos registros específicos están en preparación; las unidades de arriba sí se guardan.',
+              'Lo que todavía no tiene dónde guardarse. Los lotes, registros y eventos de arriba sí se guardan.',
         ),
         for (final name in planned)
           Padding(

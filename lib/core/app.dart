@@ -29,6 +29,7 @@ import '../modules/production/presentation/production_menu.dart';
 import '../modules/production/domain/porcino_repository.dart';
 import '../modules/production/domain/production_farm.dart';
 import '../modules/production/domain/production_unit_repository.dart';
+import '../modules/production/domain/production_write_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
 import '../vet_ui/vet_components.dart';
@@ -272,6 +273,7 @@ class VetDosisApp extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.farm,
+    this.farmWrite,
     this.exotics,
     this.exoticsWrite,
     this.units,
@@ -309,6 +311,9 @@ class VetDosisApp extends StatelessWidget {
 
   /// Los lotes, eventos y registros reales de la granja.
   final ProductionFarmRepository? farm;
+
+  /// Por donde el Dashboard Pecuario guarda lotes, registros y eventos.
+  final ProductionWriteRepository? farmWrite;
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
@@ -656,6 +661,7 @@ class VetDosisApp extends StatelessWidget {
               reviewCatalog: reviewCatalog,
               porcino: porcino,
               farm: farm,
+              farmWrite: farmWrite,
               exotics: exotics,
               exoticsWrite: exoticsWrite,
               aviculture: aviculture,
@@ -726,6 +732,7 @@ class CoreShell extends StatelessWidget {
     this.reviewCatalog,
     this.porcino,
     this.farm,
+    this.farmWrite,
     this.exotics,
     this.exoticsWrite,
     this.units,
@@ -768,6 +775,9 @@ class CoreShell extends StatelessWidget {
 
   /// Los lotes, eventos y registros reales de la granja.
   final ProductionFarmRepository? farm;
+
+  /// Por donde el Dashboard Pecuario guarda lotes, registros y eventos.
+  final ProductionWriteRepository? farmWrite;
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
@@ -1452,6 +1462,7 @@ class CoreShell extends StatelessWidget {
                     onNavigate: model.navigate,
                     porcino: porcino,
                     farm: farm,
+                    farmWrite: farmWrite,
                     units: units,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )

@@ -26,12 +26,15 @@ const productionSpecies = <String, List<String>>{
   'Equinos': ['Atención individual', 'Reproducción y crianza'],
 };
 
+/// Lo que todavia no tiene donde guardarse.
+///
+/// Esta lista encogio al entrar los lotes, los registros productivos y los
+/// eventos de manejo: «animales y rebanos» son ahora los lotes, «cosechas y
+/// seguimiento» son las metricas de miel, «revisiones y sanidad» son los
+/// eventos sanitarios y los indicadores por unidad ya salen en el panel.
+/// Solo queda fuera la reproduccion, que no tiene tabla ni metricas: no se
+/// anuncia como disponible mientras no la tenga.
 const plannedProductionAreas = <String, List<String>>{
-  'Bovinos': ['Reproducción y alimentación', 'Indicadores por unidad'],
-  'Ovinos / caprinos': [
-    'Animales y rebaños',
-    'Carne, leche y fibra según actividad',
-    'Reproducción y alimentación',
-  ],
-  'Abejas': ['Revisiones y sanidad', 'Cosechas y seguimiento'],
+  'Bovinos': ['Reproducción y genealogía'],
+  'Ovinos / caprinos': ['Reproducción y genealogía'],
 };
