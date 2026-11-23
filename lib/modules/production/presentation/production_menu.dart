@@ -20,6 +20,9 @@ import '../../../vet_ui/vet_icons.dart';
 import '../domain/porcino_repository.dart';
 import '../domain/production_farm.dart';
 import '../domain/production_write_repository.dart';
+import '../../reproduction/domain/gestation.dart';
+import '../../reproduction/domain/gestation_write_repository.dart';
+import '../../reproduction/presentation/gestation_panel.dart';
 import '../domain/aquaculture_species.dart';
 import '../domain/production_catalog.dart';
 import '../domain/production_unit_repository.dart';
@@ -40,6 +43,8 @@ class ProductionMenu extends StatefulWidget {
     this.porcino,
     this.farm,
     this.farmWrite,
+    this.gestation,
+    this.gestationWrite,
     this.units,
     this.initialSpecies,
     this.initialViewDashboard = false,
@@ -54,6 +59,11 @@ class ProductionMenu extends StatefulWidget {
 
   /// Por donde se guardan lotes, registros y eventos de manejo.
   final ProductionWriteRepository? farmWrite;
+
+  /// Gestaciones. La tabla es compartida con exoticos: una gestacion cuelga
+  /// del paciente, no del modulo.
+  final GestationRepository? gestation;
+  final GestationWriteRepository? gestationWrite;
 
   /// Donde se guardan las unidades de produccion.
   ///
@@ -230,21 +240,32 @@ class _ProductionMenuState extends State<ProductionMenu> {
       if (species == null) ...[
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
-          child: SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(
-                value: 0,
-                label: Text('Catálogo y Especies'),
-                icon: Icon(VetIcons.paw),
-              ),
-              ButtonSegment(
-                value: 1,
-                label: Text('Dashboard Pecuario'),
-                icon: Icon(VetIcons.dashboard),
-              ),
-            ],
-            selected: {_viewMode},
-            onSelectionChanged: (val) => setState(() => _viewMode = val.first),
+          // Con tres pestañas los segmentos ya no caben en un teléfono de
+          // 360 dp, así que se dejan desplazar en vez de recortarles el texto.
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(
+                  value: 0,
+                  label: Text('Catálogo y Especies'),
+                  icon: Icon(VetIcons.paw),
+                ),
+                ButtonSegment(
+                  value: 1,
+                  label: Text('Dashboard Pecuario'),
+                  icon: Icon(VetIcons.dashboard),
+                ),
+                ButtonSegment(
+                  value: 2,
+                  label: Text('Reproducción'),
+                  icon: Icon(VetIcons.heart),
+                ),
+              ],
+              selected: {_viewMode},
+              onSelectionChanged: (val) =>
+                  setState(() => _viewMode = val.first),
+            ),
           ),
         ),
         if (_viewMode == 1)
@@ -256,6 +277,14 @@ class _ProductionMenuState extends State<ProductionMenu> {
             farm: widget.farm,
             farmWrite: widget.farmWrite,
             initialSpecies: 'Bovinos',
+          )
+        else if (_viewMode == 2)
+          // La misma pantalla que abre exoticos: la gestacion no es de un
+          // modulo, cuelga del paciente.
+          GestationPanel(
+            member: widget.member,
+            repository: widget.gestation,
+            writeRepository: widget.gestationWrite,
           )
         else
           ..._speciesList(context),

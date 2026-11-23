@@ -47,6 +47,10 @@ import 'modules/exotics/domain/exotic_dashboard.dart';
 import 'modules/exotics/domain/exotic_write_repository.dart';
 import 'modules/production/domain/production_farm.dart';
 import 'modules/production/domain/production_write_repository.dart';
+import 'modules/reproduction/domain/gestation.dart';
+import 'modules/reproduction/domain/gestation_write_repository.dart';
+import 'modules/reproduction/data/supabase_gestation_repository.dart';
+import 'modules/reproduction/data/supabase_gestation_write_repository.dart';
 import 'modules/aviculture/domain/aviculture_records_repository.dart';
 import 'modules/aviculture/data/supabase_aviculture_records_repository.dart';
 import 'modules/calculations/data/reference_library_repository.dart';
@@ -124,6 +128,8 @@ Future<void> main() async {
   PorcinoRepository? porcino;
   ProductionFarmRepository? farm;
   ProductionWriteRepository? farmWrite;
+  GestationRepository? gestation;
+  GestationWriteRepository? gestationWrite;
   ExoticDashboardRepository? exotics;
   ExoticWriteRepository? exoticsWrite;
   ProductionUnitRepository? productionUnits;
@@ -161,6 +167,8 @@ Future<void> main() async {
     porcino = SupabasePorcinoRepository(Supabase.instance.client);
     farm = SupabaseProductionFarmRepository(Supabase.instance.client);
     farmWrite = SupabaseProductionWriteRepository(Supabase.instance.client);
+    gestation = SupabaseGestationRepository(Supabase.instance.client);
+    gestationWrite = SupabaseGestationWriteRepository(Supabase.instance.client);
     exotics = SupabaseExoticRepository(Supabase.instance.client);
     exoticsWrite = SupabaseExoticWriteRepository(Supabase.instance.client);
     aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
@@ -266,6 +274,8 @@ Future<void> main() async {
       porcino: porcino,
       farm: farm,
       farmWrite: farmWrite,
+      gestation: gestation,
+      gestationWrite: gestationWrite,
       exotics: exotics,
       exoticsWrite: exoticsWrite,
       aviculture: aviculture,

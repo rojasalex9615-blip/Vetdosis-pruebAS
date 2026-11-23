@@ -30,6 +30,8 @@ import '../modules/production/domain/porcino_repository.dart';
 import '../modules/production/domain/production_farm.dart';
 import '../modules/production/domain/production_unit_repository.dart';
 import '../modules/production/domain/production_write_repository.dart';
+import '../modules/reproduction/domain/gestation.dart';
+import '../modules/reproduction/domain/gestation_write_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
 import '../vet_ui/vet_components.dart';
@@ -274,6 +276,8 @@ class VetDosisApp extends StatelessWidget {
     this.porcino,
     this.farm,
     this.farmWrite,
+    this.gestation,
+    this.gestationWrite,
     this.exotics,
     this.exoticsWrite,
     this.units,
@@ -314,6 +318,10 @@ class VetDosisApp extends StatelessWidget {
 
   /// Por donde el Dashboard Pecuario guarda lotes, registros y eventos.
   final ProductionWriteRepository? farmWrite;
+
+  /// Gestaciones. Son compartidas: las usan produccion y exoticos.
+  final GestationRepository? gestation;
+  final GestationWriteRepository? gestationWrite;
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
@@ -662,6 +670,8 @@ class VetDosisApp extends StatelessWidget {
               porcino: porcino,
               farm: farm,
               farmWrite: farmWrite,
+              gestation: gestation,
+              gestationWrite: gestationWrite,
               exotics: exotics,
               exoticsWrite: exoticsWrite,
               aviculture: aviculture,
@@ -733,6 +743,8 @@ class CoreShell extends StatelessWidget {
     this.porcino,
     this.farm,
     this.farmWrite,
+    this.gestation,
+    this.gestationWrite,
     this.exotics,
     this.exoticsWrite,
     this.units,
@@ -778,6 +790,10 @@ class CoreShell extends StatelessWidget {
 
   /// Por donde el Dashboard Pecuario guarda lotes, registros y eventos.
   final ProductionWriteRepository? farmWrite;
+
+  /// Gestaciones. Son compartidas: las usan produccion y exoticos.
+  final GestationRepository? gestation;
+  final GestationWriteRepository? gestationWrite;
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
@@ -1463,6 +1479,8 @@ class CoreShell extends StatelessWidget {
                     porcino: porcino,
                     farm: farm,
                     farmWrite: farmWrite,
+                    gestation: gestation,
+                    gestationWrite: gestationWrite,
                     units: units,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )
@@ -1472,6 +1490,8 @@ class CoreShell extends StatelessWidget {
                     allowed: allowed('Exóticos'),
                     repository: exotics,
                     writeRepository: exoticsWrite,
+                    gestation: gestation,
+                    gestationWrite: gestationWrite,
                     member: auth?.active,
                     initialViewDashboard:
                         model.screen == 'Dashboard Exóticos',

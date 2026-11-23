@@ -8,6 +8,9 @@ import '../../auth/domain/clinic_membership.dart';
 import '../../calculations/presentation/calculation_screen.dart';
 import '../domain/exotic_dashboard.dart';
 import '../domain/exotic_write_repository.dart';
+import '../../reproduction/domain/gestation.dart';
+import '../../reproduction/domain/gestation_write_repository.dart';
+import '../../reproduction/presentation/gestation_panel.dart';
 import '../domain/exotic_husbandry.dart';
 import '../domain/exotic_reference.dart';
 import '../domain/exotic_taxon.dart';
@@ -26,6 +29,8 @@ class ExoticsMenu extends StatefulWidget {
     this.allowed = true,
     this.repository,
     this.writeRepository,
+    this.gestation,
+    this.gestationWrite,
     this.member,
     this.initialViewDashboard = false,
     this.onNavigate,
@@ -40,6 +45,11 @@ class ExoticsMenu extends StatefulWidget {
 
   /// Por donde se guarda. Se limita a reenviarlo al dashboard.
   final ExoticWriteRepository? writeRepository;
+
+  /// Gestaciones. La tabla es compartida con produccion: una gestacion
+  /// cuelga del paciente, no del modulo.
+  final GestationRepository? gestation;
+  final GestationWriteRepository? gestationWrite;
 
   final ClinicMembership? member;
 
@@ -100,21 +110,32 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
-          child: SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(
-                value: 0,
-                label: Text('Panel Exóticos'),
-                icon: Icon(VetIcons.paw),
-              ),
-              ButtonSegment(
-                value: 1,
-                label: Text('Dashboard'),
-                icon: Icon(VetIcons.dashboard),
-              ),
-            ],
-            selected: {_viewMode},
-            onSelectionChanged: (val) => setState(() => _viewMode = val.first),
+          // Con tres pestañas los segmentos ya no caben en un teléfono de
+          // 360 dp, así que se dejan desplazar en vez de recortarles el texto.
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(
+                  value: 0,
+                  label: Text('Panel Exóticos'),
+                  icon: Icon(VetIcons.paw),
+                ),
+                ButtonSegment(
+                  value: 1,
+                  label: Text('Dashboard'),
+                  icon: Icon(VetIcons.dashboard),
+                ),
+                ButtonSegment(
+                  value: 2,
+                  label: Text('Reproducción'),
+                  icon: Icon(VetIcons.heart),
+                ),
+              ],
+              selected: {_viewMode},
+              onSelectionChanged: (val) =>
+                  setState(() => _viewMode = val.first),
+            ),
           ),
         ),
         if (_viewMode == 1)
@@ -123,6 +144,13 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
             repository: widget.repository,
             writeRepository: widget.writeRepository,
             initialTaxon: _taxon,
+          )
+        else if (_viewMode == 2)
+          // La misma pantalla que abre produccion.
+          GestationPanel(
+            member: widget.member,
+            repository: widget.gestation,
+            writeRepository: widget.gestationWrite,
           )
         else
           ..._speciesList(context),
