@@ -21,6 +21,7 @@ import '../domain/aquaculture_species.dart';
 import '../domain/production_catalog.dart';
 import '../domain/production_unit_repository.dart';
 import 'production_units_screen.dart';
+import 'production_units_summary.dart';
 
 export '../domain/production_catalog.dart';
 
@@ -107,12 +108,32 @@ class _ProductionMenuState extends State<ProductionMenu> {
             ),
         ],
       ),
-      const SizedBox(height: 20),
-      const VetSectionHeader(
-        title: 'Especies',
-        subtitle: 'Elige una especie o grupo para ver sus herramientas.',
-      ),
     ],
+    if (widget.units case final ProductionUnitRepository almacen)
+      if (widget.member case final ClinicMembership miembro) ...[
+        const SizedBox(height: 20),
+        ProductionUnitsSummary(
+          key: ValueKey('units:${miembro.userId}:${miembro.clinicId}'),
+          repository: almacen,
+          userId: miembro.userId,
+          clinicId: miembro.clinicId,
+          visualFor: speciesVisual,
+          onOpen: (unit) => open(
+            ProductionUnitsScreen(
+              repository: almacen,
+              userId: miembro.userId,
+              clinicId: miembro.clinicId,
+              species: unit.species,
+              activity: unit.activity,
+            ),
+          ),
+        ),
+      ],
+    const SizedBox(height: 20),
+    const VetSectionHeader(
+      title: 'Especies',
+      subtitle: 'Elige una especie o grupo para ver sus herramientas.',
+    ),
     for (final entry in productionSpecies.entries)
       Padding(
         padding: const EdgeInsets.only(bottom: 12),
