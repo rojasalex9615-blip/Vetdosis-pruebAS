@@ -56,10 +56,14 @@ class _SectionMenuState extends State<SectionMenu> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const VetSectionHeader(
-          title: 'Secciones',
-          subtitle: 'Herramientas y gestión de tu espacio.',
-          large: true,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Herramientas y gestión de tu espacio.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
         TextField(
           decoration: const InputDecoration(
@@ -174,10 +178,14 @@ class CalculationMenu extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const VetSectionHeader(
-          title: 'Calculadoras',
-          subtitle: 'Elige la operación que necesitas.',
-          large: true,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Elige la operación que necesitas.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
         if (experience?.visible('Vademécum') ?? true)
           _CalculationChoice(

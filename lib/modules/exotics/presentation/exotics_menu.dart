@@ -54,11 +54,14 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
   List<Widget> _speciesList(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return [
-      const VetSectionHeader(
-        title: 'Exóticos',
-        subtitle:
-            'Mamíferos pequeños de compañía. Valores publicados en libros de texto: cada uno cita su obra y, si dos obras difieren, se muestran ambas.',
-        large: true,
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          'Mamíferos pequeños de compañía. Valores publicados en libros de texto: cada uno cita su obra y, si dos obras difieren, se muestran ambas.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
       const VetSectionHeader(
         title: 'Calculadora rápida',

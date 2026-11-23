@@ -232,11 +232,14 @@ class _ProductionMenuState extends State<ProductionMenu> {
   );
 
   List<Widget> _speciesList(BuildContext context) => [
-    const VetSectionHeader(
-      title: 'Producción y grandes especies',
-      subtitle:
-          'Elige una especie o grupo. La clínica y tus permisos se conservan.',
-      large: true,
+    Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        'Elige una especie o grupo. La clínica y tus permisos se conservan.',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
     ),
     // Acceso directo destacado al Dashboard Independiente
     VetCard(
