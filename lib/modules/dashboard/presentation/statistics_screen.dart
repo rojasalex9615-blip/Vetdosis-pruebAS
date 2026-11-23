@@ -761,7 +761,7 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
                   'M15. Caja e inventario son datos de toda la clínica.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 11.5,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -797,7 +797,7 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
                     'Ventas mensuales netas de devoluciones · MXN. No representan utilidad neta.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 11.5,
+                      fontSize: 12,
                     ),
                   ),
                 ),

@@ -399,7 +399,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                     '${progress!['en_revision'] ?? 0}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 11.5,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -556,7 +556,7 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                           'Fuente: ${item.source ?? 'No registrada'}${item.page == null ? '' : ', pág. ${item.page}'}',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 11,
+                            fontSize: 12,
                           ),
                         ),
                       ),

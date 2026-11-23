@@ -235,8 +235,10 @@ void main() {
           onNavigate: (_) {},
         ),
       );
+      await tester.ensureVisible(find.text('Aves'));
       await tester.tap(find.text('Aves'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Postura'));
       await tester.tap(find.text('Postura'));
       await tester.pumpAndSettle();
       expect(find.text('Capacidad e instalaciones avícolas'), findsNothing);

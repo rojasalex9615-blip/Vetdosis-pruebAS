@@ -758,7 +758,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                     children: [
                       Text(
                         b.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       Text(
                         '${b.headcount} animales · Etapa: ${b.stage} (${b.daysInStage} días)',
@@ -767,7 +767,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                       const SizedBox(height: 2),
                       Text(
                         'Último: ${b.lastRecordDate} (${b.lastRecordDetail})',
-                        style: const TextStyle(fontSize: 11),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ],
                   ),
@@ -805,7 +805,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                       Text(a.subtitle, style: const TextStyle(fontSize: 12, color: VetColors.muted)),
                     ],
                   ),
@@ -819,7 +819,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
                   child: Text(
                     a.daysLeft == 0 ? 'Hoy' : 'En ${a.daysLeft} d',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: a.daysLeft <= 2 ? VetColors.danger : VetColors.warning,
                     ),

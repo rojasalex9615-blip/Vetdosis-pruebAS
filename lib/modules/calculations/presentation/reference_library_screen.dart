@@ -348,7 +348,7 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
                   'el resultado.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 11.5,
+                    fontSize: 12,
                   ),
                 ),
               ),
