@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../domain/production_unit.dart';
 import '../domain/production_unit_repository.dart';
@@ -63,9 +64,6 @@ class _ProductionUnitsSummaryState extends State<ProductionUnitsSummary> {
     }
   }
 
-  String _date(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -117,11 +115,13 @@ class _ProductionUnitsSummaryState extends State<ProductionUnitsSummary> {
     final declared = list.where((u) => u.headcount != null).toList();
     if (declared.isEmpty) return count;
     final total = declared.fold<int>(0, (sum, u) => sum + u.headcount!);
-    final animals = total == 1 ? '1 animal' : '$total animales';
+    final animals = total == 1
+        ? '1 animal declarado'
+        : '$total animales declarados';
     final partial = declared.length < list.length
         ? ' (solo de las que tienen cantidad)'
         : '';
-    return '$count · $animals declarados$partial';
+    return '$count · $animals$partial';
   }
 
   Widget _card(BuildContext context, ProductionUnit unit) {
@@ -159,7 +159,7 @@ class _ProductionUnitsSummaryState extends State<ProductionUnitsSummary> {
                         style: textTheme.bodySmall,
                       ),
                     Text(
-                      'Actualizada ${_date(unit.updatedAt ?? unit.createdAt)}',
+                      'Actualizada ${VetFormat.date(unit.updatedAt ?? unit.createdAt)}',
                       style: textTheme.bodySmall,
                     ),
                   ],
