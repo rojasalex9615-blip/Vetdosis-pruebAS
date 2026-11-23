@@ -32,6 +32,7 @@ import '../vet_ui/vet_components.dart';
 import 'widgets/neu_identity.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
+import '../modules/legal/presentation/legal_links.dart';
 import '../modules/identity/domain/identity_repository.dart';
 import '../modules/identity/presentation/identity_panel.dart';
 import '../modules/dashboard/presentation/alert_preferences_panel.dart';
@@ -973,7 +974,12 @@ class CoreShell extends StatelessWidget {
                     emphasis: .75,
                   )
                 : Icon(entry.$2),
-            label: entry.$1,
+            // «Asistente IA» no cabe en el hueco de 72 px de un telefono y
+            // se recortaba contra el borde de la pantalla. El destino es el
+            // mismo; solo cambia la etiqueta visible, y el tooltip conserva
+            // el nombre completo para lectores de pantalla.
+            label: entry.$1 == 'Asistente IA' ? 'Asistente' : entry.$1,
+            tooltip: entry.$1 == 'Asistente IA' ? 'Asistente IA' : null,
           ),
       ],
     );
@@ -1897,6 +1903,19 @@ class CoreShell extends StatelessWidget {
                   ...settings(context)
                 else
                   ...pending(context),
+                // Términos y aviso acompañan al acceso, Inicio, Planes y las
+                // pantallas de cálculo con la misma versión que sirvió la
+                // puerta beta; no se repiten en Ajustes ni en el menú.
+                if (auth?.active != null &&
+                    const {
+                      'Inicio',
+                      'Planes',
+                      'Cálculo rápido',
+                      'Cálculos',
+                      'Cálculos clínicos',
+                      'Operaciones de dosis',
+                    }.contains(model.screen))
+                  const LegalSmallPrint(),
               ],
             ),
           ),

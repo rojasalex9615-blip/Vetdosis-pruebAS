@@ -557,8 +557,10 @@ class VetNotice extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final color = switch (kind) {
       VetBadgeKind.information => scheme.primary,
-      VetBadgeKind.success => VetColors.success,
-      VetBadgeKind.warning => VetColors.warning,
+      // Aclarados en modo oscuro: los tonos de marca medidos sobre blanco
+      // quedaban por debajo del contraste mínimo como texto.
+      VetBadgeKind.success => VetColors.successOn(context),
+      VetBadgeKind.warning => VetColors.warningOn(context),
       VetBadgeKind.danger => scheme.error,
       VetBadgeKind.unverified => scheme.onSurfaceVariant,
     };
@@ -792,11 +794,10 @@ class VetDataRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // El valor comparte el ancho para poder partirse en vez de desbordar;
-          // el texto se alinea a la derecha, así las cifras quedan en el borde.
-          Expanded(
-            child: Text(value, textAlign: TextAlign.right, style: valueStyle),
-          ),
+          // Sin Flexible: el valor no comparte el ancho con la etiqueta, así
+          // que las cifras quedan pegadas al borde derecho de la fila en vez
+          // de a media tarjeta.
+          Text(value, textAlign: TextAlign.right, style: valueStyle),
         ],
       ),
     );

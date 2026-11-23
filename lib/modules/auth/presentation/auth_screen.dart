@@ -6,6 +6,7 @@ import '../domain/team_message.dart';
 import '../../../core/widgets/brand_gradient.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/google_mark.dart';
+import '../../legal/presentation/legal_links.dart';
 import '../../permissions/domain/permission_repository.dart';
 import '../../permissions/presentation/permission_screen.dart';
 import '../domain/auth_repository.dart';
@@ -331,6 +332,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               }),
                         child: const Text('Olvidé mi contraseña'),
                       ),
+                  const LegalSmallPrint(preLogin: true),
                   ] else ...[
                     if (model.error == null) ...[
                       if (model.personalAvailable)
