@@ -6,7 +6,9 @@ import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../domain/exotic_dashboard.dart';
 import '../domain/exotic_taxon.dart';
+import '../domain/exotic_write_repository.dart';
 import 'allometric_calculator.dart';
+import 'exotic_capture_forms.dart';
 
 /// Dashboard Independiente: Fauna Exótica.
 ///
@@ -22,6 +24,7 @@ class ExoticsDashboard extends StatefulWidget {
     super.key,
     this.member,
     this.repository,
+    this.writeRepository,
     this.initialTaxon,
   });
 
@@ -30,6 +33,10 @@ class ExoticsDashboard extends StatefulWidget {
   /// De donde salen los ejemplares. Sin repositorio el panel queda vacío y lo
   /// dice; nunca rellena con un catálogo de muestra.
   final ExoticDashboardRepository? repository;
+
+  /// Por dónde se guarda. Sin él el panel es de solo lectura y no enseña
+  /// ningún botón de captura: ofrecerlos para que luego fallen sería peor.
+  final ExoticWriteRepository? writeRepository;
 
   final ExoticTaxon? initialTaxon;
 
@@ -175,6 +182,51 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
         subtitle: 'Microclimas, aislamiento y estatus legal de los ejemplares',
       ),
       const SizedBox(height: 10),
+      ..._barraDeCaptura([
+        (
+          'Nuevo recinto',
+          VetIcons.thermometer,
+          () => capturarRecinto(
+            context,
+            repositorio: widget.writeRepository!,
+            clinicId: widget.member!.clinicId,
+          ),
+        ),
+        (
+          'Registrar lectura',
+          VetIcons.gauge,
+          () => capturarLectura(
+            context,
+            repositorio: widget.writeRepository!,
+            clinicId: widget.member!.clinicId,
+            recintos: datos.enclosures,
+          ),
+        ),
+        (
+          'Plan de cuarentena',
+          VetIcons.hospital,
+          () => capturarCuarentena(
+            context,
+            repositorio: widget.writeRepository!,
+            clinicId: widget.member!.clinicId,
+            estancias: datos.stays,
+            nombrar: _nombreDeEstancia,
+          ),
+        ),
+        // El estatus legal solo lo firma admin o MVZ: a un auxiliar no se le
+        // ofrece, porque el servidor se lo rechazaria.
+        if (puedeFirmarEstatusLegal(widget.member))
+          (
+            'Estatus legal',
+            VetIcons.certificate,
+            () => capturarEstatusLegal(
+              context,
+              repositorio: widget.writeRepository!,
+              clinicId: widget.member!.clinicId,
+              ejemplares: datos.specimens,
+            ),
+          ),
+      ]),
       _microclimas(datos),
       const SizedBox(height: 10),
       _cuarentena(datos, ahora),
@@ -188,6 +240,28 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
         subtitle: 'Alimentación, rechazos y evolución del peso individual',
       ),
       const SizedBox(height: 10),
+      ..._barraDeCaptura([
+        (
+          'Toma de alimento',
+          VetIcons.bowlPaw,
+          () => capturarToma(
+            context,
+            repositorio: widget.writeRepository!,
+            clinicId: widget.member!.clinicId,
+            ejemplares: datos.specimens,
+          ),
+        ),
+        (
+          'Evento fisiológico',
+          VetIcons.lizard,
+          () => capturarEvento(
+            context,
+            repositorio: widget.writeRepository!,
+            clinicId: widget.member!.clinicId,
+            ejemplares: datos.specimens,
+          ),
+        ),
+      ]),
       _pesos(datos),
       const SizedBox(height: 10),
       _alimentacion(datos),
@@ -199,11 +273,68 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
         subtitle: 'Incubadoras, nidadas y eventos fisiológicos recientes',
       ),
       const SizedBox(height: 10),
+      ..._barraDeCaptura([
+        (
+          'Nueva nidada',
+          VetIcons.egg,
+          () => capturarNidada(
+            context,
+            repositorio: widget.writeRepository!,
+            clinicId: widget.member!.clinicId,
+            recintos: datos.enclosures,
+          ),
+        ),
+      ]),
       _incubadoras(datos, ahora),
       const SizedBox(height: 10),
       _eventos(datos),
       const SizedBox(height: 24),
     ];
+  }
+
+  /// Quien puede capturar. Coincide con el rol que exigen los RPC: si el
+  /// servidor va a rechazar la escritura, el boton no deberia existir.
+  bool get _puedeCapturar =>
+      widget.writeRepository != null &&
+      (widget.member?.clinicId.isNotEmpty ?? false) &&
+      puedeCapturarExoticos(widget.member);
+
+  /// Barra de botones de alta para una fila del panel.
+  ///
+  /// Devuelve lista vacia cuando no hay permiso o no hay repositorio de
+  /// escritura, de modo que la fila se dibuja igual pero sin botones muertos.
+  List<Widget> _barraDeCaptura(List<(String, IconData, Future<bool> Function())> acciones) {
+    if (!_puedeCapturar || acciones.isEmpty) return const [];
+    return [
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final (etiqueta, icono, abrir) in acciones)
+            ActionChip(
+              avatar: Icon(icono, size: 16),
+              label: Text(etiqueta),
+              onPressed: () async {
+                final guardado = await abrir();
+                // Solo se recarga si de verdad se guardo algo: releer tras un
+                // "cancelar" haria parpadear el panel sin motivo.
+                if (guardado && mounted) await _cargar();
+              },
+            ),
+        ],
+      ),
+      const SizedBox(height: 12),
+    ];
+  }
+
+  /// Como se nombra una hospitalizacion en el desplegable de cuarentena.
+  String _nombreDeEstancia(ExoticStay s) {
+    final datos = _datos;
+    final ejemplar = datos?.specimens
+        .where((e) => e.id == s.specimenId)
+        .firstOrNull;
+    final quien = ejemplar?.titulo ?? 'Ejemplar sin nombre';
+    return s.recinto.isEmpty ? quien : '$quien · ${s.recinto}';
   }
 
   Widget _selectorDeGrupo() {
@@ -240,9 +371,8 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
 
   /// Buscador instantáneo por identificador.
   ///
-  /// Hoy busca por nombre, especie, raza e identificador interno. Microchip,
-  /// anillo cerrado y muesca **no tienen columna** en `vet_patients`: cuando
-  /// se añadan, entran aquí sin tocar la pantalla.
+  /// Busca por nombre, especie, raza, identificador interno y marcaje
+  /// (microchip, anillo cerrado, muesca), que viven en `exotic_identifiers`.
   Widget _buscadorPorIdentificador() {
     final datos = _datos;
     final resultados = datos == null ? const <ExoticSpecimen>[] : datos.buscar(_busqueda);
@@ -303,6 +433,27 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
             'Busca por nombre, especie, microchip, anillo o muesca.',
             style: TextStyle(fontSize: 11, color: VetColors.muted),
           ),
+          // El alta de marcaje vive aqui porque es lo que alimenta este
+          // buscador: sin marca registrada, buscar por microchip no encuentra.
+          if (_puedeCapturar) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ActionChip(
+                avatar: const Icon(VetIcons.tagPaw, size: 16),
+                label: const Text('Registrar marcaje'),
+                onPressed: () async {
+                  final guardado = await capturarMarcaje(
+                    context,
+                    repositorio: widget.writeRepository!,
+                    clinicId: widget.member!.clinicId,
+                    ejemplares: (_datos ?? const ExoticSnapshot()).specimens,
+                  );
+                  if (guardado && mounted) await _cargar();
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );

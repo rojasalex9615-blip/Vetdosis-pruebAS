@@ -356,19 +356,38 @@ void main() {
     core.dispose();
   });
 
-  testWidgets('Choosing the exotic branch opens the read-only references', (
+  testWidgets('Choosing the exotic branch lands on its dashboard', (
     tester,
   ) async {
+    // Elegir rama lleva al tablero de esa rama, no a su catalogo: quien elige
+    // "Pequenas especies" cae en Inicio, que ya es su tablero, asi que exoticos
+    // debe caer en el suyo.
     SharedPreferences.setMockInitialValues({});
     final core = CoreViewModel(SettingsRepository(), const AppSettings());
     core.selectBranch(ClinicalBranch.exotic);
-    expect(core.screen, 'Exóticos');
+    expect(core.screen, 'Dashboard Exóticos');
     await tester.pumpWidget(MaterialApp(home: CoreShell(model: core)));
     await tester.pumpAndSettle();
     expect(find.byType(ExoticsMenu), findsOneWidget);
-    expect(find.textContaining('Mamíferos pequeños'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  test('Choosing the production branch lands on its dashboard', () {
+    SharedPreferences.setMockInitialValues({});
+    final core = CoreViewModel(SettingsRepository(), const AppSettings());
+    core.selectBranch(ClinicalBranch.production);
+    expect(core.screen, 'Dashboard Pecuario');
+    core.dispose();
+  });
+
+  test('Pequenas especies sigue cayendo en Inicio', () {
+    SharedPreferences.setMockInitialValues({});
+    final core = CoreViewModel(SettingsRepository(), const AppSettings());
+    core.selectBranch(ClinicalBranch.exotic);
+    core.selectBranch(ClinicalBranch.small);
+    expect(core.screen, 'Inicio');
     core.dispose();
   });
 

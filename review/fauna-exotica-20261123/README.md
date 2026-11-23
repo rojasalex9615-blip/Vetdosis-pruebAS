@@ -112,9 +112,56 @@ datos, y eso es distinto de «cargando» y de «no se pudo leer». Siguiendo tu
 corrección en el Dashboard Pecuario, ningún hueco se rellenó con cifras de
 ejemplo.
 
-Falta, y queda declarado: los **formularios de captura**. Las tablas y los RPC
-existen y el panel los lee, pero todavía no hay pantallas para dar de alta un
-recinto o registrar una toma desde la app.
+## Los formularios de captura
+
+El hueco que quedaba declarado ya está cubierto: **los ocho formularios
+existen** y escriben por los RPC.
+
+| Archivo | Qué contiene |
+|---|---|
+| `lib/modules/exotics/domain/exotic_write_repository.dart` | Las 8 escrituras y la traducción de errores de Postgres a español |
+| `lib/modules/exotics/data/supabase_exotic_write_repository.dart` | Implementación: llama a los 8 RPC, ni un `insert` directo |
+| `lib/modules/exotics/presentation/exotic_capture_forms.dart` | Los 8 formularios y el andamio que comparten |
+
+Dónde aparece cada uno: recinto, lectura, cuarentena y estatus legal en la fila
+de control ambiental; toma y evento en la de seguimiento; nidada en la de
+reproducción; y el marcaje junto al buscador, que es lo que alimenta.
+
+### Tres decisiones de diseño
+
+**1. No se pregunta lo que el recinto no declara.** El formulario de lectura
+solo enseña los campos que el recinto elegido vigila: si un terrario no tiene
+rango de pH, no hay campo de pH. Preguntarlo invitaría a capturar un dato que
+el panel luego no juzga, y quien lo capturó se quedaría esperando una alerta
+que nunca va a llegar. Simétricamente, el alta de recinto solo pide pH,
+amoniaco, nitrito y salinidad cuando el tipo es acuario o acuaterrario.
+
+**2. La toma no trae «lo aceptó» marcado por omisión.** Hay que decirlo. Si
+viniera marcado, un descuido registraría comidas que no ocurrieron y la racha
+de rechazos —que es un signo clínico temprano en reptiles y aves— dejaría de
+ser fiable.
+
+**3. El recibo de idempotencia sobrevive al reintento.** Si el guardado falla
+por red y la persona vuelve a pulsar, viaja el mismo `operation` y el servidor
+devuelve el registro que ya creó en lugar de duplicarlo. Solo al cerrar con
+éxito se genera uno nuevo. Hay un test que lo fija.
+
+### Permisos
+
+Los botones solo se dibujan si quien entra puede usarlos: ofrecer uno que el
+servidor va a rechazar es peor que no tenerlo. Administrador, MVZ y auxiliar
+capturan; recepción no ve ningún botón; y al auxiliar se le oculta **solo** el
+estatus legal, que es el único reservado a administrador y MVZ.
+
+## Elegir rama ya lleva a su tablero
+
+Antes, el selector del inicio («Selecciona tu tipo de práctica») llevaba a la
+rama pero abría su **catálogo**, no su tablero. Quien elige «Pequeñas especies»
+cae en Inicio, que ya es su tablero; por simetría, Producción y Exóticos ahora
+caen en el suyo. El catálogo sigue a un toque, en la misma pantalla.
+
+Lo que **no** hace el selector de áreas de Ajustes: ese sigue limitándose a
+ocultar secciones del menú, que es para lo que está.
 
 ## Conexión entre ambos perfiles
 

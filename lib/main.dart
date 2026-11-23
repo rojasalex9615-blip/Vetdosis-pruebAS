@@ -41,7 +41,9 @@ import 'modules/production/data/local_production_unit_store.dart';
 import 'modules/production/data/supabase_porcino_repository.dart';
 import 'modules/production/data/supabase_production_farm_repository.dart';
 import 'modules/exotics/data/supabase_exotic_repository.dart';
+import 'modules/exotics/data/supabase_exotic_write_repository.dart';
 import 'modules/exotics/domain/exotic_dashboard.dart';
+import 'modules/exotics/domain/exotic_write_repository.dart';
 import 'modules/production/domain/production_farm.dart';
 import 'modules/aviculture/domain/aviculture_records_repository.dart';
 import 'modules/aviculture/data/supabase_aviculture_records_repository.dart';
@@ -120,6 +122,7 @@ Future<void> main() async {
   PorcinoRepository? porcino;
   ProductionFarmRepository? farm;
   ExoticDashboardRepository? exotics;
+  ExoticWriteRepository? exoticsWrite;
   ProductionUnitRepository? productionUnits;
   AvicultureRecordsRepository? aviculture;
   if (url.isNotEmpty && key.isNotEmpty) {
@@ -155,6 +158,7 @@ Future<void> main() async {
     porcino = SupabasePorcinoRepository(Supabase.instance.client);
     farm = SupabaseProductionFarmRepository(Supabase.instance.client);
     exotics = SupabaseExoticRepository(Supabase.instance.client);
+    exoticsWrite = SupabaseExoticWriteRepository(Supabase.instance.client);
     aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     // Las unidades de produccion viven en la misma base local que el resto del
@@ -258,6 +262,7 @@ Future<void> main() async {
       porcino: porcino,
       farm: farm,
       exotics: exotics,
+      exoticsWrite: exoticsWrite,
       aviculture: aviculture,
       units: productionUnits,
       hospitalAlerts: alerts,

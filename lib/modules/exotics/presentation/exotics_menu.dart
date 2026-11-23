@@ -7,6 +7,7 @@ import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../calculations/presentation/calculation_screen.dart';
 import '../domain/exotic_dashboard.dart';
+import '../domain/exotic_write_repository.dart';
 import '../domain/exotic_husbandry.dart';
 import '../domain/exotic_reference.dart';
 import '../domain/exotic_taxon.dart';
@@ -24,6 +25,7 @@ class ExoticsMenu extends StatefulWidget {
     super.key,
     this.allowed = true,
     this.repository,
+    this.writeRepository,
     this.member,
     this.initialViewDashboard = false,
     this.onNavigate,
@@ -35,6 +37,9 @@ class ExoticsMenu extends StatefulWidget {
 
   /// De donde salen los pacientes recientes. Sin el, ese bloque lo dice.
   final ExoticDashboardRepository? repository;
+
+  /// Por donde se guarda. Se limita a reenviarlo al dashboard.
+  final ExoticWriteRepository? writeRepository;
 
   final ClinicMembership? member;
 
@@ -116,6 +121,7 @@ class _ExoticsMenuState extends State<ExoticsMenu> {
           ExoticsDashboard(
             member: widget.member,
             repository: widget.repository,
+            writeRepository: widget.writeRepository,
             initialTaxon: _taxon,
           )
         else

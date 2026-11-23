@@ -23,6 +23,7 @@ import '../modules/finance/presentation/financial_planning_panel.dart';
 import '../modules/operations/presentation/productivity_screen.dart';
 import '../modules/core/presentation/section_menu.dart';
 import '../modules/exotics/domain/exotic_dashboard.dart';
+import '../modules/exotics/domain/exotic_write_repository.dart';
 import '../modules/exotics/presentation/exotics_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/production/domain/porcino_repository.dart';
@@ -272,6 +273,7 @@ class VetDosisApp extends StatelessWidget {
     this.porcino,
     this.farm,
     this.exotics,
+    this.exoticsWrite,
     this.units,
     this.aviculture,
     this.inboxSeenStore,
@@ -310,6 +312,7 @@ class VetDosisApp extends StatelessWidget {
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
+  final ExoticWriteRepository? exoticsWrite;
 
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
@@ -654,6 +657,7 @@ class VetDosisApp extends StatelessWidget {
               porcino: porcino,
               farm: farm,
               exotics: exotics,
+              exoticsWrite: exoticsWrite,
               aviculture: aviculture,
               units: units,
               inboxSeenStore: inboxSeenStore,
@@ -723,6 +727,7 @@ class CoreShell extends StatelessWidget {
     this.porcino,
     this.farm,
     this.exotics,
+    this.exoticsWrite,
     this.units,
     this.aviculture,
     this.inboxSeenStore,
@@ -766,6 +771,7 @@ class CoreShell extends StatelessWidget {
 
   /// Los ejemplares exoticos reales, para el dashboard y el panel.
   final ExoticDashboardRepository? exotics;
+  final ExoticWriteRepository? exoticsWrite;
 
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
@@ -1454,6 +1460,7 @@ class CoreShell extends StatelessWidget {
                   ExoticsMenu(
                     allowed: allowed('Exóticos'),
                     repository: exotics,
+                    writeRepository: exoticsWrite,
                     member: auth?.active,
                     initialViewDashboard:
                         model.screen == 'Dashboard Exóticos',
