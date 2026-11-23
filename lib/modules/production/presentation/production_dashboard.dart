@@ -1091,16 +1091,22 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // El titulo pide 230 dp y la accion 192 dp: juntos no caben en
+              // los 294 dp utiles de la tarjeta. Con Expanded el titulo se
+              // quedaba en 102 dp y caia en tres renglones desiguales al lado
+              // de un boton centrado, que es lo que se veia torcido. En Wrap
+              // el titulo conserva su ancho y la accion baja sola cuando no
+              // cabe; en pantallas anchas vuelven a compartir renglon.
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                runSpacing: 4,
                 children: [
-                  const Expanded(
-                    child: Text(
-                      'Inventario en Silos y Autonomía',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                  const Text(
+                    'Inventario en Silos y Autonomía',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
                   TextButton.icon(
@@ -1614,7 +1620,15 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
             child: VetCard(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               radius: 16,
+              // Sin esto la Row centra verticalmente. Como cada alerta parte
+              // el texto en un numero distinto de renglones, el icono y la
+              // etiqueta de dias caian a una altura diferente en cada tarjeta:
+              // en una quedaban junto al titulo y en la siguiente junto al
+              // subtitulo, y la lista se veia desalineada. Anclados arriba,
+              // todas las tarjetas alinean icono, titulo y dias en la misma
+              // linea sin importar cuanto ocupe el texto.
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
                     a.type == 'withdrawal'
