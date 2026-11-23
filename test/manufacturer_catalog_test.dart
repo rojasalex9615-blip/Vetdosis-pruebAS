@@ -113,6 +113,46 @@ void main() {
   );
 
   testWidgets(
+    'a product with diverging per-species pautas asks for the species instead of picking one',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      final product = source.search('FLUNIVET').single;
+      final suyas = pautas
+          .forProduct(product.sourceUrl)
+          .where((p) => p.canCalculate)
+          .toList();
+      expect(suyas.length, greaterThan(1));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ManufacturerCatalogScreen(
+            catalog: source,
+            pautas: pautas,
+            canCalculate: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'FLUNIVET');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'FLUNIVET'));
+      await tester.pumpAndSettle();
+      // Ningun boton unico: elegir la primera pauta daria el doble de dosis
+      // al equino (1 mL/45 kg) si se precarga la de bovino (2 mL/45 kg).
+      expect(find.text('Calcular según el empaque'), findsNothing);
+      expect(
+        find.textContaining('pauta distinta por especie'),
+        findsOneWidget,
+      );
+      for (final pauta in suyas) {
+        expect(find.textContaining(pauta.species), findsWidgets);
+      }
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'a non-proportional pauta is shown but never offered for calculation',
     (tester) async {
       tester.view.physicalSize = const Size(800, 2400);

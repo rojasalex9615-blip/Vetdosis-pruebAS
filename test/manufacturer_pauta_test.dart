@@ -72,6 +72,53 @@ void main() {
     expect(ambigua.canCalculate, false);
   });
 
+  test('una referencia por kg sin cifra usa 1 kg y si precarga', () {
+    // 'por kg de peso vivo' es inequivoco: la dosis es por cada kilo.
+    final aves = catalog.pautas.firstWhere(
+      (p) => p.id == 'AGROVET-SULTRIVET-AVES',
+    );
+    expect(aves.doseReference.toLowerCase(), contains('por kg'));
+    expect(aves.weightReference, isNotNull);
+    expect(aves.weightReference!.kg, '1');
+    expect(aves.canCalculate, true);
+  });
+
+  test('un rango de kg sigue sin precargar aunque diga por kg', () {
+    final rangos = catalog.pautas.where(
+      (p) =>
+          p.rule == PautaRule.proportionalToWeight &&
+          RegExp(r'\d+\s*-\s*\d+\s*kg').hasMatch(p.doseReference),
+    );
+    expect(rangos, isNotEmpty);
+    expect(rangos.every((p) => p.weightReference == null), true);
+    expect(rangos.every((p) => !p.canCalculate), true);
+  });
+
+  test('las pautas del mismo producto no se confunden de especie', () {
+    // FLUNIVET: 2 mL/45 kg en bovino y porcino, 1 mL/45 kg en equino.
+    // Si la pantalla precarga la primera sin preguntar, el equino recibe
+    // el doble de dosis.
+    final flunivet = catalog
+        .forProduct(
+          'https://www.diccionarioveterinarioplm.com/flunivet-53-1145-10-1-2',
+        )
+        .where((p) => p.canCalculate && p.calculator == PautaCalculator.package)
+        .toList();
+    expect(flunivet.length, 3);
+    final porEspecie = {
+      for (final p in flunivet) p.species: p.weightReference!.amount,
+    };
+    expect(porEspecie['Equinos'], '1');
+    expect(porEspecie['Bovinos'], '2');
+    expect(porEspecie['Porcinos'], '2');
+    // Las tres difieren, asi que ninguna eleccion automatica es valida.
+    final pautas = {
+      for (final p in flunivet)
+        '${p.weightReference!.amount}/${p.weightReference!.kg}',
+    };
+    expect(pautas.length, greaterThan(1));
+  });
+
   test('el catálogo rechaza un esquema desconocido', () async {
     final text = await rootBundle.loadString(
       'assets/clinical/manufacturer_pautas.v1.json',

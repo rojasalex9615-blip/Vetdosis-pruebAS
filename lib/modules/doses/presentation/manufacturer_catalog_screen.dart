@@ -5,6 +5,7 @@ import '../domain/manufacturer_pauta.dart';
 import '../domain/pauta_review_gate.dart';
 import 'commercial_package_dose_screen.dart';
 import 'manufacturer_pauta_section.dart';
+import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 class ManufacturerEvidence extends StatelessWidget {
@@ -166,6 +167,18 @@ class _ManufacturerProductDetail extends StatelessWidget {
   final bool canCalculate;
   final Future<ManufacturerPautaCatalog> pautas;
 
+  void _calcular(BuildContext context, ManufacturerPauta pauta) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CommercialPackageDoseScreen(
+          initialProduct: product,
+          initialPauta: pauta,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(product.name)),
@@ -181,6 +194,17 @@ class _ManufacturerProductDetail extends StatelessWidget {
               (p) => p.canCalculate && p.calculator == PautaCalculator.package,
             )
             .toList();
+        // Duplicados exactos (misma especie y misma pauta) no son una eleccion.
+        final distintas = <ManufacturerPauta>[];
+        for (final p in deEmpaque) {
+          final key = '${p.species}|${p.doseAmount}|${p.doseUnit}|'
+              '${p.doseReference}';
+          if (distintas.any((q) => '${q.species}|${q.doseAmount}|'
+              '${q.doseUnit}|${q.doseReference}' == key)) {
+            continue;
+          }
+          distintas.add(p);
+        }
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -201,19 +225,33 @@ class _ManufacturerProductDetail extends StatelessWidget {
               ManufacturerPautaSection(pautas: delProducto),
             if (canCalculate && deEmpaque.isNotEmpty) ...[
               const SizedBox(height: 8),
-              FilledButton.icon(
-                icon: const Icon(VetIcons.calculator),
-                label: const Text('Calcular según el empaque'),
-                onPressed: () => Navigator.push<void>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CommercialPackageDoseScreen(
-                      initialProduct: product,
-                      initialPauta: deEmpaque.first,
-                    ),
-                  ),
+              // Con una sola pauta no hay nada que elegir. Con varias se pide
+              // la especie: elegir la primera precargaba la dosis de otra
+              // especie (FLUNIVET da 1 mL/45 kg en bovino y 2 mL/45 kg en
+              // porcino, el doble).
+              if (distintas.length == 1)
+                FilledButton.icon(
+                  icon: const Icon(VetIcons.calculator),
+                  label: const Text('Calcular según el empaque'),
+                  onPressed: () => _calcular(context, distintas.single),
+                )
+              else ...[
+                const VetNotice(
+                  text: 'Este producto tiene una pauta distinta por especie. '
+                      'Elige la del animal que vas a tratar.',
+                  icon: VetIcons.alertOctagon,
+                  kind: VetBadgeKind.danger,
                 ),
-              ),
+                for (final pauta in distintas)
+                  OutlinedButton.icon(
+                    icon: const Icon(VetIcons.calculator),
+                    label: Text(
+                      '${pauta.species.isEmpty ? 'Especie sin indicar' : pauta.species}'
+                      ' · ${pauta.doseAmount} ${pauta.doseUnit} ${pauta.doseReference}',
+                    ),
+                    onPressed: () => _calcular(context, pauta),
+                  ),
+              ],
             ],
           ],
         );
