@@ -558,7 +558,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Órdenes diarias y avisos del servidor'));
+    await tester.ensureVisible(find.text('Órdenes diarias'));
+    await tester.tap(find.text('Órdenes diarias'));
     await tester.pumpAndSettle();
     expect(find.text('Órdenes diarias y avisos'), findsOneWidget);
     await tester.pageBack();

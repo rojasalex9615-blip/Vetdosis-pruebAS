@@ -1,4 +1,4 @@
-import '../../../core/widgets/contrast.dart';
+import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/neu_header_card.dart';
 import 'home_pilot.dart';
@@ -1030,18 +1030,13 @@ class _DashboardActionCapsule extends StatelessWidget {
     final neu = theme.extension<WorkspaceStyle>()?.neumorphic == true;
     final accent = sectionAccent(page);
 
-    final surface = Color.lerp(
-      theme.scaffoldBackgroundColor,
-      const Color(0xFFC5A8EF),
-      dark ? 0.18 : 0.22,
-    )!;
+    final vivid = vividAccent(accent);
+    // Color de panel claro u oscuro con relieve neu y sin el morado anterior
+    final surface = dark
+        ? VetColors.darkSurface
+        : (neu ? neuBackground : VetColors.surface);
 
-    final iconColor = readableOn(accent, surface, objetivo: 3);
-    final textColor = readableOn(
-      dark ? const Color(0xFFE2D9FA) : const Color(0xFF4C387B),
-      surface,
-      objetivo: 4.5,
-    );
+    final textColor = dark ? const Color(0xFFE2E5EE) : const Color(0xFF1E2638);
 
     return Container(
       height: 48,
@@ -1050,11 +1045,19 @@ class _DashboardActionCapsule extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: dark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.white.withValues(alpha: 0.8),
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.85),
           width: 1.2,
         ),
-        boxShadow: neu ? neuShadows(dark, depth: 0.5) : null,
+        boxShadow: neu ? neuShadows(dark, depth: 0.65) : null,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(surface, Colors.white, dark ? 0.04 : 0.45)!,
+            surface,
+          ],
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1068,7 +1071,16 @@ class _DashboardActionCapsule extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(sectionIcon(page), size: 19, color: iconColor),
+                AccentGlow(
+                  color: vivid,
+                  radius: 10,
+                  emphasis: 0.75,
+                  child: Icon(
+                    sectionIcon(page),
+                    size: 19,
+                    color: vivid,
+                  ),
+                ),
                 const SizedBox(width: 7),
                 Flexible(
                   child: Text(

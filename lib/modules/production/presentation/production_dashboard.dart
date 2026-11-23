@@ -5,10 +5,7 @@ import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
-import '../../calculations/presentation/calculation_screen.dart';
 import '../../core/domain/module_access.dart';
-import '../domain/production_catalog.dart';
-import '../domain/production_unit.dart';
 import '../domain/production_unit_repository.dart';
 
 /// Datos zootécnicos y analíticos por especie para el dashboard de producción.
@@ -628,10 +625,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: facility.sanitaryStatus == 'critical'
-                    ? VetColors.danger.withOpacity(0.12)
+                    ? VetColors.danger.withValues(alpha: 0.12)
                     : (facility.sanitaryStatus == 'warning'
-                        ? VetColors.warning.withOpacity(0.12)
-                        : VetColors.success.withOpacity(0.12)),
+                        ? VetColors.warning.withValues(alpha: 0.12)
+                        : VetColors.success.withValues(alpha: 0.12)),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
@@ -650,7 +647,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     child: Text(
                       'Estado 24h: ${facility.sanitaryNote}',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         color: facility.sanitaryStatus == 'critical'
                             ? VetColors.danger
                             : (facility.sanitaryStatus == 'warning' ? VetColors.warning : VetColors.success),
@@ -791,9 +788,9 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: VetColors.success.withOpacity(0.08),
+          color: VetColors.success.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetColors.success.withOpacity(0.3)),
+          border: Border.all(color: VetColors.success.withValues(alpha: 0.3)),
         ),
         child: const Row(
           children: [
@@ -803,7 +800,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               child: Text(
                 'Sin tiempos de retiro activos en esta especie. Todos los lotes aptos para consumo/venta.',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: VetColors.success,
                 ),
@@ -817,9 +814,9 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetColors.danger.withOpacity(0.08),
+        color: VetColors.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: VetColors.danger.withOpacity(0.35)),
+        border: Border.all(color: VetColors.danger.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,7 +830,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                 style: TextStyle(
                   color: VetColors.danger,
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  fontSize: 14,
                   letterSpacing: 0.2,
                 ),
               ),
@@ -849,7 +846,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 11,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -879,7 +876,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                           '${w.facility} · ${w.batch}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 14,
                           ),
                         ),
                         Text(
@@ -892,7 +889,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: VetColors.danger.withOpacity(0.15),
+                      color: VetColors.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -973,7 +970,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               child: _KpiCard(
                 title: 'Biomasa Viva Estimada',
                 value: metrics.biomassTonnes > 0
-                    ? '${metrics.biomassTonnes.toStringAsFixed(1)}'
+                    ? metrics.biomassTonnes.toStringAsFixed(1)
                     : 'N/A',
                 unit: 'Toneladas vivas',
                 indicatorText: 'Proyección de venta',
@@ -1017,14 +1014,14 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: VetColors.turquoise.withOpacity(0.15),
+                      color: VetColors.turquoise.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
                       '+2.8% vs estándar genético',
                       style: TextStyle(
                         color: VetColors.turquoise,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1054,7 +1051,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     color: Colors.grey.shade400,
                   ),
                   const SizedBox(width: 4),
-                  const Text('Tabla Genética Teórica', style: TextStyle(fontSize: 11, color: VetColors.muted)),
+                  const Text('Tabla Genética Teórica', style: TextStyle(fontSize: 12, color: VetColors.muted)),
                   const SizedBox(width: 16),
                   Container(
                     width: 12,
@@ -1062,7 +1059,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     color: specAccent,
                   ),
                   const SizedBox(width: 4),
-                  const Text('Rendimiento Real en Granja', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  const Text('Rendimiento Real en Granja', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                 ],
               ),
             ],
@@ -1077,9 +1074,14 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Inventario en Silos y Autonomía',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  const Expanded(
+                    child: Text(
+                      'Inventario en Silos y Autonomía',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: () {
@@ -1105,7 +1107,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(silo.phase, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          Text(silo.phase, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                           Text(
                             '${silo.stockTon} / ${silo.capacityTon} Ton (${(silo.percentage * 100).toStringAsFixed(0)}%)',
                             style: const TextStyle(fontSize: 12, color: VetColors.muted),
@@ -1130,14 +1132,14 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                         children: [
                           Text(
                             'Consumo: ${(silo.dailyConsumptionKg).toStringAsFixed(0)} kg/día',
-                            style: const TextStyle(fontSize: 11, color: VetColors.muted),
+                            style: const TextStyle(fontSize: 12, color: VetColors.muted),
                           ),
                           Text(
                             silo.autonomyDays <= 5
                                 ? 'Autonomía: ${silo.autonomyDays} días ⚠️ ¡URGENTE!'
                                 : 'Autonomía: ${silo.autonomyDays} días',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: silo.autonomyDays <= 5 ? VetColors.danger : VetColors.success,
                             ),
@@ -1199,7 +1201,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                             f.id,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                              fontSize: 14,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1217,7 +1219,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     ),
                     Text(
                       f.batchId,
-                      style: const TextStyle(fontSize: 11, color: VetColors.muted),
+                      style: const TextStyle(fontSize: 12, color: VetColors.muted),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1225,22 +1227,22 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Edad / Ciclo:', style: TextStyle(fontSize: 11, color: VetColors.muted)),
-                        Text('${f.ageDays} d', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        const Text('Edad / Ciclo:', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                        Text('${f.ageDays} d', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Densidad:', style: TextStyle(fontSize: 11, color: VetColors.muted)),
-                        Text('${f.density} ${f.densityUnit}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        const Text('Densidad:', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                        Text('${f.density} ${f.densityUnit}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Mortalidad:', style: TextStyle(fontSize: 11, color: VetColors.muted)),
-                        Text('${f.mortalityRate}%', style: TextStyle(fontSize: 11, color: f.mortalityRate > 2.0 ? VetColors.danger : VetColors.ink)),
+                        const Text('Mortalidad:', style: TextStyle(fontSize: 12, color: VetColors.muted)),
+                        Text('${f.mortalityRate}%', style: TextStyle(fontSize: 12, color: f.mortalityRate > 2.0 ? VetColors.danger : VetColors.ink)),
                       ],
                     ),
                   ],
@@ -1270,15 +1272,26 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(VetIcons.calendarCheck, color: VetColors.violet, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Calendario Zootécnico y Sanitario',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                    ],
+                  const Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          VetIcons.calendarCheck,
+                          color: VetColors.violet,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Calendario Zootécnico y Sanitario',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: () => _openMassMedicationDialog(),
@@ -1296,7 +1309,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   title: Text(
                     ev.title,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       decoration: _completedEvents.contains(ev.title)
                           ? TextDecoration.lineThrough
                           : null,
@@ -1305,7 +1318,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   ),
                   subtitle: Text(
                     '${ev.batch} · ${ev.dateStr} (${ev.category})',
-                    style: const TextStyle(fontSize: 11, color: VetColors.muted),
+                    style: const TextStyle(fontSize: 12, color: VetColors.muted),
                   ),
                   onChanged: (val) {
                     setState(() {
@@ -1528,7 +1541,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                         const SizedBox(height: 4),
                         Text(
                           'Último registro: ${b.lastRecordDate} (${b.lastRecordDetail})',
-                          style: const TextStyle(fontSize: 11, color: VetColors.ink),
+                          style: const TextStyle(fontSize: 12, color: VetColors.ink),
                         ),
                       ],
                     ),
@@ -1572,7 +1585,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                         Text(a.subtitle, style: const TextStyle(fontSize: 12, color: VetColors.muted)),
                       ],
                     ),
@@ -1580,13 +1593,13 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withOpacity(0.12),
+                      color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       a.daysLeft == 0 ? 'Hoy' : 'En ${a.daysLeft} d',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: a.daysLeft <= 2 ? VetColors.danger : VetColors.warning,
                       ),
@@ -1757,7 +1770,7 @@ class _KpiCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(fontSize: 11, color: VetColors.muted),
+                  style: const TextStyle(fontSize: 12, color: VetColors.muted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1773,7 +1786,7 @@ class _KpiCard extends StatelessWidget {
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
@@ -1782,7 +1795,7 @@ class _KpiCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   unit,
-                  style: const TextStyle(fontSize: 10, color: VetColors.muted),
+                  style: const TextStyle(fontSize: 12, color: VetColors.muted),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -1801,7 +1814,7 @@ class _KpiCard extends StatelessWidget {
                 child: Text(
                   indicatorText,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: indicatorPositive ? VetColors.success : VetColors.danger,
                   ),
@@ -1843,7 +1856,7 @@ class _PerformanceCurvePainter extends CustomPainter {
     final double range = (maxVal - minVal) > 0 ? (maxVal - minVal) : 1.0;
 
     final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.18)
+      ..color = Colors.grey.withValues(alpha: 0.18)
       ..strokeWidth = 1;
 
     // Líneas horizontales de guía
@@ -1866,7 +1879,7 @@ class _PerformanceCurvePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accentColor.withOpacity(0.25), accentColor.withOpacity(0.0)],
+        colors: [accentColor.withValues(alpha: 0.25), accentColor.withValues(alpha: 0.0)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
@@ -1918,6 +1931,7 @@ class _PerformanceCurvePainter extends CustomPainter {
 // Botón de herramienta
 class ProductionToolTile extends StatelessWidget {
   const ProductionToolTile({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -1955,7 +1969,7 @@ class ProductionToolTile extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 10, color: VetColors.muted),
+                  style: const TextStyle(fontSize: 12, color: VetColors.muted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1971,6 +1985,7 @@ class ProductionToolTile extends StatelessWidget {
 // Diálogo modal de Calculadoras de Producción
 class ProductionCalculatorModal extends StatefulWidget {
   const ProductionCalculatorModal({
+    super.key,
     required this.calcType,
     required this.species,
   });
@@ -2169,13 +2184,13 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: VetColors.turquoise.withOpacity(0.12),
+                color: VetColors.turquoise.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetColors.turquoise.withOpacity(0.4)),
+                border: Border.all(color: VetColors.turquoise.withValues(alpha: 0.4)),
               ),
               child: Text(
                 _result,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -2191,7 +2206,7 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
 
 // Modal de Dosificación Masiva (Agua mg/L y Alimento ppm)
 class MassMedicationModal extends StatefulWidget {
-  const MassMedicationModal({required this.species});
+  const MassMedicationModal({super.key, required this.species});
   final String species;
 
   @override
@@ -2307,13 +2322,13 @@ class MassMedicationModalState extends State<MassMedicationModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: VetColors.violet.withOpacity(0.12),
+                color: VetColors.violet.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetColors.violet.withOpacity(0.35)),
+                border: Border.all(color: VetColors.violet.withValues(alpha: 0.35)),
               ),
               child: Text(
                 _calcOutput,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
           ],
@@ -2328,7 +2343,7 @@ class MassMedicationModalState extends State<MassMedicationModal> {
 
 // Modal de Vademécum Pecuario Oficial SENASICA
 class ProductionVademecumModal extends StatelessWidget {
-  const ProductionVademecumModal({required this.species});
+  const ProductionVademecumModal({super.key, required this.species});
   final String species;
 
   @override
@@ -2349,7 +2364,7 @@ class ProductionVademecumModal extends StatelessWidget {
         child: ListView.separated(
           shrinkWrap: true,
           itemCount: drugs.length,
-          separatorBuilder: (_, __) => const Divider(height: 14),
+          separatorBuilder: (_, _) => const Divider(height: 14),
           itemBuilder: (ctx, i) {
             final (name, cat, retiro, dose) = drugs[i];
             return Column(
@@ -2361,16 +2376,16 @@ class ProductionVademecumModal extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: VetColors.danger.withOpacity(0.12),
+                    color: VetColors.danger.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'Retiro oficial: $retiro',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: VetColors.danger),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: VetColors.danger),
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text('Dosis referencia: $dose', style: const TextStyle(fontSize: 11)),
+                Text('Dosis referencia: $dose', style: const TextStyle(fontSize: 12)),
               ],
             );
           },
@@ -2386,6 +2401,7 @@ class ProductionVademecumModal extends StatelessWidget {
 // Modal de Receta Médica Pecuaria (Simple y Cuantificada)
 class PecuariaPrescriptionModal extends StatefulWidget {
   const PecuariaPrescriptionModal({
+    super.key,
     required this.quantified,
     required this.species,
     required this.clinicName,
@@ -2421,7 +2437,7 @@ class PecuariaPrescriptionModalState extends State<PecuariaPrescriptionModal> {
           Expanded(
             child: Text(
               widget.quantified ? 'Receta Médica Cuantificada' : 'Receta Médica Simple',
-              style: const TextStyle(fontSize: 15),
+              style: const TextStyle(fontSize: 16),
             ),
           ),
         ],
@@ -2434,7 +2450,7 @@ class PecuariaPrescriptionModalState extends State<PecuariaPrescriptionModal> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.08),
+                color: Colors.grey.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
