@@ -18,6 +18,7 @@ import '../../core/domain/module_access.dart';
 import '../../core/domain/navigation_access.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../domain/porcino_repository.dart';
+import '../domain/production_farm.dart';
 import '../domain/aquaculture_species.dart';
 import '../domain/production_catalog.dart';
 import '../domain/production_unit_repository.dart';
@@ -36,6 +37,7 @@ class ProductionMenu extends StatefulWidget {
     this.member,
     this.access,
     this.porcino,
+    this.farm,
     this.units,
     this.initialSpecies,
     this.initialViewDashboard = false,
@@ -44,6 +46,9 @@ class ProductionMenu extends StatefulWidget {
   final ClinicMembership? member;
   final ModuleAccess? access;
   final PorcinoRepository? porcino;
+
+  /// Datos reales de la granja para el Dashboard Pecuario.
+  final ProductionFarmRepository? farm;
 
   /// Donde se guardan las unidades de produccion.
   ///
@@ -243,6 +248,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             member: widget.member,
             access: widget.access,
             units: widget.units,
+            farm: widget.farm,
             initialSpecies: 'Bovinos',
           )
         else
@@ -441,8 +447,6 @@ class _ProductionMenuState extends State<ProductionMenu> {
     final (icon, accent) = speciesVisual(currentSpecies);
     final textTheme = Theme.of(context).textTheme;
     final activities = productionSpecies[currentSpecies]!;
-    final metrics =
-        speciesDataCatalog[currentSpecies] ?? speciesDataCatalog['Bovinos']!;
 
     const denied = VetNotice(
       text: 'Las calculadoras no están habilitadas para tu acceso actual.',
@@ -776,127 +780,32 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ),
       const SizedBox(height: 24),
 
-      // 3. MIS LOTES / HATOS (Resumen)
+      // 3 y 4. LOTES Y ALERTAS
+      //
+      // Antes salian de `speciesDataCatalog`: lotes como «Vaquillas de
+      // Reemplazo» y alertas de una «Vaca #402» que no eran de nadie. Los
+      // datos de verdad estan en Supabase y los lee el Dashboard Pecuario,
+      // que sabe esperar la consulta y distinguir «sin registros» de «sin
+      // red». Aqui se enlaza alli en lugar de inventar cifras.
       const VetSectionHeader(
-        title: 'Mis Lotes / Hatos',
+        title: 'Mis Lotes y Alertas',
         subtitle:
-            'Número de animales, etapa productiva, días en etapa y último registro.',
+            'Animales por etapa, vacunas por vencer y resguardos de fármaco.',
       ),
       const SizedBox(height: 8),
-      for (final b in metrics.batches)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: VetCard(
-            padding: const EdgeInsets.all(12),
-            radius: 16,
-            child: Row(
-              children: [
-                VetIconBox(icon: icon, accent: accent, size: 40),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        b.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '${b.headcount} animales · Etapa: ${b.stage} (${b.daysInStage} días)',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: VetColors.muted,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Último: ${b.lastRecordDate} (${b.lastRecordDetail})',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+      VetCard(
+        child: VetEmptyState(
+          text: 'Tus lotes y alertas se consultan en el Dashboard Pecuario, '
+              'que los lee de tus propios registros.',
+          icon: VetIcons.barn,
+          actionLabel: 'Abrir Dashboard Pecuario',
+          onAction: () => setState(() {
+            _viewMode = 1;
+            species = null;
+            activity = null;
+          }),
         ),
-      const SizedBox(height: 24),
-
-      // 4. ALERTAS
-      const VetSectionHeader(
-        title: 'Alertas',
-        subtitle:
-            'Vacunas por vencer, resguardos de fármaco activos y partos o servicios próximos.',
       ),
-      const SizedBox(height: 8),
-      for (final a in metrics.alerts)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: VetCard(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            radius: 16,
-            child: Row(
-              children: [
-                Icon(
-                  a.type == 'withdrawal'
-                      ? VetIcons.alertOctagon
-                      : (a.type == 'birth' ? VetIcons.heart : VetIcons.bell),
-                  color: a.type == 'withdrawal'
-                      ? VetColors.danger
-                      : VetColors.warning,
-                  size: 22,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        a.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        a.subtitle,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: VetColors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning)
-                            .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    a.daysLeft == 0 ? 'Hoy' : 'En ${a.daysLeft} d',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: a.daysLeft <= 2
-                          ? VetColors.danger
-                          : VetColors.warning,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       const SizedBox(height: 24),
 
       // 5. RECETAS Y CONTROL

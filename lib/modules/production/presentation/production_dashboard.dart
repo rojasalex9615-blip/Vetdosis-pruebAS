@@ -6,6 +6,7 @@ import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/module_access.dart';
+import '../domain/production_farm.dart';
 import '../domain/production_unit_repository.dart';
 
 /// Datos zootécnicos y analíticos por especie para el dashboard de producción.
@@ -524,6 +525,7 @@ class ProductionDashboard extends StatefulWidget {
     this.member,
     this.access,
     this.units,
+    this.farm,
     this.initialSpecies = 'Bovinos',
   });
 
@@ -531,6 +533,12 @@ class ProductionDashboard extends StatefulWidget {
   final ClinicMembership? member;
   final ModuleAccess? access;
   final ProductionUnitRepository? units;
+
+  /// De donde salen los lotes, eventos y registros reales de la granja.
+  ///
+  /// Si no se pasa, el panel no inventa una granja de ejemplo: se queda sin
+  /// datos y lo dice. Las pruebas pueden entregar uno falso para no tocar red.
+  final ProductionFarmRepository? farm;
   final String initialSpecies;
 
   @override
@@ -539,8 +547,6 @@ class ProductionDashboard extends StatefulWidget {
 
 class _ProductionDashboardState extends State<ProductionDashboard> {
   late String _selectedSpecies;
-  final Set<String> _completedEvents = {};
-  final Set<String> _clearedWithdrawals = {};
 
   final List<String> _speciesList = const [
     'Bovinos',
@@ -552,6 +558,15 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     'Equinos',
   ];
 
+  /// Lo que hay de verdad en la granja para la especie elegida.
+  ///
+  /// `null` mientras se lee. El panel no cae de vuelta al catalogo de ejemplo
+  /// si esto viene vacio: ensenar la granja inventada de 480 vacas como si
+  /// fuera del usuario era justo el error que se corrige.
+  FarmSnapshot? _granja;
+  bool _cargandoGranja = true;
+  Object? _falloGranja;
+
   @override
   void initState() {
     super.initState();
@@ -559,8 +574,60 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     if (!_speciesList.contains(_selectedSpecies)) {
       _selectedSpecies = 'Bovinos';
     }
+    _cargarGranja();
   }
 
+  Future<void> _cargarGranja() async {
+    // Cede el turno antes de tocar el estado. La primera llamada sale de
+    // initState, y ahi el widget todavia se esta montando: un setState
+    // sincrono en ese momento revienta. Con esto, todo lo que sigue ocurre
+    // ya montado, venga de initState o de un cambio de especie.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+
+    final repo = widget.farm;
+    final clinicId = widget.member?.clinicId;
+    if (repo == null || clinicId == null || clinicId.isEmpty) {
+      // Sin repositorio o sin area de trabajo no hay nada que leer. Se queda
+      // en vacio, que es la verdad, en lugar de rellenar con el catalogo.
+      if (mounted) {
+        setState(() {
+          _granja = const FarmSnapshot();
+          _cargandoGranja = false;
+          _falloGranja = null;
+        });
+      }
+      return;
+    }
+    setState(() {
+      _cargandoGranja = true;
+      _falloGranja = null;
+    });
+    try {
+      final datos = await repo.load(
+        clinicId,
+        especies: codigosDeEspecie[_selectedSpecies] ?? const [],
+      );
+      if (!mounted) return;
+      setState(() {
+        _granja = datos;
+        _cargandoGranja = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      // Un fallo de red no es «no hay datos»: se distinguen en pantalla para
+      // que nadie lea un corte de conexion como una granja sin lotes.
+      setState(() {
+        _falloGranja = e;
+        _cargandoGranja = false;
+      });
+    }
+  }
+
+  /// Etiquetas, unidades y rangos de referencia de la especie.
+  ///
+  /// De aqui ya NO salen cifras de la granja: solo los textos que describen
+  /// que se mide y en que unidad. Lo que es del usuario viene de [_granja].
   SpeciesMetrics get _currentMetrics =>
       speciesDataCatalog[_selectedSpecies] ?? speciesDataCatalog['Bovinos']!;
 
@@ -600,75 +667,6 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     );
   }
 
-  void _openFacilityDetail(FacilityData facility) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(VetIcons.barn, color: VetColors.turquoise),
-            const SizedBox(width: 8),
-            Expanded(child: Text(facility.id)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Lote actual: ${facility.batchId}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text('Edad / Ciclo: ${facility.ageDays} días'),
-            Text('Densidad: ${facility.density} ${facility.densityUnit}'),
-            Text('Mortalidad acumulada: ${facility.mortalityRate}%'),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: facility.sanitaryStatus == 'critical'
-                    ? VetColors.danger.withValues(alpha: 0.12)
-                    : (facility.sanitaryStatus == 'warning'
-                        ? VetColors.warning.withValues(alpha: 0.12)
-                        : VetColors.success.withValues(alpha: 0.12)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    facility.sanitaryStatus == 'critical'
-                        ? VetIcons.alertOctagon
-                        : (facility.sanitaryStatus == 'warning' ? VetIcons.alertTriangle : VetIcons.checkCircle),
-                    color: facility.sanitaryStatus == 'critical'
-                        ? VetColors.danger
-                        : (facility.sanitaryStatus == 'warning' ? VetColors.warning : VetColors.success),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Estado 24h: ${facility.sanitaryNote}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: facility.sanitaryStatus == 'critical'
-                            ? VetColors.danger
-                            : (facility.sanitaryStatus == 'warning' ? VetColors.warning : VetColors.success),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final metrics = _currentMetrics;
@@ -681,36 +679,15 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
         _buildSpeciesSelector(),
         const SizedBox(height: 16),
 
-        // Banner Crítico de Tiempos de Retiro (Alerta Crítica)
-        _buildWithdrawalBanner(metrics),
-        const SizedBox(height: 16),
-
-        // Fila 1: Pulso Financiero y Productivo (KPIs de Alto Impacto)
-        _buildRow1Kpis(metrics),
-        const SizedBox(height: 20),
-
-        // Fila 2: Gráficas de Rendimiento (Núcleo Analítico)
-        _buildRow2Analytics(metrics, specAccent),
-        const SizedBox(height: 20),
-
-        // Fila 3: Mapa Operativo de Instalaciones (Naves / Corrales / Estanques)
-        _buildRow3Facilities(metrics),
-        const SizedBox(height: 20),
-
-        // Fila 4: Ejecución Diaria (Calendario Sanitario & Dosificación Masiva)
-        _buildRow4DailyExecution(metrics),
-        const SizedBox(height: 24),
+        // Todo lo que describe a ESTA granja (retiros, KPIs, curvas,
+        // instalaciones, calendario, lotes y alertas) sale de Supabase. Si no
+        // hay registros, se dice; no se rellena con el catalogo de ejemplo.
+        ..._buildFarmArea(),
 
         // 2. Herramientas de la especie elegida (tarjetas interactivas)
+        // No dependen de la granja: son calculadoras y referencias, y siguen
+        // sirviendo aunque todavia no se haya dado de alta ningun lote.
         _buildSpeciesToolsSection(metrics, specIcon, specAccent),
-        const SizedBox(height: 24),
-
-        // 3. Mis lotes / hatos (resumen)
-        _buildBatchesSummarySection(metrics),
-        const SizedBox(height: 24),
-
-        // 4. Alertas (vacunas por vencer, retiros, partos o servicios próximos)
-        _buildAlertsSection(metrics),
         const SizedBox(height: 24),
 
         // 5. Recetas y control (acceso directo a receta cuantificada / simple)
@@ -721,6 +698,338 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
         _buildUpcomingSection(),
         const SizedBox(height: 32),
       ],
+    );
+  }
+
+  /// La parte del panel que describe a ESTA granja.
+  ///
+  /// Antes se pintaba siempre desde `speciesDataCatalog`, un catalogo fijo con
+  /// una granja inventada (480 vacas, silos al 71 %, alertas de una vaca
+  /// #402). Parecia informacion del usuario y no lo era. Ahora sale de
+  /// Supabase y, cuando no hay registros, se dice con todas sus letras.
+  List<Widget> _buildFarmArea() {
+    if (_cargandoGranja) {
+      return const [
+        VetCard(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+        SizedBox(height: 24),
+      ];
+    }
+
+    if (_falloGranja != null) {
+      return [
+        VetCard(
+          child: Column(
+            children: [
+              const Icon(VetIcons.cloudOff, size: 28, color: VetColors.muted),
+              const SizedBox(height: 8),
+              const Text(
+                'No se pudieron leer los datos de producción',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Revisa la conexión. Esto no significa que la granja esté '
+                'vacía: no se alcanzó el servidor.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: VetColors.muted),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _cargarGranja,
+                icon: const Icon(VetIcons.refresh, size: 16),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ];
+    }
+
+    final granja = _granja ?? const FarmSnapshot();
+
+    if (granja.sinDatos) {
+      return [
+        _buildFarmEmptyCard(),
+        const SizedBox(height: 24),
+      ];
+    }
+
+    final ahora = DateTime.now();
+    return [
+      _buildRealKpis(granja),
+      const SizedBox(height: 20),
+      _buildRealBatches(granja, ahora),
+      const SizedBox(height: 24),
+      _buildRealAlerts(granja, ahora),
+      const SizedBox(height: 24),
+    ];
+  }
+
+  /// El estado vacio de verdad: ni una cifra inventada.
+  Widget _buildFarmEmptyCard() {
+    final especieSinCatalogo =
+        (codigosDeEspecie[_selectedSpecies] ?? const []).isEmpty;
+    return VetCard(
+      child: Column(
+        children: [
+          Icon(
+            especieSinCatalogo ? VetIcons.info : VetIcons.barn,
+            size: 30,
+            color: VetColors.muted.withValues(alpha: .8),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            especieSinCatalogo
+                ? 'Todavía no hay producción de $_selectedSpecies'
+                : 'Aún no hay datos de producción',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            especieSinCatalogo
+                ? 'Esta especie todavía no forma parte del catálogo '
+                    'productivo, así que no hay lotes ni registros que mostrar.'
+                : 'Cuando des de alta un lote y las calculadoras empiecen a '
+                    'guardar registros, aquí aparecerán tus costos, curvas, '
+                    'inventarios y alertas. No mostramos cifras de ejemplo '
+                    'para que nada se confunda con datos de tu granja.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: VetColors.muted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Cabezas y lotes reales. Solo lo que se puede contar de verdad.
+  Widget _buildRealKpis(FarmSnapshot granja) {
+    final activos = granja.batches.where((b) => b.estado != 'cerrado').length;
+    return Row(
+      children: [
+        Expanded(
+          child: VetCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cabezas en inventario',
+                  style: TextStyle(fontSize: 12, color: VetColors.muted),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${granja.totalCabezas}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: VetCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Lotes activos',
+                  style: TextStyle(fontSize: 12, color: VetColors.muted),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$activos',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Los lotes tal como estan en `lotes_produccion`.
+  Widget _buildRealBatches(FarmSnapshot granja, DateTime ahora) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const VetSectionHeader(
+          title: 'Mis lotes',
+          subtitle: 'Lotes dados de alta en este espacio de trabajo',
+        ),
+        const SizedBox(height: 10),
+        if (granja.batches.isEmpty)
+          const VetCard(
+            child: VetEmptyState(
+              text: 'Aún no hay lotes dados de alta para esta especie.',
+              icon: VetIcons.barn,
+            ),
+          )
+        else
+          for (final b in granja.batches)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: VetCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                radius: 16,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            b.nombre.isEmpty ? b.codigo : b.nombre,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${b.proposito} · ${b.diasEnEtapa(ahora)} días',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: VetColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${b.cabezas}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+
+  /// Alertas reales: eventos de `produccion_eventos` que aun no han pasado.
+  Widget _buildRealAlerts(FarmSnapshot granja, DateTime ahora) {
+    final proximos = granja.proximos(ahora);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const VetSectionHeader(
+          title: 'Alertas y Tareas Críticas',
+          subtitle:
+              'Vacunas por vencer, resguardos farmacológicos y partos o servicios',
+        ),
+        const SizedBox(height: 10),
+        if (proximos.isEmpty)
+          const VetCard(
+            child: VetEmptyState(
+              text: 'No hay eventos próximos registrados.',
+              icon: VetIcons.calendarCheck,
+            ),
+          )
+        else
+          for (final e in proximos)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: VetCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                radius: 16,
+                // Mismo anclaje arriba que el resto de tarjetas de alerta:
+                // asi el icono y los dias no bailan segun cuanto texto haya.
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      e.tipo == 'resguardo'
+                          ? VetIcons.alertOctagon
+                          : (e.tipo == 'parto'
+                              ? VetIcons.heart
+                              : VetIcons.bell),
+                      color: e.tipo == 'resguardo'
+                          ? VetColors.danger
+                          : VetColors.warning,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            e.subtipo.isEmpty ? e.tipo : e.subtipo,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            _nombreDeLote(granja, e.loteId),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: VetColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _chipDeDias(e.diasRestantes(ahora)),
+                  ],
+                ),
+              ),
+            ),
+      ],
+    );
+  }
+
+  String _nombreDeLote(FarmSnapshot granja, String loteId) {
+    for (final b in granja.batches) {
+      if (b.id == loteId) return b.nombre.isEmpty ? b.codigo : b.nombre;
+    }
+    return 'Lote sin nombre';
+  }
+
+  Widget _chipDeDias(int dias) {
+    final urgente = dias <= 2;
+    final color = urgente ? VetColors.danger : VetColors.warning;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        dias == 0 ? 'Hoy' : 'En $dias d',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
     );
   }
 
@@ -751,6 +1060,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                           setState(() {
                             _selectedSpecies = sp;
                           });
+                          // Cada especie tiene sus propios lotes: al cambiar
+                          // de pestaña hay que releer, o se quedaria viendo
+                          // los datos de la especie anterior.
+                          _cargarGranja();
                         }
                       },
                       label: Row(
@@ -769,614 +1082,6 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                       ),
                     ),
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // BANNER CRÍTICO: Tiempos de Retiro
-  Widget _buildWithdrawalBanner(SpeciesMetrics metrics) {
-    final activeWithdrawals = metrics.withdrawals
-        .where((w) => !_clearedWithdrawals.contains('${w.facility}_${w.drug}'))
-        .toList();
-
-    if (activeWithdrawals.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: VetColors.success.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetColors.success.withValues(alpha: 0.3)),
-        ),
-        child: const Row(
-          children: [
-            Icon(VetIcons.checkCircle, color: VetColors.success, size: 22),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Sin tiempos de retiro activos en esta especie. Todos los lotes aptos para consumo/venta.',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: VetColors.success,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: VetColors.danger.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: VetColors.danger.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(VetIcons.alertOctagon, color: VetColors.danger, size: 22),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'ALERTA CRÍTICA: TIEMPOS DE RETIRO ACTIVOS',
-                  style: TextStyle(
-                    color: VetColors.danger,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ),
-              // El Spacer sobra desde que el titulo es Expanded: con los dos,
-              // el reparto flexible era mitad y mitad y el rotulo caia a
-              // cuatro lineas en vez de ocupar el hueco que queda libre.
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: VetColors.danger,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${activeWithdrawals.length} ACTIVOS',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Prohibida la salida a rastro, ordeña o comercialización sin cumplir periodo de resguardo farmacológico:',
-            style: TextStyle(fontSize: 12, color: VetColors.muted),
-          ),
-          const SizedBox(height: 10),
-          for (final w in activeWithdrawals) ...[
-            Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${w.facility} · ${w.batch}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          'Fármaco: ${w.drug} (${w.destination})',
-                          style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: VetColors.danger.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Faltan ${w.daysRemaining} d',
-                      style: const TextStyle(
-                        color: VetColors.danger,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // FILA 1: Pulso Financiero y Productivo (KPIs de Alto Impacto)
-  Widget _buildRow1Kpis(SpeciesMetrics metrics) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const VetSectionHeader(
-          title: 'Pulso Financiero y Productivo',
-          subtitle: 'KPIs clave actualizados de la piara, hato o parvada',
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            // KPI 1: Costo por unidad producida
-            Expanded(
-              child: _KpiCard(
-                title: metrics.costMetricTitle,
-                value: '\$${metrics.costValue.toStringAsFixed(2)}',
-                unit: metrics.costUnit,
-                indicatorText: metrics.costDiff,
-                indicatorPositive: metrics.costDiffPositive,
-                icon: VetIcons.banknote,
-                accentColor: VetColors.turquoise,
-              ),
-            ),
-            const SizedBox(width: 8),
-            // KPI 2: Conversión Alimenticia (ICA)
-            Expanded(
-              child: _KpiCard(
-                title: 'Conversión Alimenticia (ICA)',
-                value: metrics.fcaValue > 0 ? metrics.fcaValue.toStringAsFixed(2) : 'N/A',
-                unit: metrics.fcaUnit,
-                indicatorText: 'Promedio activo',
-                indicatorPositive: true,
-                icon: VetIcons.balance,
-                accentColor: VetColors.violet,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            // KPI 3: Inventario total
-            Expanded(
-              child: _KpiCard(
-                title: 'Inventario Total en Granja',
-                value: '${metrics.totalHeads}',
-                unit: 'cabezas / animales',
-                indicatorText: 'Censo activo',
-                indicatorPositive: true,
-                icon: VetIcons.clipboardList,
-                accentColor: VetColors.cyan,
-              ),
-            ),
-            const SizedBox(width: 8),
-            // KPI 4: Biomasa viva estimada
-            Expanded(
-              child: _KpiCard(
-                title: 'Biomasa Viva Estimada',
-                value: metrics.biomassTonnes > 0
-                    ? metrics.biomassTonnes.toStringAsFixed(1)
-                    : 'N/A',
-                unit: 'Toneladas vivas',
-                indicatorText: 'Proyección de venta',
-                indicatorPositive: true,
-                icon: VetIcons.kgToMeat,
-                accentColor: VetColors.pink,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // FILA 2: Gráficas de Rendimiento (Núcleo Analítico)
-  Widget _buildRow2Analytics(SpeciesMetrics metrics, Color specAccent) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const VetSectionHeader(
-          title: 'Núcleo Analítico de Rendimiento',
-          subtitle: 'Curva genética vs real y autonomía de inventario en silos',
-        ),
-        const SizedBox(height: 10),
-        VetCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      metrics.curveMetricTitle,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: VetColors.turquoise.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      '+2.8% vs estándar genético',
-                      style: TextStyle(
-                        color: VetColors.turquoise,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Canvas de la curva
-              SizedBox(
-                height: 140,
-                child: CustomPaint(
-                  size: const Size(double.infinity, 140),
-                  painter: _PerformanceCurvePainter(
-                    theoretical: metrics.theoreticalPoints,
-                    real: metrics.realPoints,
-                    accentColor: specAccent,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Las dos leyendas suman mas que el ancho util de la tarjeta en
-              // un telefono de 360 dp, asi que en Row se cortaba la segunda.
-              // En Wrap bajan a un segundo renglon y se leen completas.
-              Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 16,
-                runSpacing: 6,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 3,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(width: 4),
-                      const Text('Tabla Genética Teórica', style: TextStyle(fontSize: 12, color: VetColors.muted)),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 3,
-                        color: specAccent,
-                      ),
-                      const SizedBox(width: 4),
-                      const Text('Rendimiento Real en Granja', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Consumo de Alimento vs Inventario en Silos
-        VetCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // El titulo pide 230 dp y la accion 192 dp: juntos no caben en
-              // los 294 dp utiles de la tarjeta. Con Expanded el titulo se
-              // quedaba en 102 dp y caia en tres renglones desiguales al lado
-              // de un boton centrado, que es lo que se veia torcido. En Wrap
-              // el titulo conserva su ancho y la accion baja sola cuando no
-              // cabe; en pantallas anchas vuelven a compartir renglon.
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                runSpacing: 4,
-                children: [
-                  const Text(
-                    'Inventario en Silos y Autonomía',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Pedido automático enviado a planta de alimentos.'),
-                          backgroundColor: VetColors.turquoise,
-                        ),
-                      );
-                    },
-                    icon: const Icon(VetIcons.cart, size: 16),
-                    label: const Text('Disparar pedido a planta', style: TextStyle(fontSize: 12)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              for (final silo in metrics.silos) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(silo.phase, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${silo.stockTon} / ${silo.capacityTon} Ton (${(silo.percentage * 100).toStringAsFixed(0)}%)',
-                            style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: silo.percentage,
-                          minHeight: 8,
-                          backgroundColor: Colors.grey.shade200,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            silo.autonomyDays <= 5 ? VetColors.danger : VetColors.turquoise,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Consumo: ${(silo.dailyConsumptionKg).toStringAsFixed(0)} kg/día',
-                              style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // Con el aviso de urgencia esta linea pasa de 294 dp
-                          // y antes se cortaba justo en «¡URGENTE!».
-                          Flexible(
-                            child: Text(
-                              silo.autonomyDays <= 5
-                                  ? 'Autonomía: ${silo.autonomyDays} días ⚠️ ¡URGENTE!'
-                                  : 'Autonomía: ${silo.autonomyDays} días',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: silo.autonomyDays <= 5 ? VetColors.danger : VetColors.success,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // FILA 3: Mapa Operativo de Instalaciones
-  Widget _buildRow3Facilities(SpeciesMetrics metrics) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const VetSectionHeader(
-          title: 'Mapa Operativo de Instalaciones',
-          subtitle: 'Naves, corrales y estanques con densidad y semáforo sanitario 24h',
-        ),
-        const SizedBox(height: 10),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.15,
-          ),
-          itemCount: metrics.facilities.length,
-          itemBuilder: (context, idx) {
-            final f = metrics.facilities[idx];
-            final statusColor = f.sanitaryStatus == 'critical'
-                ? VetColors.danger
-                : (f.sanitaryStatus == 'warning' ? VetColors.warning : VetColors.success);
-
-            return InkWell(
-              onTap: () => _openFacilityDetail(f),
-              borderRadius: BorderRadius.circular(16),
-              child: VetCard(
-                padding: const EdgeInsets.all(12),
-                radius: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            f.id,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: statusColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      f.batchId,
-                      style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const Divider(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // La celda de la rejilla deja 133 dp: la etiqueta cede
-                        // el espacio que pida el dato en vez de empujarlo fuera.
-                        const Expanded(
-                          child: Text('Edad / Ciclo:', style: TextStyle(fontSize: 12, color: VetColors.muted), overflow: TextOverflow.ellipsis),
-                        ),
-                        const SizedBox(width: 6),
-                        Text('${f.ageDays} d', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Expanded(
-                          child: Text('Densidad:', style: TextStyle(fontSize: 12, color: VetColors.muted), overflow: TextOverflow.ellipsis),
-                        ),
-                        const SizedBox(width: 6),
-                        Text('${f.density} ${f.densityUnit}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Expanded(
-                          child: Text('Mortalidad:', style: TextStyle(fontSize: 12, color: VetColors.muted), overflow: TextOverflow.ellipsis),
-                        ),
-                        const SizedBox(width: 6),
-                        Text('${f.mortalityRate}%', style: TextStyle(fontSize: 12, color: f.mortalityRate > 2.0 ? VetColors.danger : VetColors.ink)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  // FILA 4: Ejecución Diaria (Calendario + Dosificación Masiva)
-  Widget _buildRow4DailyExecution(SpeciesMetrics metrics) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const VetSectionHeader(
-          title: 'Ejecución Diaria en Campo',
-          subtitle: 'Calendario zoosanitario de lote y dosificación masiva en agua y alimento',
-        ),
-        const SizedBox(height: 10),
-        VetCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          VetIcons.calendarCheck,
-                          color: VetColors.violet,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            'Calendario Zootécnico y Sanitario',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _openMassMedicationDialog(),
-                    icon: const Icon(VetIcons.calculator, size: 16),
-                    label: const Text('Dosificación Masiva', style: TextStyle(fontSize: 12)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              for (final ev in metrics.calendarEvents) ...[
-                CheckboxListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  value: _completedEvents.contains(ev.title),
-                  title: Text(
-                    ev.title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      decoration: _completedEvents.contains(ev.title)
-                          ? TextDecoration.lineThrough
-                          : null,
-                      color: _completedEvents.contains(ev.title) ? VetColors.muted : null,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${ev.batch} · ${ev.dateStr} (${ev.category})',
-                    style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                  ),
-                  onChanged: (val) {
-                    setState(() {
-                      if (val == true) {
-                        _completedEvents.add(ev.title);
-                      } else {
-                        _completedEvents.remove(ev.title);
-                      }
-                    });
-                  },
                 ),
               ],
             ],
@@ -1439,6 +1144,16 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               icon: VetIcons.microscope,
               accent: VetColors.pink,
               onTap: () => _openCalculatorDialog('semen'),
+            ),
+            // Vivia en la fila de «Ejecución Diaria», que se retiro por pintar
+            // un calendario de ejemplo. La dosificacion masiva no es un dato
+            // inventado sino una calculadora, asi que se conserva aqui.
+            ProductionToolTile(
+              title: 'Dosificación Masiva',
+              subtitle: 'Agua mg/L y alimento ppm',
+              icon: VetIcons.dropper,
+              accent: VetColors.brandSky,
+              onTap: _openMassMedicationDialog,
             ),
             ProductionToolTile(
               title: 'Constantes Fisiológicas',
@@ -1545,129 +1260,6 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           ),
         ],
       ),
-    );
-  }
-
-  // 3. MIS LOTES / HATOS (Resumen)
-  Widget _buildBatchesSummarySection(SpeciesMetrics metrics) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const VetSectionHeader(
-              title: 'Mis Lotes y Hatos',
-              subtitle: 'Resumen de cabezas, etapa zootécnica y últimos registros',
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        for (final b in metrics.batches) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: VetCard(
-              padding: const EdgeInsets.all(14),
-              radius: 16,
-              child: Row(
-                children: [
-                  VetIconBox(
-                    icon: _speciesVisual(_selectedSpecies).$1,
-                    accent: VetColors.turquoise,
-                    size: 42,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(b.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${b.headcount} animales · Etapa: ${b.stage} (${b.daysInStage} días)',
-                          style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Último registro: ${b.lastRecordDate} (${b.lastRecordDetail})',
-                          style: const TextStyle(fontSize: 12, color: VetColors.ink),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  // 4. ALERTAS
-  Widget _buildAlertsSection(SpeciesMetrics metrics) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const VetSectionHeader(
-          title: 'Alertas y Tareas Críticas',
-          subtitle: 'Vacunas por vencer, resguardos farmacológicos y partos o servicios',
-        ),
-        const SizedBox(height: 10),
-        for (final a in metrics.alerts) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: VetCard(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              radius: 16,
-              // Sin esto la Row centra verticalmente. Como cada alerta parte
-              // el texto en un numero distinto de renglones, el icono y la
-              // etiqueta de dias caian a una altura diferente en cada tarjeta:
-              // en una quedaban junto al titulo y en la siguiente junto al
-              // subtitulo, y la lista se veia desalineada. Anclados arriba,
-              // todas las tarjetas alinean icono, titulo y dias en la misma
-              // linea sin importar cuanto ocupe el texto.
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    a.type == 'withdrawal'
-                        ? VetIcons.alertOctagon
-                        : (a.type == 'birth' ? VetIcons.heart : VetIcons.bell),
-                    color: a.type == 'withdrawal' ? VetColors.danger : VetColors.warning,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        Text(a.subtitle, style: const TextStyle(fontSize: 12, color: VetColors.muted)),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (a.daysLeft <= 2 ? VetColors.danger : VetColors.warning).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      a.daysLeft == 0 ? 'Hoy' : 'En ${a.daysLeft} d',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: a.daysLeft <= 2 ? VetColors.danger : VetColors.warning,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -1884,105 +1476,6 @@ class _KpiCard extends StatelessWidget {
       ),
     );
   }
-}
-
-// Pintor de Curvas de Rendimiento Teórico vs Real
-class _PerformanceCurvePainter extends CustomPainter {
-  _PerformanceCurvePainter({
-    required this.theoretical,
-    required this.real,
-    required this.accentColor,
-  });
-
-  final List<double> theoretical;
-  final List<double> real;
-  final Color accentColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (theoretical.isEmpty || real.isEmpty) return;
-
-    final double minVal = [
-      ...theoretical,
-      ...real,
-    ].reduce(math.min);
-    final double maxVal = [
-      ...theoretical,
-      ...real,
-    ].reduce(math.max);
-    final double range = (maxVal - minVal) > 0 ? (maxVal - minVal) : 1.0;
-
-    final gridPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.18)
-      ..strokeWidth = 1;
-
-    // Líneas horizontales de guía
-    for (int i = 0; i <= 3; i++) {
-      final y = size.height * (i / 3.0);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-
-    final theoryPaint = Paint()
-      ..color = Colors.grey.shade400
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final realPaint = Paint()
-      ..color = accentColor
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [accentColor.withValues(alpha: 0.25), accentColor.withValues(alpha: 0.0)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-
-    final theoryPath = Path();
-    final realPath = Path();
-    final fillPath = Path();
-
-    final stepX = size.width / (theoretical.length - 1);
-
-    for (int i = 0; i < theoretical.length; i++) {
-      final x = i * stepX;
-      final yNorm = (theoretical[i] - minVal) / range;
-      final y = size.height - (yNorm * (size.height - 20) + 10);
-      if (i == 0) {
-        theoryPath.moveTo(x, y);
-      } else {
-        theoryPath.lineTo(x, y);
-      }
-    }
-
-    for (int i = 0; i < real.length; i++) {
-      final x = i * stepX;
-      final yNorm = (real[i] - minVal) / range;
-      final y = size.height - (yNorm * (size.height - 20) + 10);
-      if (i == 0) {
-        realPath.moveTo(x, y);
-        fillPath.moveTo(x, size.height);
-        fillPath.lineTo(x, y);
-      } else {
-        realPath.lineTo(x, y);
-        fillPath.lineTo(x, y);
-      }
-      // Dibujar punto
-      canvas.drawCircle(Offset(x, y), 3.5, Paint()..color = accentColor);
-      canvas.drawCircle(Offset(x, y), 2.0, Paint()..color = Colors.white);
-    }
-    fillPath.lineTo((real.length - 1) * stepX, size.height);
-    fillPath.close();
-
-    canvas.drawPath(fillPath, fillPaint);
-    canvas.drawPath(theoryPath, theoryPaint);
-    canvas.drawPath(realPath, realPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PerformanceCurvePainter oldDelegate) => true;
 }
 
 // Botón de herramienta

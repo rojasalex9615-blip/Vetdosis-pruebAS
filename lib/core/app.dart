@@ -25,6 +25,7 @@ import '../modules/core/presentation/section_menu.dart';
 import '../modules/exotics/presentation/exotics_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/production/domain/porcino_repository.dart';
+import '../modules/production/domain/production_farm.dart';
 import '../modules/production/domain/production_unit_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
@@ -268,6 +269,7 @@ class VetDosisApp extends StatelessWidget {
     this.experienceRepository,
     this.reviewCatalog,
     this.porcino,
+    this.farm,
     this.units,
     this.aviculture,
     this.inboxSeenStore,
@@ -300,6 +302,9 @@ class VetDosisApp extends StatelessWidget {
   final ClinicExperienceRepository? experienceRepository;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Los lotes, eventos y registros reales de la granja.
+  final ProductionFarmRepository? farm;
 
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
@@ -642,6 +647,7 @@ class VetDosisApp extends StatelessWidget {
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
               porcino: porcino,
+              farm: farm,
               aviculture: aviculture,
               units: units,
               inboxSeenStore: inboxSeenStore,
@@ -709,6 +715,7 @@ class CoreShell extends StatelessWidget {
     this.onExperienceSaved,
     this.reviewCatalog,
     this.porcino,
+    this.farm,
     this.units,
     this.aviculture,
     this.inboxSeenStore,
@@ -746,6 +753,9 @@ class CoreShell extends StatelessWidget {
   final Future<void> Function()? onExperienceSaved;
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
+
+  /// Los lotes, eventos y registros reales de la granja.
+  final ProductionFarmRepository? farm;
 
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
@@ -1425,6 +1435,7 @@ class CoreShell extends StatelessWidget {
                     access: moduleAccess,
                     onNavigate: model.navigate,
                     porcino: porcino,
+                    farm: farm,
                     units: units,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )

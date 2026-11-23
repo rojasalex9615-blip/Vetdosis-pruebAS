@@ -39,6 +39,8 @@ import 'modules/production/domain/porcino_repository.dart';
 import 'modules/production/domain/production_unit_repository.dart';
 import 'modules/production/data/local_production_unit_store.dart';
 import 'modules/production/data/supabase_porcino_repository.dart';
+import 'modules/production/data/supabase_production_farm_repository.dart';
+import 'modules/production/domain/production_farm.dart';
 import 'modules/aviculture/domain/aviculture_records_repository.dart';
 import 'modules/aviculture/data/supabase_aviculture_records_repository.dart';
 import 'modules/calculations/data/reference_library_repository.dart';
@@ -114,6 +116,7 @@ Future<void> main() async {
   ClinicExperienceRepository? experienceRepository;
   ReviewCatalogRepository? reviewCatalog;
   PorcinoRepository? porcino;
+  ProductionFarmRepository? farm;
   ProductionUnitRepository? productionUnits;
   AvicultureRecordsRepository? aviculture;
   if (url.isNotEmpty && key.isNotEmpty) {
@@ -147,6 +150,7 @@ Future<void> main() async {
     experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     porcino = SupabasePorcinoRepository(Supabase.instance.client);
+    farm = SupabaseProductionFarmRepository(Supabase.instance.client);
     aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     // Las unidades de produccion viven en la misma base local que el resto del
@@ -248,6 +252,7 @@ Future<void> main() async {
       experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
       porcino: porcino,
+      farm: farm,
       aviculture: aviculture,
       units: productionUnits,
       hospitalAlerts: alerts,
