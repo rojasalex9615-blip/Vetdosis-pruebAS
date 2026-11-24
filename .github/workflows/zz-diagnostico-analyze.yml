@@ -27,7 +27,7 @@ jobs:
           set +e
           flutter analyze > analyze.txt 2>&1
           echo "flutter analyze termino con: $?"
-          flutter test --timeout 5m --concurrency 2 > pruebas.txt 2>&1
+          flutter test --timeout 5m --concurrency 2 --reporter expanded > pruebas.txt 2>&1
           echo "flutter test termino con: $?"
           tail -40 pruebas.txt
           python3 - <<'PY'
@@ -48,15 +48,16 @@ jobs:
               anota('analyze', hallazgos, 2)
 
           pruebas = open('pruebas.txt', encoding='utf-8', errors='replace').read().splitlines()
+          marcas = ('[E]', '\u274c')
           fallos = []
           for i, l in enumerate(pruebas):
-              if '[E]' in l:
-                  fallos.append('--- ' + l.strip())
-                  for sig in pruebas[i + 1:i + 9]:
-                      if '[E]' in sig:
+              if any(x in l for x in marcas):
+                  fallos.append('--- ' + l.strip()[:300])
+                  for sig in pruebas[i + 1:i + 10]:
+                      if any(x in sig for x in marcas) or '\u2705' in sig:
                           break
                       if sig.strip():
-                          fallos.append('    ' + sig.strip())
+                          fallos.append('    ' + sig.strip()[:300])
           print(f'LINEAS DE FALLO DE PRUEBAS: {len(fallos)}')
           if fallos:
               anota('pruebas', fallos, 6)
