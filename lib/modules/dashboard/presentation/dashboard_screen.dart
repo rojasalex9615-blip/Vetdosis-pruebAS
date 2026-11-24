@@ -870,8 +870,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             title: Text(entry.$1),
                             trailing: Text(money(totals?[entry.$2])),
                           ),
-                        const Text(
-                          'Importes netos de reversos. No acreditan que estén incluidos todos los gastos ni costos pendientes.',
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Importes netos de reversos. No acreditan que estén incluidos todos los gastos ni costos pendientes.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: VetColors.muted,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1113,11 +1120,7 @@ class _DashboardActionCapsule extends StatelessWidget {
                   color: vivid,
                   radius: 10,
                   emphasis: 0.75,
-                  child: Icon(
-                    sectionIcon(page),
-                    size: 19,
-                    color: vivid,
-                  ),
+                  child: Icon(sectionIcon(page), size: 19, color: vivid),
                 ),
                 const SizedBox(width: 7),
                 Flexible(
