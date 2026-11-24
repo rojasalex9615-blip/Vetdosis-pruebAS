@@ -2324,7 +2324,9 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
-          childAspectRatio: 1.35,
+          // Alto fijo: con proporcion, el texto se salia en pantallas
+          // angostas y ademas cortaba los titulos largos.
+          mainAxisExtent: 148,
           children: [
             ProductionToolTile(
               title: 'Calculadora de Ración',
@@ -2998,7 +3000,7 @@ class ProductionToolTile extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
