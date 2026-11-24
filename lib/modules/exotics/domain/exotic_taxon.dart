@@ -392,9 +392,7 @@ MicroVolume calcularMicroVolumen({
   } else if (pasos > 0) {
     avisa =
         'Sin diluir serían ${_num6(mlSinDiluir)} mL, que no se pueden '
-        'medir. Se prepara en $pasos paso${pasos == 1 ? '' : 's'} de '
-        '1 + 9, y de la última mezcla se cargan '
-        '${volumen.toStringAsFixed(2)} mL.';
+        'medir.';
   }
 
   return MicroVolume(
