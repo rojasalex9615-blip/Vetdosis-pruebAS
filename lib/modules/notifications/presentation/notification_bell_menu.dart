@@ -117,9 +117,7 @@ class _NotificationBellMenuState extends State<NotificationBellMenu> {
         items = next;
         // Primera vez en este telefono: solo la ultima semana cuenta como
         // nueva, para no estrenar la campana con treinta pendientes.
-        seen =
-            stored ??
-            widget.now().toUtc().subtract(const Duration(days: 7));
+        seen = stored ?? widget.now().toUtc().subtract(const Duration(days: 7));
       });
       if (_menu.isOpen) await _markSeen();
     } catch (_) {
@@ -221,12 +219,21 @@ class _NotificationBellMenuState extends State<NotificationBellMenu> {
   Widget build(BuildContext context) {
     final count = unread;
     final label = count > 99 ? '99+' : '$count';
+    final scheme = Theme.of(context).colorScheme;
     return MenuAnchor(
       controller: _menu,
       // El menu se recoloca solo para no salirse de la pantalla.
       alignmentOffset: const Offset(0, 4),
-      style: const MenuStyle(
-        maximumSize: WidgetStatePropertyAll(Size(340, 520)),
+      // Sin recorte, las esquinas redondeadas dejaban ver el fondo cuadrado
+      // del panel y se veia montado encima de la cabecera.
+      clipBehavior: Clip.antiAlias,
+      style: MenuStyle(
+        maximumSize: const WidgetStatePropertyAll(Size(340, 520)),
+        backgroundColor: WidgetStatePropertyAll(scheme.surface),
+        elevation: const WidgetStatePropertyAll(8),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
       ),
       menuChildren: [
         Padding(
