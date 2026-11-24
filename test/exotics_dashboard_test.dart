@@ -35,7 +35,9 @@ const _miembro = ClinicMembership(
 
 Future<void> host(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(
-    MaterialApp(home: Scaffold(body: SingleChildScrollView(child: child))),
+    MaterialApp(
+      home: Scaffold(body: SingleChildScrollView(child: child)),
+    ),
   );
   await tester.pumpAndSettle();
 }
@@ -85,30 +87,42 @@ void main() {
   });
 
   group('micro-volúmenes', () {
-    test('propone dilución cuando el volumen no se puede medir', () {
+    test('propone dilución en pasos seriados cuando no se puede medir', () {
       // 0.05 mg de un producto a 100 mg/mL son 0.0005 mL: impracticable.
       final v = calcularMicroVolumen(dosisMg: 0.05, concentracionMgMl: 100);
       expect(v.mlSinDiluir, closeTo(0.0005, 1e-9));
-      expect(v.dilucion, greaterThan(1));
-      expect(v.mlConDilucion, greaterThanOrEqualTo(0.01));
+      expect(v.pasos, 2);
+      expect(v.mlConDilucion, closeTo(0.05, 1e-9));
+      expect(v.concentracionFinal, closeTo(1, 1e-9));
+      expect(v.receta, hasLength(2));
+      expect(v.receta[0].esPrimero, isTrue);
+      expect(v.receta[0].concentracion, closeTo(10, 1e-9));
+      expect(v.receta[1].esPrimero, isFalse);
+      expect(v.receta[1].concentracion, closeTo(1, 1e-9));
       expect(v.avisa, isNotNull);
       expect(v.jeringaSugerida, contains('Insulina'));
     });
 
     test('no diluye cuando el volumen ya es medible', () {
       final v = calcularMicroVolumen(dosisMg: 10, concentracionMgMl: 50);
-      expect(v.dilucion, 1);
+      expect(v.pasos, 0);
+      expect(v.receta, isEmpty);
       expect(v.mlConDilucion, closeTo(0.2, 1e-9));
+      expect(v.concentracionFinal, closeTo(50, 1e-9));
       expect(v.avisa, isNull);
+    });
+
+    test('avisa cuando ni tres pasos alcanzan un volumen medible', () {
+      final v = calcularMicroVolumen(dosisMg: 0.0001, concentracionMgMl: 100);
+      expect(v.pasos, 3);
+      expect(v.mlConDilucion, lessThan(0.05));
+      expect(v.avisa, contains('tres pasos'));
     });
   });
 
   group('mantenimiento hídrico', () {
     test('devuelve el rango completo, no un promedio', () {
-      final m = mantenimientoDiario(
-        taxon: ExoticTaxon.reptiles,
-        pesoKg: 2,
-      );
+      final m = mantenimientoDiario(taxon: ExoticTaxon.reptiles, pesoKg: 2);
       expect(m, isNotNull);
       expect(m!.min, closeTo(20, 1e-9)); // 10 mL/kg
       expect(m.max, closeTo(60, 1e-9)); // 30 mL/kg
@@ -203,10 +217,7 @@ void main() {
       // que pinta el panel es «Sin registros».
       expect(find.text('Sin registros'), findsWidgets);
       expect(find.text('Estado de microclimas y recintos'), findsOneWidget);
-      expect(
-        find.text('Estatus normativo (CITES / SEMARNAT)'),
-        findsOneWidget,
-      );
+      expect(find.text('Estatus normativo (CITES / SEMARNAT)'), findsOneWidget);
       expect(find.text('Incubadoras y nidadas activas'), findsOneWidget);
     });
 
@@ -215,10 +226,7 @@ void main() {
     ) async {
       await host(
         tester,
-        ExoticsDashboard(
-          member: _miembro,
-          repository: _BrokenExoticRepo(),
-        ),
+        ExoticsDashboard(member: _miembro, repository: _BrokenExoticRepo()),
       );
       // Caerse la red y no tener ejemplares son cosas distintas: si se
       // confunden, el usuario cree que perdio sus pacientes.
@@ -239,9 +247,7 @@ void main() {
         tester,
         ExoticsDashboard(
           member: _miembro,
-          repository: _FakeExoticRepo(
-            const ExoticSnapshot(specimens: [ave]),
-          ),
+          repository: _FakeExoticRepo(const ExoticSnapshot(specimens: [ave])),
         ),
       );
       expect(find.text('No se pudieron leer los ejemplares'), findsNothing);

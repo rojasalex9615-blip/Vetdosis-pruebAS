@@ -270,12 +270,35 @@ AllometricResult escalarDosis({
   );
 }
 
+/// Un paso de dilución seriada 1 + 9 y la concentración con la que termina.
+class PasoDilucion {
+  const PasoDilucion({
+    required this.producto,
+    required this.diluyente,
+    required this.concentracion,
+    required this.esPrimero,
+  });
+
+  /// mL que se toman del frasco (primer paso) o de la mezcla anterior.
+  final double producto;
+
+  /// mL de diluyente que se añaden.
+  final double diluyente;
+
+  /// Concentración resultante del paso, en mg/mL.
+  final double concentracion;
+
+  final bool esPrimero;
+}
+
 /// Volumen a cargar para una dosis, con la jeringa que de verdad la mide.
 class MicroVolume {
   const MicroVolume({
     required this.mlSinDiluir,
-    required this.dilucion,
+    required this.pasos,
     required this.mlConDilucion,
+    required this.concentracionFinal,
+    required this.receta,
     required this.jeringaSugerida,
     required this.avisa,
   });
@@ -283,11 +306,21 @@ class MicroVolume {
   /// Volumen del producto tal cual sale del frasco.
   final double mlSinDiluir;
 
-  /// Cuantas partes de diluyente por parte de producto. 1 = sin diluir.
-  final int dilucion;
+  /// Pasos seriados de 1 + 9. 0 = sin diluir.
+  ///
+  /// No se expresa como 1:N porque 1:100 y 1:1000 no se pueden preparar de una
+  /// vez: habría que medir 0.01 mL o 0.001 mL del frasco, que es justo el
+  /// volumen que no se puede medir. Se hacen pasos de 1 parte + 9 de diluyente.
+  final int pasos;
 
   /// Volumen a cargar una vez diluido.
   final double mlConDilucion;
+
+  /// Concentración de lo que se carga, en mg/mL.
+  final double concentracionFinal;
+
+  /// Preparación paso a paso. Vacía cuando no hace falta diluir.
+  final List<PasoDilucion> receta;
 
   final String jeringaSugerida;
 
@@ -298,8 +331,9 @@ class MicroVolume {
 /// Calcula el volumen de una dosis y, si sale impracticable, propone diluir.
 ///
 /// En exóticos el problema no suele ser la dosis sino poder medirla: 0.004 mL
-/// no se cargan en ninguna jeringa. Se busca la dilución mínima (1:1, 1:10,
-/// 1:100) que lleve el volumen a algo medible en una jeringa de insulina.
+/// no se cargan en ninguna jeringa. Se busca la dilución mínima, en pasos de
+/// 1 + 9, que lleve el volumen a algo medible con margen en una jeringa de
+/// insulina.
 MicroVolume calcularMicroVolumen({
   required double dosisMg,
   required double concentracionMgMl,
@@ -309,14 +343,17 @@ MicroVolume calcularMicroVolumen({
   }
   final mlSinDiluir = dosisMg / concentracionMgMl;
 
-  // Una jeringa de insulina de 0.3 mL marca cada 0.01 mL: por debajo de eso no
-  // se puede medir y hay que diluir.
-  const minimoMedible = 0.01;
-  var dilucion = 1;
+  // 0.01 mL es una sola marca de la jeringa de insulina, con demasiado error
+  // relativo. Se apunta a 0.05 mL.
+  const minimoMedible = 0.05;
+  const maximoPasos = 3;
+  var pasos = 0;
+  var factor = 1;
   var volumen = mlSinDiluir;
-  while (volumen < minimoMedible && dilucion < 1000) {
-    dilucion *= 10;
-    volumen = mlSinDiluir * dilucion;
+  while (volumen < minimoMedible && pasos < maximoPasos) {
+    pasos++;
+    factor *= 10;
+    volumen = mlSinDiluir * factor;
   }
 
   final String jeringa;
@@ -332,19 +369,40 @@ MicroVolume calcularMicroVolumen({
     jeringa = 'Jeringa de ${volumen.ceil()} mL';
   }
 
+  final receta = <PasoDilucion>[];
+  var concentracion = concentracionMgMl;
+  for (var i = 0; i < pasos; i++) {
+    concentracion /= 10;
+    receta.add(
+      PasoDilucion(
+        producto: 0.1,
+        diluyente: 0.9,
+        concentracion: concentracion,
+        esPrimero: i == 0,
+      ),
+    );
+  }
+
   String? avisa;
   if (volumen < minimoMedible) {
-    avisa = 'Ni diluyendo 1:1000 se alcanza un volumen medible. Revisa la '
-        'concentración del producto o busca una presentación más diluida.';
-  } else if (dilucion > 1) {
-    avisa = 'Sin diluir serían ${_num6(mlSinDiluir)} mL, que no se pueden '
-        'medir. El volumen mostrado ya incluye la dilución 1:$dilucion.';
+    avisa =
+        'Ni con tres pasos de dilución se alcanza un volumen medible. '
+        'Revisa la concentración del producto o busca una presentación más '
+        'diluida.';
+  } else if (pasos > 0) {
+    avisa =
+        'Sin diluir serían ${_num6(mlSinDiluir)} mL, que no se pueden '
+        'medir. Se prepara en $pasos paso${pasos == 1 ? '' : 's'} de '
+        '1 + 9, y de la última mezcla se cargan '
+        '${volumen.toStringAsFixed(2)} mL.';
   }
 
   return MicroVolume(
     mlSinDiluir: mlSinDiluir,
-    dilucion: dilucion,
+    pasos: pasos,
     mlConDilucion: volumen,
+    concentracionFinal: concentracion,
+    receta: receta,
     jeringaSugerida: jeringa,
     avisa: avisa,
   );

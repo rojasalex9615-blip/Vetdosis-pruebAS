@@ -69,8 +69,9 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
     final dosis = double.tryParse(_dosis.text.trim().replaceAll(',', '.'));
     final pesoModeloKg = _kg(_pesoModelo);
     final pesoDestinoKg = _kg(_pesoDestino);
-    final conc =
-        double.tryParse(_concentracion.text.trim().replaceAll(',', '.'));
+    final conc = double.tryParse(
+      _concentracion.text.trim().replaceAll(',', '.'),
+    );
 
     AllometricResult? resultado;
     if (dosis != null &&
@@ -148,11 +149,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
           Row(
             children: [
               Expanded(
-                child: _campo(
-                  _dosis,
-                  'Dosis conocida',
-                  sufijo: 'mg/kg',
-                ),
+                child: _campo(_dosis, 'Dosis conocida', sufijo: 'mg/kg'),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -185,11 +182,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _campo(
-                  _concentracion,
-                  'Concentración',
-                  sufijo: 'mg/mL',
-                ),
+                child: _campo(_concentracion, 'Concentración', sufijo: 'mg/mL'),
               ),
             ],
           ),
@@ -220,9 +213,9 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
   }
 
   Widget _rotulo(String t) => Text(
-        t,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-      );
+    t,
+    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+  );
 
   Widget _selectorTaxon({
     required ExoticTaxon valor,
@@ -231,7 +224,10 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
     return DropdownButtonFormField<ExoticTaxon>(
       initialValue: valor,
       isExpanded: true,
-      decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+      decoration: const InputDecoration(
+        isDense: true,
+        border: OutlineInputBorder(),
+      ),
       items: [
         for (final t in ExoticTaxon.values)
           DropdownMenuItem(
@@ -261,7 +257,10 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
     return DropdownButtonFormField<MetabolicConstant>(
       initialValue: opciones.contains(valor) ? valor : opciones.first,
       isExpanded: true,
-      decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()),
+      decoration: const InputDecoration(
+        isDense: true,
+        border: OutlineInputBorder(),
+      ),
       items: [
         for (final c in opciones)
           DropdownMenuItem(
@@ -286,9 +285,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
     return TextField(
       controller: c,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-      ],
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: etiqueta,
@@ -299,11 +296,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
     );
   }
 
-  Widget _resultado(
-    AllometricResult r,
-    MicroVolume? v,
-    double pesoDestinoKg,
-  ) {
+  Widget _resultado(AllometricResult r, MicroVolume? v, double pesoDestinoKg) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -328,7 +321,10 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
             style: const TextStyle(fontSize: 12, color: VetColors.muted),
           ),
           const SizedBox(height: 10),
-          _linea('TMB del modelo', '${r.tmbModelo.toStringAsFixed(2)} kcal/día'),
+          _linea(
+            'TMB del modelo',
+            '${r.tmbModelo.toStringAsFixed(2)} kcal/día',
+          ),
           _linea(
             'TMB del ejemplar',
             '${r.tmbDestino.toStringAsFixed(2)} kcal/día',
@@ -342,8 +338,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
             ),
             const SizedBox(height: 2),
             Text(
-              '${v.mlConDilucion.toStringAsFixed(3)} mL'
-              '${v.dilucion > 1 ? '  (dilución 1:${v.dilucion})' : ''}',
+              '${v.mlConDilucion.toStringAsFixed(2)} mL',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 2),
@@ -351,6 +346,31 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
               v.jeringaSugerida,
               style: const TextStyle(fontSize: 12, color: VetColors.muted),
             ),
+            if (v.receta.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Para prepararlo, en pasos de 1 + 9:',
+                style: TextStyle(fontSize: 12, color: VetColors.muted),
+              ),
+              const SizedBox(height: 2),
+              for (var i = 0; i < v.receta.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    'Paso ${i + 1}: ${v.receta[i].producto.toStringAsFixed(1)} mL '
+                    'de ${v.receta[i].esPrimero ? 'producto' : 'la mezcla anterior'}'
+                    ' + ${v.receta[i].diluyente.toStringAsFixed(1)} mL de '
+                    'diluyente → ${_mg(v.receta[i].concentracion)} mg/mL',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              Text(
+                'De la última mezcla carga '
+                '${v.mlConDilucion.toStringAsFixed(2)} mL, que son '
+                '${_mg(v.concentracionFinal)} mg/mL.',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
             if (v.avisa != null) ...[
               const SizedBox(height: 6),
               Row(
@@ -419,21 +439,21 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
   }
 
   Widget _linea(String k, String v) => Padding(
-        padding: const EdgeInsets.only(bottom: 2),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                k,
-                style: const TextStyle(fontSize: 12, color: VetColors.muted),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(v, style: const TextStyle(fontSize: 12)),
-          ],
+    padding: const EdgeInsets.only(bottom: 2),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Text(
+            k,
+            style: const TextStyle(fontSize: 12, color: VetColors.muted),
+          ),
         ),
-      );
+        const SizedBox(width: 8),
+        Text(v, style: const TextStyle(fontSize: 12)),
+      ],
+    ),
+  );
 
   /// Los mg de un exótico son cifras diminutas: con dos decimales un 0.004 se
   /// vería como 0.00, así que se da más precisión cuando el número es pequeño.
