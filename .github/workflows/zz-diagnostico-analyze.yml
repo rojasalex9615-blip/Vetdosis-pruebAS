@@ -1,0 +1,45 @@
+name: Diagnostico temporal de flutter analyze
+# Temporal: publica la salida de `flutter analyze` como anotaciones, que si
+# se pueden leer por API. Se borra en cuanto el analisis quede limpio.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/zz-diagnostico-analyze.yml'
+      - 'lib/**'
+      - 'test/**'
+permissions:
+  contents: read
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analizar y publicar los hallazgos como anotaciones
+        run: |
+          set +e
+          flutter analyze > analyze.txt 2>&1
+          echo "codigo de salida de flutter analyze: $?"
+          cat analyze.txt
+          python3 - <<'PY'
+          import re
+          texto = open('analyze.txt', encoding='utf-8', errors='replace').read()
+          lineas = texto.splitlines()
+          utiles = [l.strip() for l in lineas if '•' in l]
+          print(f'TOTAL DE HALLAZGOS: {len(utiles)}')
+          if not utiles:
+              utiles = [l.strip() for l in lineas if l.strip()][-25:]
+          bloques = [utiles[i:i + 25] for i in range(0, len(utiles), 25)][:8]
+          for n, bloque in enumerate(bloques, 1):
+              cuerpo = '%0A'.join(
+                  x.replace('%', '%25').replace('\r', '') for x in bloque
+              )
+              print(f'::error title=analyze {n} de {len(bloques)} ({len(utiles)} hallazgos)::{cuerpo}')
+          PY
