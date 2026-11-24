@@ -30,16 +30,14 @@ const _testMember = ClinicMembership(
 );
 
 Widget _wrap(Widget child) => MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: child,
-        ),
-      ),
-    );
+  home: Scaffold(body: SingleChildScrollView(child: child)),
+);
 
 void main() {
   group('ProductionDashboard Tests', () {
-    testWidgets('Dashboard Independiente carga selector de especies y KPIs', (tester) async {
+    testWidgets('Dashboard Independiente carga selector de especies y KPIs', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           ProductionDashboard(
@@ -55,6 +53,13 @@ void main() {
       expect(find.text('Bovinos'), findsWidgets);
       expect(find.text('Porcinos'), findsWidgets);
       expect(find.text('Aves'), findsWidgets);
+
+      // En un telefono angosto ninguna fila se sale del ancho.
+      tester.view.physicalSize = const Size(360, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
 
       // Fila 1: Pulso Financiero y Productivo
       expect(find.text('Pulso Financiero y Productivo'), findsOneWidget);
@@ -97,32 +102,43 @@ void main() {
 
       // 6. Próximamente
       expect(find.text('Próximamente'), findsOneWidget);
-      expect(find.text('Grandes Especies: Cirugía y Clínica Avanzada'), findsOneWidget);
-    });
-
-    testWidgets('Cambiar de especie en el Dashboard actualiza los datos a Porcinos', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          ProductionDashboard(
-            onNavigate: (_) {},
-            member: _testMember,
-            units: _FakeUnitRepo(),
-            initialSpecies: 'Bovinos',
-          ),
-        ),
+      expect(
+        find.text('Grandes Especies: Cirugía y Clínica Avanzada'),
+        findsOneWidget,
       );
-
-      // Tocar chip de Porcinos
-      final porcinoChip = find.widgetWithText(ChoiceChip, 'Porcinos');
-      await tester.tap(porcinoChip);
-      await tester.pumpAndSettle();
-
-      // Debe mostrar KPIs de porcinos
-      expect(find.text('Costo por Kg Cerdo en Pie'), findsOneWidget);
-      expect(find.text('Ganancia Diaria de Peso - GDP (g/día)'), findsOneWidget);
     });
 
-    testWidgets('ProductionMenu permite alternar al Dashboard Pecuario', (tester) async {
+    testWidgets(
+      'Cambiar de especie en el Dashboard actualiza los datos a Porcinos',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            ProductionDashboard(
+              onNavigate: (_) {},
+              member: _testMember,
+              units: _FakeUnitRepo(),
+              initialSpecies: 'Bovinos',
+            ),
+          ),
+        );
+
+        // Tocar chip de Porcinos
+        final porcinoChip = find.widgetWithText(ChoiceChip, 'Porcinos');
+        await tester.tap(porcinoChip);
+        await tester.pumpAndSettle();
+
+        // Debe mostrar KPIs de porcinos
+        expect(find.text('Costo por Kg Cerdo en Pie'), findsOneWidget);
+        expect(
+          find.text('Ganancia Diaria de Peso - GDP (g/día)'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('ProductionMenu permite alternar al Dashboard Pecuario', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           ProductionMenu(
@@ -134,7 +150,10 @@ void main() {
       );
 
       // En el catálogo inicial
-      expect(find.text('Dashboard Independiente: Producción Pecuaria'), findsOneWidget);
+      expect(
+        find.text('Dashboard Independiente: Producción Pecuaria'),
+        findsOneWidget,
+      );
       expect(find.text('Abrir Dashboard Pecuario Completo'), findsOneWidget);
 
       // Tocar la pestaña de Dashboard Pecuario
