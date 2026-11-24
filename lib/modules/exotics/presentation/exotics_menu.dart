@@ -833,13 +833,13 @@ class _PacientesRecientesState extends State<_PacientesRecientes> {
                   Expanded(
                     child: Text(
                       '${e.titulo} · ${e.especie}',
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(fontSize: 14),
                     ),
                   ),
                   Text(
                     e.taxon?.label ?? 'Sin grupo',
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: VetColors.muted,
                     ),
                   ),

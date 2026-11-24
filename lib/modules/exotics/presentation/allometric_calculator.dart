@@ -125,7 +125,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
           const Text(
             'Escala la dosis por energía metabólica, no por peso: la regla de '
             'tres sobredosifica a los pequeños.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
           const SizedBox(height: 14),
 
@@ -212,7 +212,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
           const Text(
             'El escalamiento metabólico orienta la dosis de partida; no '
             'sustituye la dosis publicada para la especie cuando existe.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
         ],
       ),
@@ -221,7 +221,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
 
   Widget _rotulo(String t) => Text(
         t,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       );
 
   Widget _selectorTaxon({
@@ -255,7 +255,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
       final c = opciones.first;
       return Text(
         'K = ${c.k.toStringAsFixed(0)} kcal/día · ${c.detalle}',
-        style: const TextStyle(fontSize: 11, color: VetColors.muted),
+        style: const TextStyle(fontSize: 12, color: VetColors.muted),
       );
     }
     return DropdownButtonFormField<MetabolicConstant>(
@@ -344,7 +344,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
             Text(
               '${v.mlConDilucion.toStringAsFixed(3)} mL'
               '${v.dilucion > 1 ? '  (dilución 1:${v.dilucion})' : ''}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 2),
             Text(
@@ -366,7 +366,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
                     child: Text(
                       v.avisa!,
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color: VetColors.warning,
                       ),
                     ),
@@ -393,25 +393,25 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
         children: [
           const Text(
             'Mantenimiento hídrico diario',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 4),
           Text(
             '${m.min.toStringAsFixed(1)} - ${m.max.toStringAsFixed(1)} mL/día',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           if (tasa != null) ...[
             const SizedBox(height: 2),
             Text(
               '${tasa.rango} · ${tasa.nota}',
-              style: const TextStyle(fontSize: 11, color: VetColors.muted),
+              style: const TextStyle(fontSize: 12, color: VetColors.muted),
             ),
           ],
           const SizedBox(height: 4),
           const Text(
             'Se muestra el rango completo a propósito: elegir el punto exacto '
             'es decisión clínica, no del cálculo.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
         ],
       ),

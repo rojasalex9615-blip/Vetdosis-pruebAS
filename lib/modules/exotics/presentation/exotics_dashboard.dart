@@ -414,13 +414,13 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                       Expanded(
                         child: Text(
                           '${e.titulo} · ${e.especie}',
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
                       Text(
                         _etiquetaDe(datos, e),
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: VetColors.muted,
                         ),
                       ),
@@ -431,7 +431,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
           const SizedBox(height: 4),
           const Text(
             'Busca por nombre, especie, microchip, anillo o muesca.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
           // El alta de marcaje vive aqui porque es lo que alimenta este
           // buscador: sin marca registrada, buscar por microchip no encuentra.
@@ -510,7 +510,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                 '${datos.enclosures.length}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
               ),
             ],
@@ -541,7 +541,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                           Text(
                             d.enclosure.nombre,
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -563,7 +563,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
             Text(
               // Un recinto sin lectura no es un recinto correcto: se dice.
               '${sinLectura.length} recinto(s) sin lectura registrada.',
-              style: const TextStyle(fontSize: 11, color: VetColors.muted),
+              style: const TextStyle(fontSize: 12, color: VetColors.muted),
             ),
           ],
         ],
@@ -647,7 +647,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                         '${_nombreDe(datos, l.specimenId)} · '
                         '${l.regimen.toUpperCase()}'
                         '${l.numeroRegistro.isEmpty ? '' : ' ${l.numeroRegistro}'}',
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -728,7 +728,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                 '${activas.length}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
               ),
             ],
@@ -747,7 +747,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                         child: Text(
                           c.especie,
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -817,7 +817,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                 '${estancias.length}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
               ),
             ],
@@ -838,7 +838,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                     Expanded(
                       child: Text(
                         _nombreDe(datos, s.specimenId),
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -861,7 +861,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
           const Text(
             'Cuando la cuarentena tiene días previstos se muestra la cuenta '
             'regresiva; si no, el tiempo que lleva dentro.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
         ],
       ),
@@ -891,7 +891,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
           const Text(
             'En gramos: una caída del 5 % avisa y del 10 % es alerta, medida '
             'contra el peso más alto registrado.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
           const SizedBox(height: 8),
           if (conSerie.isEmpty)
@@ -925,7 +925,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                       Expanded(
                         child: Text(
                           a.specimen.titulo,
-                          style: const TextStyle(fontSize: 13),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -946,7 +946,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
             const SizedBox(height: 6),
             Text(
               '${conSerie.length} ejemplar(es) con peso registrado.',
-              style: const TextStyle(fontSize: 11, color: VetColors.muted),
+              style: const TextStyle(fontSize: 12, color: VetColors.muted),
             ),
           ],
         ],
@@ -1022,7 +1022,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                     Expanded(
                       child: Text(
                         r.specimen.titulo,
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1081,7 +1081,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
           const SizedBox(height: 2),
           const Text(
             'Mudas, posturas, conducta y enriquecimiento junto al expediente.',
-            style: TextStyle(fontSize: 11, color: VetColors.muted),
+            style: TextStyle(fontSize: 12, color: VetColors.muted),
           ),
           const SizedBox(height: 8),
           if (fila.isEmpty)

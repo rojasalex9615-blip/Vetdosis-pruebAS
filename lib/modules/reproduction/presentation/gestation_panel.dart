@@ -275,7 +275,7 @@ class _GestationPanelState extends State<GestationPanel> {
               ? 'Todavía no hay gestaciones registradas'
               : 'Este lote no tiene gestaciones registradas',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         const SizedBox(height: 6),
         Text(
@@ -313,7 +313,7 @@ class _GestationPanelState extends State<GestationPanel> {
       children: [
         Text(
           titulo,
-          style: const TextStyle(fontSize: 11, color: VetColors.muted),
+          style: const TextStyle(fontSize: 12, color: VetColors.muted),
         ),
         const SizedBox(height: 4),
         Text(
@@ -375,7 +375,7 @@ class _GestationPanelState extends State<GestationPanel> {
                       Text(
                         '${g.especie} · ${g.metodo.label}',
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: VetColors.muted,
                         ),
                       ),

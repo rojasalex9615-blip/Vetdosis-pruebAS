@@ -8,6 +8,7 @@ import 'package:vetdosis_pro/modules/calculations/domain/calculation_catalog.dar
 import 'package:vetdosis_pro/modules/calculations/presentation/calculation_screen.dart';
 import 'package:vetdosis_pro/modules/doses/data/catalog_repository.dart';
 import 'package:vetdosis_pro/modules/doses/domain/catalog.dart';
+import 'package:vetdosis_pro/modules/exotics/presentation/allometric_calculator.dart';
 import 'package:vetdosis_pro/modules/exotics/presentation/exotics_menu.dart';
 import 'package:vetdosis_pro/modules/production/presentation/production_menu.dart';
 
@@ -88,7 +89,7 @@ void main() {
     tester,
   ) async {
     await _host(tester, const ExoticsMenu());
-    expect(find.text('Calculadora rápida'), findsOneWidget);
+    expect(find.byType(AllometricCalculatorCard), findsOneWidget);
     final tarjeta = find.text('Peso metabólico');
     expect(tarjeta, findsOneWidget);
     await tester.ensureVisible(tarjeta);

@@ -450,7 +450,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                 ? 'Todavía no hay producción de $_selectedSpecies'
                 : 'Aún no hay datos de producción',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 6),
           Text(
