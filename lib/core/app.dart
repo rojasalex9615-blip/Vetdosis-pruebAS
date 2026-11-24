@@ -1388,6 +1388,7 @@ class CoreShell extends StatelessWidget {
                   'Dashboard Pecuario',
                   'Producción pecuaria',
                   'Exóticos',
+                  'Dashboard Exóticos',
                 ].contains(model.screen))
                   DropdownButtonFormField<ClinicalBranch>(
                     initialValue: model.branch,

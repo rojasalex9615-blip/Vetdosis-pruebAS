@@ -755,6 +755,10 @@ class _PacientesRecientesState extends State<_PacientesRecientes> {
     // mientras el widget todavia se monta.
     await Future<void>.delayed(Duration.zero);
     if (!mounted) return;
+    setState(() {
+      fallo = null;
+      cargando = true;
+    });
     final repo = widget.repository;
     final clinicId = widget.member?.clinicId;
     if (repo == null || clinicId == null || clinicId.isEmpty) {
@@ -769,6 +773,7 @@ class _PacientesRecientesState extends State<_PacientesRecientes> {
       if (!mounted) return;
       setState(() {
         datos = leido;
+        fallo = null;
         cargando = false;
       });
     } catch (e) {
