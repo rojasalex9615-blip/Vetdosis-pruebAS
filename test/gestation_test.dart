@@ -162,6 +162,15 @@ Future<void> _montar(
   WidgetTester tester,
   Future<bool> Function(BuildContext) abrir,
 ) async {
+  // La ventana de prueba por omision mide 800x600. Estas hojas son mas
+  // altas: su ListView ni siquiera construye el boton de guardar, y un tap
+  // sobre algo que quedo fuera de pantalla no acierta. Se le da alto de
+  // telefono real conservando el ancho, que es el que cuidan las otras
+  // pruebas.
+  tester.view.physicalSize = const Size(800, 2400);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(

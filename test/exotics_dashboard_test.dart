@@ -199,8 +199,9 @@ void main() {
       tester,
     ) async {
       await host(tester, const ExoticsDashboard());
-      // Lo que no tiene tabla se marca, en vez de rellenarse.
-      expect(find.text('Sin datos'), findsWidgets);
+      // Lo que no tiene tabla se marca, en vez de rellenarse. La etiqueta
+      // que pinta el panel es «Sin registros».
+      expect(find.text('Sin registros'), findsWidgets);
       expect(find.text('Estado de microclimas y recintos'), findsOneWidget);
       expect(
         find.text('Estatus normativo (CITES / SEMARNAT)'),

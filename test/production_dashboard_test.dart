@@ -161,7 +161,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Hato Lechero Norte'), findsOneWidget);
+      // El nombre del lote sale dos veces, y es correcto: en su tarjeta y
+      // debajo del evento, para saber a que lote pertenece ese evento.
+      expect(find.text('Hato Lechero Norte'), findsNWidgets(2));
       expect(find.text('42'), findsWidgets);
       expect(find.text('Revacunación brucelosis'), findsOneWidget);
       expect(find.text('En 3 d'), findsOneWidget);
