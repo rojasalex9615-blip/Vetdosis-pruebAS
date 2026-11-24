@@ -1,5 +1,6 @@
-import 'accent_glow.dart';
 import 'package:flutter/material.dart';
+import '../../vet_ui/vet_theme.dart';
+import 'contrast.dart';
 import 'workspace_panel.dart';
 
 class NeuHeaderCard extends StatelessWidget {
@@ -33,7 +34,7 @@ class NeuHeaderCard extends StatelessWidget {
         .withSaturation(hsl.saturation.clamp(0, .6).toDouble())
         .withLightness(dark ? .62 : .42)
         .toColor();
-    final vivid = vividAccent(color);
+    final banda = Color.lerp(base, quiet, dark ? .22 : .12)!;
 
     return WorkspacePanel(
       radius: soft ? 32 : 24,
@@ -46,20 +47,15 @@ class NeuHeaderCard extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Color.lerp(base, quiet, dark ? .22 : .12),
-              ),
+              decoration: BoxDecoration(color: banda),
               child: Row(
                 children: [
-                  AccentGlow(
-                    color: vivid,
-                    radius: 12,
-                    emphasis: 0.8,
-                    child: Icon(
-                      icon,
-                      color: vivid,
-                      size: 22,
-                    ),
+                  // El glifo va en el gris del menu, no en el tono de la
+                  // seccion: la franja ya lleva el color.
+                  Icon(
+                    icon,
+                    color: readableOn(VetColors.muted, banda),
+                    size: 22,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
