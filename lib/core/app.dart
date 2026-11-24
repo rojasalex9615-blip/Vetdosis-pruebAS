@@ -32,7 +32,6 @@ import '../vet_ui/vet_components.dart';
 import 'widgets/neu_identity.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
-import '../modules/legal/presentation/legal_links.dart';
 import '../modules/identity/domain/identity_repository.dart';
 import '../modules/identity/presentation/identity_panel.dart';
 import '../modules/dashboard/presentation/alert_preferences_panel.dart';
@@ -113,12 +112,12 @@ import '../vet_ui/vet_icons.dart';
 /// En reposo no lleva ninguna: lo que lo separa del fondo es el relieve.
 BorderSide? Function(Set<WidgetState>) _neuSide(Color primary) =>
     (states) => states.contains(WidgetState.disabled)
-        ? BorderSide.none
-        : states.contains(WidgetState.selected) ||
-              states.contains(WidgetState.pressed) ||
-              states.contains(WidgetState.focused)
-        ? BorderSide(color: primary, width: 1.5)
-        : BorderSide.none;
+    ? BorderSide.none
+    : states.contains(WidgetState.selected) ||
+          states.contains(WidgetState.pressed) ||
+          states.contains(WidgetState.focused)
+    ? BorderSide(color: primary, width: 1.5)
+    : BorderSide.none;
 
 /// Relieve del control: levantado en reposo, hundido al pulsar, plano si
 /// esta deshabilitado, que es como se comporta una tecla de verdad.
@@ -584,37 +583,37 @@ class VetDosisApp extends StatelessWidget {
   Widget build(BuildContext context) => SessionRouteGuard(
     auth: auth,
     builder: (context, navigatorKey) => ListenableBuilder(
-    listenable: Listenable.merge([model, ?auth]),
-    // Keep MaterialApp (and its Navigator/Element tree) stable across
-    // auth and clinic updates. Re-keying it here disposed and recreated the
-    // whole app subtree during ListenableBuilder notifications, which could
-    // invalidate inherited dependencies while Flutter was rebuilding.
-    builder: (context, _) => MaterialApp(
-      navigatorKey: navigatorKey,
-      title: 'VetDosis Pro',
-      locale: const Locale('es', 'MX'),
-      supportedLocales: const [Locale('es', 'MX')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      debugShowCheckedModeBanner: false,
-      theme: theme(Brightness.light),
-      darkTheme: theme(Brightness.dark),
-      themeMode: model.themeMode,
-      home:
-          beta != null &&
-              auth?.signedIn == true &&
-              auth?.recoveringPassword != true
-          ? BetaBoundary(
-              key: ValueKey('beta:${auth!.repository.userId}'),
-              repository: beta!,
-              clinicId: auth!.active?.clinicId,
-              canSponsor: auth!.active?.role == ClinicRole.admin,
-              onSignOut: auth!.repository.signOut,
-              onRefresh: () => auth!.refresh(),
-              child: shell(context),
-            )
-          : shell(context),
+      listenable: Listenable.merge([model, ?auth]),
+      // Keep MaterialApp (and its Navigator/Element tree) stable across
+      // auth and clinic updates. Re-keying it here disposed and recreated the
+      // whole app subtree during ListenableBuilder notifications, which could
+      // invalidate inherited dependencies while Flutter was rebuilding.
+      builder: (context, _) => MaterialApp(
+        navigatorKey: navigatorKey,
+        title: 'VetDosis Pro',
+        locale: const Locale('es', 'MX'),
+        supportedLocales: const [Locale('es', 'MX')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        debugShowCheckedModeBanner: false,
+        theme: theme(Brightness.light),
+        darkTheme: theme(Brightness.dark),
+        themeMode: model.themeMode,
+        home:
+            beta != null &&
+                auth?.signedIn == true &&
+                auth?.recoveringPassword != true
+            ? BetaBoundary(
+                key: ValueKey('beta:${auth!.repository.userId}'),
+                repository: beta!,
+                clinicId: auth!.active?.clinicId,
+                canSponsor: auth!.active?.role == ClinicRole.admin,
+                onSignOut: auth!.repository.signOut,
+                onRefresh: () => auth!.refresh(),
+                child: shell(context),
+              )
+            : shell(context),
+      ),
     ),
-  ),
   );
 
   Widget shell(BuildContext context) =>
@@ -948,7 +947,10 @@ class CoreShell extends StatelessWidget {
       'Vademécum' ||
       'Operaciones de dosis' ||
       'Cálculos clínicos' => 'Cálculos',
-      'Producción y grandes especies' || 'Dashboard Pecuario' || 'Producción pecuaria' || 'Exóticos' => 'Inicio',
+      'Producción y grandes especies' ||
+      'Dashboard Pecuario' ||
+      'Producción pecuaria' ||
+      'Exóticos' => 'Inicio',
       _ => model.screen,
     };
     final selected = destinations.indexWhere((entry) => entry.$1 == page);
@@ -1287,639 +1289,630 @@ class CoreShell extends StatelessWidget {
       body: _sheet(
         context,
         SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
-            child: ListView(
-              key: ValueKey((
-                auth?.active?.userId,
-                auth?.active?.clinicId,
-                model.branch,
-                model.screen,
-              )),
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 220),
-              children: [
-                if (auth?.offline == true) ...[
-                  const SoftPanel(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Sin conexión · Acceso guardado. La gestión del equipo requiere conexión.',
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: ListView(
+                key: ValueKey((
+                  auth?.active?.userId,
+                  auth?.active?.clinicId,
+                  model.branch,
+                  model.screen,
+                )),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 220),
+                children: [
+                  if (auth?.offline == true) ...[
+                    const SoftPanel(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'Sin conexión · Acceso guardado. La gestión del equipo requiere conexión.',
+                        ),
                       ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => auth!.refresh(),
-                    child: const Text('Reintentar conexión'),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                if (model.screen == 'Inicio')
-                  HomePracticeSelector(
-                    selected: model.branch,
-                    onChanged: model.selectBranch,
-                  )
-                else if (![
-                  'Más',
-                  'Producción y grandes especies',
-                  'Dashboard Pecuario',
-                  'Producción pecuaria',
-                  'Exóticos',
-                ].contains(model.screen))
-                  DropdownButtonFormField<ClinicalBranch>(
-                    initialValue: model.branch,
-                    key: ValueKey(model.branch),
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Rama de trabajo',
-                      border: OutlineInputBorder(),
+                    TextButton(
+                      onPressed: () => auth!.refresh(),
+                      child: const Text('Reintentar conexión'),
                     ),
-                    items: ClinicalBranch.values
-                        .map(
-                          (branch) => DropdownMenuItem(
-                            value: branch,
-                            child: Text(
-                              branch.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 16),
+                  ],
+                  if (model.screen == 'Inicio')
+                    HomePracticeSelector(
+                      selected: model.branch,
+                      onChanged: model.selectBranch,
+                    )
+                  else if (![
+                    'Más',
+                    'Producción y grandes especies',
+                    'Dashboard Pecuario',
+                    'Producción pecuaria',
+                    'Exóticos',
+                  ].contains(model.screen))
+                    DropdownButtonFormField<ClinicalBranch>(
+                      initialValue: model.branch,
+                      key: ValueKey(model.branch),
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Rama de trabajo',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: ClinicalBranch.values
+                          .map(
+                            (branch) => DropdownMenuItem(
+                              value: branch,
+                              child: Text(
+                                branch.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (branch) {
-                      if (branch != null) model.selectBranch(branch);
-                    },
-                  ),
-                const SizedBox(height: 28),
-                if (auth?.active != null &&
-                    moduleAccess != null &&
-                    !serverAllowed(model.screen))
-                  const Text(
-                    'Este apartado no está disponible con tus permisos actuales.',
-                  )
-                else if (auth?.active != null &&
-                    !(experience?.visible(model.screen) ?? true) &&
-                    !(model.screen == 'Hospitalización' &&
-                        serverAllowed('Hospitalización')))
-                  const Text(
-                    'Este apartado está oculto en los ajustes de esta clínica.',
-                  )
-                else if (model.screen == 'Inicio')
-                  ...home(context)
-                else if (model.screen == 'Modo revisión')
-                  auth?.active != null &&
-                          reviewCatalog != null &&
-                          allowed('Modo revisión')
-                      ? ReviewCatalogScreen(
-                          key: ValueKey(
-                            'review:${auth!.active!.userId}:${auth!.active!.clinicId}',
-                          ),
-                          repository: reviewCatalog!,
-                          clinic: auth!.active!.clinicId,
-                          user: auth!.active!.userId,
-                          offline: auth!.offline,
+                          )
+                          .toList(),
+                      onChanged: (branch) {
+                        if (branch != null) model.selectBranch(branch);
+                      },
+                    ),
+                  const SizedBox(height: 28),
+                  if (auth?.active != null &&
+                      moduleAccess != null &&
+                      !serverAllowed(model.screen))
+                    const Text(
+                      'Este apartado no está disponible con tus permisos actuales.',
+                    )
+                  else if (auth?.active != null &&
+                      !(experience?.visible(model.screen) ?? true) &&
+                      !(model.screen == 'Hospitalización' &&
+                          serverAllowed('Hospitalización')))
+                    const Text(
+                      'Este apartado está oculto en los ajustes de esta clínica.',
+                    )
+                  else if (model.screen == 'Inicio')
+                    ...home(context)
+                  else if (model.screen == 'Modo revisión')
+                    auth?.active != null &&
+                            reviewCatalog != null &&
+                            allowed('Modo revisión')
+                        ? ReviewCatalogScreen(
+                            key: ValueKey(
+                              'review:${auth!.active!.userId}:${auth!.active!.clinicId}',
+                            ),
+                            repository: reviewCatalog!,
+                            clinic: auth!.active!.clinicId,
+                            user: auth!.active!.userId,
+                            offline: auth!.offline,
                             canManageClinic:
                                 auth!.active!.role == ClinicRole.admin,
-                        )
-                      : const Text(
-                          'El modo revisión requiere una cuenta autorizada y conexión.',
-                        )
-                else if (model.screen == 'Más')
-                  SectionMenu(
-                    member: auth?.active,
-                    access: moduleAccess,
-                    experience: experience,
+                          )
+                        : const Text(
+                            'El modo revisión requiere una cuenta autorizada y conexión.',
+                          )
+                  else if (model.screen == 'Más')
+                    SectionMenu(
+                      member: auth?.active,
+                      access: moduleAccess,
+                      experience: experience,
                       workAreas:
                           experience?.workAreas ?? model.settings.workAreas,
                       includeAdmin:
                           experience?.includeAdmin ??
                           model.settings.includeAdmin,
-                    initialGroup: model.branch == ClinicalBranch.management
-                        ? 'Administración y finanzas'
-                        : null,
-                    onNavigate: model.navigate,
+                      initialGroup: model.branch == ClinicalBranch.management
+                          ? 'Administración y finanzas'
+                          : null,
+                      onNavigate: model.navigate,
                       onAccount: auth == null
                           ? null
                           : () => openAccount(context),
-                  )
-                else if (model.screen == 'Planeación financiera')
-                  allowed('Planeación financiera')
-                      ? FinancialPlanningPanel(
-                          key: ValueKey(
-                            '${auth?.active?.userId}:${auth?.active?.clinicId}',
-                          ),
-                        )
-                      : const Text(
-                          'Este apartado no está disponible con tus permisos actuales.',
-                        )
-                else if (model.screen == 'Cálculos')
-                  CalculationMenu(
-                    member: auth?.active,
-                    access: moduleAccess,
-                    experience: experience,
-                    onNavigate: model.navigate,
-                  )
-                else if (model.screen == 'Producción y grandes especies' || model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria')
-                  ProductionMenu(
-                    member: auth?.active,
-                    access: moduleAccess,
-                    onNavigate: model.navigate,
-                    porcino: porcino,
-                    units: units,
-                    initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
-                  )
-                else if (model.screen == 'Exóticos')
-                  ExoticsMenu(allowed: allowed('Exóticos'))
-                else if (model.screen == 'Cálculo rápido')
-                  auth == null ||
+                    )
+                  else if (model.screen == 'Planeación financiera')
+                    allowed('Planeación financiera')
+                        ? FinancialPlanningPanel(
+                            key: ValueKey(
+                              '${auth?.active?.userId}:${auth?.active?.clinicId}',
+                            ),
+                          )
+                        : const Text(
+                            'Este apartado no está disponible con tus permisos actuales.',
+                          )
+                  else if (model.screen == 'Cálculos')
+                    CalculationMenu(
+                      member: auth?.active,
+                      access: moduleAccess,
+                      experience: experience,
+                      onNavigate: model.navigate,
+                    )
+                  else if (model.screen == 'Producción y grandes especies' ||
+                      model.screen == 'Dashboard Pecuario' ||
+                      model.screen == 'Producción pecuaria')
+                    ProductionMenu(
+                      member: auth?.active,
+                      access: moduleAccess,
+                      onNavigate: model.navigate,
+                      porcino: porcino,
+                      units: units,
+                      initialViewDashboard:
+                          model.screen == 'Dashboard Pecuario' ||
+                          model.screen == 'Producción pecuaria',
+                    )
+                  else if (model.screen == 'Exóticos')
+                    ExoticsMenu(allowed: allowed('Exóticos'))
+                  else if (model.screen == 'Cálculo rápido')
+                    auth == null ||
+                            [
+                              ClinicRole.admin,
+                              ClinicRole.mvz,
+                            ].contains(auth!.active?.role)
+                        ? DoseScreen(
+                            key: ValueKey(
+                              '${auth?.active?.userId}:${auth?.active?.clinicId}',
+                            ),
+                            personalRepository: personalDoses,
+                            clinicId: auth?.active?.clinicId,
+                            userId: auth?.active?.userId,
+                            admin: auth?.active?.role == ClinicRole.admin,
+                            offline: auth?.offline ?? false,
+                            onChoosePatient: canChooseDosePatient
+                                ? () => chooseDosePatient(context)
+                                : null,
+                          )
+                        : const Text(
+                            'El cálculo clínico requiere acceso de MVZ o administrador.',
+                          )
+                  else if (model.screen == 'Escanear etiqueta para dosis')
+                    auth?.active != null && allowed('Cálculo rápido')
+                        ? DoseLabelScannerScreen(
+                            member: auth!.active!,
+                            personalRepository: personalDoses,
+                            offline: auth!.offline,
+                          )
+                        : const Text(
+                            'La lectura de etiquetas para dosis requiere acceso de MVZ o administrador.',
+                          )
+                  else if (model.screen == 'Vademécum')
+                    VademecumScreen(
+                      key: ValueKey(
+                        'vademecum:${auth?.active?.userId}:${auth?.active?.clinicId}',
+                      ),
+                      catalog: AssetCatalogRepository(),
+                      personal: personalDoses,
+                      clinicId: auth?.active?.clinicId,
+                      userId: auth?.active?.userId,
+                      admin: auth?.active?.role == ClinicRole.admin,
+                      canCalculate:
+                          auth?.active == null ||
                           [
                             ClinicRole.admin,
                             ClinicRole.mvz,
-                          ].contains(auth!.active?.role)
-                      ? DoseScreen(
-                          key: ValueKey(
-                            '${auth?.active?.userId}:${auth?.active?.clinicId}',
-                          ),
-                          personalRepository: personalDoses,
-                          clinicId: auth?.active?.clinicId,
-                          userId: auth?.active?.userId,
-                          admin: auth?.active?.role == ClinicRole.admin,
-                          offline: auth?.offline ?? false,
-                          onChoosePatient: canChooseDosePatient
-                              ? () => chooseDosePatient(context)
-                              : null,
-                        )
-                      : const Text(
-                          'El cálculo clínico requiere acceso de MVZ o administrador.',
-                        )
-                else if (model.screen == 'Escanear etiqueta para dosis')
-                  auth?.active != null && allowed('Cálculo rápido')
-                      ? DoseLabelScannerScreen(
-                          member: auth!.active!,
-                          personalRepository: personalDoses,
-                          offline: auth!.offline,
-                        )
-                      : const Text(
-                          'La lectura de etiquetas para dosis requiere acceso de MVZ o administrador.',
-                        )
-                else if (model.screen == 'Vademécum')
-                  VademecumScreen(
-                    key: ValueKey(
-                      'vademecum:${auth?.active?.userId}:${auth?.active?.clinicId}',
-                    ),
-                    catalog: AssetCatalogRepository(),
-                    personal: personalDoses,
-                    clinicId: auth?.active?.clinicId,
-                    userId: auth?.active?.userId,
-                    admin: auth?.active?.role == ClinicRole.admin,
-                    canCalculate:
-                        auth?.active == null ||
-                        [
-                          ClinicRole.admin,
-                          ClinicRole.mvz,
-                        ].contains(auth?.active?.role),
-                    // El revisor comprueba la pauta calculando la dosis del
-                    // empaque; no calcula la dosis clínica por paciente.
-                    canCalculateManufacturer:
-                        auth?.active == null ||
-                        [
-                          ClinicRole.admin,
-                          ClinicRole.mvz,
-                          ClinicRole.revisor,
-                        ].contains(auth?.active?.role),
-                    offline: auth?.offline ?? false,
-                  )
-                else if (model.screen == 'Operaciones de dosis')
-                  auth == null ||
+                          ].contains(auth?.active?.role),
+                      // El revisor comprueba la pauta calculando la dosis del
+                      // empaque; no calcula la dosis clínica por paciente.
+                      canCalculateManufacturer:
+                          auth?.active == null ||
                           [
                             ClinicRole.admin,
                             ClinicRole.mvz,
-                          ].contains(auth!.active?.role)
-                      ? DoseMathTools(
+                            ClinicRole.revisor,
+                          ].contains(auth?.active?.role),
+                      offline: auth?.offline ?? false,
+                    )
+                  else if (model.screen == 'Operaciones de dosis')
+                    auth == null ||
+                            [
+                              ClinicRole.admin,
+                              ClinicRole.mvz,
+                            ].contains(auth!.active?.role)
+                        ? DoseMathTools(
                             visualReference:
                                 model.settings.visualStyle == 'neu',
-                          onChoosePatient: canChooseDosePatient
-                              ? () => chooseDosePatient(context)
-                              : null,
-                        )
-                      : const Text(
-                          'El cálculo clínico requiere acceso de MVZ o administrador.',
-                        )
-                else if (model.screen == 'Cálculos clínicos')
-                  auth == null ||
-                          [
-                            ClinicRole.admin,
-                            ClinicRole.mvz,
-                          ].contains(auth!.active?.role)
-                      ? CalculationScreen(
-                          patients:
-                              auth?.offline == false && allowed('Pacientes')
-                              ? patients
-                              : null,
-                          onFluidReminder:
-                              hospital != null &&
-                                  auth?.offline == false &&
-                                  allowed('Hospitalización')
-                              ? (patientId, summary) => model.navigate(
-                                  'Hospitalización',
-                                  patientId: patientId,
-                                  instructions: summary,
+                            onChoosePatient: canChooseDosePatient
+                                ? () => chooseDosePatient(context)
+                                : null,
+                          )
+                        : const Text(
+                            'El cálculo clínico requiere acceso de MVZ o administrador.',
+                          )
+                  else if (model.screen == 'Cálculos clínicos')
+                    auth == null ||
+                            [
+                              ClinicRole.admin,
+                              ClinicRole.mvz,
+                            ].contains(auth!.active?.role)
+                        ? CalculationScreen(
+                            patients:
+                                auth?.offline == false && allowed('Pacientes')
+                                ? patients
+                                : null,
+                            onFluidReminder:
+                                hospital != null &&
+                                    auth?.offline == false &&
+                                    allowed('Hospitalización')
+                                ? (patientId, summary) => model.navigate(
+                                    'Hospitalización',
+                                    patientId: patientId,
+                                    instructions: summary,
+                                  )
+                                : null,
+                            referenceLibrary: referenceLibrary,
+                            clinicId: auth?.active?.clinicId,
+                            showAviculture:
+                                model.branch == ClinicalBranch.production,
+                            branch: model.branch == ClinicalBranch.management
+                                ? ClinicalBranch.small
+                                : model.branch,
+                            key: ValueKey(
+                              '${model.branch}:${auth?.active?.userId}:${auth?.active?.clinicId}',
+                            ),
+                          )
+                        : const Text(
+                            'Los cálculos clínicos requieren acceso de MVZ o administrador.',
+                          )
+                  else if (model.screen == 'Pacientes')
+                    patients != null && auth?.active != null
+                        ? auth!.offline
+                              ? const Text(
+                                  'Los expedientes requieren conexión por ahora. Reconecta para consultar o guardar datos.',
                                 )
-                              : null,
-                          referenceLibrary: referenceLibrary,
-                          clinicId: auth?.active?.clinicId,
-                          showAviculture:
-                              model.branch == ClinicalBranch.production,
-                          branch: model.branch == ClinicalBranch.management
-                              ? ClinicalBranch.small
-                              : model.branch,
-                          key: ValueKey(
-                            '${model.branch}:${auth?.active?.userId}:${auth?.active?.clinicId}',
-                          ),
-                        )
-                      : const Text(
-                          'Los cálculos clínicos requieren acceso de MVZ o administrador.',
-                        )
-                else if (model.screen == 'Pacientes')
-                  patients != null && auth?.active != null
-                      ? auth!.offline
-                            ? const Text(
-                                'Los expedientes requieren conexión por ahora. Reconecta para consultar o guardar datos.',
-                              )
-                            : PatientsScreen(
-                                ai: ai,
-                                key: ValueKey(
-                                  '${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role.name}',
-                                ),
-                                repository: patients!,
-                                member: auth!.active!,
-                                canOpenActivity: allowed,
+                              : PatientsScreen(
+                                  ai: ai,
+                                  key: ValueKey(
+                                    '${auth!.active!.userId}:${auth!.active!.clinicId}:${auth!.active!.role.name}',
+                                  ),
+                                  repository: patients!,
+                                  member: auth!.active!,
+                                  canOpenActivity: allowed,
                                   onOpenActivity:
                                       (destination, patientId) async {
-                                  if (allowed(destination)) {
-                                    model.navigate(
-                                      destination,
-                                      patientId: patientId,
-                                    );
-                                  }
-                                },
-                                onOpenLab:
-                                    laboratory != null &&
-                                        allowed('Analíticas')
-                                    ? (patient) async {
-                                        await Navigator.push(
-                                          context,
-                                          MaterialPageRoute<void>(
-                                            builder: (_) => LabScreen(
-                                              repository: laboratory!,
-                                              clinicId:
-                                                  auth!.active!.clinicId,
-                                              patientId: patient.id,
-                                              patientName: patient.name,
-                                              referenceLibrary:
-                                                  referenceLibrary,
+                                        if (allowed(destination)) {
+                                          model.navigate(
+                                            destination,
+                                            patientId: patientId,
+                                          );
+                                        }
+                                      },
+                                  onOpenLab:
+                                      laboratory != null &&
+                                          allowed('Analíticas')
+                                      ? (patient) async {
+                                          await Navigator.push(
+                                            context,
+                                            MaterialPageRoute<void>(
+                                              builder: (_) => LabScreen(
+                                                repository: laboratory!,
+                                                clinicId:
+                                                    auth!.active!.clinicId,
+                                                patientId: patient.id,
+                                                patientName: patient.name,
+                                                referenceLibrary:
+                                                    referenceLibrary,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }
-                                    : null,
-                                onOpenClinical:
-                                    clinical != null && forms != null
-                                    ? (patient) async {
-                                        await Navigator.push(
-                                          context,
-                                          MaterialPageRoute<void>(
-                                            builder: (_) => ClinicalScreen(
-                                              repository: clinical!,
-                                              prescribing: prescribing,
-                                              referenceLibrary:
-                                                  referenceLibrary,
-                                              forms: forms!,
-                                              member: auth!.active!,
-                                              patientId: patient.id,
+                                          );
+                                        }
+                                      : null,
+                                  onOpenClinical:
+                                      clinical != null && forms != null
+                                      ? (patient) async {
+                                          await Navigator.push(
+                                            context,
+                                            MaterialPageRoute<void>(
+                                              builder: (_) => ClinicalScreen(
+                                                repository: clinical!,
+                                                prescribing: prescribing,
+                                                referenceLibrary:
+                                                    referenceLibrary,
+                                                forms: forms!,
+                                                member: auth!.active!,
+                                                patientId: patient.id,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }
-                                    : null,
-                              )
-                      : const Text(
-                          'Conecta tu cuenta y clínica para abrir pacientes.',
-                        )
-                else if (model.screen == 'Hospitalización')
-                  _hospitalSection(context)
-                else if (model.screen == 'Receta')
-                  _prescriptionSection()
-                else if (model.screen == 'Formatos')
-                  forms != null && patients != null && auth?.active != null
-                      ? auth!.offline
-                            ? const Text(
-                                'Los formatos y las firmas requieren conexión. No se guardan documentos sensibles offline.',
-                              )
-                            : FormsScreen(
-                                ai: ai,
-                                repository: forms!,
-                                clinical: clinical,
-                                prescribing: prescribing,
-                                patients: patients!,
-                                member: auth!.active!,
-                              )
-                      : const Text(
-                          'Conecta tu cuenta y clínica para abrir formatos.',
-                        )
-                else if (model.screen == 'Escanear producto')
-                  inventory != null &&
-                          auth?.active != null &&
-                          auth?.offline != true &&
-                          allowed('Escanear producto')
-                      ? QuickScanScreen(
-                          repository: inventory!,
-                          member: auth!.active!,
-                          onOpenLabelScanner: allowed('Cálculo rápido')
-                              ? () => model.navigate(
-                                  'Escanear etiqueta para dosis',
+                                          );
+                                        }
+                                      : null,
                                 )
-                              : null,
-                        )
-                      : const Text(
-                          'Conecta tu cuenta y verifica el acceso a inventario para escanear productos.',
-                        )
+                        : const Text(
+                            'Conecta tu cuenta y clínica para abrir pacientes.',
+                          )
+                  else if (model.screen == 'Hospitalización')
+                    _hospitalSection(context)
+                  else if (model.screen == 'Receta')
+                    _prescriptionSection()
+                  else if (model.screen == 'Formatos')
+                    forms != null && patients != null && auth?.active != null
+                        ? auth!.offline
+                              ? const Text(
+                                  'Los formatos y las firmas requieren conexión. No se guardan documentos sensibles offline.',
+                                )
+                              : FormsScreen(
+                                  ai: ai,
+                                  repository: forms!,
+                                  clinical: clinical,
+                                  prescribing: prescribing,
+                                  patients: patients!,
+                                  member: auth!.active!,
+                                )
+                        : const Text(
+                            'Conecta tu cuenta y clínica para abrir formatos.',
+                          )
+                  else if (model.screen == 'Escanear producto')
+                    inventory != null &&
+                            auth?.active != null &&
+                            auth?.offline != true &&
+                            allowed('Escanear producto')
+                        ? QuickScanScreen(
+                            repository: inventory!,
+                            member: auth!.active!,
+                            onOpenLabelScanner: allowed('Cálculo rápido')
+                                ? () => model.navigate(
+                                    'Escanear etiqueta para dosis',
+                                  )
+                                : null,
+                          )
+                        : const Text(
+                            'Conecta tu cuenta y verifica el acceso a inventario para escanear productos.',
+                          )
                   else if (model.screen == 'Inventario' ||
                       model.screen == 'Caja')
-                  inventory != null && auth?.active != null
-                      ? auth!.offline
-                            ? const Text(
-                                'Inventario, ventas y caja requieren conexión para confirmar saldos y permisos.',
-                              )
-                            : InventoryScreen(
-                                identity: identity,
-                                ai: ai,
-                                key: ValueKey('inventory:${model.screen}'),
-                                initialSection: model.screen == 'Caja'
-                                    ? 'cash'
-                                    : 'stock',
-                                repository: inventory!,
-                                member: auth!.active!,
-                              )
-                      : const Text(
-                          'Conecta tu cuenta y clínica para abrir inventario.',
-                        )
-                else if (model.screen == 'Agenda telefónica')
-                  operations != null &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? ContactDirectoryScreen(
-                          embedded: true,
-                          repository: operations!,
-                          member: auth!.active!,
-                        )
-                      : const Text(
-                          'El directorio de la clínica requiere cuenta y conexión.',
-                        )
-                else if (model.screen == 'Productividad y semana')
-                  operations is ProductivityRepository &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? ProductivityScreen(
-                          embedded: true,
-                          repository: operations as ProductivityRepository,
-                          member: auth!.active!,
-                          ai: ai,
-                        )
-                      : const Text(
-                          'La planificación semanal requiere cuenta y conexión.',
-                        )
-                else if (model.screen == 'Promociones')
-                  operations != null &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? PromotionsScreen(
-                          embedded: true,
-                          repository: operations!,
-                          member: auth!.active!,
-                          ai: ai,
-                        )
-                      : const Text(
-                          'Las promociones requieren cuenta y conexión.',
-                        )
-                else if (model.screen == 'Agenda' ||
-                    model.screen == 'Equipo y avisos' ||
-                    model.screen == 'Anuncios y avisos' ||
-                    model.screen == 'Pendientes del equipo' ||
-                    model.screen == 'Servicios' ||
-                    model.screen == 'Proveedores')
-                  operations != null &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? OperationsScreen(
-                          ai: ai,
-                          key: ValueKey(
-                            'operations:${model.screen}:${auth?.active?.clinicId}:${auth?.active?.userId}:${model.activityPatientId}',
-                          ),
-                          initialSection: model.screen == 'Servicios'
-                              ? 'services'
-                              : model.screen == 'Proveedores'
-                              ? 'suppliers'
-                              : model.screen == 'Equipo y avisos'
-                              ? 'messages'
-                              : model.screen == 'Anuncios y avisos'
-                              ? 'notices'
-                              : model.screen == 'Pendientes del equipo'
-                              ? 'tasks'
-                              : 'appointments',
-                          initialPatientId: model.activityPatientId,
-                          onNavigate: model.navigate,
-                          canOpenInventory: allowed('Inventario'),
-                          canOpenSales: allowed('Caja'),
-                          repository: operations!,
-                          member: auth!.active!,
-                          onOpenDuty: auth!.repository is TeamDutyRepository
-                              ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => TeamDutyScreen(
-                                      model: auth!,
-                                      clinic: auth!.active!,
-                                    ),
-                                  ),
+                    inventory != null && auth?.active != null
+                        ? auth!.offline
+                              ? const Text(
+                                  'Inventario, ventas y caja requieren conexión para confirmar saldos y permisos.',
                                 )
-                              : null,
-                          onOpenPatient:
-                              patients != null && allowed('Pacientes')
-                              ? (id) async {
-                                  final member = auth!.active!;
-                                  final patientTheme = homePilotTheme(
-                                    Theme.of(context),
-                                  );
-                                  await Navigator.push(
+                              : InventoryScreen(
+                                  identity: identity,
+                                  ai: ai,
+                                  key: ValueKey('inventory:${model.screen}'),
+                                  initialSection: model.screen == 'Caja'
+                                      ? 'cash'
+                                      : 'stock',
+                                  repository: inventory!,
+                                  member: auth!.active!,
+                                )
+                        : const Text(
+                            'Conecta tu cuenta y clínica para abrir inventario.',
+                          )
+                  else if (model.screen == 'Agenda telefónica')
+                    operations != null &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? ContactDirectoryScreen(
+                            embedded: true,
+                            repository: operations!,
+                            member: auth!.active!,
+                          )
+                        : const Text(
+                            'El directorio de la clínica requiere cuenta y conexión.',
+                          )
+                  else if (model.screen == 'Productividad y semana')
+                    operations is ProductivityRepository &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? ProductivityScreen(
+                            embedded: true,
+                            repository: operations as ProductivityRepository,
+                            member: auth!.active!,
+                            ai: ai,
+                          )
+                        : const Text(
+                            'La planificación semanal requiere cuenta y conexión.',
+                          )
+                  else if (model.screen == 'Promociones')
+                    operations != null &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? PromotionsScreen(
+                            embedded: true,
+                            repository: operations!,
+                            member: auth!.active!,
+                            ai: ai,
+                          )
+                        : const Text(
+                            'Las promociones requieren cuenta y conexión.',
+                          )
+                  else if (model.screen == 'Agenda' ||
+                      model.screen == 'Equipo y avisos' ||
+                      model.screen == 'Anuncios y avisos' ||
+                      model.screen == 'Pendientes del equipo' ||
+                      model.screen == 'Servicios' ||
+                      model.screen == 'Proveedores')
+                    operations != null &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? OperationsScreen(
+                            ai: ai,
+                            key: ValueKey(
+                              'operations:${model.screen}:${auth?.active?.clinicId}:${auth?.active?.userId}:${model.activityPatientId}',
+                            ),
+                            initialSection: model.screen == 'Servicios'
+                                ? 'services'
+                                : model.screen == 'Proveedores'
+                                ? 'suppliers'
+                                : model.screen == 'Equipo y avisos'
+                                ? 'messages'
+                                : model.screen == 'Anuncios y avisos'
+                                ? 'notices'
+                                : model.screen == 'Pendientes del equipo'
+                                ? 'tasks'
+                                : 'appointments',
+                            initialPatientId: model.activityPatientId,
+                            onNavigate: model.navigate,
+                            canOpenInventory: allowed('Inventario'),
+                            canOpenSales: allowed('Caja'),
+                            repository: operations!,
+                            member: auth!.active!,
+                            onOpenDuty: auth!.repository is TeamDutyRepository
+                                ? () => Navigator.push(
                                     context,
                                     MaterialPageRoute<void>(
-                                      builder: (_) => Theme(
-                                        data: patientTheme,
-                                        child: Scaffold(
-                                          appBar: AppBar(
-                                            title: const Text(
-                                              'Paciente de la cita',
+                                      builder: (_) => TeamDutyScreen(
+                                        model: auth!,
+                                        clinic: auth!.active!,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                            onOpenPatient:
+                                patients != null && allowed('Pacientes')
+                                ? (id) async {
+                                    final member = auth!.active!;
+                                    final patientTheme = homePilotTheme(
+                                      Theme.of(context),
+                                    );
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => Theme(
+                                          data: patientTheme,
+                                          child: Scaffold(
+                                            appBar: AppBar(
+                                              title: const Text(
+                                                'Paciente de la cita',
+                                              ),
                                             ),
-                                          ),
-                                          body: SingleChildScrollView(
-                                            padding: const EdgeInsets.all(20),
-                                            child: PatientsScreen(
-                                              ai: ai,
-                                              repository: patients!,
-                                              member: member,
-                                              initialPatientId: id,
+                                            body: SingleChildScrollView(
+                                              padding: const EdgeInsets.all(20),
+                                              child: PatientsScreen(
+                                                ai: ai,
+                                                repository: patients!,
+                                                member: member,
+                                                initialPatientId: id,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                }
-                              : null,
-                        )
-                      : const Text(
-                          'Conecta tu cuenta y clínica para abrir operación y agenda.',
-                        )
-                else if (model.screen == 'Control de asistencia')
-                  attendance != null &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? AttendanceScreen(
-                          repository: attendance!,
-                          member: auth!.active!,
-                        )
-                      : const Text(
-                          'El control de asistencia requiere conexión con el servidor.',
-                        )
-                else if (model.screen == 'Estadísticas')
-                  DashboardScreen(
-                    key: ValueKey((
-                      auth?.active?.userId,
-                      auth?.active?.clinicId,
-                      auth?.offline,
-                      moduleAccess,
-                      experience?.revision,
-                    )),
-                    model: DashboardViewModel(
-                      member: auth?.active,
-                      operations: operations,
-                      inventory: inventory,
-                      hospital: hospital,
-                      patients: patients,
-                      backup: allowed('Estadísticas') ? backup : null,
-                      attendance: attendance,
-                      // M15 y altas: los datos ya existen en la app; aquí
-                      // solo se cablean a la pantalla de Estadísticas.
-                      aviculture: aviculture,
-                      history: hospital is HospitalHistoryRepository
-                          ? hospital as HospitalHistoryRepository
-                          : null,
-                      moduleAccess: moduleAccess,
-                    ),
-                    offline: auth?.offline ?? false,
-                    statisticsOnly: true,
-                    isVisible: allowed,
-                    identity: identity,
-                    experience: experience,
-                    onNavigate: model.navigate,
-                  )
-                else if (model.screen == 'Respaldo' ||
-                    model.screen == 'Estadísticas y respaldo')
-                  backup != null &&
-                          allowed(model.screen) &&
-                          auth?.offline != true
-                      ? BackupScreen(
-                          key: ValueKey(
-                            'backup-${auth!.active!.userId}-${auth!.active!.clinicId}',
-                          ),
-                          identity: identity,
-                          repository: backup!,
-                          googleDrive: googleDriveBackup,
-                          member: auth!.active!,
-                          backupOnly: model.screen == 'Respaldo',
-                        )
-                      : const Text(
-                          'Las estadísticas y el respaldo requieren conexión y permiso vigente.',
-                        )
-                else if (model.screen == 'Asistente IA')
-                  ai != null && auth?.active != null && auth?.offline != true
-                      ? AiScreen(
-                          repository: ai!,
-                          member: auth!.active!,
-                          preferredProvider: experience?.defaultAiProvider,
-                        )
-                      : const Text('El asistente requiere cuenta y conexión.')
-                else if (model.screen == 'Planes')
-                  subscriptions != null &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? SubscriptionScreen(
-                          repository: subscriptions!,
-                          member: auth!.active!,
-                        )
-                      : const Text('Los planes requieren cuenta y conexión.')
-                else if (model.screen == 'Producto y costos')
-                  ProductScreen(onNavigate: model.navigate)
-                else if (model.screen == 'Inicio guiado')
-                  GuidedStartScreen(
+                                    );
+                                  }
+                                : null,
+                          )
+                        : const Text(
+                            'Conecta tu cuenta y clínica para abrir operación y agenda.',
+                          )
+                  else if (model.screen == 'Control de asistencia')
+                    attendance != null &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? AttendanceScreen(
+                            repository: attendance!,
+                            member: auth!.active!,
+                          )
+                        : const Text(
+                            'El control de asistencia requiere conexión con el servidor.',
+                          )
+                  else if (model.screen == 'Estadísticas')
+                    DashboardScreen(
+                      key: ValueKey((
+                        auth?.active?.userId,
+                        auth?.active?.clinicId,
+                        auth?.offline,
+                        moduleAccess,
+                        experience?.revision,
+                      )),
+                      model: DashboardViewModel(
+                        member: auth?.active,
+                        operations: operations,
+                        inventory: inventory,
+                        hospital: hospital,
+                        patients: patients,
+                        backup: allowed('Estadísticas') ? backup : null,
+                        attendance: attendance,
+                        // M15 y altas: los datos ya existen en la app; aquí
+                        // solo se cablean a la pantalla de Estadísticas.
+                        aviculture: aviculture,
+                        history: hospital is HospitalHistoryRepository
+                            ? hospital as HospitalHistoryRepository
+                            : null,
+                        moduleAccess: moduleAccess,
+                      ),
+                      offline: auth?.offline ?? false,
+                      statisticsOnly: true,
+                      isVisible: allowed,
+                      identity: identity,
+                      experience: experience,
+                      onNavigate: model.navigate,
+                    )
+                  else if (model.screen == 'Respaldo' ||
+                      model.screen == 'Estadísticas y respaldo')
+                    backup != null &&
+                            allowed(model.screen) &&
+                            auth?.offline != true
+                        ? BackupScreen(
+                            key: ValueKey(
+                              'backup-${auth!.active!.userId}-${auth!.active!.clinicId}',
+                            ),
+                            identity: identity,
+                            repository: backup!,
+                            googleDrive: googleDriveBackup,
+                            member: auth!.active!,
+                            backupOnly: model.screen == 'Respaldo',
+                          )
+                        : const Text(
+                            'Las estadísticas y el respaldo requieren conexión y permiso vigente.',
+                          )
+                  else if (model.screen == 'Asistente IA')
+                    ai != null && auth?.active != null && auth?.offline != true
+                        ? AiScreen(
+                            repository: ai!,
+                            member: auth!.active!,
+                            preferredProvider: experience?.defaultAiProvider,
+                          )
+                        : const Text('El asistente requiere cuenta y conexión.')
+                  else if (model.screen == 'Planes')
+                    subscriptions != null &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? SubscriptionScreen(
+                            repository: subscriptions!,
+                            member: auth!.active!,
+                          )
+                        : const Text('Los planes requieren cuenta y conexión.')
+                  else if (model.screen == 'Producto y costos')
+                    ProductScreen(onNavigate: model.navigate)
+                  else if (model.screen == 'Inicio guiado')
+                    GuidedStartScreen(
                       scope:
                           '${auth?.active?.userId}:${auth?.active?.clinicId}',
-                    onNavigate: (page) {
-                      if (page == 'Mi cuenta' && auth != null) {
-                        openAccount(context);
-                      } else {
-                        model.navigate(page);
-                      }
-                    },
-                  )
-                else if (model.screen == 'Ayuda y soporte')
-                  support != null &&
-                          auth?.active != null &&
-                          auth?.offline != true
-                      ? SupportScreen(
-                          repository: support!,
-                          member: auth!.active!,
-                          mode: SupportMode.chat,
+                      onNavigate: (page) {
+                        if (page == 'Mi cuenta' && auth != null) {
+                          openAccount(context);
+                        } else {
+                          model.navigate(page);
+                        }
+                      },
+                    )
+                  else if (model.screen == 'Ayuda y soporte')
+                    support != null &&
+                            auth?.active != null &&
+                            auth?.offline != true
+                        ? SupportScreen(
+                            repository: support!,
+                            member: auth!.active!,
+                            mode: SupportMode.chat,
                             helpPanel: ai is StarterAiRepository && ai != null
-                              ? StarterHelpPanel(
-                                  repository: ai as StarterAiRepository,
-                                  chats: ai!,
-                                  clinic: auth!.active!.clinicId,
-                                  onHumanSupport: () => openSupportForm(
-                                    context,
-                                    repository: support!,
-                                    member: auth!.active!,
-                                  ),
-                                )
-                              : null,
-                        )
-                      : const Text(
-                          'El soporte requiere cuenta y conexión. Puedes consultar Producto y costos o Inicio guiado sin enviar datos.',
-                        )
-                else if (model.screen == 'Información de la app')
-                  const AppInfoScreen()
-                else if (model.screen == 'Ajustes')
-                  ...settings(context)
-                else
-                  ...pending(context),
-                // Términos y aviso acompañan al acceso, Inicio, Planes y las
-                // pantallas de cálculo con la misma versión que sirvió la
-                // puerta beta; no se repiten en Ajustes ni en el menú.
-                if (auth?.active != null &&
-                    const {
-                      'Inicio',
-                      'Planes',
-                      'Cálculo rápido',
-                      'Cálculos',
-                      'Cálculos clínicos',
-                      'Operaciones de dosis',
-                    }.contains(model.screen))
-                  const LegalSmallPrint(),
-              ],
+                                ? StarterHelpPanel(
+                                    repository: ai as StarterAiRepository,
+                                    chats: ai!,
+                                    clinic: auth!.active!.clinicId,
+                                    onHumanSupport: () => openSupportForm(
+                                      context,
+                                      repository: support!,
+                                      member: auth!.active!,
+                                    ),
+                                  )
+                                : null,
+                          )
+                        : const Text(
+                            'El soporte requiere cuenta y conexión. Puedes consultar Producto y costos o Inicio guiado sin enviar datos.',
+                          )
+                  else if (model.screen == 'Información de la app')
+                    const AppInfoScreen()
+                  else if (model.screen == 'Ajustes')
+                    ...settings(context)
+                  else
+                    ...pending(context),
+                ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     ),
