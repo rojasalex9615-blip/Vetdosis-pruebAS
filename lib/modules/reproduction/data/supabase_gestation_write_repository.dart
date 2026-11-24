@@ -21,7 +21,7 @@ class SupabaseGestationWriteRepository implements GestationWriteRepository {
 
   /// Fecha de calendario sin hora: convertirla a UTC podría correrla un día.
   String? _dia(DateTime? valor) =>
-      valor == null ? null : valor.toIso8601String().substring(0, 10);
+      valor?.toIso8601String().substring(0, 10);
 
   @override
   Future<String> guardarGestacion({

@@ -15,7 +15,6 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/capture_sheet.dart';
-import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../domain/gestation.dart';

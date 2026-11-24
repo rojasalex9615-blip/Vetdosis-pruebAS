@@ -308,7 +308,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: VetColors.turquoise.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(VetColors.radiusMd),
+        borderRadius: BorderRadius.circular(VetSpacing.radiusMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +386,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: VetColors.brandSky.withValues(alpha: .10),
-        borderRadius: BorderRadius.circular(VetColors.radiusMd),
+        borderRadius: BorderRadius.circular(VetSpacing.radiusMd),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -9,10 +9,10 @@ import 'package:vetdosis_pro/modules/production/presentation/production_capture_
 /// Escritura de mentira: apunta lo que le piden y puede fallar a voluntad,
 /// que es como se comprueba que el reintento no duplica.
 class _FakeWrite implements ProductionWriteRepository {
-  _FakeWrite({this.fallarVeces = 0, this.pares = _paresPorOmision});
+  _FakeWrite({this.fallarVeces = 0});
 
   int fallarVeces;
-  List<SpeciesPurpose> pares;
+  List<SpeciesPurpose> pares = _paresPorOmision;
   bool fallarCatalogo = false;
 
   final llamadas = <String>[];

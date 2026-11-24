@@ -616,8 +616,8 @@ class _MovimientoSheetState extends State<_MovimientoSheet> {
           busy: busy,
           suffix: unidadTexto,
           help: [
-            if (_conversion != null) _conversion!,
-            if (_despues != null) _despues!,
+            ?_conversion,
+            ?_despues,
           ].join(' '),
           extraValidator: (v) {
             if (v == 0) return 'No puede ser cero';

@@ -1,13 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import '../../../vet_ui/vet_components.dart';
-import '../../../vet_ui/vet_icons.dart';
-import '../../auth/domain/clinic_membership.dart';
-import '../../patients/presentation/patient_view_model.dart' show newOperationId;
-import '../domain/exotic_dashboard.dart';
-import '../domain/exotic_write_repository.dart';
-
 /// Las pantallas de captura del módulo de exóticos.
 ///
 /// Hasta ahora el panel solo sabía leer: las tablas existían y nadie podía
@@ -25,6 +15,17 @@ import '../domain/exotic_write_repository.dart';
 /// la misma operación y devuelve el registro que ya creó en lugar de
 /// duplicarlo. Solo al cerrar con éxito se genera uno nuevo.
 library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_icons.dart';
+import '../../auth/domain/clinic_membership.dart';
+import '../../patients/presentation/patient_view_model.dart' show newOperationId;
+import '../domain/exotic_dashboard.dart';
+import '../domain/exotic_write_repository.dart';
+
 
 /// Resultado de abrir un formulario: `true` si se guardó algo.
 typedef CapturaGuardada = bool;

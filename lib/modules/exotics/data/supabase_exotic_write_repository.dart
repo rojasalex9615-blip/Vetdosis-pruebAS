@@ -42,7 +42,7 @@ class SupabaseExoticWriteRepository implements ExoticWriteRepository {
   /// Las fechas de calendario (puesta, vigencia) no llevan hora: convertirlas
   /// a UTC podría correrlas un día según la zona horaria.
   String? _dia(DateTime? valor) =>
-      valor == null ? null : valor.toIso8601String().substring(0, 10);
+      valor?.toIso8601String().substring(0, 10);
 
   @override
   Future<String> guardarRecinto({
