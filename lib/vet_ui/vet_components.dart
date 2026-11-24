@@ -79,7 +79,9 @@ class VetCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: forma,
             border: Border.all(
-              color: neu ? Colors.transparent : theme.colorScheme.outlineVariant,
+              color: neu
+                  ? Colors.transparent
+                  : theme.colorScheme.outlineVariant,
             ),
           ),
           child: child,
@@ -274,11 +276,7 @@ class VetPracticeSelector extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
   static const labels = ['Pequeñas especies', 'Exóticos', 'Producción'];
-  static const icons = [
-    VetIcons.paw,
-    VetIcons.rabbit,
-    VetIcons.tractor,
-  ];
+  static const icons = [VetIcons.paw, VetIcons.rabbit, VetIcons.tractor];
   @override
   Widget build(BuildContext context) => Row(
     children: List.generate(3, (i) {
@@ -389,19 +387,14 @@ class VetIconBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vivid = vividAccent(accent);
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: .15),
+        color: accent.withValues(alpha: .18),
         borderRadius: BorderRadius.circular(size * .32),
-        boxShadow: [
-          BoxShadow(
-            color: vivid.withValues(alpha: .34),
-            blurRadius: size * .42,
-            spreadRadius: 1,
-          ),
-        ],
+        boxShadow: neuShadows(dark, depth: size / 48),
       ),
       child: Icon(icon, color: vivid, size: size * .52),
     );
@@ -779,8 +772,8 @@ class VetDataRow extends StatelessWidget {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final muted = theme.colorScheme.onSurfaceVariant;
-    final valueStyle = (emphasized ? textTheme.titleLarge : textTheme.bodyMedium)
-        ?.copyWith(
+    final valueStyle =
+        (emphasized ? textTheme.titleLarge : textTheme.bodyMedium)?.copyWith(
           fontWeight: FontWeight.w600,
           color: valueColor ?? theme.colorScheme.onSurface,
         );
@@ -1028,9 +1021,7 @@ class VetPlanCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(name, style: theme.textTheme.titleMedium),
-              ),
+              Expanded(child: Text(name, style: theme.textTheme.titleMedium)),
               if (current) ...[
                 const SizedBox(width: 8),
                 VetStatusBadge(label: 'Tu plan', kind: VetBadgeKind.success),
@@ -1093,9 +1084,7 @@ class VetSecondaryButton extends StatelessWidget {
           horizontal: VetSpacing.lg,
           vertical: VetSpacing.md,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
       ),
       child: Row(
@@ -1155,23 +1144,19 @@ class VetActionChip extends StatelessWidget {
       radius: VetSpacing.radiusMd,
       child: ActionChip(
         avatar: icon != null ? Icon(icon, size: 16, color: color) : null,
-        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         onPressed: onPressed,
         backgroundColor: selected
             ? color.withValues(alpha: .15)
             : isActive
-                ? cs.surface
-                : cs.surfaceContainerLow,
-        side: BorderSide(
-          color: selected ? color : cs.outlineVariant,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 6,
-        ),
+            ? cs.surface
+            : cs.surfaceContainerLow,
+        side: BorderSide(color: selected ? color : cs.outlineVariant),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
     );
   }
@@ -1241,10 +1226,7 @@ class VetSectionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: padding,
-                child: child,
-              ),
+              Padding(padding: padding, child: child),
             ],
           ),
         ),
