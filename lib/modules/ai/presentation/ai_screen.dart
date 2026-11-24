@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../core/widgets/neu_identity.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
@@ -1114,34 +1115,28 @@ class _AiNotice extends StatelessWidget {
 LinearGradient _aiGradient(ColorScheme cs) =>
     LinearGradient(colors: [cs.primary, cs.tertiary]);
 
-/// Icono del asistente sobre una pastilla clara.
+/// Icono del asistente: el mismo azul en degradado y el mismo relieve que el
+/// boton de enviar, para que se lea como parte del asistente y no como una
+/// caja aparte.
 class _AiBotAvatar extends StatelessWidget {
   const _AiBotAvatar({this.size = 36});
   final double size;
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: cs.surface,
+        gradient: _aiGradient(cs),
         borderRadius: BorderRadius.circular(size * .3),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withValues(alpha: .08),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: neuShadows(dark, depth: size / 48),
       ),
-      child: ShaderMask(
-        shaderCallback: (rect) => _aiGradient(cs).createShader(rect),
-        child: Icon(
-          Icons.smart_toy_rounded,
-          size: size * .6,
-          color: Colors.white,
-        ),
+      child: Icon(
+        Icons.smart_toy_rounded,
+        size: size * .6,
+        color: Colors.white,
       ),
     );
   }
