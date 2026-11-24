@@ -19,27 +19,26 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/widgets/capture_sheet.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../../auth/domain/clinic_membership.dart';
-import '../../patients/presentation/patient_view_model.dart' show newOperationId;
 import '../domain/exotic_dashboard.dart';
 import '../domain/exotic_write_repository.dart';
 
-
 /// Resultado de abrir un formulario: `true` si se guardó algo.
-typedef CapturaGuardada = bool;
+typedef CapturaGuardada = CaptureSaved;
 
 // ---------------------------------------------------------------------------
-// Andamio comun
+// Andamio comun: el marco y los campos viven en core
 // ---------------------------------------------------------------------------
 
-/// El marco que comparten los ocho formularios.
-///
-/// Centraliza lo aburrido y fácil de hacer mal: el estado ocupado, el mensaje
-/// de error, que no se pueda pulsar guardar dos veces y que el teclado no tape
-/// el botón.
-class _HojaDeCaptura extends StatefulWidget {
+String _traducirError(Object error) => error is ExoticWriteException
+    ? error.mensaje
+    : traducirErrorExotico(error).mensaje;
+
+/// El marco de captura del core, con los nombres del módulo.
+class _HojaDeCaptura extends StatelessWidget {
   const _HojaDeCaptura({
     required this.titulo,
     required this.icono,
@@ -51,9 +50,6 @@ class _HojaDeCaptura extends StatefulWidget {
 
   final String titulo;
   final IconData icono;
-
-  /// Los campos propios del formulario. Reciben si está ocupado para poder
-  /// deshabilitarse durante el guardado.
   final List<Widget> Function(bool ocupado) campos;
 
   /// Devuelve el id creado. Debe lanzar [ExoticWriteException] si algo falla.
@@ -61,132 +57,30 @@ class _HojaDeCaptura extends StatefulWidget {
   final Future<String> Function(String operation) guardar;
 
   final String etiquetaGuardar;
-
-  /// Nota fija bajo el título, para advertencias de permiso o de alcance.
   final String? aviso;
 
   @override
-  State<_HojaDeCaptura> createState() => _HojaDeCapturaState();
-}
-
-class _HojaDeCapturaState extends State<_HojaDeCaptura> {
-  final _form = GlobalKey<FormState>();
-
-  /// Se genera una vez y sobrevive a los reintentos: en eso consiste el
-  /// recibo. Si se regenerara en cada pulsación, dos intentos seguidos tras un
-  /// error de red crearían dos registros.
-  final String _operacion = newOperationId();
-
-  bool _ocupado = false;
-  String? _error;
-
-  Future<void> _enviar() async {
-    if (!(_form.currentState?.validate() ?? false)) return;
-    setState(() {
-      _ocupado = true;
-      _error = null;
-    });
-    try {
-      await widget.guardar(_operacion);
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } on ExoticWriteException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _ocupado = false;
-        _error = e.mensaje;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _ocupado = false;
-        _error = traducirErrorExotico(e).mensaje;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      // El teclado no debe tapar el boton de guardar.
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        child: Form(
-          key: _form,
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-            children: [
-              Row(
-                children: [
-                  VetIconBox(icon: widget.icono),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.titulo,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Cerrar',
-                    onPressed: _ocupado
-                        ? null
-                        : () => Navigator.of(context).pop(false),
-                    icon: const Icon(VetIcons.close),
-                  ),
-                ],
-              ),
-              if (widget.aviso != null) ...[
-                const SizedBox(height: 12),
-                VetNotice(text: widget.aviso!, kind: VetBadgeKind.information),
-              ],
-              const SizedBox(height: 16),
-              ...widget.campos(_ocupado),
-              if (_error != null) ...[
-                const SizedBox(height: 16),
-                VetNotice(
-                  text: _error!,
-                  icon: VetIcons.alertTriangle,
-                  kind: VetBadgeKind.danger,
-                ),
-              ],
-              const SizedBox(height: 20),
-              VetActionButton(
-                label: widget.etiquetaGuardar,
-                icon: VetIcons.save,
-                loading: _ocupado,
-                onPressed: _ocupado ? null : _enviar,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => CaptureSheet(
+    title: titulo,
+    icon: icono,
+    fields: campos,
+    onSave: guardar,
+    saveLabel: etiquetaGuardar,
+    notice: aviso,
+    translateError: _traducirError,
+  );
 }
 
 /// Abre un formulario como hoja inferior y dice si se guardó algo.
-Future<CapturaGuardada> _abrir(BuildContext context, Widget hoja) async {
-  final guardado = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => hoja,
-  );
-  return guardado ?? false;
-}
+Future<CapturaGuardada> _abrir(BuildContext context, Widget hoja) =>
+    openCaptureSheet(context, hoja);
 
 // ---------------------------------------------------------------------------
-// Piezas de campo reutilizables
+// Piezas de campo: reenvíos a core
 // ---------------------------------------------------------------------------
 
-/// Campo numérico opcional con coma o punto.
-///
-/// En México se teclea «36,5» tanto como «36.5»; rechazar la coma sería
-/// pelearse con la costumbre de quien captura.
+double? leerNumero(String? texto) => readDecimal(texto);
+
 class _CampoNumero extends StatelessWidget {
   const _CampoNumero({
     required this.control,
@@ -203,38 +97,15 @@ class _CampoNumero extends StatelessWidget {
   final String? ayuda;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: TextFormField(
-      controller: control,
-      enabled: !ocupado,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,\-]')),
-      ],
-      decoration: InputDecoration(
-        labelText: etiqueta,
-        suffixText: sufijo,
-        helperText: ayuda,
-        border: const OutlineInputBorder(),
-      ),
-      validator: (v) {
-        final t = (v ?? '').trim();
-        if (t.isEmpty) return null;
-        return leerNumero(t) == null ? 'Número no válido' : null;
-      },
-    ),
+  Widget build(BuildContext context) => CaptureNumberField(
+    controller: control,
+    label: etiqueta,
+    busy: ocupado,
+    suffix: sufijo,
+    help: ayuda,
   );
 }
 
-/// Lee un número aceptando coma decimal. Devuelve `null` si no es un número.
-double? leerNumero(String? texto) {
-  final t = (texto ?? '').trim().replaceAll(',', '.');
-  if (t.isEmpty) return null;
-  return double.tryParse(t);
-}
-
-/// Campo de texto con validación de obligatorio opcional.
 class _CampoTexto extends StatelessWidget {
   const _CampoTexto({
     required this.control,
@@ -254,26 +125,17 @@ class _CampoTexto extends StatelessWidget {
   final String? ayuda;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: TextFormField(
-      controller: control,
-      enabled: !ocupado,
-      maxLines: lineas,
-      maxLength: maximo,
-      decoration: InputDecoration(
-        labelText: obligatorio ? '$etiqueta *' : etiqueta,
-        helperText: ayuda,
-        border: const OutlineInputBorder(),
-      ),
-      validator: !obligatorio
-          ? null
-          : (v) => (v ?? '').trim().isEmpty ? 'Hace falta este dato' : null,
-    ),
+  Widget build(BuildContext context) => CaptureTextField(
+    controller: control,
+    label: etiqueta,
+    busy: ocupado,
+    required: obligatorio,
+    lines: lineas,
+    maxLength: maximo,
+    help: ayuda,
   );
 }
 
-/// Selector de fecha. Nunca deja elegir futuro cuando [soloPasado].
 class _CampoFecha extends StatelessWidget {
   const _CampoFecha({
     required this.valor,
@@ -290,50 +152,16 @@ class _CampoFecha extends StatelessWidget {
   final ValueChanged<DateTime?> alCambiar;
 
   @override
-  Widget build(BuildContext context) {
-    final hoy = DateTime.now();
-    final texto = valor == null
-        ? 'Sin definir'
-        : '${valor!.day.toString().padLeft(2, '0')}/'
-              '${valor!.month.toString().padLeft(2, '0')}/${valor!.year}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: obligatorio ? '$etiqueta *' : etiqueta,
-          border: const OutlineInputBorder(),
-        ),
-        child: Row(
-          children: [
-            Expanded(child: Text(texto)),
-            if (valor != null && !obligatorio)
-              IconButton(
-                tooltip: 'Quitar fecha',
-                onPressed: ocupado ? null : () => alCambiar(null),
-                icon: const Icon(VetIcons.close, size: 18),
-              ),
-            TextButton(
-              onPressed: ocupado
-                  ? null
-                  : () async {
-                      final elegida = await showDatePicker(
-                        context: context,
-                        initialDate: valor ?? hoy,
-                        firstDate: DateTime(hoy.year - 30),
-                        lastDate: soloPasado ? hoy : DateTime(hoy.year + 5),
-                      );
-                      if (elegida != null) alCambiar(elegida);
-                    },
-              child: const Text('Elegir'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => CaptureDateField(
+    value: valor,
+    label: etiqueta,
+    busy: ocupado,
+    onChanged: alCambiar,
+    pastOnly: soloPasado,
+    required: obligatorio,
+  );
 }
 
-/// Desplegable de opciones con etiqueta legible.
 class _CampoOpcion<T> extends StatelessWidget {
   const _CampoOpcion({
     required this.valor,
@@ -354,43 +182,19 @@ class _CampoOpcion<T> extends StatelessWidget {
   final String? ayuda;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: DropdownButtonFormField<T>(
-      initialValue: valor,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: '$etiqueta *',
-        helperText: ayuda,
-        border: const OutlineInputBorder(),
-      ),
-      items: [
-        for (final o in opciones)
-          DropdownMenuItem(
-            value: o,
-            child: Text(
-              nombrar(o),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-      ],
-      onChanged: ocupado ? null : alCambiar,
-      validator: (v) => v == null ? 'Elige una opción' : null,
-    ),
+  Widget build(BuildContext context) => CaptureChoiceField<T>(
+    value: valor,
+    label: etiqueta,
+    options: opciones,
+    nameOf: nombrar,
+    busy: ocupado,
+    onChanged: alCambiar,
+    help: ayuda,
   );
 }
 
-/// Encabezado pequeño para separar bloques dentro de un formulario largo.
-Widget _bloque(BuildContext context, String texto) => Padding(
-  padding: const EdgeInsets.only(top: 4, bottom: 10),
-  child: Text(
-    texto,
-    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-    ),
-  ),
-);
+Widget _bloque(BuildContext context, String texto) =>
+    captureBlockLabel(context, texto);
 
 // ---------------------------------------------------------------------------
 // Catalogos: deben coincidir con los CHECK de la base
@@ -544,7 +348,8 @@ class _FormularioRecintoState extends State<_FormularioRecinto> {
     return _HojaDeCaptura(
       titulo: 'Nuevo recinto',
       icono: VetIcons.thermometer,
-      aviso: 'Deja en blanco los rangos que este recinto no vigile. El panel '
+      aviso:
+          'Deja en blanco los rangos que este recinto no vigile. El panel '
           'no juzga un parámetro que no se declaró.',
       campos: (ocupado) => [
         _CampoTexto(
@@ -571,8 +376,13 @@ class _FormularioRecintoState extends State<_FormularioRecinto> {
         _bloque(context, 'Gradiente térmico'),
         // Se piden los dos puntos por separado porque en un ectotermo son dos
         // exigencias distintas: una media las oculta a las dos.
-        _par(ocupado, 'Punto caliente', 'temp_caliente_min',
-            'temp_caliente_max', '°C'),
+        _par(
+          ocupado,
+          'Punto caliente',
+          'temp_caliente_min',
+          'temp_caliente_max',
+          '°C',
+        ),
         _par(ocupado, 'Punto frío', 'temp_fria_min', 'temp_fria_max', '°C'),
         _bloque(context, 'Humedad y luz'),
         _par(ocupado, 'Humedad', 'humedad_min', 'humedad_max', '%'),
@@ -697,7 +507,8 @@ class _FormularioLecturaState extends State<_FormularioLectura> {
   @override
   void initState() {
     super.initState();
-    _recinto = widget.recintoInicial ??
+    _recinto =
+        widget.recintoInicial ??
         (widget.recintos.length == 1 ? widget.recintos.first : null);
   }
 
@@ -727,22 +538,35 @@ class _FormularioLecturaState extends State<_FormularioLectura> {
       );
     }
 
-    si(r.tempCalienteMin != null || r.tempCalienteMax != null, 'temp_caliente',
-        'Punto caliente', '°C');
-    si(r.tempFriaMin != null || r.tempFriaMax != null, 'temp_fria',
-        'Punto frío', '°C');
+    si(
+      r.tempCalienteMin != null || r.tempCalienteMax != null,
+      'temp_caliente',
+      'Punto caliente',
+      '°C',
+    );
+    si(
+      r.tempFriaMin != null || r.tempFriaMax != null,
+      'temp_fria',
+      'Punto frío',
+      '°C',
+    );
     si(r.humedadMin != null || r.humedadMax != null, 'humedad', 'Humedad', '%');
     si(r.uvMin != null || r.uvMax != null, 'uv_index', 'Índice UV', '');
     si(r.phMin != null || r.phMax != null, 'ph', 'pH', '');
     si(r.amoniacoMax != null, 'amoniaco', 'Amoniaco', 'mg/L');
     si(r.nitritoMax != null, 'nitrito', 'Nitrito', 'mg/L');
-    si(r.salinidadMin != null || r.salinidadMax != null, 'salinidad',
-        'Salinidad', 'ppt');
+    si(
+      r.salinidadMin != null || r.salinidadMax != null,
+      'salinidad',
+      'Salinidad',
+      'ppt',
+    );
 
     if (campos.isEmpty) {
       campos.add(
         const VetNotice(
-          text: 'Este recinto no declara ningún rango objetivo todavía. '
+          text:
+              'Este recinto no declara ningún rango objetivo todavía. '
               'Edítalo para añadirle rangos y así poder comparar sus lecturas.',
           icon: VetIcons.info,
           kind: VetBadgeKind.warning,
@@ -758,7 +582,8 @@ class _FormularioLecturaState extends State<_FormularioLectura> {
       return const _SinRequisito(
         titulo: 'Registrar lectura',
         icono: VetIcons.thermometer,
-        texto: 'Antes de registrar una lectura hace falta dar de alta al menos '
+        texto:
+            'Antes de registrar una lectura hace falta dar de alta al menos '
             'un recinto. Una medición sin recinto no se puede comparar con '
             'nada.',
       );
@@ -851,7 +676,8 @@ class _FormularioTomaState extends State<_FormularioToma> {
   @override
   void initState() {
     super.initState();
-    _ejemplar = widget.ejemplarInicial ??
+    _ejemplar =
+        widget.ejemplarInicial ??
         (widget.ejemplares.length == 1 ? widget.ejemplares.first : null);
   }
 
@@ -869,7 +695,8 @@ class _FormularioTomaState extends State<_FormularioToma> {
       return const _SinRequisito(
         titulo: 'Registrar toma',
         icono: VetIcons.bowlPaw,
-        texto: 'No hay ejemplares registrados en esta clínica todavía. '
+        texto:
+            'No hay ejemplares registrados en esta clínica todavía. '
             'Da de alta al paciente en Pacientes y vuelve aquí.',
       );
     }
@@ -1007,7 +834,8 @@ class _FormularioEventoState extends State<_FormularioEvento> {
   @override
   void initState() {
     super.initState();
-    _ejemplar = widget.ejemplarInicial ??
+    _ejemplar =
+        widget.ejemplarInicial ??
         (widget.ejemplares.length == 1 ? widget.ejemplares.first : null);
   }
 
@@ -1116,7 +944,8 @@ class _FormularioMarcajeState extends State<_FormularioMarcaje> {
   @override
   void initState() {
     super.initState();
-    _ejemplar = widget.ejemplarInicial ??
+    _ejemplar =
+        widget.ejemplarInicial ??
         (widget.ejemplares.length == 1 ? widget.ejemplares.first : null);
   }
 
@@ -1139,7 +968,8 @@ class _FormularioMarcajeState extends State<_FormularioMarcaje> {
     return _HojaDeCaptura(
       titulo: 'Marcaje del ejemplar',
       icono: VetIcons.tagPaw,
-      aviso: 'Un mismo código activo no puede estar en dos ejemplares de la '
+      aviso:
+          'Un mismo código activo no puede estar en dos ejemplares de la '
           'clínica: el buscador dejaría de ser fiable.',
       campos: (ocupado) => [
         _CampoOpcion<ExoticSpecimen>(
@@ -1243,7 +1073,8 @@ class _FormularioLegalState extends State<_FormularioLegal> {
   @override
   void initState() {
     super.initState();
-    _ejemplar = widget.ejemplarInicial ??
+    _ejemplar =
+        widget.ejemplarInicial ??
         (widget.ejemplares.length == 1 ? widget.ejemplares.first : null);
   }
 
@@ -1268,7 +1099,8 @@ class _FormularioLegalState extends State<_FormularioLegal> {
     return _HojaDeCaptura(
       titulo: 'Estatus legal',
       icono: VetIcons.certificate,
-      aviso: 'Este registro solo lo puede firmar un administrador o un MVZ: '
+      aviso:
+          'Este registro solo lo puede firmar un administrador o un MVZ: '
           'es quien responde por él ante la autoridad.',
       campos: (ocupado) => [
         _CampoOpcion<ExoticSpecimen>(
@@ -1327,9 +1159,7 @@ class _FormularioLegalState extends State<_FormularioLegal> {
           subtitle: const Text(
             'Marca solo si el papel existe y está en el expediente.',
           ),
-          onChanged: ocupado
-              ? null
-              : (v) => setState(() => _documentada = v),
+          onChanged: ocupado ? null : (v) => setState(() => _documentada = v),
         ),
         const SizedBox(height: 8),
         _CampoTexto(
@@ -1419,7 +1249,8 @@ class _FormularioNidadaState extends State<_FormularioNidada> {
   Widget build(BuildContext context) => _HojaDeCaptura(
     titulo: 'Nueva nidada',
     icono: VetIcons.egg,
-    aviso: 'La fecha de eclosión la calcula el servidor con los días de '
+    aviso:
+        'La fecha de eclosión la calcula el servidor con los días de '
         'incubación, para que no dependa del reloj del teléfono.',
     campos: (ocupado) => [
       _CampoTexto(
@@ -1612,7 +1443,8 @@ class _FormularioCuarentenaState extends State<_FormularioCuarentena> {
   @override
   void initState() {
     super.initState();
-    _estancia = widget.estanciaInicial ??
+    _estancia =
+        widget.estanciaInicial ??
         (widget.estancias.length == 1 ? widget.estancias.first : null);
     final previos = _estancia?.diasAislamiento;
     if (previos != null) _dias.text = '$previos';
@@ -1631,7 +1463,8 @@ class _FormularioCuarentenaState extends State<_FormularioCuarentena> {
       return const _SinRequisito(
         titulo: 'Plan de cuarentena',
         icono: VetIcons.hospital,
-        texto: 'No hay hospitalizaciones abiertas. La cuarentena se fija '
+        texto:
+            'No hay hospitalizaciones abiertas. La cuarentena se fija '
             'sobre una estancia que ya existe.',
       );
     }
@@ -1639,7 +1472,8 @@ class _FormularioCuarentenaState extends State<_FormularioCuarentena> {
       titulo: 'Plan de cuarentena',
       icono: VetIcons.hospital,
       etiquetaGuardar: 'Fijar días',
-      aviso: 'Con esto el panel cuenta hacia atrás los días que faltan para '
+      aviso:
+          'Con esto el panel cuenta hacia atrás los días que faltan para '
           'terminar el aislamiento.',
       campos: (ocupado) => [
         _CampoOpcion<ExoticStay>(
@@ -1708,41 +1542,8 @@ class _SinRequisito extends StatelessWidget {
   final String texto;
 
   @override
-  Widget build(BuildContext context) => SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              VetIconBox(icon: icono),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  titulo,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          VetNotice(
-            text: texto,
-            icon: VetIcons.info,
-            kind: VetBadgeKind.information,
-          ),
-          const SizedBox(height: 20),
-          VetActionButton(
-            label: 'Entendido',
-            style: VetActionStyle.secondary,
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-        ],
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      MissingPrerequisiteSheet(title: titulo, icon: icono, text: texto);
 }
 
 /// Quién puede escribir en exóticos. Coincide con el `has_clinic_role` de los
