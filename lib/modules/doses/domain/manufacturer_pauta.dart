@@ -259,6 +259,84 @@ class ManufacturerPautaCatalog {
       pautas.where((p) => p.productUrl == productUrl).toList(growable: false);
 }
 
+/// Grupos de especie del filtro del vademécum.
+///
+/// La fuente escribe la especie libremente («Caninos y felinos», «Perros y
+/// gatos», «Cerdos»): 435 textos distintos para una docena de grupos. El
+/// filtro trabaja con el grupo, no con el texto literal.
+const especiesDelVademecum = [
+  'Caninos',
+  'Felinos',
+  'Bovinos',
+  'Porcinos',
+  'Ovinos',
+  'Caprinos',
+  'Equinos',
+  'Aves',
+  'Conejos',
+  'Peces',
+  'Abejas',
+  'Reptiles',
+];
+
+const _clavesDeEspecie = <String, List<String>>{
+  'Caninos': ['canin', 'perr', 'cachorr'],
+  'Felinos': ['felin', 'gat'],
+  'Bovinos': ['bovin', 'vaca', 'toro', 'terner', 'becerr', 'buey'],
+  'Porcinos': ['porcin', 'cerd', 'lechon', 'cochin'],
+  'Ovinos': ['ovin', 'ovej', 'cordero', 'borreg'],
+  'Caprinos': ['caprin', 'cabra', 'cabrit', 'chivo'],
+  'Equinos': ['equin', 'caball', 'yegu', 'potro', 'mular', 'burro'],
+  'Aves': [
+    'ave',
+    'aviar',
+    'poll',
+    'gallin',
+    'pavo',
+    'pata',
+    'ganso',
+    'codorniz',
+    'psitac',
+    'loro',
+    'periquito',
+    'canari',
+  ],
+  'Conejos': ['conejo', 'cunicul'],
+  'Peces': ['pez', 'pece', 'tilapia', 'trucha', 'carpa', 'bagre', 'salmon'],
+  'Abejas': ['abej', 'apis'],
+  'Reptiles': [
+    'reptil',
+    'serpient',
+    'lagart',
+    'tortug',
+    'gecko',
+    'iguana',
+    'ofidio',
+  ],
+};
+
+/// Grupo o grupos a los que pertenece el texto de especie de una pauta.
+List<String> gruposDeEspecie(String texto) {
+  final t = normalizeDoseSearch(texto);
+  if (t.isEmpty ||
+      t.contains('no especificado') ||
+      t.contains('sin datos') ||
+      t.contains('no aplica')) {
+    return const ['Sin especificar'];
+  }
+  // Con `contains` a secas, «bovinos» también caería en Ovinos por la cadena
+  // «ovin». La clave tiene que empezar palabra.
+  final out = [
+    for (final entry in _clavesDeEspecie.entries)
+      if (entry.value.any((clave) => RegExp('(?:^|[^a-z])$clave').hasMatch(t)))
+        entry.key,
+  ];
+  return out.isEmpty ? const ['Sin especificar'] : out;
+}
+
+bool pautaDeEspecie(ManufacturerPauta pauta, String grupo) =>
+    grupo == 'Todas' || gruposDeEspecie(pauta.species).contains(grupo);
+
 /// Principio activo con las pautas que lo mencionan.
 ///
 /// Es un índice de consulta, no una regla: agrupa por el texto de
