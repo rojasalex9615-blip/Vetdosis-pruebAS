@@ -1,6 +1,6 @@
 name: Diagnostico temporal de flutter analyze
-# Temporal: publica la salida de `flutter analyze` como anotaciones, que si
-# se pueden leer por API. Se borra en cuanto el analisis quede limpio.
+# Temporal: publica la salida de `flutter analyze` y de `flutter test` como
+# anotaciones, que si se pueden leer por API. Se borra al quedar todo verde.
 on:
   workflow_dispatch:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 jobs:
   diagnostico:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -22,24 +22,44 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Analizar y publicar los hallazgos como anotaciones
+      - name: Analizar y probar, publicando los fallos como anotaciones
         run: |
           set +e
           flutter analyze > analyze.txt 2>&1
-          echo "codigo de salida de flutter analyze: $?"
-          cat analyze.txt
+          echo "flutter analyze termino con: $?"
+          flutter test --timeout 5m --concurrency 2 > pruebas.txt 2>&1
+          echo "flutter test termino con: $?"
+          tail -40 pruebas.txt
           python3 - <<'PY'
           import re
-          texto = open('analyze.txt', encoding='utf-8', errors='replace').read()
-          lineas = texto.splitlines()
-          utiles = [l.strip() for l in lineas if '•' in l]
-          print(f'TOTAL DE HALLAZGOS: {len(utiles)}')
-          if not utiles:
-              utiles = [l.strip() for l in lineas if l.strip()][-25:]
-          bloques = [utiles[i:i + 25] for i in range(0, len(utiles), 25)][:8]
-          for n, bloque in enumerate(bloques, 1):
-              cuerpo = '%0A'.join(
-                  x.replace('%', '%25').replace('\r', '') for x in bloque
-              )
-              print(f'::error title=analyze {n} de {len(bloques)} ({len(utiles)} hallazgos)::{cuerpo}')
+
+          def anota(titulo, lineas, limite=6):
+              bloques = [lineas[i:i + 20] for i in range(0, len(lineas), 20)][:limite]
+              for n, bloque in enumerate(bloques, 1):
+                  cuerpo = '%0A'.join(
+                      x.replace('%', '%25').replace('\r', '')[:900] for x in bloque
+                  )
+                  print(f'::error title={titulo} {n}/{len(bloques)}::{cuerpo}')
+
+          analisis = open('analyze.txt', encoding='utf-8', errors='replace').read().splitlines()
+          hallazgos = [l.strip() for l in analisis if '•' in l]
+          print(f'HALLAZGOS DE ANALYZE: {len(hallazgos)}')
+          if hallazgos:
+              anota('analyze', hallazgos, 2)
+
+          pruebas = open('pruebas.txt', encoding='utf-8', errors='replace').read().splitlines()
+          fallos = []
+          for i, l in enumerate(pruebas):
+              if '[E]' in l:
+                  fallos.append('--- ' + l.strip())
+                  for sig in pruebas[i + 1:i + 9]:
+                      if '[E]' in sig:
+                          break
+                      if sig.strip():
+                          fallos.append('    ' + sig.strip())
+          print(f'LINEAS DE FALLO DE PRUEBAS: {len(fallos)}')
+          if fallos:
+              anota('pruebas', fallos, 6)
+          else:
+              anota('cola de pruebas', [l.strip() for l in pruebas if l.strip()][-20:], 1)
           PY
