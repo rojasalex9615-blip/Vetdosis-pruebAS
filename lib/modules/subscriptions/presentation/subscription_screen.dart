@@ -405,7 +405,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        '${shortDate(g['starts_at'])} → ${shortDate(g['ends_at'])}',
+                        '${VetFormat.dateFromIso(g['starts_at'])} → ${VetFormat.dateFromIso(g['ends_at'])}',
                       ),
                       trailing: VetStatusBadge(
                         label: g['revoked'] == true ? 'Revocado' : 'Vigente',
@@ -483,7 +483,7 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
-                      '${p['provider']} · ${shortDate(p['period_start'])} → ${shortDate(p['period_end'])}',
+                      '${p['provider']} · ${VetFormat.dateFromIso(p['period_start'])} → ${VetFormat.dateFromIso(p['period_end'])}',
                     ),
                   ),
               ],
@@ -507,37 +507,6 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
 }
 
 String storageSize(dynamic value) => VetFormat.size(value);
-
-const _spanishMonths = [
-  'ene',
-  'feb',
-  'mar',
-  'abr',
-  'may',
-  'jun',
-  'jul',
-  'ago',
-  'sep',
-  'oct',
-  'nov',
-  'dic',
-];
-
-String shortDate(dynamic value) {
-  final parsed = DateTime.tryParse('$value');
-  if (parsed == null) return '$value';
-  final d = parsed.toLocal();
-  return '${d.day} ${_spanishMonths[d.month - 1]} ${d.year}';
-}
-
-String shortDateTime(dynamic value) {
-  final parsed = DateTime.tryParse('$value');
-  if (parsed == null) return '$value';
-  final d = parsed.toLocal();
-  final hh = d.hour.toString().padLeft(2, '0');
-  final mm = d.minute.toString().padLeft(2, '0');
-  return '${shortDate(value)}, $hh:$mm';
-}
 
 String storagePercent(dynamic used, dynamic limit) {
   final u = (num.tryParse('$used') ?? 0).toDouble();
