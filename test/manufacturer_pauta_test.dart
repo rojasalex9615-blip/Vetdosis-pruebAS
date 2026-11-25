@@ -83,6 +83,60 @@ void main() {
     expect(aves.canCalculate, true);
   });
 
+  test('solo interpreta kg cuando la referencia declara peso del animal', () {
+    final exacta = PautaWeightReference.parse(
+      amount: '1',
+      unit: 'mL',
+      reference: 'por kg de peso vivo',
+    );
+    expect(exacta, isNotNull);
+    expect(exacta!.kg, '1');
+
+    final numerica = PautaWeightReference.parse(
+      amount: '2',
+      unit: 'mL',
+      reference: 'por 20 kg de peso vivo',
+    );
+    expect(numerica, isNotNull);
+    expect(numerica!.kg, '20');
+
+    // Las fichas del maestro usan «peso», «peso corporal» y «PC» como
+    // sinónimos de «peso vivo»; 342 pautas dependen de ese texto.
+    for (final reference in [
+      'por kg de peso',
+      'por kg de peso corporal',
+      'por cada 20 kg de peso corporal',
+      'por 10 kg de PC',
+    ]) {
+      final ref = PautaWeightReference.parse(
+        amount: '1',
+        unit: 'mL',
+        reference: reference,
+      );
+      expect(ref, isNotNull, reason: 'Deberia aceptarse: $reference');
+      expect(ref!.text, reference);
+    }
+
+    for (final reference in [
+      'por kg',
+      'por kg de alimento',
+      'por kg de producto',
+      'por 20-40 kg de peso vivo',
+      'por 20 kg de peso vivo durante 3 días',
+      'por tonelada de alimento (para 12.75 mg/kg/día)',
+    ]) {
+      expect(
+        PautaWeightReference.parse(
+          amount: '1',
+          unit: 'mL',
+          reference: reference,
+        ),
+        isNull,
+        reason: 'No debe inferirse una base de peso vivo desde: $reference',
+      );
+    }
+  });
+
   test('un rango de kg sigue sin precargar aunque diga por kg', () {
     final rangos = catalog.pautas.where(
       (p) =>
