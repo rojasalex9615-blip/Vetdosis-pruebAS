@@ -88,6 +88,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                 a['patient_id'] == widget.initialPatientId) &&
             (appointmentState == null || a['state'] == appointmentState) &&
             (filterProfessional == null ||
+                professionalIds.length < 2 ||
                 a['professional_id'] == filterProfessional) &&
             (calendarDay == null ||
                 DateUtils.isSameDay(
@@ -98,16 +99,40 @@ class _OperationsScreenState extends State<OperationsScreen>
       .toList();
   bool get admin => widget.member.role == ClinicRole.admin;
 
-  // Filtro por responsable: solo aparece si hay 2 o más profesionales
-  // con citas. "Todos" no filtra.
-  Widget _professionalFilter() {
+  // Profesionales con citas. El filtro por responsable solo existe si hay
+  // 2 o más; con uno solo no filtra nada (Octopus Review, PR #111: el filtro
+  // quedaba activo en silencio cuando su menú se ocultaba).
+  Set<String> get professionalIds {
     final ids = <String>{};
     for (final a in model.rows('appointments')) {
       final id = a['professional_id'];
       if (id is String && id.isNotEmpty) ids.add(id);
     }
-    if (ids.length < 2) return const SizedBox.shrink();
-    final options = {...ids, ?filterProfessional};
+    return ids;
+  }
+
+  // Filtro por responsable: solo aparece si hay 2 o más profesionales
+  // con citas. "Todos" no filtra.
+  Widget _professionalFilter() {
+    final ids = professionalIds;
+    if (ids.length < 2) {
+      // El filtro quedó activo de cuando había 2+ profesionales: se limpia
+      // para que no siga filtrando en silencio sin menú visible. Se hace
+      // fuera del build (post-frame) para no llamar a setState construyendo.
+      if (filterProfessional != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (filterProfessional != null && professionalIds.length < 2) {
+            setState(() => filterProfessional = null);
+          }
+        });
+      }
+      return const SizedBox.shrink();
+    }
+    final options = {
+      ...ids,
+      if (filterProfessional != null) filterProfessional!,
+    };
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: DropdownButtonFormField<String?>(
