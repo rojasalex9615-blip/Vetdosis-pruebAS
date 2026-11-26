@@ -47,7 +47,19 @@ class NeuHeaderCard extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(color: banda),
+              decoration: BoxDecoration(
+                color: banda,
+                boxShadow: [
+                  // Glow muy sutil alrededor de la cabecera: el mismo tono de
+                  // la sección, muy translúcido, para que el panel respire sin
+                  // cargar la franja.
+                  BoxShadow(
+                    color: quiet.withValues(alpha: .15),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
               child: Row(
                 children: [
                   // El glifo va dentro de un cuadro redondeado teñido con el
