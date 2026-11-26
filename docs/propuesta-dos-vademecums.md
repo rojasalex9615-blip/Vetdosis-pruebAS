@@ -200,3 +200,58 @@ pantalla.
 - Publicar datos (`habilitado_en_app = true`).
 - Tocar los catálogos comerciales.
 - Modificar la pantalla comercial.
+
+---
+
+## 8. Aplicado el 2026-11-26 (autorizado: «edita la tabla con los campos faltantes»)
+
+Decisión 1 resuelta a favor del `ALTER` aditivo. Script en
+`supabase/adaptations/reference_pautas_bibliografia_v1.sql`.
+
+### Columnas nuevas en `private.vetdosis_qwen_dosis_revision`
+
+| Columna | Tipo | Qué guarda |
+|---|---|---|
+| `autor` | text | autor de la pauta |
+| `titulo` | text | obra de la que procede |
+| `edicion` | text | edición |
+| `anio` | smallint | año |
+| `seccion` | text | sección o tabla, cuando la página no basta |
+| `dosis_original` | text | expresión literal, sin normalizar |
+| `unidad_original` | text | unidad tal como la escribe la fuente |
+| `regla` | text | `proporcional_al_peso` · `fija_por_animal` · `otra` |
+| `base_calculo` | text | `masa` · `volumen` · null |
+| `estado_normalizacion` | text | `normalizada` · `no_normalizable` · `no_aplica` |
+| `motivo_no_normalizado` | text | por qué no hay rango numérico |
+| `especies` | text[] | una pauta para perro y gato sigue siendo una pauta |
+
+Índices nuevos: GIN sobre `especies` y btree sobre `autor`.
+
+### Relleno
+
+Bloque `ramsey_9a_parte_a`, 1.023 pautas: autor, título, edición, año, dosis
+literal, unidad literal, especies, estado y motivo, todos desde la copia de
+trabajo. Sin reprocesar el PDF.
+
+| `regla` | Pautas |
+|---|---:|
+| `proporcional_al_peso` | 594 (580 masa, 14 volumen) |
+| `fija_por_animal` | 146 |
+| `otra` | 189 |
+| sin unidad en la fuente | 94 |
+
+`regla` describe la unidad, no si el rango se pudo extraer. La condición para
+calcular es `dosis_min is not null and base_calculo is not null`, que da 580
+pautas de masa y 14 de volumen. Las 80 normalizadas con `regla = 'otra'` son
+mg/m² y similares: tienen rango pero no se calculan por peso.
+
+### Pendiente de tu bibliografía
+
+Las 54 pautas anteriores (`dosis_001_053` y ss.) quedan con `autor`, `titulo`,
+`edicion`, `anio` y `dosis_original` en null. Su `fuente_original` dice
+«Tabla 21-1», página 235, pero no el libro. Con el autor y el título que me des,
+relleno las 54 de una vez.
+
+### Lo que no se tocó
+
+Ninguna columna existente, ningún dato original, ninguna tabla de marca.
