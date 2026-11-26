@@ -50,12 +50,35 @@ class NeuHeaderCard extends StatelessWidget {
               decoration: BoxDecoration(color: banda),
               child: Row(
                 children: [
-                  // El glifo va en el gris del menu, no en el tono de la
-                  // seccion: la franja ya lleva el color.
-                  Icon(
-                    icon,
-                    color: readableOn(VetColors.muted, banda),
-                    size: 22,
+                  // El glifo va dentro de un cuadro redondeado teñido con el
+                  // color de la sección y un glow sutil, como en las
+                  // referencias: el ojo encuentra dónde empieza cada panel sin
+                  // recorrer el texto. Antes era un icono plano en gris sobre
+                  // la franja, que no se distinguía del título.
+                  Builder(
+                    builder: (context) {
+                      final vivid = HSLColor.fromColor(color)
+                          .withSaturation(.80)
+                          .withLightness(dark ? .66 : .40)
+                          .toColor();
+                      final placa = composite(color, .20, banda);
+                      return Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: placa,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: vivid.withValues(alpha: .30),
+                              blurRadius: 14,
+                              spreadRadius: .5,
+                            ),
+                          ],
+                        ),
+                        child: Icon(icon, color: vivid, size: 18),
+                      );
+                    },
                   ),
                   const SizedBox(width: 12),
                   Expanded(
