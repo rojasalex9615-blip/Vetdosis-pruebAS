@@ -56,6 +56,12 @@ const calculationBranches = <ClinicalBranch, List<CalculationEntry>>{
       route: 'Dosis por empaque comercial',
     ),
     CalculationEntry(
+      id: 'doseTable',
+      title: 'Tabla acumulativa de dosis',
+      subtitle: 'Los dos vademecums en una tabla de 15 columnas',
+      route: 'Tabla acumulativa de dosis',
+    ),
+    CalculationEntry(
       id: 'protocols',
       title: 'Protocolos por etapas',
       subtitle: 'Premedicacion, induccion, analgesia y recuperacion',

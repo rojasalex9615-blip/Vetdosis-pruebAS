@@ -18,6 +18,7 @@ import 'calculation_branch_menu.dart';
 import '../../doses/presentation/dose_screen.dart';
 import '../../doses/presentation/commercial_package_dose_screen.dart';
 import '../../doses/presentation/farmacologico_dose_screen.dart';
+import '../../doses/presentation/tabla_dosis_screen.dart';
 import '../domain/calculation_branch.dart';
 import '../domain/calculation_catalog.dart';
 import '../domain/calculation_engine.dart';
@@ -227,6 +228,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
       body: const FarmacologicoDoseLoader(),
     ),
     'Dosis por empaque comercial' => const CommercialPackageDoseScreen(),
+    'Tabla acumulativa de dosis' => Scaffold(
+      appBar: AppBar(title: const Text('Tabla acumulativa de dosis')),
+      body: const TablaDosisLoader(),
+    ),
     'Aves · Capacidad e instalaciones' => const AvicultureScreen(),
     'Aves · Incubacion' => const IncubationScreen(),
     'Aves · Engorda' => const BroilerScreen(),
