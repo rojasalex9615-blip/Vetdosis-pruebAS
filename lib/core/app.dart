@@ -82,6 +82,7 @@ import '../modules/hospital/application/hospital_alerts.dart';
 import '../modules/hospital/application/hospital_push_service.dart';
 import '../modules/hospital/presentation/hospital_screen.dart';
 import '../modules/aviculture/domain/aviculture_records_repository.dart';
+import '../modules/patients/domain/patient_models.dart';
 import '../modules/patients/domain/patient_repository.dart';
 import '../modules/patients/domain/recorded_weight.dart';
 import '../modules/patients/presentation/patients_screen.dart';
@@ -89,6 +90,7 @@ import '../modules/patients/presentation/patients_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../modules/doses/data/syncing_dose_record_store.dart';
+import '../modules/doses/domain/peso_del_expediente.dart';
 import '../modules/doses/presentation/dose_screen.dart';
 import '../modules/doses/presentation/farmacologico_dose_screen.dart';
 import '../modules/doses/presentation/dose_label_scanner_screen.dart';
@@ -778,6 +780,35 @@ class CoreShell extends StatelessWidget {
       auth?.active != null &&
       hospitalWeightContext(auth!.active!) &&
       serverAllowed('Cálculo rápido');
+
+  /// Abre la calculadora con el paciente del expediente ya puesto.
+  ///
+  /// Si el expediente tiene peso anotado, va escrito y el cálculo queda ligado
+  /// al paciente; si no, la calculadora avisa que el peso es a mano y que no
+  /// se liga a nadie. Nunca se inventa un peso.
+  Future<void> calculateDoseForPatient(
+    BuildContext context,
+    VetPatient patient,
+    PesoDelExpediente? peso,
+  ) async {
+    final member = auth?.active;
+    if (member == null ||
+        member.clinicId != patient.clinicId ||
+        !serverAllowed('Cálculos clínicos') ||
+        ![ClinicRole.admin, ClinicRole.mvz, ClinicRole.auxiliar]
+            .contains(member.role)) {
+      return;
+    }
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: Text('Dosis para ${patient.name}')),
+          body: FarmacologicoDoseLoader(pesoDelExpediente: peso),
+        ),
+      ),
+    );
+  }
 
   Future<void> chooseDosePatient(BuildContext context) async {
     final member = auth?.active;
@@ -1543,6 +1574,12 @@ class CoreShell extends StatelessWidget {
                                   member: auth!.active!,
                                   openDoses: (clinicId) =>
                                       abrirDoseRecordStore(clinicId: clinicId),
+                                  onCalculateDose: (patient, peso) =>
+                                      calculateDoseForPatient(
+                                        context,
+                                        patient,
+                                        peso,
+                                      ),
                                   canOpenActivity: allowed,
                                   onOpenActivity:
                                       (destination, patientId) async {
@@ -1762,6 +1799,13 @@ class CoreShell extends StatelessWidget {
                                                     abrirDoseRecordStore(
                                                       clinicId: clinicId,
                                                     ),
+                                                onCalculateDose:
+                                                    (patient, peso) =>
+                                                        calculateDoseForPatient(
+                                                          context,
+                                                          patient,
+                                                          peso,
+                                                        ),
                                                 initialPatientId: id,
                                               ),
                                             ),

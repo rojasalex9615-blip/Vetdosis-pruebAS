@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
 import '../domain/patient_models.dart';
 
+/// Peso en kg aceptando la coma decimal que se escribe en la consulta.
+/// Un texto inválido no entra a la curva: se omite en vez de romper la hoja.
+double? _kg(Object? value) {
+  final texto = '${value ?? ''}'.trim().replaceAll(',', '.');
+  if (texto.isEmpty) return null;
+  final kg = double.tryParse(texto);
+  return kg != null && kg > 0 ? kg : null;
+}
+
 class WeightChart extends StatelessWidget {
   const WeightChart({super.key, required this.events});
   final List<PatientEvent> events;
   @override
   Widget build(BuildContext context) {
-    final weights = events.where((e) => e.kind == EventKind.weight).toList()
+    final weights = events
+        .where(
+          (e) =>
+              e.kind == EventKind.weight &&
+              _kg(e.data['kg']) != null &&
+              DateTime.tryParse('${e.data['date']}') != null,
+        )
+        .toList()
       ..sort((a, b) {
         final date = (a.data['date'] as String).compareTo(
           b.data['date'] as String,
@@ -14,9 +30,7 @@ class WeightChart extends StatelessWidget {
         return date == 0 ? a.createdAt.compareTo(b.createdAt) : date;
       });
     if (weights.isEmpty) return const Text('Sin pesos registrados.');
-    final values = weights
-        .map((e) => double.parse(e.data['kg'] as String))
-        .toList();
+    final values = weights.map((e) => _kg(e.data['kg'])!).toList();
     final min = values.reduce((a, b) => a < b ? a : b),
         max = values.reduce((a, b) => a > b ? a : b);
     final days = weights

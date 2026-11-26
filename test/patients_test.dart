@@ -7,6 +7,7 @@ import 'package:vetdosis_pro/core/app.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
 import 'package:vetdosis_pro/modules/doses/data/local_dose_record_store.dart';
 import 'package:vetdosis_pro/modules/doses/domain/dose_record.dart';
+import 'package:vetdosis_pro/modules/doses/domain/peso_del_expediente.dart';
 import 'package:vetdosis_pro/modules/auth/presentation/auth_view_model.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
@@ -18,6 +19,7 @@ import 'package:vetdosis_pro/modules/patients/presentation/event_form.dart';
 import 'package:vetdosis_pro/modules/patients/application/voice_dictation.dart';
 import 'support/fake_auth.dart';
 import 'package:vetdosis_pro/modules/patients/presentation/signature_pad.dart';
+import 'package:vetdosis_pro/modules/patients/presentation/weight_chart.dart';
 
 const patient = VetPatient(
   id: 'patient-a',
@@ -669,6 +671,136 @@ void main() {
       find.textContaining('Pendiente de enviar desde este dispositivo'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('La curva de peso acepta coma decimal y omite basura', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WeightChart(
+            events: [
+              event(EventKind.weight, data: {'date': '2026-01-01', 'kg': '8'}),
+              event(
+                EventKind.weight,
+                data: {'date': '2026-11-20', 'kg': '10,5'},
+              ),
+              event(
+                EventKind.weight,
+                data: {'date': '2026-11-21', 'kg': 'sin dato'},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('8.0–10.5 kg'), findsOneWidget);
+    expect(find.textContaining('10,5 kg'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('El expediente abre la calculadora con el último peso', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repo = FakePatients()
+      ..rows = [
+        event(
+          EventKind.weight,
+          data: {'date': '2026-01-01', 'kg': '8'},
+        ),
+        event(
+          EventKind.weight,
+          data: {'date': '2026-11-20', 'kg': '10,5'},
+        ),
+      ];
+    VetPatient? abierto;
+    PesoDelExpediente? pesoPasado;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            children: [
+              PatientsScreen(
+                repository: repo,
+                member: membership(ClinicRole.mvz),
+                onCalculateDose: (patient, peso) async {
+                  abierto = patient;
+                  pesoPasado = peso;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Paciente ficticio'));
+    await tester.pumpAndSettle();
+
+    final boton = find.text('Calcular dosis de este paciente');
+    expect(boton, findsOneWidget);
+    await tester.ensureVisible(boton);
+    await tester.pumpAndSettle();
+    await tester.tap(boton);
+    await tester.pumpAndSettle();
+
+    expect(abierto?.id, 'patient-a', reason: 'debe abrir ESTE paciente');
+    expect(pesoPasado?.kg, '10,5', reason: 'el peso más reciente, no el viejo');
+    expect(pesoPasado?.fecha, '2026-11-20');
+    expect(pesoPasado?.patientId, 'patient-a');
+    expect(pesoPasado?.clinicId, 'a');
+  });
+
+  testWidgets('Sin peso anotado la calculadora abre sin inventarlo', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var llamado = false;
+    PesoDelExpediente? pesoPasado = const PesoDelExpediente(
+      clinicId: 'a',
+      patientId: 'patient-a',
+      patientName: 'Paciente ficticio',
+      kg: '1',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            children: [
+              PatientsScreen(
+                repository: FakePatients(),
+                member: membership(ClinicRole.mvz),
+                onCalculateDose: (patient, peso) async {
+                  llamado = true;
+                  pesoPasado = peso;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Paciente ficticio'));
+    await tester.pumpAndSettle();
+
+    final boton = find.text('Calcular dosis de este paciente');
+    await tester.ensureVisible(boton);
+    await tester.pumpAndSettle();
+    await tester.tap(boton);
+    await tester.pumpAndSettle();
+
+    expect(llamado, isTrue);
+    expect(pesoPasado, isNull);
   });
 
   testWidgets('Recepción no ve cálculos ni se piden a la nube', (tester) async {

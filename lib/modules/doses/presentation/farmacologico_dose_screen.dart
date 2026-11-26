@@ -11,6 +11,7 @@ import '../domain/dose_record.dart';
 import '../domain/dosis_farmacologica.dart';
 import '../domain/manufacturer_pauta.dart';
 import '../domain/pauta_farmacologica.dart';
+import '../domain/peso_del_expediente.dart';
 import '../domain/quantity.dart';
 import 'farmacologico_views.dart' show GrupoChip;
 
@@ -22,11 +23,13 @@ class FarmacologicoDoseLoader extends StatelessWidget {
   const FarmacologicoDoseLoader({
     super.key,
     this.recordedWeight,
+    this.pesoDelExpediente,
     this.onChoosePatient,
     this.validateRecordedWeight,
   });
 
   final RecordedPatientWeight? recordedWeight;
+  final PesoDelExpediente? pesoDelExpediente;
   final Future<void> Function()? onChoosePatient;
 
   /// Revalida que el peso medido siga vigente antes de calcular con él.
@@ -57,6 +60,7 @@ class FarmacologicoDoseLoader extends StatelessWidget {
       return FarmacologicoDoseScreen(
         catalog: catalog,
         recordedWeight: recordedWeight,
+        pesoDelExpediente: pesoDelExpediente,
         onChoosePatient: onChoosePatient,
         validateRecordedWeight: validateRecordedWeight,
       );
@@ -75,6 +79,7 @@ class FarmacologicoDoseScreen extends StatefulWidget {
     required this.catalog,
     this.marcas = const [],
     this.recordedWeight,
+    this.pesoDelExpediente,
     this.onChoosePatient,
     this.validateRecordedWeight,
     this.records,
@@ -89,6 +94,10 @@ class FarmacologicoDoseScreen extends StatefulWidget {
 
   /// Peso medido y guardado del paciente. Si viene, no se escribe a mano.
   final RecordedPatientWeight? recordedWeight;
+
+  /// Peso que ya está anotado en el expediente. Se ofrece escrito, con su
+  /// fecha a la vista, y el cálculo queda ligado a ese paciente.
+  final PesoDelExpediente? pesoDelExpediente;
 
   final Future<void> Function()? onChoosePatient;
 
@@ -124,6 +133,8 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
     super.initState();
     final peso = widget.recordedWeight;
     if (peso != null) _peso.text = peso.kg;
+    final expediente = widget.pesoDelExpediente;
+    if (peso == null && expediente != null) _peso.text = expediente.kg;
     _abrirAlmacen();
     final revisar = widget.validateRecordedWeight;
     if (peso != null && revisar != null) _revisarPeso(peso, revisar);
@@ -153,7 +164,7 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
     }
     try {
       _registros = await abrirDoseRecordStore(
-        clinicId: widget.recordedWeight?.clinicId,
+        clinicId: _clinica,
       );
     } catch (_) {
       _registros = null;
@@ -194,6 +205,18 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
     _guardado = null;
     _guardandoError = null;
   });
+
+  String? get _clinica =>
+      widget.recordedWeight?.clinicId ?? widget.pesoDelExpediente?.clinicId;
+
+  String get _pacienteId =>
+      widget.recordedWeight?.patientId ??
+      widget.pesoDelExpediente?.patientId ??
+      '';
+
+  String? get _pacienteNombre =>
+      widget.recordedWeight?.patientName ??
+      widget.pesoDelExpediente?.patientName;
 
   Quantity? _cantidad(TextEditingController controller) {
     final texto = controller.text.trim();
@@ -260,9 +283,9 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
       resultadoMg: dosis.texto,
       concentracionMgMl: volumen?.concentracion.display(),
       resultadoMl: volumen?.texto,
-      clinicId: widget.recordedWeight?.clinicId,
-      patientId: widget.recordedWeight?.patientId,
-      patientName: widget.recordedWeight?.patientName,
+      clinicId: _clinica,
+      patientId: _pacienteId.isEmpty ? null : _pacienteId,
+      patientName: _pacienteNombre,
       actorId: widget.actorId,
     );
   }
@@ -329,7 +352,29 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
           const SizedBox(height: 12),
         ] else if (widget.recordedWeight != null)
           _PacienteCard(widget.recordedWeight!)
-        else if (widget.onChoosePatient != null) ...[
+        else if (widget.pesoDelExpediente case final expediente?) ...[
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    expediente.patientName,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Text(expediente.detalle),
+                  Text(
+                    'Revisa que sea el peso de hoy; si no, mide y registra el '
+                    'peso en el expediente antes de calcular.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ] else if (widget.onChoosePatient != null) ...[
           const Text(
             'Sin peso registrado, la dosis se calcula con un peso escrito a '
             'mano y el cálculo no queda ligado a ningún paciente.',
@@ -574,7 +619,7 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
               CalculatorSaveButton(
                 enabled: !_guardando,
                 onPressed: () => _guardar(dosis, volumen),
-                paciente: widget.recordedWeight?.patientName,
+                paciente: _pacienteNombre,
                 guardando: _guardando,
               ),
             if (_guardado != null)

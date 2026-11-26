@@ -18,6 +18,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/plan_errors.dart';
 import '../domain/patient_models.dart';
+import '../../doses/domain/peso_del_expediente.dart';
 import '../domain/patient_repository.dart';
 import 'patient_view_model.dart';
 import 'patient_form.dart';
@@ -46,12 +47,18 @@ class PatientsScreen extends StatefulWidget {
     this.canOpenActivity,
     this.ai,
     this.openDoses,
+    this.onCalculateDose,
   });
   final String? initialPatientId;
 
   /// Abre los cálculos de dosis guardados. Nulo cuando la pantalla no debe
   /// mostrarlos: entonces no se abre nada.
   final DoseStoreOpener? openDoses;
+
+  /// Abre la calculadora con este paciente y, si el expediente tiene peso
+  /// anotado, con ese peso a la vista. Nulo cuando el módulo no está
+  /// disponible: entonces el botón no se pinta, en vez de pintarse y fallar.
+  final Future<void> Function(VetPatient, PesoDelExpediente?)? onCalculateDose;
   final AiRepository? ai;
   final bool Function(String)? canOpenActivity;
   final Future<void> Function(String destination, String patientId)?
@@ -239,6 +246,28 @@ class _PatientsScreenState extends State<PatientsScreen>
         );
       }
     }
+  }
+
+  /// Peso más reciente anotado en la historia. Sin fecha conocida se ofrece
+  /// igual: la tarjeta de la calculadora lo dice y el MVZ decide.
+  PesoDelExpediente? _ultimoPeso(VetPatient paciente) {
+    final pesos = model.events
+        .where(
+          (e) =>
+              e.kind == EventKind.weight &&
+              '${e.data['kg'] ?? ''}'.trim().isNotEmpty,
+        )
+        .toList()
+      ..sort((a, b) => '${a.data['date']}'.compareTo('${b.data['date']}'));
+    if (pesos.isEmpty) return null;
+    final ultimo = pesos.last;
+    return PesoDelExpediente(
+      clinicId: paciente.clinicId,
+      patientId: paciente.id,
+      patientName: paciente.name,
+      kg: '${ultimo.data['kg']}'.trim(),
+      fecha: '${ultimo.data['date'] ?? ''}',
+    );
   }
 
   @override
@@ -571,6 +600,21 @@ class _PatientsScreenState extends State<PatientsScreen>
                                 clinicName: widget.member.clinicName,
                               ),
                             ),
+                          );
+                          if (mounted) await model.select(patient);
+                        },
+                ),
+
+              if (widget.onCalculateDose != null)
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.medication_outlined),
+                  label: const Text('Calcular dosis de este paciente'),
+                  onPressed: model.busy
+                      ? null
+                      : () async {
+                          await widget.onCalculateDose!(
+                            patient,
+                            _ultimoPeso(patient),
                           );
                           if (mounted) await model.select(patient);
                         },

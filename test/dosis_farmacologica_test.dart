@@ -6,6 +6,7 @@ import 'package:vetdosis_pro/modules/doses/data/syncing_dose_record_store.dart';
 import 'package:vetdosis_pro/modules/doses/domain/dose_record.dart';
 import 'package:vetdosis_pro/modules/doses/domain/dosis_farmacologica.dart';
 import 'package:vetdosis_pro/modules/doses/domain/pauta_farmacologica.dart';
+import 'package:vetdosis_pro/modules/doses/domain/peso_del_expediente.dart';
 import 'package:vetdosis_pro/modules/doses/domain/quantity.dart';
 import 'package:vetdosis_pro/modules/doses/presentation/farmacologico_dose_screen.dart';
 import 'package:vetdosis_pro/modules/patients/domain/recorded_weight.dart';
@@ -126,6 +127,7 @@ void main() {
     Future<void> abrir(
       WidgetTester tester, {
       RecordedPatientWeight? peso,
+      PesoDelExpediente? expediente,
       DoseRecordStore? almacen,
     }) async {
       // Pantalla alta: con el alto por defecto la tarjeta del resultado queda
@@ -139,6 +141,7 @@ void main() {
             body: FarmacologicoDoseScreen(
               catalog: catalog,
               recordedWeight: peso,
+              pesoDelExpediente: expediente,
               records: almacen,
             ),
           ),
@@ -329,6 +332,49 @@ void main() {
         find.textContaining('En este dispositivo. Se envía a la ficha'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('el peso del expediente viene puesto y queda ligado', (
+      tester,
+    ) async {
+      final remoto = RemotoFalso();
+      final almacen = SyncingDoseRecordStore(
+        local: LocalDoseRecordStore(
+          await databaseFactoryMemory.openDatabase('expediente-peso'),
+        ),
+        remote: remoto,
+      );
+      await abrir(
+        tester,
+        expediente: const PesoDelExpediente(
+          clinicId: 'C1',
+          patientId: 'P1',
+          patientName: 'Anestesia',
+          kg: '10',
+          fecha: '2026-11-20',
+        ),
+        almacen: almacen,
+      );
+
+      expect(find.text('Anestesia'), findsOneWidget);
+      expect(
+        find.textContaining('Peso anotado en el expediente: 10 kg'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('2026-11-20'), findsOneWidget);
+
+      await llegarAGiardia(tester);
+      await tester.enterText(campo('Concentración en mg/mL'), '50');
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Guardar en la ficha de Anestesia'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(remoto.guardados.single.patientId, 'P1');
+      expect(remoto.guardados.single.pesoKg, '10');
+      expect(find.textContaining('En la ficha del paciente'), findsOneWidget);
     });
 
     testWidgets('con nube el guardado dice que quedó en la ficha', (
