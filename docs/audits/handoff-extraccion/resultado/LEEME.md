@@ -171,3 +171,39 @@ Dos precisiones:
 2. Confirmar o descartar los 26 candidatos de alta contra la página.
 3. Decidir los 15 grupos de `posibles_sinonimos.csv`.
 4. Resolver las 52 celdas de varios valores, que son las que más pautas nuevas aportarían.
+
+## 11. Carga en Supabase
+
+Proyecto `wtrelwtztkddfktrfdpb`, esquema `private`, siguiendo el patrón de las demás tablas de revisión:
+
+| Tabla | Filas | Columnas |
+|---|---:|---:|
+| `private.vetdosis_ramsey_monografias_revision` | 413 | 15 |
+| `private.vetdosis_ramsey_pautas_revision` | 1.023 | 44 |
+
+`pautas.monografia_id` tiene clave foránea a `monografias.monografia_id`. RLS activo sin políticas, igual que el resto de `vetdosis_*_revision`: denegación por defecto, solo acceso de servicio. Índices por `clave_busqueda`, `monografia_id` y `estado_normalizacion`.
+
+**No se borró ni se alteró ninguna tabla existente.** Las dos tablas son nuevas. La carga es idempotente: trunca sus propias tablas y vuelve a insertar.
+
+Verificado en la base: 413 y 1.023 filas, `sum(pautas) = 1023`, cero huérfanas, cero con `dosis_min > dosis_max`, 617 con mínimo numérico (622 normalizadas menos 5 de cota superior), y los caracteres `µ` conservados en 10 filas.
+
+### Nombres: literal, canónico y variantes
+
+Tres campos, para no perder ninguna grafía:
+
+| Campo | Qué guarda | Ejemplo |
+|---|---|---|
+| `principio_activo` | literal de la fuente, sin tocar | `Zolacepam/tiletamina` |
+| `nombre_canonico` | la errata corregida | `Zolazepam/tiletamina` |
+| `nombre_variantes` | las otras denominaciones | `Zolazepam / Tiletamina`, `Zolazepam`, `Tiletamina` |
+
+`clave_busqueda` normaliza el canónico y las variantes (minúsculas, sin acentos, sin puntuación), así que una búsqueda encuentra la ficha con cualquiera de los nombres:
+
+```
+'vitamina d'  -> Calcitriol, Dihidrotaquisterol (vit. D)
+'t4'          -> L‑Tiroxina (levotiroxina)
+'zolazepam'   -> Zolacepam/tiletamina
+'meperidina'  -> Petidina
+```
+
+40 monografías llevan variantes. Las que comparten raíz pero son productos distintos siguen separadas y sin variantes cruzadas: `Fosfato`, `Fosfato (de potasio)`, `Fosfato (oral)` y `Fosfato (toldimfos)` no se referencian entre sí.
