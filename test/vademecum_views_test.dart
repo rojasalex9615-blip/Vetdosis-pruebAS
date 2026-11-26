@@ -5,6 +5,8 @@ import 'package:vetdosis_pro/modules/calculations/presentation/reference_library
 import 'package:vetdosis_pro/modules/doses/data/catalog_repository.dart';
 import 'package:vetdosis_pro/modules/doses/domain/catalog.dart';
 import 'package:vetdosis_pro/modules/doses/domain/manufacturer_pauta.dart';
+import 'package:vetdosis_pro/modules/doses/domain/pauta_farmacologica.dart';
+import 'package:vetdosis_pro/modules/doses/presentation/farmacologico_views.dart';
 import 'package:vetdosis_pro/modules/doses/presentation/vademecum_screen.dart';
 import 'package:vetdosis_pro/modules/doses/presentation/vademecum_views.dart';
 
@@ -35,17 +37,35 @@ String _pautasGrandes(int cuantas) {
   return '{"schema_version":1,"note":"","pautas":[${items.join(',')}]}';
 }
 
-String _pautasMixtas() =>
-    '{"schema_version":1,"note":"","pautas":['
-    '{"id":"c1","product_name":"CANINO 1","manufacturer":"LAB C",'
-    '"product_url":"https://example.test/c1","ingredients":"Fenbendazol",'
-    '"dose_amount":"1","dose_unit":"mL","dose_reference":"por 10 kg",'
-    '"rule":"proporcional al peso","species":"Caninos","literal":"1 mL/10 kg"},'
-    '{"id":"b1","product_name":"BOVINO 1","manufacturer":"LAB B",'
-    '"product_url":"https://example.test/b1","ingredients":"Oxitetraciclina",'
-    '"dose_amount":"5","dose_unit":"mg","dose_reference":"por 1 kg",'
-    '"rule":"proporcional al peso","species":"Bovinos","literal":"5 mg/kg"}'
-    ']}';
+const _farmacologicoJson = '''
+{"schema_version":1,"version":"prueba","farmacos":[
+  {"id":"F1","principio_activo":"Fenbendazol","grupo_clasificacion":"II"},
+  {"id":"F2","principio_activo":"Oxitetraciclina","grupo_clasificacion":null},
+  {"id":"F3","principio_activo":"Prazicuantel","grupo_clasificacion":"I"}],
+ "dosis":[
+  {"id":"D1","id_farmaco":"F1","especie":"Perro y gato","especies":["Perro","Gato"],
+   "indicacion":"Parásitos","dosis_original":"50","unidad_original":"mg/kg",
+   "dosis_min":"50","dosis_max":"50","base_calculo":"masa","via":"oral",
+   "autor":"Ramsey, I. (ed.) / BSAVA","anio":2017,"edicion_pagina":"274"},
+  {"id":"D2","id_farmaco":"F2","especie":"Bovino","especies":["Bovino"],
+   "indicacion":"Neumonía","dosis_original":"5","unidad_original":"mg/kg",
+   "dosis_min":"5","dosis_max":"10","base_calculo":"masa","via":"i.m."}]}
+''';
+
+String _farmacologicoGrande(int cuantos) {
+  final farmacos = [
+    for (var i = 0; i < cuantos; i++)
+      '{"id":"F$i","principio_activo":"Agente $i"}',
+  ];
+  final dosis = [
+    for (var i = 0; i < cuantos; i++)
+      '{"id":"D$i","id_farmaco":"F$i","especies":["Perro"],'
+          '"dosis_original":"1","unidad_original":"mg/kg","dosis_min":"1",'
+          '"base_calculo":"masa"}',
+  ];
+  return '{"schema_version":1,"version":"prueba","farmacos":'
+      '[${farmacos.join(',')}],"dosis":[${dosis.join(',')}]}';
+}
 
 class _EmptyCatalog implements CatalogRepository {
   @override
@@ -73,9 +93,11 @@ class _LibraryFixture implements ReferenceLibraryRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ManufacturerPautaCatalog catalog;
+  late FarmacologicoCatalog farmacologico;
 
   setUpAll(() async {
     catalog = ManufacturerPautaCatalog.parse(_pautasJson);
+    farmacologico = FarmacologicoCatalog.parse(_farmacologicoJson);
   });
 
   test('El índice agrupa por principio activo y no pierde pautas', () {
@@ -91,14 +113,18 @@ void main() {
     expect(prazicuantel.pautas.single.productName, 'PRODUCTO A');
   });
 
-  testWidgets('El vademécum por fármaco filtra por principio activo', (
+  testWidgets('El vademécum por principio activo filtra por nombre', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: VademecumDrugView(pautas: catalog.pautas, query: 'fenben'),
+            child: VademecumFarmacologicoView(
+              catalog: farmacologico,
+              marcas: catalog.pautas,
+              query: 'fenben',
+            ),
           ),
         ),
       ),
@@ -106,6 +132,50 @@ void main() {
     expect(find.text('Fenbendazol'), findsOneWidget);
     expect(find.text('Prazicuantel'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('La ficha del principio muestra la dosis con su cita', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumFarmacologicoView(
+              catalog: farmacologico,
+              marcas: catalog.pautas,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Fenbendazol'));
+    await tester.pumpAndSettle();
+    expect(find.text('50 mg/kg'), findsOneWidget);
+    expect(find.textContaining('p. 274'), findsOneWidget);
+    expect(find.textContaining('Grupo II'), findsWidgets);
+  });
+
+  testWidgets('La ficha nombra las marcas que contienen el principio', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumFarmacologicoView(
+              catalog: farmacologico,
+              marcas: catalog.pautas,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Fenbendazol'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('PRODUCTO A'), findsWidgets);
+    expect(find.textContaining('PRODUCTO B'), findsOneWidget);
+    expect(find.textContaining('Marcas que lo contienen (2)'), findsOneWidget);
   });
 
   testWidgets('El vademécum comercial filtra por nombre comercial', (
@@ -138,6 +208,7 @@ void main() {
           repository: fixture,
           clinicId: 'synthetic-clinic',
           pautas: catalog,
+          farmacologico: farmacologico,
         ),
       ),
     );
@@ -158,7 +229,11 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: VademecumScreen(catalog: _EmptyCatalog(), pautas: catalog),
+            child: VademecumScreen(
+              catalog: _EmptyCatalog(),
+              pautas: catalog,
+              farmacologico: farmacologico,
+            ),
           ),
         ),
       ),
@@ -180,7 +255,11 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: VademecumScreen(catalog: _EmptyCatalog(), pautas: catalog),
+            child: VademecumScreen(
+              catalog: _EmptyCatalog(),
+              pautas: catalog,
+              farmacologico: farmacologico,
+            ),
           ),
         ),
       ),
@@ -190,22 +269,22 @@ void main() {
   });
 
   testWidgets('El adelanto no esconde el resto del índice', (tester) async {
-    final grande = ManufacturerPautaCatalog.parse(_pautasGrandes(25));
+    final grande = FarmacologicoCatalog.parse(_farmacologicoGrande(30));
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: VademecumDrugView(pautas: grande.pautas),
+            child: VademecumFarmacologicoView(catalog: grande),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('Mostrando 15 de 25'), findsOneWidget);
-    await tester.ensureVisible(find.text('Ver los 25 principios activos'));
-    await tester.tap(find.text('Ver los 25 principios activos'));
+    expect(find.textContaining('Mostrando 25 de 30'), findsOneWidget);
+    await tester.ensureVisible(find.text('Ver los 30 principios activos'));
+    await tester.tap(find.text('Ver los 30 principios activos'));
     await tester.pumpAndSettle();
-    expect(find.text('Agente 24'), findsOneWidget);
+    expect(find.text('Agente 29'), findsOneWidget);
   });
 
   testWidgets('El vademécum comercial tampoco esconde productos', (
@@ -243,30 +322,66 @@ void main() {
     expect(gruposDeEspecie('no especificado'), ['Sin especificar']);
   });
 
-  testWidgets('El índice nombra la marca junto al principio activo', (
+  testWidgets('El índice cuenta las marcas junto al principio activo', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: VademecumDrugView(pautas: catalog.pautas),
+            child: VademecumFarmacologicoView(
+              catalog: farmacologico,
+              marcas: catalog.pautas,
+            ),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('PRODUCTO A · LAB A'), findsWidgets);
-    expect(find.textContaining('(1)'), findsWidgets);
+    expect(find.textContaining('marca(s)'), findsWidgets);
+  });
+
+  group('con el activo real', () {
+    // Los activos se leen en setUpAll: dentro de testWidgets, loadString de un
+    // archivo de más de 50 KB usa un isolate y el reloj falso no lo espera.
+    late FarmacologicoCatalog real;
+    late ManufacturerPautaCatalog marcas;
+
+    setUpAll(() async {
+      real = await FarmacologicoCatalog.load();
+      marcas = await ManufacturerPautaCatalog.load();
+    });
+
+    testWidgets('buscar abre la ficha del principio', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: VademecumFarmacologicoView(
+                catalog: real,
+                marcas: marcas.pautas,
+                query: 'xilacina',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Xilacina'), findsOneWidget);
+      await tester.tap(find.text('Xilacina'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Grupo I'), findsWidgets);
+      expect(find.textContaining('Dosis publicadas'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 
   testWidgets('El filtro de especie recorta el índice', (tester) async {
-    final mixto = ManufacturerPautaCatalog.parse(_pautasMixtas());
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: VademecumDrugView(pautas: mixto.pautas),
+            child: VademecumFarmacologicoView(catalog: farmacologico),
           ),
         ),
       ),
@@ -274,8 +389,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Fenbendazol'), findsOneWidget);
     expect(find.text('Oxitetraciclina'), findsOneWidget);
-    await tester.ensureVisible(find.text('Bovinos (1)'));
-    await tester.tap(find.text('Bovinos (1)'));
+    await tester.tap(find.text('Bovino'));
     await tester.pumpAndSettle();
     expect(find.text('Oxitetraciclina'), findsOneWidget);
     expect(find.text('Fenbendazol'), findsNothing);
