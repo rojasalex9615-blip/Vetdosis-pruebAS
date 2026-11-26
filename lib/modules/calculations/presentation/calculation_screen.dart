@@ -16,6 +16,7 @@ import '../data/reference_library_repository.dart';
 import 'reference_library_screen.dart';
 import 'calculation_branch_menu.dart';
 import '../../doses/presentation/dose_screen.dart';
+import '../../doses/presentation/farmacologico_dose_screen.dart';
 import '../domain/calculation_branch.dart';
 import '../domain/calculation_catalog.dart';
 import '../domain/calculation_engine.dart';
@@ -233,13 +234,7 @@ class _CalculationScreenState extends State<CalculationScreen> {
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Dosis por agente farmacéutico')),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: DoseScreen(repository: widget.doses),
-          ),
-        ),
+        builder: (_) => const FarmacologicoDoseLoader(),
       ),
     );
   }

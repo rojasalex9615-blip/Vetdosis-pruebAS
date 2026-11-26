@@ -9,6 +9,7 @@ import '../domain/catalog.dart';
 import '../domain/manufacturer_pauta.dart';
 import '../domain/pauta_farmacologica.dart';
 import 'dose_screen.dart';
+import 'farmacologico_dose_screen.dart';
 import 'farmacologico_views.dart';
 import 'personal_dose_screen.dart';
 import 'vademecum_views.dart';
@@ -116,23 +117,12 @@ class _VademecumScreenState extends State<VademecumScreen> {
   }
 
   void openDoseCalculator(BuildContext context) {
+    final dosis = farmacologico;
+    if (dosis == null) return;
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Dosis por agente farmacéutico')),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: DoseScreen(
-              repository: widget.catalog,
-              personalRepository: widget.personal,
-              clinicId: widget.clinicId,
-              userId: widget.userId,
-              admin: widget.admin,
-              offline: widget.offline,
-            ),
-          ),
-        ),
+        builder: (_) => FarmacologicoDoseScreen(catalog: dosis),
       ),
     );
   }

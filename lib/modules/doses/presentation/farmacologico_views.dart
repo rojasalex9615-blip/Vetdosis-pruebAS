@@ -222,7 +222,7 @@ class _PrincipioCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (principio.grupo != null) _GrupoChip(grupo: principio.grupo!),
+            if (principio.grupo != null) GrupoChip(grupo: principio.grupo!),
             const Icon(VetIcons.chevronRight),
           ],
         ),
@@ -265,7 +265,7 @@ class PrincipioActivoScreen extends StatelessWidget {
           if (principio.grupo != null) ...[
             Row(
               children: [
-                _GrupoChip(grupo: principio.grupo!),
+                GrupoChip(grupo: principio.grupo!),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text('Acuerdo DOF 05/03/2012 · nivel de riesgo'),
@@ -385,8 +385,8 @@ class _PautaCard extends StatelessWidget {
   }
 }
 
-class _GrupoChip extends StatelessWidget {
-  const _GrupoChip({required this.grupo});
+class GrupoChip extends StatelessWidget {
+  const GrupoChip({super.key, required this.grupo});
 
   final String grupo;
 
