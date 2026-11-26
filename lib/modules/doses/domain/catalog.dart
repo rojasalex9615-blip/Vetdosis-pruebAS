@@ -65,15 +65,16 @@ class Presentation {
   final Quantity? concentration;
   final Evidence evidence;
   factory Presentation.read(Map<String, dynamic> map) {
-    if (map['unidad_concentracion'] != 'mg/ml') {
+    final concentration = optionalQuantity(map, 'concentracion');
+    if (concentration != null && map['unidad_concentracion'] != 'mg/ml') {
       throw const FormatException(
-        'Esta versión requiere concentración explícita en mg/ml.',
+        'La concentración debe expresarse en mg/ml.',
       );
     }
     return Presentation(
       requiredText(map, 'id'),
       requiredText(map, 'nombre_comercial'),
-      optionalQuantity(map, 'concentracion'),
+      concentration,
       Evidence.read(map),
     );
   }
