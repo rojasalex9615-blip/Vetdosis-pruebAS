@@ -1,0 +1,16 @@
+base,nombres,ids,pautas,advertencia
+acepromazina,Acepromazina | Acepromazina (ACP),pa-acepromazina | pa-acepromazina-acp,6,revisar si es sinónimo o producto distinto
+anfotericina b,Anfotericina B (convencional) | Anfotericina B (lípidos),pa-anfotericina-b-convencional | pa-anfotericina-b-lipidos,8,revisar si es sinónimo o producto distinto
+dihidrotaquisterol,Dihidrotaquisterol | Dihidrotaquisterol (vit. D),pa-dihidrotaquisterol | pa-dihidrotaquisterol-vit-d,4,revisar si es sinónimo o producto distinto
+fosfato,Fosfato | Fosfato (de potasio) | Fosfato (oral) | Fosfato (toldimfos),pa-fosfato | pa-fosfato-de-potasio | pa-fosfato-oral | pa-fosfato-toldimfos,7,NO FUSIONAR: compuestos distintos (regla del usuario)
+lidocaina,Lidocaína | Lidocaína (crema EMLA),pa-lidocaina | pa-lidocaina-crema-emla,10,revisar si es sinónimo o producto distinto
+micofenolato de mofetilo,Micofenolato de mofetilo | Micofenolato de mofetilo (MMF),pa-micofenolato-de-mofetilo | pa-micofenolato-de-mofetilo-mmf,4,revisar si es sinónimo o producto distinto
+petidina,Petidina | Petidina (meperidina),pa-petidina | pa-petidina-meperidina,3,revisar si es sinónimo o producto distinto
+sales de bismuto,Sales de bismuto (De-Noltab) | Sales de bismuto (Pepto-Bismol),pa-sales-de-bismuto-de-noltab | pa-sales-de-bismuto-pepto-bismol,4,revisar si es sinónimo o producto distinto
+sales de hierro,Sales de hierro | Sales de hierro (hierro dextrano),pa-sales-de-hierro | pa-sales-de-hierro-hierro-dextrano,4,revisar si es sinónimo o producto distinto
+ticarcilina,Ticarcilina | Ticarcilina (+ ác. clavulánico),pa-ticarcilina | pa-ticarcilina-ac-clavulanico,3,revisar si es sinónimo o producto distinto
+trinitrato de glicerina,Trinitrato de glicerina | Trinitrato de glicerina (nitroglicerina),pa-trinitrato-de-glicerina | pa-trinitrato-de-glicerina-nitroglicerina,2,revisar si es sinónimo o producto distinto
+vitamina a,Vitamina A | Vitamina A (retinol),pa-vitamina-a | pa-vitamina-a-retinol,5,revisar si es sinónimo o producto distinto
+vitamina b1,Vitamina B1 | Vitamina B1 (tiamina),pa-vitamina-b1 | pa-vitamina-b1-tiamina,6,revisar si es sinónimo o producto distinto
+vitamina e,Vitamina E | Vitamina E (α-tocoferil acetato),pa-vitamina-e | pa-vitamina-e-tocoferil-acetato,2,revisar si es sinónimo o producto distinto
+vitamina k1,Vitamina K1 | Vitamina K1 (fitomenadiona),pa-vitamina-k1 | pa-vitamina-k1-fitomenadiona,7,revisar si es sinónimo o producto distinto
