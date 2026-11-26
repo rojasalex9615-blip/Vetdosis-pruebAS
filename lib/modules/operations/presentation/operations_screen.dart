@@ -72,7 +72,11 @@ class _OperationsScreenState extends State<OperationsScreen>
       model.careWindow != null;
   String? appointmentState;
   String? filterProfessional;
-  List<Map<String, dynamic>> get visibleAppointments => model
+  List<Map<String, dynamic>> get visibleAppointments {
+    // CodeRabbit, PR #146, linea 91: professionalIds se recalculaba por
+    // cada cita dentro del predicado; se calcula una sola vez por llamada.
+    final multipleProfessionals = professionalIds.length >= 2;
+    return model
       .rows('appointments')
       .where(
         (a) =>
@@ -88,7 +92,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                 a['patient_id'] == widget.initialPatientId) &&
             (appointmentState == null || a['state'] == appointmentState) &&
             (filterProfessional == null ||
-                professionalIds.length < 2 ||
+                !multipleProfessionals ||
                 a['professional_id'] == filterProfessional) &&
             (calendarDay == null ||
                 DateUtils.isSameDay(
@@ -97,6 +101,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                 )),
       )
       .toList();
+  }
   bool get admin => widget.member.role == ClinicRole.admin;
 
   // Profesionales con citas. El filtro por responsable solo existe si hay
@@ -131,7 +136,7 @@ class _OperationsScreenState extends State<OperationsScreen>
     }
     final options = {
       ...ids,
-      if (filterProfessional != null) filterProfessional!,
+      ?filterProfessional,
     };
     return Padding(
       padding: const EdgeInsets.only(top: 8),
