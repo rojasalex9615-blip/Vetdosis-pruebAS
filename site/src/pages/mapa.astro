@@ -1,0 +1,54 @@
+---
+import "../styles/global.css";
+
+const areas = [
+  ["Pequeñas especies", "Perros, gatos y mascotas de compañía: consultas, vacunas y expediente clínico."],
+  ["Exóticos / Silvestres", "Aves, reptiles y fauna silvestre, con sus propios protocolos y registros."],
+  ["Producción y grandes especies", "Bovinos, porcinos, aves de postura y más, con registros y cálculos productivos."],
+  ["Gestión clínica", "La administración de tu clínica: caja, equipo, finanzas y ajustes."],
+];
+
+const groups = [
+  ["Atención y expedientes", ["Agenda", "Pacientes", "Hospitalización", "Receta", "Formatos"]],
+  ["Medicamentos y herramientas", ["Cálculo rápido", "Vademécum", "Operaciones de dosis", "Cálculos clínicos", "Inventario", "Escanear producto"]],
+  ["Producción animal", ["Producción y grandes especies"]],
+  ["Administración y finanzas", ["Caja", "Planeación financiera", "Servicios", "Proveedores", "Promociones", "Productividad y semana"]],
+  ["Equipo y comunicación", ["Agenda telefónica", "Equipo y avisos", "Anuncios y avisos", "Pendientes del equipo", "Control de asistencia"]],
+  ["Estadísticas y reportes", ["Estadísticas"]],
+  ["Asistente IA", ["Asistente IA"]],
+  ["Revisión de catálogos", ["Modo revisión"]],
+  ["Cuenta y ajustes", ["Mi cuenta y clínicas", "Ajustes", "Respaldo", "Planes", "Producto y costos", "Inicio guiado", "Ayuda y soporte"]],
+];
+---
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f5fb" />
+    <meta name="description" content="Mapa de VetDosis Pro: las 4 áreas de la app y sus 33 secciones en 9 grupos." />
+    <title>Mapa — VetDosis Pro</title>
+  </head>
+  <body>
+    <header class="header">
+      <a class="brand" href="/"> <img class="logo-img" src="/vetdosis-logo.svg" alt="VetDosis Pro" /> </a>
+      <nav><a href="/#herramientas">Herramientas</a><a href="/#planes">Planes</a><a href="/#proximamente">Próximamente</a><a href="/mapa">Mapa</a></nav>
+      <a class="button button-small" href="/#planes">Ver planes ↗</a>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="section-heading"><div><p class="eyebrow">MAPA DE LA APP</p><h2>Todo VetDosis Pro,<br /><em>en un mapa.</em></h2></div><p>33 secciones en 9 grupos, organizadas en las 4 áreas de la app. Todo empieza en Inicio, con tu agenda del día y tus accesos.</p></div>
+        <div class="areas">{areas.map(([title, text]) => <article class="area-card"><h3>{title}</h3><p>{text}</p></article>)}</div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading"><div><p class="eyebrow">LAS SECCIONES, GRUPO POR GRUPO</p><h2>Cada rincón<br /><em>de tu clínica.</em></h2></div><p>Estas son las secciones que trae la app hoy, tal como se ven en su menú.</p></div>
+        <div class="grid">{groups.map(([title, pages], i) => <article class="module"><div class="module-top"><span>{String(i + 1).padStart(2, "0")}</span><span>VETDOSIS PRO</span></div><h3>{title}</h3><ul class="map-list">{pages.map((p) => <li>{p}</li>)}</ul></article>)}</div>
+        <p class="footnote">La pantalla de escáneres reúne el escáner de producto y la etiqueta para dosis. Algunas secciones muestran contenido en preparación dentro de la app.</p>
+      </section>
+
+      <section class="closing" id="acceso"><p class="eyebrow">VETDOSIS PRO</p><h2>¿Te gusta lo que ves? <em>Empieza gratis.</em></h2><p>Prueba VetDosis Pro gratis por 30 días y elige el plan que te convenga.</p><a class="button button-light" href="/#planes">Ver planes →</a><small>Contacto oficial: provetdosis@gmail.com</small></section>
+    </main>
+    <footer><a class="brand" href="/"> <img class="logo-img" src="/vetdosis-logo.svg" alt="VetDosis Pro" /> </a><span>Herramientas digitales para la práctica veterinaria.</span><span>© {new Date().getFullYear()} VetDosis Pro</span></footer>
+  </body>
+</html>
