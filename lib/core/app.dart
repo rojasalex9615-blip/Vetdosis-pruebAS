@@ -88,6 +88,7 @@ import '../modules/patients/presentation/patients_screen.dart';
 
 import 'package:flutter/material.dart';
 
+import '../modules/doses/data/syncing_dose_record_store.dart';
 import '../modules/doses/presentation/dose_screen.dart';
 import '../modules/doses/presentation/farmacologico_dose_screen.dart';
 import '../modules/doses/presentation/dose_label_scanner_screen.dart';
@@ -1540,6 +1541,8 @@ class CoreShell extends StatelessWidget {
                                   ),
                                   repository: patients!,
                                   member: auth!.active!,
+                                  openDoses: (clinicId) =>
+                                      abrirDoseRecordStore(clinicId: clinicId),
                                   canOpenActivity: allowed,
                                   onOpenActivity:
                                       (destination, patientId) async {
@@ -1755,6 +1758,10 @@ class CoreShell extends StatelessWidget {
                                                 ai: ai,
                                                 repository: patients!,
                                                 member: member,
+                                                openDoses: (clinicId) =>
+                                                    abrirDoseRecordStore(
+                                                      clinicId: clinicId,
+                                                    ),
                                                 initialPatientId: id,
                                               ),
                                             ),

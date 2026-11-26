@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetdosis_pro/core/app.dart';
 import 'package:vetdosis_pro/modules/auth/domain/clinic_membership.dart';
+import 'package:vetdosis_pro/modules/doses/data/local_dose_record_store.dart';
+import 'package:vetdosis_pro/modules/doses/domain/dose_record.dart';
 import 'package:vetdosis_pro/modules/auth/presentation/auth_view_model.dart';
 import 'package:vetdosis_pro/modules/core/data/settings_repository.dart';
 import 'package:vetdosis_pro/modules/core/presentation/core_view_model.dart';
@@ -381,9 +383,7 @@ void main() {
                 PatientsScreen(
                   repository: FakePatients(),
                   member: membership(ClinicRole.mvz),
-                  onOpenLab: conLaboratorio
-                      ? (p) async => abierto = p
-                      : null,
+                  onOpenLab: conLaboratorio ? (p) async => abierto = p : null,
                 ),
               ],
             ),
@@ -598,4 +598,145 @@ void main() {
       );
     },
   );
+
+  testWidgets('El expediente muestra los cálculos de dosis con su cita', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final dosis = FakeDoses([calculo()]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            children: [
+              PatientsScreen(
+                repository: FakePatients(),
+                member: membership(ClinicRole.mvz),
+                openDoses: (clinicId) async {
+                  expect(clinicId, 'a', reason: 'lee la clínica de la sesión');
+                  return dosis;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Paciente ficticio'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cálculos de dosis'), findsOneWidget);
+    expect(find.textContaining('Principio ficticio'), findsOneWidget);
+    expect(
+      find.textContaining('Dosis: 25–50 mg/kg · Peso: 10,5 kg'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('250–500 mg (5–10 mL'), findsOneWidget);
+    expect(find.textContaining('Fuente ficticia, p. 275'), findsOneWidget);
+    expect(dosis.reads, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Un cálculo pendiente se anuncia como tal', (tester) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            children: [
+              PatientsScreen(
+                repository: FakePatients(),
+                member: membership(ClinicRole.mvz),
+                openDoses: (_) async => FakeDoses([calculo()]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Paciente ficticio'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Pendiente de enviar desde este dispositivo'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Recepción no ve cálculos ni se piden a la nube', (tester) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final dosis = FakeDoses([calculo()]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ListView(
+            children: [
+              PatientsScreen(
+                repository: FakePatients(),
+                member: membership(ClinicRole.recepcion),
+                openDoses: (_) async => dosis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Paciente ficticio'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cálculos de dosis'), findsNothing);
+    expect(dosis.reads, 0);
+  });
 }
+
+/// Cálculos guardados de mentira: devuelve lo que se le diga, sin red ni disco.
+class FakeDoses implements DoseRecordStore {
+  FakeDoses(this.rows);
+  final List<DoseRecord> rows;
+  int reads = 0;
+
+  @override
+  Future<DoseRecord> save(DoseRecord record) async => record;
+
+  @override
+  Future<List<DoseRecord>> forPatient(
+    String patientId, {
+    int limit = 50,
+  }) async {
+    reads++;
+    return rows;
+  }
+
+  @override
+  Future<List<DoseRecord>> recent({int limit = 50}) async => rows;
+}
+
+DoseRecord calculo({DateTime? syncedAt}) => DoseRecord(
+  id: 'a' * 48,
+  createdAt: DateTime.utc(2026, 11, 26, 15, 30),
+  principio: 'Principio ficticio',
+  dosisLiteral: '25–50 mg/kg',
+  cita: 'Fuente ficticia, p. 275',
+  pesoKg: '10,5',
+  resultadoMg: '250–500 mg',
+  concentracionMgMl: '50',
+  resultadoMl: '5–10 mL',
+  indicacion: 'Indicación ficticia',
+  via: 'oral',
+  intervalo: 'cada 24 h',
+  clinicId: 'a',
+  patientId: 'patient-a',
+  syncedAt: syncedAt,
+);

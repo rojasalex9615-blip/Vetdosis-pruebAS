@@ -2,6 +2,8 @@ import '../../core/domain/plan_errors.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../../auth/domain/clinic_membership.dart';
+import '../../doses/data/local_dose_record_store.dart';
+import '../../doses/domain/dose_record.dart';
 import '../domain/patient_repository.dart';
 import '../domain/patient_models.dart';
 
@@ -13,12 +15,22 @@ String newOperationId() {
   ).join();
 }
 
+/// Abre el almacén de cálculos de dosis de una clínica: el del dispositivo y,
+/// si hay sesión, el de la ficha en la nube.
+typedef DoseStoreOpener = Future<DoseRecordStore> Function(String clinicId);
+
 class PatientViewModel extends ChangeNotifier {
-  PatientViewModel(this.repository, this.member)
+  PatientViewModel(this.repository, this.member, {this.openDoses})
     : access = PatientAccess(member.role);
   final PatientRepository repository;
   final ClinicMembership member;
   final PatientAccess access;
+
+  /// Nulo en las pantallas que no muestran cálculos de dosis: entonces no se
+  /// abre nada ni se pide nada.
+  final DoseStoreOpener? openDoses;
+  DoseRecordStore? _doseStore;
+  List<DoseRecord> doseRecords = [];
   List<VetPatient> patients = [];
   List<VetOwner> owners = [];
   List<PatientEvent> events = [];
@@ -34,6 +46,7 @@ class PatientViewModel extends ChangeNotifier {
     patients = [];
     owners = [];
     events = [];
+    doseRecords = [];
     selected = null;
     super.dispose();
   }
@@ -49,6 +62,7 @@ class PatientViewModel extends ChangeNotifier {
     error = null;
     selected = null;
     events = [];
+    doseRecords = [];
     changed();
     try {
       final p = await repository.patients(member.clinicId);
@@ -83,6 +97,7 @@ class PatientViewModel extends ChangeNotifier {
     final revision = ++_revision;
     selected = patient;
     events = [];
+    doseRecords = [];
     busy = true;
     error = null;
     changed();
@@ -90,10 +105,12 @@ class PatientViewModel extends ChangeNotifier {
       final result = access.clinical
           ? await repository.events(member.clinicId, patient.id)
           : <PatientEvent>[];
+      final calculos = await _dosisGuardadas(patient.id);
       if (!_disposed && revision == _revision) {
         events = result
             .where((e) => e.kind != EventKind.consent || access.medical)
             .toList();
+        doseRecords = calculos;
       }
     } catch (e) {
       if (!_disposed && revision == _revision) {
@@ -104,6 +121,20 @@ class PatientViewModel extends ChangeNotifier {
         busy = false;
         changed();
       }
+    }
+  }
+
+  /// Los cálculos de dosis guardados a este paciente. Si el almacén no abre o
+  /// la nube no contesta, la sección queda vacía: no se inventa historial.
+  Future<List<DoseRecord>> _dosisGuardadas(String patientId) async {
+    final abrir = openDoses;
+    if (abrir == null || !access.clinical) return const [];
+    try {
+      final store = _doseStore ??= await abrir(member.clinicId);
+      return await store.forPatient(patientId);
+    } catch (_) {
+      _doseStore = null;
+      return const [];
     }
   }
 

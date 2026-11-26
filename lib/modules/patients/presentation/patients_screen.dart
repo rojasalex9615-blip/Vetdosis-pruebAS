@@ -26,6 +26,14 @@ import 'signature_pad.dart';
 import 'weight_chart.dart';
 import '../../../vet_ui/vet_icons.dart';
 
+/// Fecha del cálculo en hora local del equipo, como se leyó al guardarlo.
+String doseDateLabel(DateTime momento) {
+  final local = momento.toLocal();
+  String dos(int valor) => valor.toString().padLeft(2, '0');
+  return '${dos(local.day)}/${dos(local.month)}/${local.year} '
+      '${dos(local.hour)}:${dos(local.minute)}';
+}
+
 class PatientsScreen extends StatefulWidget {
   const PatientsScreen({
     super.key,
@@ -37,8 +45,13 @@ class PatientsScreen extends StatefulWidget {
     this.onOpenActivity,
     this.canOpenActivity,
     this.ai,
+    this.openDoses,
   });
   final String? initialPatientId;
+
+  /// Abre los cálculos de dosis guardados. Nulo cuando la pantalla no debe
+  /// mostrarlos: entonces no se abre nada.
+  final DoseStoreOpener? openDoses;
   final AiRepository? ai;
   final bool Function(String)? canOpenActivity;
   final Future<void> Function(String destination, String patientId)?
@@ -73,7 +86,11 @@ class _PatientsScreenState extends State<PatientsScreen>
   @override
   void initState() {
     super.initState();
-    model = PatientViewModel(widget.repository, widget.member);
+    model = PatientViewModel(
+      widget.repository,
+      widget.member,
+      openDoses: widget.openDoses,
+    );
     WidgetsBinding.instance.addObserver(this);
     if (widget.repository is PatientActivityRepository) {
       activity = PatientActivityModel(
@@ -647,6 +664,57 @@ class _PatientsScreenState extends State<PatientsScreen>
                 'Orden por fecha clínica. Fechas preventivas desconocidas: se usa la fecha de registro. El motivo agrupa consultas, sin unir ni modificar documentos.',
               ),
               WeightChart(events: model.events),
+              if (model.doseRecords.isNotEmpty) ...[
+                const Divider(height: 32),
+                Text(
+                  'Cálculos de dosis',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Se guardan con su cita al calcularlos. Son el cálculo tal '
+                  'como se hizo, no una indicación vigente.',
+                ),
+                const SizedBox(height: 8),
+                for (final calculo in model.doseRecords)
+                  WorkspacePanel(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${calculo.principio} · '
+                            '${doseDateLabel(calculo.createdAt)}',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          if (calculo.indicacion.isNotEmpty)
+                            Text('Indicación: ${calculo.indicacion}'),
+                          Text(
+                            'Dosis: ${calculo.dosisLiteral} · '
+                            'Peso: ${calculo.pesoKg} kg',
+                          ),
+                          Text('Resultado: ${calculo.resumen}'),
+                          if (calculo.via.isNotEmpty ||
+                              calculo.intervalo.isNotEmpty)
+                            Text(
+                              [
+                                if (calculo.via.isNotEmpty) calculo.via,
+                                if (calculo.intervalo.isNotEmpty)
+                                  calculo.intervalo,
+                              ].join(' · '),
+                            ),
+                          Text('Cita: ${calculo.cita}'),
+                          if (calculo.syncedAt == null)
+                            Text(
+                              'Pendiente de enviar desde este dispositivo.',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
               const Divider(height: 32),
               if (model.events.isEmpty && !model.busy)
                 const Text('Sin entradas clínicas registradas.'),
