@@ -132,18 +132,38 @@ Los 57 sin candidato no se pueden resolver con lo que hay: la columna `pagina_li
 
 Sigue abierta la discrepancia de año: 2017 en las tablas, 2023 en `sources`. Se resuelve con la página de créditos.
 
-## 9. Estado de cada pauta
+## 9. Estado de cada pauta y en qué canal se ve
 
-Las 1.023 llevan:
+Estado del dato, igual en todos los canales:
 
 ```
 evidence_metodo                 extraccion_ia_vision
 evidence_revision_documental    pendiente
 evidence_verificacion_clinica   no_revisada
-evidence_elegibilidad_calculo   no_habilitada
+evidence_elegibilidad_calculo   no_habilitada   (uso clínico)
 ```
 
-Ninguna es calculable. Que una dosis esté normalizada no significa que esté verificada.
+Uso por canal, según la decisión de Ale y la puerta que ya existe en la app
+(`lib/modules/doses/domain/pauta_review_gate.dart`, gobernada por `APP_CHANNEL`):
+
+| Canal | Se muestra | Se puede calcular |
+|---|---|---|
+| `beta` / profesores y sus derivadas | sí, con el cartel «Dato en revisión, no usar en pacientes» | sí, para las pautas normalizadas |
+| `integration` / integración | no | no |
+
+Columnas que lo expresan: `canal_beta_profesores` = `visible`, `canal_integracion` = `oculto`, `aviso_visible` con el texto del cartel, y `elegibilidad_calculo_docente`.
+
+| `elegibilidad_calculo_docente` | Pautas |
+|---|---:|
+| `habilitada_con_aviso` | 622 |
+| `no_permitida_por_unidad` | 401 |
+
+Las 401 no se excluyen por permiso, sino por unidad: sin denominador ni conversión no hay número que calcular. Las 622 sí entran al motor de masa (peso × mg/kg).
+
+Dos precisiones:
+
+- Mostrar y calcular en la beta de profesores **no cambia el estado del dato**. Sigue `sin verificar` y `no_revisada`, y no puede exportarse como documento clínico.
+- El cálculo de volumen sigue bloqueado por el contrato: `Presentation.read` exige `unidad_concentracion == 'mg/ml'` y ninguna de estas pautas trae concentración. Con el parche propuesto en `docs/audits/propuestas/presentation-read.patch` se podría calcular masa sin volumen; hoy solo hay masa.
 
 ## 10. Siguiente paso
 
