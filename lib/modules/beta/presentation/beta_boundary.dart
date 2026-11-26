@@ -333,18 +333,6 @@ class _BetaBoundaryState extends State<BetaBoundary> {
               offstage: blocked != null,
               child: Column(
                 children: [
-                  if (banner != null)
-                    SafeArea(
-                      key: const ValueKey('beta-banner'),
-                      bottom: false,
-                      child: Material(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(banner),
-                        ),
-                      ),
-                    ),
                   if (state?.termsPending == true)
                     TextButton(
                       key: const ValueKey('beta-terms-button'),
@@ -353,15 +341,61 @@ class _BetaBoundaryState extends State<BetaBoundary> {
                     ),
                   Expanded(
                     key: const ValueKey('beta-content'),
-                    child: LegalScope(
-                      // El par ya verificado por la puerta beta es el unico que
-                      // ven Inicio, Planes y los calculos: misma version y
-                      // misma huella que se acepta aqui.
-                      pair: LegalPair.fromServer({
-                        'terms': state?.terms,
-                        'privacy': state?.privacy,
-                      }),
-                      child: widget.child,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: LegalScope(
+                            // El par ya verificado por la puerta beta es el
+                            // unico que ven Inicio, Planes y los calculos:
+                            // misma version y misma huella que se acepta aqui.
+                            pair: LegalPair.fromServer({
+                              'terms': state?.terms,
+                              'privacy': state?.privacy,
+                            }),
+                            child: widget.child,
+                          ),
+                        ),
+                        // El aviso flota sobre la cabecera en vez de empujar el
+                        // contenido: una fila propia recortaba la barra en cada
+                        // modo de la beta. Va translucido y sin absorber toques
+                        // para que la cabecera siga siendo usable.
+                        if (banner != null)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: SafeArea(
+                              key: const ValueKey('beta-banner'),
+                              bottom: false,
+                              child: IgnorePointer(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: .62),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 7,
+                                      ),
+                                      child: Text(
+                                        banner,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],

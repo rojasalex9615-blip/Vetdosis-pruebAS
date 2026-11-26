@@ -140,6 +140,44 @@ void main() {
     expect(tabla.buscar('', especie: 'Perros').length, 2);
   });
 
+  test('el CSV lleva encabezado de 15 columnas y una fila por pauta', () {
+    final csv = tablaDosisCsv(_tabla().filas);
+    expect(csv.startsWith('\uFEFF'), isTrue, reason: 'Excel necesita el BOM');
+    final lineas = csv.substring(1).split('\r\n')..removeLast();
+    expect(lineas.first, columnasTablaDosis.join(','));
+    expect(lineas.length, 4);
+    expect(lineas[1].split(',').first, 'Principio activo');
+    expect(lineas.last.split(',').first, 'Marca comercial');
+  });
+
+  test('el CSV entrecomilla comas y comillas sin perder la coma decimal', () {
+    final fila = FilaDosis(
+      id: 'x',
+      origen: OrigenDosis.marca,
+      especie: 'Perros',
+      grupos: const ['Perros'],
+      principioActivo: 'Fenbendazol',
+      nombreComercial: 'MARCA "ESPECIAL"',
+      presentacion: 'Frasco 100 mL; caja',
+      indicacion: 'Parásitos, giardia y más',
+      dosis: '0,5 mL por 10 kg',
+      via: 'Oral',
+      intervalo: 'cada 24 h',
+      duracion: '3 días',
+      condiciones: '—',
+      edadPeso: '—',
+      fuente: 'LAB A',
+      anio: '2026',
+      estado: 'sin verificar',
+    );
+    final csv = tablaDosisCsv([fila], conBom: false, finLinea: '\n');
+    final linea = csv.split('\n').firstWhere((l) => l.isNotEmpty && !l.startsWith('Tipo'));
+    expect(linea, contains('"MARCA ""ESPECIAL"""'));
+    expect(linea, contains('"Parásitos, giardia y más"'));
+    expect(linea, contains('"0,5 mL por 10 kg"'));
+    expect(linea, contains('"Frasco 100 mL; caja"'));
+  });
+
   group('pantalla', () {
     testWidgets('muestra las dos fuentes con su conteo', (tester) async {
       tester.view.physicalSize = const Size(390, 3000);
@@ -162,6 +200,37 @@ void main() {
       expect(find.textContaining('Estado:'), findsWidgets);
     });
 
+    testWidgets('exporta a CSV exactamente lo que está filtrado', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 3000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final capturado = <(String, String)>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TablaDosisLoader(
+              tabla: _tabla(),
+              compartir: (nombre, contenido) async =>
+                  capturado.add((nombre, contenido)),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Exportar 3 filas a CSV'));
+      await tester.pumpAndSettle();
+
+      expect(capturado.single.$1, 'tabla-dosis-3-filas.csv');
+      final lineas = capturado.single.$2.split('\r\n');
+      expect(lineas.first, '\uFEFF${columnasTablaDosis.join(',')}');
+      expect(lineas.length, 5, reason: 'encabezado y 3 pautas, más el vacío');
+      expect(find.textContaining('CSV de 3 filas'), findsOneWidget);
+    });
+
     testWidgets('el buscador filtra y el filtro de origen separa', (
       tester,
     ) async {
@@ -179,7 +248,7 @@ void main() {
         'panacur',
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('1 filas'), findsOneWidget);
+      expect(find.text('1 filas'), findsOneWidget);
       expect(find.text('PANACUR 10%'), findsOneWidget);
 
       await tester.enterText(
@@ -189,7 +258,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ChoiceChip, 'Marca comercial'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('1 filas'), findsOneWidget);
+      expect(find.text('1 filas'), findsOneWidget);
       expect(find.text('Fenbendazol'), findsNothing);
     });
   });

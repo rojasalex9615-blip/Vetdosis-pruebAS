@@ -163,11 +163,7 @@ class TablaDosis {
     return List.unmodifiable(lista);
   }
 
-  List<FilaDosis> buscar(
-    String texto, {
-    OrigenDosis? origen,
-    String? especie,
-  }) {
+  List<FilaDosis> buscar(String texto, {OrigenDosis? origen, String? especie}) {
     final consulta = normalizar(texto);
     final salida = <FilaDosis>[];
     for (var i = 0; i < filas.length; i++) {
@@ -247,7 +243,8 @@ class TablaDosis {
 
   static String _texto(String? valor) {
     final texto = valor?.trim() ?? '';
-    if (texto.isEmpty || texto == '--' || texto == 'no especificado') return '—';
+    if (texto.isEmpty || texto == '--' || texto == 'no especificado')
+      return '—';
     return texto;
   }
 
@@ -277,4 +274,61 @@ class TablaDosis {
     }
     return null;
   }
+}
+
+/// Las 15 columnas de la tabla, en el orden en que se leen y se exportan.
+const columnasTablaDosis = <String>[
+  'Tipo',
+  'Especie',
+  'Principio activo',
+  'Nombre comercial',
+  'Presentación',
+  'Indicación',
+  'Dosis',
+  'Vía',
+  'Intervalo',
+  'Duración',
+  'Condiciones',
+  'Edad y peso',
+  'Fuente',
+  'Año',
+  'Estado',
+];
+
+/// CSV listo para Excel: encabezado de 15 columnas y una fila por pauta.
+///
+/// Lleva BOM porque sin él Excel abre los acentos en otra codificación. Los
+/// campos se entrecomillan cuando traen coma, comilla o salto de línea: las
+/// dosis publicadas usan coma decimal y no se pueden partir.
+String tablaDosisCsv(
+  List<FilaDosis> filas, {
+  String separador = ',',
+  String finLinea = '\r\n',
+  bool conBom = true,
+}) {
+  final buffer = StringBuffer();
+  if (conBom) buffer.write('\uFEFF');
+  buffer.write(columnasTablaDosis.map(_celdaCsv).join(separador));
+  buffer.write(finLinea);
+  for (final fila in filas) {
+    buffer.write(
+      [
+        for (final columna in columnasTablaDosis)
+          _celdaCsv(fila.columnas[columna]!),
+      ].join(separador),
+    );
+    buffer.write(finLinea);
+  }
+  return buffer.toString();
+}
+
+String _celdaCsv(String valor) {
+  final texto = valor.replaceAll('\r\n', ' ').replaceAll('\n', ' ');
+  final necesitaComillas =
+      texto.contains(',') ||
+      texto.contains(';') ||
+      texto.contains('"') ||
+      texto != texto.trim();
+  if (!necesitaComillas) return texto;
+  return '"${texto.replaceAll('"', '""')}"';
 }

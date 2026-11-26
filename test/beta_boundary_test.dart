@@ -71,6 +71,56 @@ class BetaFake implements BetaRepository {
 }
 
 void main() {
+  testWidgets('el aviso de la beta flota traslúcido sobre la cabecera', (
+    tester,
+  ) async {
+    final repository = BetaFake()
+      ..current = const BetaState({'mode': 'internal'});
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BetaBoundary(
+          repository: repository,
+          onSignOut: () async {},
+          onRefresh: () async {},
+          child: Scaffold(
+            appBar: AppBar(title: const Text('Cabecera normal')),
+            body: const Center(child: Text('Contenido')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final banner = find.byKey(const ValueKey('beta-banner'));
+    expect(banner, findsOneWidget);
+    expect(find.textContaining('Pruebas internas'), findsOneWidget);
+
+    // El aviso ya no es una fila: el contenido arranca pegado al borde
+    // superior y el aviso se dibuja encima de la barra.
+    final contenido = find.byKey(const ValueKey('beta-content'));
+    expect(tester.getTopLeft(contenido).dy, 0);
+    expect(
+      tester.getTopLeft(banner).dy,
+      lessThan(tester.getBottomLeft(find.text('Cabecera normal')).dy),
+    );
+
+    // Negro translúcido y sin absorber toques: la cabecera sigue usable.
+    final caja = tester.widget<DecoratedBox>(
+      find
+          .descendant(of: banner, matching: find.byType(DecoratedBox))
+          .first,
+    );
+    final color = (caja.decoration as BoxDecoration).color!;
+    expect(color.a, lessThan(1));
+    expect(color.r, 0);
+    expect(color.g, 0);
+    expect(color.b, 0);
+    expect(
+      find.descendant(of: banner, matching: find.byType(IgnorePointer)),
+      findsOneWidget,
+    );
+  });
+
   testWidgets(
     'La conexión fallida bloquea acceso sin perder el borrador de la pantalla',
     (tester) async {

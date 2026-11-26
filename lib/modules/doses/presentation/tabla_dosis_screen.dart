@@ -1,16 +1,39 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../vet_ui/vet_icons.dart';
 import '../domain/manufacturer_pauta.dart';
 import '../domain/pauta_farmacologica.dart';
 import '../domain/tabla_dosis.dart';
 
+/// Entrega el CSV a donde el MVZ lo quiera mandar (Excel, correo, WhatsApp).
+typedef CompartirCsv = Future<void> Function(String nombre, String contenido);
+
+Future<void> compartirCsvDelSistema(String nombre, String contenido) async {
+  final directory = await getTemporaryDirectory();
+  final file = File('${directory.path}/$nombre');
+  await file.writeAsString(contenido, flush: true);
+  await SharePlus.instance.share(
+    ShareParams(
+      files: [XFile(file.path, mimeType: 'text/csv')],
+      title: 'Tabla acumulativa de dosis',
+      text: 'Tabla acumulativa de dosis · VetDosis Pro.',
+    ),
+  );
+}
+
 /// Carga los dos vademécums y arma la tabla acumulativa una sola vez.
 class TablaDosisLoader extends StatefulWidget {
-  const TablaDosisLoader({super.key, this.tabla});
+  const TablaDosisLoader({super.key, this.tabla, this.compartir});
 
   /// Tabla ya armada, para pruebas o para reusar la que está en memoria.
   final TablaDosis? tabla;
+
+  /// Cómo se entrega el CSV. Las pruebas inyectan su propio capturador.
+  final CompartirCsv? compartir;
 
   /// Arma la tabla con los dos catálogos que trae la app.
   static Future<TablaDosis> cargarReal() async {
@@ -52,7 +75,7 @@ class _TablaDosisLoaderState extends State<TablaDosisLoader> {
           child: Text('Reuniendo principios y marcas…'),
         );
       }
-      return TablaDosisScreen(tabla: tabla);
+      return TablaDosisScreen(tabla: tabla, compartir: widget.compartir);
     },
   );
 }
@@ -60,9 +83,10 @@ class _TablaDosisLoaderState extends State<TablaDosisLoader> {
 /// Tabla acumulativa de dosis: las 15 columnas de los dos catálogos en una
 /// sola lista de consulta.
 class TablaDosisScreen extends StatefulWidget {
-  const TablaDosisScreen({super.key, required this.tabla});
+  const TablaDosisScreen({super.key, required this.tabla, this.compartir});
 
   final TablaDosis tabla;
+  final CompartirCsv? compartir;
 
   @override
   State<TablaDosisScreen> createState() => _TablaDosisScreenState();
@@ -73,6 +97,8 @@ class _TablaDosisScreenState extends State<TablaDosisScreen> {
   String consulta = '';
   OrigenDosis? origen;
   String? especie;
+  bool exportando = false;
+  String? mensaje;
 
   @override
   void initState() {
@@ -91,14 +117,15 @@ class _TablaDosisScreenState extends State<TablaDosisScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final filas = widget.tabla.buscar(consulta, origen: origen, especie: especie);
+    final filas = widget.tabla.buscar(
+      consulta,
+      origen: origen,
+      especie: especie,
+    );
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          'Tabla acumulativa de dosis',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('Tabla acumulativa de dosis', style: theme.textTheme.titleLarge),
         Text(widget.tabla.nota, style: theme.textTheme.bodySmall),
         const SizedBox(height: 8),
         Text(
@@ -144,6 +171,23 @@ class _TablaDosisScreenState extends State<TablaDosisScreen> {
           ],
           onChanged: (valor) => setState(() => especie = valor),
         ),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: filas.isEmpty || exportando
+              ? null
+              : () => _exportar(filas),
+          icon: const Icon(VetIcons.documentScan),
+          label: Text(
+            filas.isEmpty
+                ? 'Sin filas para exportar'
+                : 'Exportar ${filas.length} filas a CSV',
+          ),
+        ),
+        if (mensaje != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(mensaje!, style: theme.textTheme.bodySmall),
+          ),
         const SizedBox(height: 12),
         Text(
           filas.isEmpty
@@ -164,6 +208,36 @@ class _TablaDosisScreenState extends State<TablaDosisScreen> {
           ),
       ],
     );
+  }
+
+  /// Exporta lo que está en pantalla, no el catálogo completo: el MVZ filtra
+  /// por especie o por marca y se lleva exactamente lo que está viendo.
+  Future<void> _exportar(List<FilaDosis> filas) async {
+    setState(() {
+      exportando = true;
+      mensaje = null;
+    });
+    try {
+      final csv = tablaDosisCsv(filas);
+      final nombre = 'tabla-dosis-${filas.length}-filas.csv';
+      final entrega = widget.compartir ?? compartirCsvDelSistema;
+      await entrega(nombre, csv);
+      if (mounted) {
+        setState(
+          () => mensaje =
+              'CSV de ${filas.length} filas con las 15 columnas, listo para '
+              'compartir.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => mensaje = 'No se pudo preparar el CSV. Intenta de nuevo.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => exportando = false);
+    }
   }
 }
 
@@ -190,10 +264,7 @@ class _FilaCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    fila.titulo,
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  child: Text(fila.titulo, style: theme.textTheme.titleMedium),
                 ),
               ],
             ),
