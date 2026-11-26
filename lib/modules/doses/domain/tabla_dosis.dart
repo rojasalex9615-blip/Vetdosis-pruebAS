@@ -243,8 +243,9 @@ class TablaDosis {
 
   static String _texto(String? valor) {
     final texto = valor?.trim() ?? '';
-    if (texto.isEmpty || texto == '--' || texto == 'no especificado')
+    if (texto.isEmpty || texto == '--' || texto == 'no especificado') {
       return '—';
+    }
     return texto;
   }
 
