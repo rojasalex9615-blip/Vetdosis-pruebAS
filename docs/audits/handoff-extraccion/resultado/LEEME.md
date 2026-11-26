@@ -172,24 +172,49 @@ Dos precisiones:
 3. Decidir los 15 grupos de `posibles_sinonimos.csv`.
 4. Resolver las 52 celdas de varios valores, que son las que más pautas nuevas aportarían.
 
-## 11. Carga en Supabase
+## 11. Integración en la tabla de la calculadora
 
-Proyecto `wtrelwtztkddfktrfdpb`, esquema `private`, siguiendo el patrón de las demás tablas de revisión:
+Las pautas no van a una tabla propia de Ramsey. Van a la tabla multi-especie que ya usa la calculadora, porque ambas fuentes sirven al mismo motor:
 
-| Tabla | Filas | Columnas |
-|---|---:|---:|
-| `private.vetdosis_ramsey_monografias_revision` | 413 | 15 |
-| `private.vetdosis_ramsey_pautas_revision` | 1.023 | 44 |
+| Destino | Antes | Ramsey | Total |
+|---|---:|---:|---:|
+| `private.vetdosis_qwen_farmacos_revision` | 127 | 413 | 540 |
+| `private.vetdosis_qwen_dosis_revision` | 54 | 1.023 | 1.077 |
 
-`pautas.monografia_id` tiene clave foránea a `monografias.monografia_id`. RLS activo sin políticas, igual que el resto de `vetdosis_*_revision`: denegación por defecto, solo acceso de servicio. Índices por `clave_busqueda`, `monografia_id` y `estado_normalizacion`.
+Todo lo insertado lleva `bloque_origen = 'ramsey_9a_parte_a'`, así que se distingue de los bloques anteriores y se revierte de una vez:
 
-**No se borró ni se alteró ninguna tabla existente.** Las dos tablas son nuevas. La carga es idempotente: trunca sus propias tablas y vuelve a insertar.
+```sql
+delete from private.vetdosis_qwen_dosis_revision    where bloque_origen = 'ramsey_9a_parte_a';
+delete from private.vetdosis_qwen_farmacos_revision where bloque_origen = 'ramsey_9a_parte_a';
+```
 
-Verificado en la base: 413 y 1.023 filas, `sum(pautas) = 1023`, cero huérfanas, cero con `dosis_min > dosis_max`, 617 con mínimo numérico (622 normalizadas menos 5 de cota superior), y los caracteres `µ` conservados en 10 filas.
+Mapeo aplicado:
+
+| Origen (Ramsey) | Destino |
+|---|---|
+| `monografia_id` | `id_farmaco_original` = `R0001`…`R0413` |
+| `principio_activo` | `principio_activo` (literal) |
+| `nombre_variantes` | `sinonimos` |
+| `pauta_id` | `id_dosis_original` |
+| `especie_normalizada` | `especie` |
+| `dosis_min` / `dosis_max` | `dosis_min` / `dosis_max`, solo si la pauta está normalizada |
+| `unidad_normalizada` | `unidad`; si no está normalizada, la unidad original |
+| `frecuencia` | `intervalo` |
+| `dosis_original` | `fuente_original` («Dosis literal: …») |
+| `referencia_ubicacion` | `edicion_pagina` |
+| `motivo_no_normalizado` | `condiciones_contraindicaciones` («no calculable: …») |
+
+`clave_global` es columna generada, no se inserta.
+
+Verificado en la base: 1.023 dosis del bloque, 413 principios, cero huérfanas, cero con `dosis_min > dosis_max`, 617 con rango numérico. Los bloques anteriores siguen con sus 54 dosis intactas.
+
+Estado de lo cargado: `estado_revision = 'pendiente'` y `estado_verificacion_origen = 'sin_verificar'`. Nada de esto queda validado.
+
+### Qué pasa con las dos tablas `vetdosis_ramsey_*`
+
+Se quedan como copia de trabajo, porque la tabla de la calculadora no tiene columnas para `estado_normalizacion`, `motivo_no_normalizado`, `evidence_*` ni `canal_*`. Ahí vive el detalle que permite auditar cada pauta. Si no las quieres, se borran con `drop table private.vetdosis_ramsey_pautas_revision, private.vetdosis_ramsey_monografias_revision;` y no se pierde nada de lo integrado.
 
 ### Nombres: literal, canónico y variantes
-
-Tres campos, para no perder ninguna grafía:
 
 | Campo | Qué guarda | Ejemplo |
 |---|---|---|
