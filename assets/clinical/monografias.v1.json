@@ -1,0 +1,1569 @@
+{
+  "schema_version": 1,
+  "catalog_version": "0.1.0",
+  "estado": "sin verificar",
+  "fuente": "Vademécum Farmacológico para perros y gatos, 9ª ed. (ed. Ian Ramsey), Parte A",
+  "nota": "Pautas por indicación, especie y vía. «grupo» conserva la letra de la fuente (A, B, C, D); leyenda pendiente de confirmar. «calculable» solo cuando la unidad es mg/kg. Sin presentación ni concentración: no depende del vademécum comercial.",
+  "grupos": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "monografia_count": 53,
+  "dosis_count": 83,
+  "calculable_count": 55,
+  "monografias": [
+    {
+      "id": "emodepsida-toltrazuril",
+      "farmaco": "Emodepsida / Toltrazuril",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "emodepsida-toltrazuril-gato-topico-spot-on",
+          "grupo": "C",
+          "especie": "Gato",
+          "via": "Tópico spot-on",
+          "min": "0.14",
+          "max": "0.14",
+          "unidad": "ml/kg",
+          "frecuencia": "una vez",
+          "duracion": "",
+          "calculable": false,
+          "nota": "VERIFICAR fuente: combinación dudosa",
+          "texto_original": "0,14 ml/kg tópico (spot-on) una vez."
+        }
+      ]
+    },
+    {
+      "id": "orbifloxacina",
+      "farmaco": "Orbifloxacina",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "orbifloxacina-perro-gato-vo",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "2.5",
+          "max": "7.5",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Contra: animales en crecimiento",
+          "texto_original": "2,5-7,5 mg/kg p.o. q24h."
+        }
+      ]
+    },
+    {
+      "id": "osaterona",
+      "farmaco": "Osaterona",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "osaterona-perro-vo",
+          "grupo": "A",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "0.25",
+          "max": "0.5",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "7 días",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "0,25-0,5 mg/kg p.o. q24h durante 7 días."
+        }
+      ]
+    },
+    {
+      "id": "oxantel",
+      "farmaco": "Oxantel",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "oxantel-perro-gato-vo",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "20.0",
+          "max": "20.0",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Usualmente combinado con praziquantel: avisar",
+          "texto_original": "20 mg/kg p.o. (usualmente combinado con praziquantel)."
+        }
+      ]
+    },
+    {
+      "id": "oximetazolina",
+      "farmaco": "Oximetazolina",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "oximetazolina-perro-gato-nasal",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "Nasal",
+          "min": "1.0",
+          "max": "1.0",
+          "unidad": "gota/narina",
+          "frecuencia": "q12h",
+          "duracion": "máx. 3 días",
+          "calculable": false,
+          "nota": "Solución al 0,05%",
+          "texto_original": "1 gota por narina (solución al 0,05%) q12h (máx. 3 días)."
+        }
+      ]
+    },
+    {
+      "id": "oxipentofilina",
+      "farmaco": "Oxipentofilina",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "oxipentofilina-perro-vo",
+          "grupo": "A",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "10.0",
+          "max": "15.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8-12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "10-15 mg/kg p.o. q8-12h."
+        }
+      ]
+    },
+    {
+      "id": "oxitetraciclina",
+      "farmaco": "Oxitetraciclina",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "oxitetraciclina-perro-gato-vo",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "10.0",
+          "max": "20.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8-12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "10-20 mg/kg p.o. q8-12h o 5-10 mg/kg i.v. q12-24h."
+        },
+        {
+          "id": "oxitetraciclina-perro-gato-iv",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "IV",
+          "min": "5.0",
+          "max": "10.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12-24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "10-20 mg/kg p.o. q8-12h o 5-10 mg/kg i.v. q12-24h."
+        }
+      ]
+    },
+    {
+      "id": "oxitocina",
+      "farmaco": "Oxitocina",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "oxitocina-perro-im-sc",
+          "grupo": "C",
+          "especie": "Perro",
+          "via": "IM/SC",
+          "min": "2.0",
+          "max": "20.0",
+          "unidad": "UI/animal",
+          "frecuencia": "repetir cada 30-60 min si necesario",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Unidades internacionales",
+          "texto_original": "P: 2-20 UI i.m. o s.c. (repetir cada 30-60 min si es necesario).G: 1-5 UI i.m. o s.c."
+        },
+        {
+          "id": "oxitocina-gato-im-sc",
+          "grupo": "C",
+          "especie": "Gato",
+          "via": "IM/SC",
+          "min": "1.0",
+          "max": "5.0",
+          "unidad": "UI/animal",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Unidades internacionales",
+          "texto_original": "P: 2-20 UI i.m. o s.c. (repetir cada 30-60 min si es necesario).G: 1-5 UI i.m. o s.c."
+        }
+      ]
+    },
+    {
+      "id": "ticarcilina",
+      "farmaco": "Ticarcilina",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "ticarcilina-perro-gato-iv-bolo",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "IV bolo",
+          "min": "15.0",
+          "max": "25.0",
+          "unidad": "mg/kg",
+          "frecuencia": "una vez",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "15-25 mg/kg IV (bolo), luego 7,5-15 mg/kg/h en infusión."
+        },
+        {
+          "id": "ticarcilina-perro-gato-iv-infusion",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "IV infusión",
+          "min": "7.5",
+          "max": "15.0",
+          "unidad": "mg/kg/h",
+          "frecuencia": "continua",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Infusión: unidad mg/kg/h, solo monografía",
+          "texto_original": "15-25 mg/kg IV (bolo), luego 7,5-15 mg/kg/h en infusión."
+        }
+      ]
+    },
+    {
+      "id": "tilosina",
+      "farmaco": "Tilosina",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "tilosina-perro-gato-vo",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "7.0",
+          "max": "15.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12-24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Con alimento",
+          "texto_original": "7-15 mg/kg VO q12-24h (con alimento)."
+        }
+      ]
+    },
+    {
+      "id": "tobramicina",
+      "farmaco": "Tobramicina",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "tobramicina-perro-iv-im-sc",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "IV/IM/SC",
+          "min": "9.0",
+          "max": "14.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 9-14 mg/kg IV/IM/SC q24h.G: 5-8 mg/kg IV/IM/SC q24h."
+        },
+        {
+          "id": "tobramicina-gato-iv-im-sc",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "IV/IM/SC",
+          "min": "5.0",
+          "max": "8.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 9-14 mg/kg IV/IM/SC q24h.G: 5-8 mg/kg IV/IM/SC q24h."
+        }
+      ]
+    },
+    {
+      "id": "toceranib",
+      "farmaco": "Toceranib",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "toceranib-perro-vo",
+          "grupo": "A",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "2.5",
+          "max": "3.25",
+          "unidad": "mg/kg",
+          "frecuencia": "q48h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Días alternos",
+          "texto_original": "2,5-3,25 mg/kg VO q48h (días alternos)."
+        }
+      ]
+    },
+    {
+      "id": "topiramato",
+      "farmaco": "Topiramato",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "topiramato-perro-vo",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "2.0",
+          "max": "20.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8-12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Rango muy amplio",
+          "texto_original": "P: 2-20 mg/kg VO q8-12h.G: 12,5-25 mg/kg VO q12h (experimental)."
+        },
+        {
+          "id": "topiramato-gato-vo",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "VO",
+          "min": "12.5",
+          "max": "25.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Experimental",
+          "texto_original": "P: 2-20 mg/kg VO q8-12h.G: 12,5-25 mg/kg VO q12h (experimental)."
+        }
+      ]
+    },
+    {
+      "id": "torasemida",
+      "farmaco": "Torasemida",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "torasemida-perro-vo",
+          "grupo": "A",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "0.1",
+          "max": "0.6",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "0,1-0,6 mg/kg VO q24h."
+        }
+      ]
+    },
+    {
+      "id": "tramadol",
+      "farmaco": "Tramadol",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "tramadol-perro-vo",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "2.0",
+          "max": "5.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 2-5 mg/kg VO q8h / 2 mg/kg IV.G: 2-4 mg/kg VO q8h / 1-2 mg/kg IV/SC."
+        },
+        {
+          "id": "tramadol-perro-iv",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "IV",
+          "min": "2.0",
+          "max": "2.0",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 2-5 mg/kg VO q8h / 2 mg/kg IV.G: 2-4 mg/kg VO q8h / 1-2 mg/kg IV/SC."
+        },
+        {
+          "id": "tramadol-gato-vo",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "VO",
+          "min": "2.0",
+          "max": "4.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 2-5 mg/kg VO q8h / 2 mg/kg IV.G: 2-4 mg/kg VO q8h / 1-2 mg/kg IV/SC."
+        },
+        {
+          "id": "tramadol-gato-iv-sc",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "IV/SC",
+          "min": "1.0",
+          "max": "2.0",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 2-5 mg/kg VO q8h / 2 mg/kg IV.G: 2-4 mg/kg VO q8h / 1-2 mg/kg IV/SC."
+        }
+      ]
+    },
+    {
+      "id": "travoprost",
+      "farmaco": "Travoprost",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "travoprost-perro-oftalmico",
+          "grupo": "C",
+          "especie": "Perro",
+          "via": "Oftálmico",
+          "min": "1.0",
+          "max": "1.0",
+          "unidad": "gota/ojo",
+          "frecuencia": "q24h (noche) o q8-12h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Gotas",
+          "texto_original": "1 gota/ojo q24h (noche) o q8-12h."
+        }
+      ]
+    },
+    {
+      "id": "trazodona",
+      "farmaco": "Trazodona",
+      "grupo": "D",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "trazodona-perro-vo",
+          "grupo": "D",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "5.0",
+          "max": "10.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Máx. 300 mg totales",
+          "texto_original": "P: 5-10 mg/kg VO q24h (ajustar hasta máx. 300 mg).G: 50-100 mg/gato VO q24h (corto plazo)."
+        },
+        {
+          "id": "trazodona-gato-vo",
+          "grupo": "D",
+          "especie": "Gato",
+          "via": "VO",
+          "min": "50.0",
+          "max": "100.0",
+          "unidad": "mg/animal",
+          "frecuencia": "q24h",
+          "duracion": "corto plazo",
+          "calculable": false,
+          "nota": "mg/gato, no mg/kg",
+          "texto_original": "P: 5-10 mg/kg VO q24h (ajustar hasta máx. 300 mg).G: 50-100 mg/gato VO q24h (corto plazo)."
+        }
+      ]
+    },
+    {
+      "id": "triamcinolona",
+      "farmaco": "Triamcinolona",
+      "grupo": "D",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "triamcinolona-perro-gato-intralesional",
+          "grupo": "D",
+          "especie": "Perro, Gato",
+          "via": "Intralesional",
+          "min": "1.2",
+          "max": "4.8",
+          "unidad": "mg/animal",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": false,
+          "nota": "mg totales",
+          "texto_original": "Intralesional: 1,2-4,8 mg.Sistémica: 0,11-0,22 mg/kg."
+        },
+        {
+          "id": "triamcinolona-perro-gato-sistemica",
+          "grupo": "D",
+          "especie": "Perro, Gato",
+          "via": "Sistémica",
+          "min": "0.11",
+          "max": "0.22",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Vía no especificada en la tabla",
+          "texto_original": "Intralesional: 1,2-4,8 mg.Sistémica: 0,11-0,22 mg/kg."
+        }
+      ]
+    },
+    {
+      "id": "trientina",
+      "farmaco": "Trientina",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "trientina-perro-vo",
+          "grupo": "A",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "10.0",
+          "max": "15.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Con alimento",
+          "texto_original": "10-15 mg/kg VO q12h (con alimento)."
+        }
+      ]
+    },
+    {
+      "id": "trilostano",
+      "farmaco": "Trilostano",
+      "grupo": "D",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "trilostano-perro-vo",
+          "grupo": "D",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "2.0",
+          "max": "6.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 2-6 mg/kg VO q24h.G: 10 mg/gato VO q24h."
+        },
+        {
+          "id": "trilostano-gato-vo",
+          "grupo": "D",
+          "especie": "Gato",
+          "via": "VO",
+          "min": "10.0",
+          "max": "10.0",
+          "unidad": "mg/animal",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "mg/gato, no mg/kg",
+          "texto_original": "P: 2-6 mg/kg VO q24h.G: 10 mg/gato VO q24h."
+        }
+      ]
+    },
+    {
+      "id": "trimetoprim-sulfonamida",
+      "farmaco": "Trimetoprim / Sulfonamida",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "trimetoprim-sulfonamida-perro-gato-vo",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "15.0",
+          "max": "15.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Confirmar si es mg/kg del combinado",
+          "texto_original": "15 mg/kg VO q12h."
+        }
+      ]
+    },
+    {
+      "id": "trinitrato-de-glicerina",
+      "farmaco": "Trinitrato de glicerina",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "trinitrato-de-glicerina-perro-gato-topico",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "Tópico",
+          "min": "6.0",
+          "max": "50.0",
+          "unidad": "mm de pomada",
+          "frecuencia": "q6-8h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "1/4-1 pulgada",
+          "texto_original": "6-50 mm (1/4-1 pulgada) de pomada tópica q6-8h."
+        }
+      ]
+    },
+    {
+      "id": "tropicamida",
+      "farmaco": "Tropicamida",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "tropicamida-perro-gato-oftalmico",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "Oftálmico",
+          "min": "1.0",
+          "max": "1.0",
+          "unidad": "gota/ojo",
+          "frecuencia": "repetir a 20-30 min si necesario",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Gotas",
+          "texto_original": "1 gota/ojo (repetir a los 20-30 min si es necesario)."
+        }
+      ]
+    },
+    {
+      "id": "vecuronio",
+      "farmaco": "Vecuronio",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vecuronio-perro-gato-iv-lento",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "IV lento",
+          "min": "0.1",
+          "max": "0.2",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Dosis inicial",
+          "texto_original": "0,1-0,2 mg/kg IV (lento), luego 0,05 mg/kg según necesidad."
+        },
+        {
+          "id": "vecuronio-perro-gato-iv-mantenimiento",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "IV mantenimiento",
+          "min": "0.05",
+          "max": "0.05",
+          "unidad": "mg/kg",
+          "frecuencia": "según necesidad",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Dosis de mantenimiento",
+          "texto_original": "0,1-0,2 mg/kg IV (lento), luego 0,05 mg/kg según necesidad."
+        }
+      ]
+    },
+    {
+      "id": "verapamilo",
+      "farmaco": "Verapamilo",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "verapamilo-perro-vo",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "0.5",
+          "max": "3.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 0,5-3 mg/kg VO q8h o 0,05 mg/kg IV lento.G: 0,5-1 mg/kg VO q8h."
+        },
+        {
+          "id": "verapamilo-perro-iv-lento",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "IV lento",
+          "min": "0.05",
+          "max": "0.05",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 0,5-3 mg/kg VO q8h o 0,05 mg/kg IV lento.G: 0,5-1 mg/kg VO q8h."
+        },
+        {
+          "id": "verapamilo-gato-vo",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "VO",
+          "min": "0.5",
+          "max": "1.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q8h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 0,5-3 mg/kg VO q8h o 0,05 mg/kg IV lento.G: 0,5-1 mg/kg VO q8h."
+        }
+      ]
+    },
+    {
+      "id": "vinblastina",
+      "farmaco": "Vinblastina",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vinblastina-perro-gato-iv",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "IV",
+          "min": "2.0",
+          "max": "3.0",
+          "unidad": "mg/m2",
+          "frecuencia": "q7-14 días",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Por superficie corporal",
+          "texto_original": "2-3 mg/m² IV q7-14 días."
+        }
+      ]
+    },
+    {
+      "id": "vincristina",
+      "farmaco": "Vincristina",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vincristina-perro-gato-iv",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "IV",
+          "min": "0.5",
+          "max": "0.75",
+          "unidad": "mg/m2",
+          "frecuencia": "q1-3 semanas",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Por superficie corporal",
+          "texto_original": "0,5-0,75 mg/m² IV q1-3 semanas."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-a",
+      "farmaco": "Vitamina A",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-a-perro-gato-im",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "IM",
+          "min": "10000.0",
+          "max": "100000.0",
+          "unidad": "UI/kg",
+          "frecuencia": "q3d",
+          "duracion": "máx. 2 dosis",
+          "calculable": false,
+          "nota": "VERIFICAR: valor muy alto, quizá UI por animal",
+          "texto_original": "10.000-100.000 UI/kg IM q3d (máx. 2 dosis) o 10.000 UI/kg VO q24h."
+        },
+        {
+          "id": "vitamina-a-perro-gato-vo",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "10000.0",
+          "max": "10000.0",
+          "unidad": "UI/kg",
+          "frecuencia": "q24h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "VERIFICAR: igual que arriba",
+          "texto_original": "10.000-100.000 UI/kg IM q3d (máx. 2 dosis) o 10.000 UI/kg VO q24h."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-b1-tiamina",
+      "farmaco": "Vitamina B1 (Tiamina)",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-b1-tiamina-perro-gato-im-sc-vo",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "IM/SC/VO",
+          "min": "50.0",
+          "max": "250.0",
+          "unidad": "mg/animal",
+          "frecuencia": "q12-24h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Dice mg/perro",
+          "texto_original": "50-250 mg/perro IM/SC/VO q12-24h."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-b12",
+      "farmaco": "Vitamina B12",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-b12-perro-gato-sc-im",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "SC/IM",
+          "min": "0.02",
+          "max": "0.02",
+          "unidad": "mg/kg",
+          "frecuencia": "q7d",
+          "duracion": "4 semanas",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "0,02 mg/kg SC/IM q7d durante 4 semanas."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-c",
+      "farmaco": "Vitamina C",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-c-perro-gato-vo",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "30.0",
+          "max": "40.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q6h",
+          "duracion": "7 días",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "30-40 mg/kg VO q6h durante 7 días."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-d-calcitriol",
+      "farmaco": "Vitamina D (Calcitriol)",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-d-calcitriol-perro-gato-vo",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "10.0",
+          "max": "15.0",
+          "unidad": "ng/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Unidad ng/kg; ajustar según calcio sérico",
+          "texto_original": "10-15 ng/kg VO q12h (ajustar según calcio sérico)."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-e",
+      "farmaco": "Vitamina E",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-e-perro-gato-vo",
+          "grupo": "A",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "1.6",
+          "max": "8.3",
+          "unidad": "mg/kg",
+          "frecuencia": "q24h",
+          "duracion": "30 días",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "1,6-8,3 mg/kg VO q24h durante 30 días."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-k1",
+      "farmaco": "Vitamina K1",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "vitamina-k1-perro-gato-vo",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "1.0",
+          "max": "2.5",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Caso: tóxicos 1ª generación",
+          "texto_original": "1-2,5 mg/kg VO q12h (tóxicos 1ª gen) o 2,5 mg/kg VO q12h x 3 sem (2ª gen)."
+        },
+        {
+          "id": "vitamina-k1-perro-gato-vo",
+          "grupo": "B",
+          "especie": "Perro, Gato",
+          "via": "VO",
+          "min": "2.5",
+          "max": "2.5",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "3 semanas",
+          "calculable": true,
+          "nota": "Caso: tóxicos 2ª generación",
+          "texto_original": "1-2,5 mg/kg VO q12h (tóxicos 1ª gen) o 2,5 mg/kg VO q12h x 3 sem (2ª gen)."
+        }
+      ]
+    },
+    {
+      "id": "xilazina",
+      "farmaco": "Xilazina",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "xilazina-perro-im",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "IM",
+          "min": "0.1",
+          "max": "0.1",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "SOLO emesis, no es dosis de sedación",
+          "texto_original": "P (Emesis): 0,1 mg/kg IM.G (Emesis): 0,2 mg/kg IM."
+        },
+        {
+          "id": "xilazina-gato-im",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "IM",
+          "min": "0.2",
+          "max": "0.2",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "SOLO emesis, no es dosis de sedación",
+          "texto_original": "P (Emesis): 0,1 mg/kg IM.G (Emesis): 0,2 mg/kg IM."
+        }
+      ]
+    },
+    {
+      "id": "zidovudina-azt",
+      "farmaco": "Zidovudina (AZT)",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "zidovudina-azt-gato-vo-sc",
+          "grupo": "A",
+          "especie": "Gato",
+          "via": "VO/SC",
+          "min": "5.0",
+          "max": "5.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "5 mg/kg VO/SC q12h."
+        }
+      ]
+    },
+    {
+      "id": "zolazepam-tiletamina",
+      "farmaco": "Zolazepam / Tiletamina",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "zolazepam-tiletamina-perro-iv",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "IV",
+          "min": "5.0",
+          "max": "10.0",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 5-10 mg/kg IV o 7-25 mg/kg IM.G: 5-7,5 mg/kg IV o 10-15 mg/kg IM."
+        },
+        {
+          "id": "zolazepam-tiletamina-perro-im",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "IM",
+          "min": "7.0",
+          "max": "25.0",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 5-10 mg/kg IV o 7-25 mg/kg IM.G: 5-7,5 mg/kg IV o 10-15 mg/kg IM."
+        },
+        {
+          "id": "zolazepam-tiletamina-gato-iv",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "IV",
+          "min": "5.0",
+          "max": "7.5",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 5-10 mg/kg IV o 7-25 mg/kg IM.G: 5-7,5 mg/kg IV o 10-15 mg/kg IM."
+        },
+        {
+          "id": "zolazepam-tiletamina-gato-im",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "IM",
+          "min": "10.0",
+          "max": "15.0",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 5-10 mg/kg IV o 7-25 mg/kg IM.G: 5-7,5 mg/kg IV o 10-15 mg/kg IM."
+        }
+      ]
+    },
+    {
+      "id": "zoledronato",
+      "farmaco": "Zoledronato",
+      "grupo": "A",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "zoledronato-perro-iv-lento",
+          "grupo": "A",
+          "especie": "Perro",
+          "via": "IV lento",
+          "min": "0.1",
+          "max": "0.25",
+          "unidad": "mg/kg",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Diluir en 100 ml NaCl 0,9% y pasar en 15-30 min",
+          "texto_original": "0,1-0,25 mg/kg IV lento (en 100 ml NaCl 0,9% durante 15-30 min)."
+        }
+      ]
+    },
+    {
+      "id": "zonisamida",
+      "farmaco": "Zonisamida",
+      "grupo": "B",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "zonisamida-perro-vo",
+          "grupo": "B",
+          "especie": "Perro",
+          "via": "VO",
+          "min": "5.0",
+          "max": "10.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 5-10 mg/kg VO q12h.G: 5 mg/kg VO q12h."
+        },
+        {
+          "id": "zonisamida-gato-vo",
+          "grupo": "B",
+          "especie": "Gato",
+          "via": "VO",
+          "min": "5.0",
+          "max": "5.0",
+          "unidad": "mg/kg",
+          "frecuencia": "q12h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "P: 5-10 mg/kg VO q12h.G: 5 mg/kg VO q12h."
+        }
+      ]
+    },
+    {
+      "id": "oxido-nitroso",
+      "farmaco": "Óxido nitroso",
+      "grupo": "C",
+      "indicacion": "",
+      "dosis": [
+        {
+          "id": "oxido-nitroso-perro-gato-inhalatorio",
+          "grupo": "C",
+          "especie": "Perro, Gato",
+          "via": "Inhalatorio",
+          "min": "50.0",
+          "max": "70.0",
+          "unidad": "% en mezcla con O2",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Porcentaje, no mg/kg",
+          "texto_original": "50-70% en mezcla con oxígeno (inhalatorio)."
+        }
+      ]
+    },
+    {
+      "id": "levotiroxina",
+      "farmaco": "Levotiroxina (T4)",
+      "indicacion": "Hipotiroidismo",
+      "dosis": [
+        {
+          "id": "levotiroxina-perro-oral",
+          "especie": "Perro",
+          "via": "Oral",
+          "min": "0.02",
+          "max": "0.04",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "Hipotiroidismo: 0,02-0,04 mg/kg/día. Dosis con comida o dividida dos veces al día."
+        },
+        {
+          "id": "levotiroxina-gato-oral",
+          "especie": "Gato",
+          "via": "Oral",
+          "min": "0.02",
+          "max": "0.04",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "Hipotiroidismo: 0,02-0,04 mg/kg/día (misma pauta que perro en la fuente)."
+        }
+      ]
+    },
+    {
+      "id": "telmisartan",
+      "farmaco": "Telmisartán",
+      "indicacion": "Proteinuria en enfermedad renal crónica",
+      "dosis": [
+        {
+          "id": "telmisartan-perro-oral",
+          "especie": "Perro",
+          "via": "Oral",
+          "min": "0.5",
+          "max": "0.5",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h, hasta cada 12 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "0,5 mg/kg p.o. q24 horas aumentando hasta q12 horas según respuesta (información limitada)."
+        },
+        {
+          "id": "telmisartan-gato-oral",
+          "especie": "Gato",
+          "via": "Oral",
+          "min": "1.0",
+          "max": "1.0",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "1 mg/kg p.o. q24 horas."
+        }
+      ]
+    },
+    {
+      "id": "teofilina",
+      "farmaco": "Teofilina",
+      "indicacion": "Broncodilatación",
+      "dosis": [
+        {
+          "id": "teofilina-perro-oral",
+          "especie": "Perro",
+          "via": "Oral",
+          "min": "20",
+          "max": "20",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "Broncodilatación: 20 mg/kg p.o. q24 h (o 10 mg/kg q12 h, hasta 15 mg/kg q12 h sin efectos adversos)."
+        },
+        {
+          "id": "teofilina-gato-oral",
+          "especie": "Gato",
+          "via": "Oral",
+          "min": "15",
+          "max": "19",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "Broncodilatación: 15-19 mg/kg p.o. q24 horas (liberación sostenida)."
+        }
+      ]
+    },
+    {
+      "id": "toltrazuril",
+      "farmaco": "Toltrazuril",
+      "indicacion": "Coccidiosis (Isospora spp.)",
+      "dosis": [
+        {
+          "id": "toltrazuril-perro-oral",
+          "especie": "Perro",
+          "via": "Oral",
+          "min": "9",
+          "max": "20",
+          "unidad": "mg/kg",
+          "frecuencia": "dosis única",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "9 mg/kg p.o. una vez; repetir solo si persiste la eliminación de oocistos. Hasta 20 mg/kg si es necesario."
+        },
+        {
+          "id": "toltrazuril-gato-oral",
+          "especie": "Gato",
+          "via": "Oral",
+          "min": "9",
+          "max": "20",
+          "unidad": "mg/kg",
+          "frecuencia": "dosis única",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "9 mg/kg p.o. una vez; hasta 20 mg/kg si es necesario."
+        }
+      ]
+    },
+    {
+      "id": "tiamazol",
+      "farmaco": "Tiamazol (Metimazol)",
+      "indicacion": "Hipertiroidismo felino",
+      "dosis": [
+        {
+          "id": "tiamazol-gato-oral",
+          "especie": "Gato",
+          "via": "Oral",
+          "min": "2.5",
+          "max": "2.5",
+          "unidad": "mg/animal",
+          "frecuencia": "cada 12 h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "",
+          "texto_original": "Hipertiroidismo: 2,5 mg/gato p.o. q12 horas. También gel transdérmico en pabellón auricular."
+        },
+        {
+          "id": "tiamazol-perro-oral",
+          "especie": "Perro",
+          "via": "Oral",
+          "min": "2.5",
+          "max": "5",
+          "unidad": "mg/animal",
+          "frecuencia": "cada 12 h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "",
+          "texto_original": "Hipertiroidismo: 2,5-5 mg/perro p.o. q12 horas según tamaño."
+        }
+      ]
+    },
+    {
+      "id": "tacrolimus",
+      "farmaco": "Tacrolimus (FK 506)",
+      "indicacion": "Queratoconjuntivitis seca (oftálmico)",
+      "dosis": [
+        {
+          "id": "tacrolimus-perro-oftalmico",
+          "especie": "Perro",
+          "via": "Oftálmica tópica",
+          "min": "0",
+          "max": "0",
+          "unidad": "aplicación",
+          "frecuencia": "cada 12 h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "No calculable: dosis no expresada por kg.",
+          "texto_original": "Aplicar una cantidad pequeña de ungüento en el ojo afectado cada 12 horas."
+        },
+        {
+          "id": "tacrolimus-gato-oftalmico",
+          "especie": "Gato",
+          "via": "Oftálmica tópica",
+          "min": "0",
+          "max": "0",
+          "unidad": "aplicación",
+          "frecuencia": "cada 12 h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Sin dato para gato en la fuente.",
+          "texto_original": "No hay información disponible para gato en la fuente."
+        }
+      ]
+    },
+    {
+      "id": "vetrabutina",
+      "farmaco": "Vetrabutina",
+      "indicacion": "Facilitar el parto (relajación cervical)",
+      "dosis": [
+        {
+          "id": "vetrabutina-perro-im",
+          "especie": "Perro",
+          "via": "Intramuscular",
+          "min": "2",
+          "max": "2",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 30-60 min, hasta 3 veces",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "2 mg/kg i.m. q30-60 minutos, hasta 3 veces."
+        },
+        {
+          "id": "vetrabutina-gato",
+          "especie": "Gato",
+          "via": "",
+          "min": "0",
+          "max": "0",
+          "unidad": "",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Contraindicado en gato según la fuente.",
+          "texto_original": "No utilizar."
+        }
+      ]
+    },
+    {
+      "id": "tiabendazol",
+      "farmaco": "Tetracosactida (ACTH)",
+      "indicacion": "Prueba de estimulación de ACTH",
+      "dosis": [
+        {
+          "id": "tetracosactida-perro-im",
+          "especie": "Perro",
+          "via": "Intramuscular",
+          "min": "0.0005",
+          "max": "0.0005",
+          "unidad": "mg/kg",
+          "frecuencia": "dosis única",
+          "duracion": "",
+          "calculable": true,
+          "nota": "",
+          "texto_original": "Prueba de estimulación de ACTH: 0,5 µg/kg i.m. (equivale a 0,0005 mg/kg)."
+        },
+        {
+          "id": "tetracosactida-gato-im",
+          "especie": "Gato",
+          "via": "Intramuscular / Intravenosa",
+          "min": "0",
+          "max": "0.125",
+          "unidad": "mg/animal",
+          "frecuencia": "dosis única",
+          "duracion": "",
+          "calculable": false,
+          "nota": "",
+          "texto_original": "Prueba de estimulación de ACTH: 0,5 µg/kg o 125 µg/gato i.v./i.m."
+        }
+      ]
+    },
+    {
+      "id": "terbinafina",
+      "farmaco": "Terbinafina",
+      "indicacion": "Dermatofitosis, dermatitis por Malassezia",
+      "dosis": [
+        {
+          "id": "terbinafina-perro-gato-oral",
+          "especie": "Perro, Gato",
+          "via": "Oral",
+          "min": "20",
+          "max": "40",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 24 h",
+          "duracion": "",
+          "calculable": true,
+          "nota": "Nombre reconstruido: la fila del OCR perdió el nombre y quedó bajo \"Terbutalina\". Contenido verificado como antifúngico.",
+          "texto_original": "Antimicótico 20-40 mg/kg p.o. q24 horas; pueden requerirse dosis >30 mg/kg para niveles terapéuticos en piel."
+        }
+      ]
+    },
+    {
+      "id": "terbutalina",
+      "farmaco": "Terbutalina",
+      "indicacion": "Broncodilatación",
+      "dosis": [
+        {
+          "id": "terbutalina-perro-oral",
+          "especie": "Perro",
+          "via": "Oral",
+          "min": "1.25",
+          "max": "5",
+          "unidad": "mg/animal",
+          "frecuencia": "cada 8-12 h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Dosis en mg/animal, no por kg: no calculable. Fila recuperada del desplazamiento del OCR.",
+          "texto_original": "Broncodilatación: 1,25-5 mg/perro p.o. q8-12 h; 0,01 mg/kg i.m./s.c. q4 h."
+        },
+        {
+          "id": "terbutalina-gato-oral",
+          "especie": "Gato",
+          "via": "Oral",
+          "min": "0.312",
+          "max": "1.25",
+          "unidad": "mg/animal",
+          "frecuencia": "cada 8-12 h",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Dosis en mg/animal, no por kg: no calculable.",
+          "texto_original": "Broncodilatación: 0,312-1,25 mg/gato p.o. q8-12 h."
+        }
+      ]
+    },
+    {
+      "id": "tetracaina",
+      "farmaco": "Tetracaína (Ametocaína)",
+      "indicacion": "Anestesia tópica ocular",
+      "dosis": [
+        {
+          "id": "tetracaina-perro-gato-oftalmica",
+          "especie": "Perro, Gato",
+          "via": "Oftálmica",
+          "min": "0",
+          "max": "0",
+          "unidad": "gota",
+          "frecuencia": "dosis única",
+          "duracion": "",
+          "calculable": false,
+          "nota": "Fila recuperada del desplazamiento del OCR (estaba bajo \"Tetracosactida\"). No calculable por kg.",
+          "texto_original": "Oftálmica: 1 gota por ojo; una sola aplicación."
+        }
+      ]
+    },
+    {
+      "id": "vitamina-b3",
+      "farmaco": "Vitamina B3 (Niacinamida)",
+      "indicacion": "Metahemoglobinemia",
+      "dosis": [
+        {
+          "id": "vitamina-b3-perro-gato-sc",
+          "especie": "Perro, Gato",
+          "via": "Subcutánea",
+          "min": "30",
+          "max": "40",
+          "unidad": "mg/kg",
+          "frecuencia": "cada 6 h",
+          "duracion": "7 tratamientos",
+          "calculable": true,
+          "nota": "El texto del OCR mezcla Vitamina C y D en la misma fila; se conserva solo la pauta de B3 verificable.",
+          "texto_original": "Metahemoglobinemia: 30-40 mg/kg s.c. q6 horas durante 7 tratamientos."
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "farmaco": "T3 (Triyodotironina)",
+      "indicacion": "Insuficiencia pancreática exocrina (enzimas)",
+      "dosis": [
+        {
+          "id": "t3-perro-gato-oral",
+          "especie": "Perro, Gato",
+          "via": "Oral",
+          "min": "0",
+          "max": "0",
+          "unidad": "",
+          "frecuencia": "",
+          "duracion": "",
+          "calculable": false,
+          "nota": "SIN DOSIS NUMÉRICA en la fuente: requiere ajuste individual. NO USAR como T3 hormonal: la fila del OCR corresponde a enzimas pancreáticas.",
+          "texto_original": "Usar recomendaciones del fabricante; ajustar hasta heces de consistencia normal."
+        }
+      ]
+    }
+  ]
+}
