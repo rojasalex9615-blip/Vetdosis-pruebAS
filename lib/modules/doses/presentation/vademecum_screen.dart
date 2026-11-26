@@ -122,7 +122,13 @@ class _VademecumScreenState extends State<VademecumScreen> {
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => FarmacologicoDoseScreen(catalog: dosis),
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Dosis por principio activo')),
+          body: FarmacologicoDoseScreen(
+            catalog: dosis,
+            marcas: pautas?.pautas ?? const [],
+          ),
+        ),
       ),
     );
   }

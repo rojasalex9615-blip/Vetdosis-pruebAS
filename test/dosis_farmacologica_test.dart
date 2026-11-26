@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sembast/sembast_memory.dart' hide Finder;
+import 'package:vetdosis_pro/modules/doses/data/local_dose_record_store.dart';
+import 'package:vetdosis_pro/modules/doses/domain/dose_record.dart';
 import 'package:vetdosis_pro/modules/doses/domain/dosis_farmacologica.dart';
 import 'package:vetdosis_pro/modules/doses/domain/pauta_farmacologica.dart';
 import 'package:vetdosis_pro/modules/doses/domain/quantity.dart';
 import 'package:vetdosis_pro/modules/doses/presentation/farmacologico_dose_screen.dart';
+import 'package:vetdosis_pro/modules/patients/domain/recorded_weight.dart';
 
 const _catalogo = '''
 {"schema_version":1,"version":"prueba","farmacos":[
@@ -91,17 +95,39 @@ void main() {
   });
 
   group('pantalla', () {
-    Future<void> abrir(WidgetTester tester) async {
+    late LocalDoseRecordStore registros;
+    setUp(() async {
+      registros = LocalDoseRecordStore(
+        await databaseFactoryMemory.openDatabase('guardado-widget'),
+      );
+    });
+
+    Future<void> abrir(
+      WidgetTester tester, {
+      RecordedPatientWeight? peso,
+      DoseRecordStore? almacen,
+    }) async {
       // Pantalla alta: con el alto por defecto la tarjeta del resultado queda
       // fuera del ListView y no llega a construirse.
       tester.view.physicalSize = const Size(1000, 3000);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
-        MaterialApp(home: FarmacologicoDoseScreen(catalog: catalog)),
+        MaterialApp(
+          home: Scaffold(
+            body: FarmacologicoDoseScreen(
+              catalog: catalog,
+              recordedWeight: peso,
+              records: almacen,
+            ),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
     }
+
+    Finder campo(String etiqueta) =>
+        find.widgetWithText(TextField, etiqueta);
 
     Future<void> elegirEspecie(WidgetTester tester, String especie) async {
       await tester.tap(find.text('Especie'));
@@ -132,7 +158,7 @@ void main() {
       expect(find.textContaining('La app no elige por ti'), findsOneWidget);
       await tester.tap(find.text('Giardia'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).last, '10');
+      await tester.enterText(campo('Peso en kg'), '10');
       await tester.pumpAndSettle();
       expect(find.text('250–500 mg'), findsOneWidget);
       expect(find.textContaining('p. 275'), findsWidgets);
@@ -148,6 +174,176 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Parásitos'), findsOneWidget);
       expect(find.text('Giardia'), findsOneWidget);
+    });
+
+    Future<void> llegarAGiardia(WidgetTester tester, {String peso = '10'}) async {
+      await elegirEspecie(tester, 'Perro');
+      await tester.tap(find.text('Fenbendazol').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giardia'));
+      await tester.pumpAndSettle();
+      await tester.enterText(campo('Peso en kg'), peso);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('la concentración del empaque da el volumen en mL', (
+      tester,
+    ) async {
+      await abrir(tester);
+      await llegarAGiardia(tester);
+      expect(find.text('250–500 mg'), findsOneWidget);
+      expect(find.textContaining('Volumen a administrar'), findsNothing);
+
+      await tester.enterText(campo('Concentración en mg/mL'), '50');
+      await tester.pumpAndSettle();
+      expect(find.text('5–10 mL'), findsOneWidget);
+      expect(find.textContaining('250–500 mg ÷ 50 mg/mL'), findsOneWidget);
+    });
+
+    testWidgets('una concentración de cero no inventa un volumen', (
+      tester,
+    ) async {
+      await abrir(tester);
+      await llegarAGiardia(tester);
+      await tester.enterText(campo('Concentración en mg/mL'), '0');
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Volumen a administrar'), findsNothing);
+    });
+
+    testWidgets('la jeringa redondea pero el número exacto sigue a la vista', (
+      tester,
+    ) async {
+      await abrir(tester);
+      await llegarAGiardia(tester, peso: '3');
+      await tester.enterText(campo('Concentración en mg/mL'), '50');
+      await tester.pumpAndSettle();
+      // 25–50 mg/kg × 3 kg = 75–150 mg; entre 50 mg/mL = 1,5–3 mL.
+      expect(find.text('1,5–3 mL'), findsOneWidget);
+      await tester.tap(find.text('Jeringa 0,1 mL'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Jeringa de 0,1 mL:'), findsOneWidget);
+      expect(find.text('1,5–3 mL'), findsOneWidget);
+    });
+
+    testWidgets('el peso registrado viene del paciente y no se escribe', (
+      tester,
+    ) async {
+      await abrir(
+        tester,
+        peso: RecordedPatientWeight(
+          id: 'W1',
+          clinicId: 'C1',
+          patientId: 'P1',
+          patientName: 'Anestesia',
+          caseId: 'K1',
+          kg: '10',
+          observedAt: DateTime.utc(2026, 11, 26, 9),
+          performedBy: 'MVZ Rojas',
+          recordedBy: 'MVZ Rojas',
+          recordedAt: DateTime.utc(2026, 11, 26, 9, 5),
+        ),
+      );
+      expect(find.text('Anestesia'), findsOneWidget);
+      expect(find.textContaining('Peso medido: 10 kg'), findsOneWidget);
+      await elegirEspecie(tester, 'Perro');
+      await tester.tap(find.text('Fenbendazol').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Giardia'));
+      await tester.pumpAndSettle();
+      final peso = tester.widget<TextField>(campo('Peso en kg'));
+      expect(peso.readOnly, isTrue);
+      expect(find.text('250–500 mg'), findsOneWidget);
+    });
+
+    testWidgets('el cálculo se guarda con su cita y su volumen', (
+      tester,
+    ) async {
+      await abrir(
+        tester,
+        almacen: registros,
+        peso: RecordedPatientWeight(
+          id: 'W1',
+          clinicId: 'C1',
+          patientId: 'P1',
+          patientName: 'Anestesia',
+          caseId: 'K1',
+          kg: '10',
+          observedAt: DateTime.utc(2026, 11, 26, 9),
+          performedBy: 'MVZ Rojas',
+          recordedBy: 'MVZ Rojas',
+          recordedAt: DateTime.utc(2026, 11, 26, 9, 5),
+        ),
+      );
+      await llegarAGiardia(tester);
+      await tester.enterText(campo('Concentración en mg/mL'), '50');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Guardar en la ficha de Anestesia'), findsOne);
+      await tester.tap(find.textContaining('Guardar en la ficha de Anestesia'));
+      // El guardado es asíncrono real: se deja correr fuera del reloj falso.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Cálculo guardado: 250–500 mg'), findsOneWidget);
+
+      final guardados = (await tester.runAsync(
+        () => registros.forPatient('P1'),
+      ))!;
+      expect(guardados, hasLength(1));
+      expect(guardados.single.principio, 'Fenbendazol');
+      expect(guardados.single.indicacion, 'Giardia');
+      expect(guardados.single.pesoKg, '10');
+      expect(guardados.single.resultadoMg, '250–500 mg');
+      expect(guardados.single.resultadoMl, '5–10 mL');
+      expect(guardados.single.concentracionMgMl, '50');
+      expect(guardados.single.cita, contains('p. 275'));
+    });
+  });
+
+  group('volumen de empaque', () {
+    Quantity mg(String value) => Quantity.parse(value);
+
+    test('miligramos entre concentración da mililitros exactos', () {
+      final volumen = volumenDeEmpaque(
+        dosisMg: mg('250'),
+        dosisMaximaMg: mg('500'),
+        concentracionMgMl: mg('50'),
+      );
+      expect(volumen!.texto, '5–10 mL');
+    });
+
+    test('una dosis fija da un volumen fijo', () {
+      final volumen = volumenDeEmpaque(
+        dosisMg: mg('100'),
+        concentracionMgMl: mg('20'),
+      );
+      expect(volumen!.texto, '5 mL');
+    });
+
+    test('los decimales no arrastran el error de la coma flotante', () {
+      final volumen = volumenDeEmpaque(
+        dosisMg: mg('0.3'),
+        concentracionMgMl: mg('2'),
+      );
+      expect(volumen!.minimo.display(), '0,15');
+    });
+
+    test('sin concentración no hay volumen', () {
+      expect(
+        volumenDeEmpaque(dosisMg: mg('250'), concentracionMgMl: mg('0')),
+        isNull,
+      );
+    });
+
+    test('el redondeo de jeringa lleva el volumen a la graduación', () {
+      final volumen = volumenDeEmpaque(
+        dosisMg: mg('7.5'),
+        dosisMaximaMg: mg('15'),
+        concentracionMgMl: mg('50'),
+      );
+      expect(volumen!.redondeado(mg('0.1')), 'Jeringa de 0,1 mL: 0,2–0,3 mL');
+      expect(volumen.redondeado(null), isNull);
     });
   });
 }

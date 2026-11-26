@@ -234,7 +234,10 @@ class _CalculationScreenState extends State<CalculationScreen> {
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (_) => const FarmacologicoDoseLoader(),
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Dosis por principio activo')),
+          body: const FarmacologicoDoseLoader(),
+        ),
       ),
     );
   }

@@ -89,6 +89,7 @@ import '../modules/patients/presentation/patients_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../modules/doses/presentation/dose_screen.dart';
+import '../modules/doses/presentation/farmacologico_dose_screen.dart';
 import '../modules/doses/presentation/dose_label_scanner_screen.dart';
 import '../modules/doses/presentation/vademecum_screen.dart';
 import '../modules/doses/data/catalog_repository.dart';
@@ -845,29 +846,9 @@ class CoreShell extends StatelessWidget {
       MaterialPageRoute<void>(
         builder: (_) => Scaffold(
           appBar: AppBar(title: const Text('Cálculo con peso registrado')),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: DoseScreen(
-              clinicId: member.clinicId,
-              userId: member.userId,
-              personalRepository: personalDoses,
-              admin: member.role == ClinicRole.admin,
-              recordedWeight: weight,
-              validateRecordedWeight: current,
-              onReviewPatientInstructions:
-                  hospitalAlerts != null && patients != null
-                  ? (patientId) async {
-                      if (!sessionCurrent() ||
-                          (validateAccess != null && !await validateAccess())) {
-                        return;
-                      }
-                      if (!context.mounted || !sessionCurrent()) return;
-                      // Reuse the complete hospital module, including prescription actions.
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                      model.navigate('Hospitalización', patientId: patientId);
-                    }
-                  : null,
-            ),
+          body: FarmacologicoDoseLoader(
+            recordedWeight: weight,
+            validateRecordedWeight: current,
           ),
         ),
       ),
