@@ -444,4 +444,33 @@ void menuTests() {
     await tester.pumpAndSettle();
     expect(find.text('Fluidoterapia'), findsOneWidget);
   });
+
+  testWidgets('Cálculos abre las dos calculadoras de vademécum', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CalculationScreen(repository: CalcRepo(), doses: DoseRepo()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Dosis por principio activo'), findsOneWidget);
+    expect(find.text('Dosis por empaque comercial'), findsOneWidget);
+
+    await tester.tap(find.text('Dosis por empaque comercial'));
+    await tester.pumpAndSettle();
+    expect(find.text('Vademécum comercial'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dosis por principio activo'));
+    await tester.pump();
+    expect(find.text('Dosis por principio activo'), findsWidgets);
+  });
 }

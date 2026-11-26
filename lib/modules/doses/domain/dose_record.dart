@@ -1,4 +1,17 @@
+import 'dart:math' as math;
+
 import 'quantity.dart';
+
+/// Identidad de un cálculo: 48 hex, el formato que exige el recibo idempotente
+/// del servidor. Sirve para reintentar el envío sin duplicar el registro.
+String nuevoDoseRecordId() {
+  final random = math.Random.secure();
+  final buffer = StringBuffer();
+  for (var i = 0; i < 48; i++) {
+    buffer.write(random.nextInt(16).toRadixString(16));
+  }
+  return buffer.toString();
+}
 
 /// Un cálculo de dosis tal como quedó, con su cita.
 ///
@@ -25,6 +38,7 @@ class DoseRecord {
     this.patientId,
     this.patientName,
     this.actorId,
+    this.syncedAt,
   });
 
   final String id;
@@ -33,6 +47,32 @@ class DoseRecord {
   final String pautaId, indicacion, especie, via, intervalo;
   final String? concentracionMgMl, resultadoMl;
   final String? clinicId, patientId, patientName, actorId;
+
+  /// Cuándo llegó a la base de la clínica. Nulo significa que solo está en el
+  /// dispositivo y sigue pendiente de enviarse.
+  final DateTime? syncedAt;
+
+  DoseRecord marcarSincronizado(DateTime momento) => DoseRecord(
+    id: id,
+    createdAt: createdAt,
+    principio: principio,
+    pautaId: pautaId,
+    indicacion: indicacion,
+    especie: especie,
+    via: via,
+    intervalo: intervalo,
+    dosisLiteral: dosisLiteral,
+    cita: cita,
+    pesoKg: pesoKg,
+    resultadoMg: resultadoMg,
+    concentracionMgMl: concentracionMgMl,
+    resultadoMl: resultadoMl,
+    clinicId: clinicId,
+    patientId: patientId,
+    patientName: patientName,
+    actorId: actorId,
+    syncedAt: momento,
+  );
 
   String get resumen => resultadoMl == null
       ? resultadoMg
@@ -57,6 +97,7 @@ class DoseRecord {
     if (patientId != null) 'patient_id': patientId,
     if (patientName != null) 'patient_name': patientName,
     if (actorId != null) 'actor_id': actorId,
+    if (syncedAt != null) 'synced_at': syncedAt!.toIso8601String(),
   };
 
   static DoseRecord fromJson(Map<String, dynamic> json) => DoseRecord(
@@ -78,6 +119,10 @@ class DoseRecord {
     patientId: json['patient_id'] as String?,
     patientName: json['patient_name'] as String?,
     actorId: json['actor_id'] as String?,
+    syncedAt: switch (json['synced_at']) {
+      final String text => DateTime.tryParse(text),
+      _ => null,
+    },
   );
 }
 

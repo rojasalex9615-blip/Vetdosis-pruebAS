@@ -16,6 +16,7 @@ import '../data/reference_library_repository.dart';
 import 'reference_library_screen.dart';
 import 'calculation_branch_menu.dart';
 import '../../doses/presentation/dose_screen.dart';
+import '../../doses/presentation/commercial_package_dose_screen.dart';
 import '../../doses/presentation/farmacologico_dose_screen.dart';
 import '../domain/calculation_branch.dart';
 import '../domain/calculation_catalog.dart';
@@ -221,6 +222,11 @@ class _CalculationScreenState extends State<CalculationScreen> {
 
   Widget _routeScreen(String route) => switch (route) {
     'Calculo rapido' => DoseScreen(repository: widget.doses),
+    'Dosis por principio activo' => Scaffold(
+      appBar: AppBar(title: const Text('Dosis por principio activo')),
+      body: const FarmacologicoDoseLoader(),
+    ),
+    'Dosis por empaque comercial' => const CommercialPackageDoseScreen(),
     'Aves · Capacidad e instalaciones' => const AvicultureScreen(),
     'Aves · Incubacion' => const IncubationScreen(),
     'Aves · Engorda' => const BroilerScreen(),

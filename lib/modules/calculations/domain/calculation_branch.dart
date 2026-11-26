@@ -44,6 +44,18 @@ const calculationBranches = <ClinicalBranch, List<CalculationEntry>>{
       route: 'Calculo rapido',
     ),
     CalculationEntry(
+      id: 'doseActive',
+      title: 'Dosis por principio activo',
+      subtitle: 'Vademecum farmacologico: dosis por kg, peso y cita',
+      route: 'Dosis por principio activo',
+    ),
+    CalculationEntry(
+      id: 'doseBrand',
+      title: 'Dosis por empaque comercial',
+      subtitle: 'Vademecum de marcas: lo que dice el fabricante',
+      route: 'Dosis por empaque comercial',
+    ),
+    CalculationEntry(
       id: 'protocols',
       title: 'Protocolos por etapas',
       subtitle: 'Premedicacion, induccion, analgesia y recuperacion',

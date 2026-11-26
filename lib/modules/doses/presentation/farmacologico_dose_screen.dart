@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../vet_ui/vet_icons.dart';
-import '../../offline/data/local_database.dart';
 import '../../patients/domain/recorded_weight.dart';
 import '../data/local_dose_record_store.dart';
+import '../data/syncing_dose_record_store.dart';
 import '../domain/catalog.dart';
 import '../domain/dose_record.dart';
 import '../domain/dosis_farmacologica.dart';
@@ -140,8 +142,9 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
     if (mounted) setState(() => _pesoVigente = vigente);
   }
 
-  /// El almacén usa la misma base sin conexión que el resto de la app. Si no se
-  /// puede abrir, el botón de guardar no aparece: mejor eso que fingir guardar.
+  /// El almacén usa la misma base sin conexión que el resto de la app y, si hay
+  /// sesión con paciente, también la ficha de la clínica. Si no se puede abrir,
+  /// el botón de guardar no aparece: mejor eso que fingir guardar.
   Future<void> _abrirAlmacen() async {
     final inyectado = widget.records;
     if (inyectado != null) {
@@ -149,11 +152,18 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
       return;
     }
     try {
-      _registros = LocalDoseRecordStore(await openOfflineDatabase());
+      _registros = await abrirDoseRecordStore(
+        clinicId: widget.recordedWeight?.clinicId,
+      );
     } catch (_) {
       _registros = null;
     }
     if (mounted) setState(() {});
+    // Lo que quedó pendiente de otro día se reintenta al abrir la pantalla.
+    final almacen = _registros;
+    if (almacen is SyncingDoseRecordStore) {
+      unawaited(almacen.reintentarPendientes());
+    }
   }
 
   @override
@@ -236,7 +246,7 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
     final ahora = DateTime.now().toUtc();
     final pauta = _pauta!;
     return DoseRecord(
-      id: 'dose-${ahora.microsecondsSinceEpoch}',
+      id: nuevoDoseRecordId(),
       createdAt: ahora,
       principio: _principio!.nombre,
       pautaId: pauta.id,
@@ -266,9 +276,9 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
     });
     try {
       final registro = _registro(dosis, volumen);
-      await store.save(registro);
+      final guardado = await store.save(registro);
       if (!mounted) return;
-      setState(() => _guardado = registro);
+      setState(() => _guardado = guardado);
     } catch (_) {
       if (mounted) {
         setState(
@@ -578,8 +588,12 @@ class _FarmacologicoDoseScreenState extends State<FarmacologicoDoseScreen> {
                       style: theme.textTheme.bodyMedium,
                     ),
                     Text(
-                      'Queda en este dispositivo con su cita. Todavía no se '
-                      'envía a la ficha del paciente en la nube.',
+                      _guardado!.syncedAt != null
+                          ? 'En la ficha del paciente, con su cita y su '
+                                'concentración.'
+                          : 'En este dispositivo. Se envía a la ficha cuando '
+                                'haya sesión y paciente; si no, queda '
+                                'pendiente aquí.',
                       style: theme.textTheme.bodySmall,
                     ),
                   ],

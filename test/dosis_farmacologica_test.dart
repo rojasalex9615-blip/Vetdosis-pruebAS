@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart' hide Finder;
 import 'package:vetdosis_pro/modules/doses/data/local_dose_record_store.dart';
+import 'package:vetdosis_pro/modules/doses/data/syncing_dose_record_store.dart';
 import 'package:vetdosis_pro/modules/doses/domain/dose_record.dart';
 import 'package:vetdosis_pro/modules/doses/domain/dosis_farmacologica.dart';
 import 'package:vetdosis_pro/modules/doses/domain/pauta_farmacologica.dart';
@@ -31,6 +32,26 @@ const _catalogo = '''
 
 PautaFarmacologica _pauta(String id) =>
     FarmacologicoCatalog.parse(_catalogo).pautas.firstWhere((p) => p.id == id);
+
+/// Destino en la nube de mentira: dice que guardó y no toca red.
+class RemotoFalso implements DoseRecordStore {
+  final guardados = <DoseRecord>[];
+
+  @override
+  Future<DoseRecord> save(DoseRecord record) async {
+    guardados.add(record);
+    return record.marcarSincronizado(DateTime.utc(2026, 11, 26, 12));
+  }
+
+  @override
+  Future<List<DoseRecord>> forPatient(
+    String patientId, {
+    int limit = 50,
+  }) async => guardados;
+
+  @override
+  Future<List<DoseRecord>> recent({int limit = 50}) async => guardados;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -126,8 +147,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Finder campo(String etiqueta) =>
-        find.widgetWithText(TextField, etiqueta);
+    Finder campo(String etiqueta) => find.widgetWithText(TextField, etiqueta);
 
     Future<void> elegirEspecie(WidgetTester tester, String especie) async {
       await tester.tap(find.text('Especie'));
@@ -176,7 +196,10 @@ void main() {
       expect(find.text('Giardia'), findsOneWidget);
     });
 
-    Future<void> llegarAGiardia(WidgetTester tester, {String peso = '10'}) async {
+    Future<void> llegarAGiardia(
+      WidgetTester tester, {
+      String peso = '10',
+    }) async {
       await elegirEspecie(tester, 'Perro');
       await tester.tap(find.text('Fenbendazol').first);
       await tester.pumpAndSettle();
@@ -285,7 +308,10 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
       await tester.pumpAndSettle();
-      expect(find.textContaining('Cálculo guardado: 250–500 mg'), findsOneWidget);
+      expect(
+        find.textContaining('Cálculo guardado: 250–500 mg'),
+        findsOneWidget,
+      );
 
       final guardados = (await tester.runAsync(
         () => registros.forPatient('P1'),
@@ -298,6 +324,52 @@ void main() {
       expect(guardados.single.resultadoMl, '5–10 mL');
       expect(guardados.single.concentracionMgMl, '50');
       expect(guardados.single.cita, contains('p. 275'));
+      // Sin nube, la pantalla dice la verdad: quedó en el dispositivo.
+      expect(
+        find.textContaining('En este dispositivo. Se envía a la ficha'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('con nube el guardado dice que quedó en la ficha', (
+      tester,
+    ) async {
+      final remoto = RemotoFalso();
+      final almacen = SyncingDoseRecordStore(
+        local: LocalDoseRecordStore(
+          await databaseFactoryMemory.openDatabase('pantalla-nube'),
+        ),
+        remote: remoto,
+      );
+      await abrir(
+        tester,
+        almacen: almacen,
+        peso: RecordedPatientWeight(
+          id: 'W1',
+          clinicId: 'C1',
+          patientId: 'P1',
+          patientName: 'Anestesia',
+          caseId: 'K1',
+          kg: '10',
+          observedAt: DateTime.utc(2026, 11, 26, 9),
+          performedBy: 'MVZ Rojas',
+          recordedBy: 'MVZ Rojas',
+          recordedAt: DateTime.utc(2026, 11, 26, 9, 5),
+        ),
+      );
+      await llegarAGiardia(tester);
+      await tester.enterText(campo('Concentración en mg/mL'), '50');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.textContaining('Guardar en la ficha de Anestesia'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('En la ficha del paciente'), findsOneWidget);
+      expect(remoto.guardados.single.patientId, 'P1');
+      expect(remoto.guardados.single.clinicId, 'C1');
     });
   });
 
