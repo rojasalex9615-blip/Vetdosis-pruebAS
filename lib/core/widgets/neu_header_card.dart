@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../vet_ui/vet_theme.dart';
 import 'contrast.dart';
 import 'workspace_panel.dart';
 
@@ -51,7 +50,7 @@ class NeuHeaderCard extends StatelessWidget {
                 color: banda,
                 boxShadow: [
                   // Glow muy sutil alrededor de la cabecera: el mismo tono de
-                  // la sección, muy translúcido, para que el panel respire sin
+                  // la seccion, muy translucido, para que el panel respire sin
                   // cargar la franja.
                   BoxShadow(
                     color: quiet.withValues(alpha: .15),
@@ -62,11 +61,11 @@ class NeuHeaderCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // El glifo va dentro de un cuadro redondeado teñido con el
-                  // color de la sección y un glow sutil, como en las
-                  // referencias: el ojo encuentra dónde empieza cada panel sin
+                  // El glifo va dentro de un cuadro redondeado tenido con el
+                  // color de la seccion y un glow sutil, como en las
+                  // referencias: el ojo encuentra donde empieza cada panel sin
                   // recorrer el texto. Antes era un icono plano en gris sobre
-                  // la franja, que no se distinguía del título.
+                  // la franja, que no se distinguia del titulo.
                   Builder(
                     builder: (context) {
                       final vivid = HSLColor.fromColor(color)
