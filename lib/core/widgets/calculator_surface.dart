@@ -105,12 +105,6 @@ class CalculatorIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final identity = calculatorIdentity(id);
-    // El glifo no se pinta sobre el lienzo sino sobre una placa tenida con su
-    // propio color, que aclara el fondo. Se compone primero esa placa y el
-    // contraste se mide contra ella.
-    // La placa se tine al 35%, no al 10%. Con los tonos cargados de antes un
-    // 10% ya se notaba; con la paleta palida ese 10% dejaba la
-    // placa indistinguible del fondo y el icono parecia flotar suelto.
     final placa = composite(
       identity.color,
       .35,
@@ -120,7 +114,7 @@ class CalculatorIcon extends StatelessWidget {
     return AccentGlow(
       color: color,
       radius: 12,
-      emphasis: 1, // Preserve the badge glow.
+      emphasis: 1,
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -133,11 +127,6 @@ class CalculatorIcon extends StatelessWidget {
   }
 }
 
-/// Envoltura de una calculadora, con el color que la identifica aplicado al
-/// fondo, al borde y al boton principal.
-///
-/// Sustituye el tema para su contenido, de modo que los campos y botones de
-/// dentro salen ya con el tono de esa calculadora sin configurarlos uno a uno.
 class CalculatorSurface extends StatelessWidget {
   const CalculatorSurface({
     super.key,
@@ -217,9 +206,6 @@ class CalculatorSurface extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: accent,
             backgroundBuilder: plainButtonLayer,
-            // La tinta se elige midiendo contra el acento ya ajustado. Fijar
-            // blanco dejaba el peor caso en 4.51:1, justo en el limite de
-            // 4.5:1 que pide el texto: cualquier retoque posterior lo rompia.
             foregroundColor: inkOn(accent),
             minimumSize: Size(0, referenceStyle ? 48 : 46),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -260,7 +246,6 @@ class CalculatorSurface extends StatelessWidget {
   }
 }
 
-/// A visible title and icon keep identity understandable without color alone.
 class CalculatorHeading extends StatelessWidget {
   const CalculatorHeading({super.key, required this.id, required this.title});
   final String id, title;
@@ -277,13 +262,11 @@ class CalculatorHeading extends StatelessWidget {
   );
 }
 
-/// Keep captured units readable on narrow forms even when the floating label truncates.
 String? calculatorUnitHint(String label) {
   final unit = RegExp(r'\(([^)]+)\)').firstMatch(label)?.group(1);
   return unit == null ? null : 'Unidad: $unit';
 }
 
-/// Keeps the selector label outside its field so it never overlaps the value.
 class CalculatorSelectorCard extends StatelessWidget {
   const CalculatorSelectorCard({
     super.key,
@@ -331,11 +314,6 @@ class CalculatorSelectorCard extends StatelessWidget {
         children: [
           Builder(
             builder: (context) {
-              // La cabecera del estilo clasico se rellena con el color de
-              // identidad a pleno. Iba con blanco fijo, que con los tonos
-              // cargados de antes funcionaba y con la paleta palida cae a
-              // 1.4:1: el titulo y el icono desaparecian. Se mide la tinta
-              // contra el relleno real en vez de darla por supuesta.
               final tinta = inkOn(identity.color);
               return Container(
                 color: identity.color,
@@ -395,22 +373,29 @@ class CalculatorActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Widget child;
   @override
-  Widget build(BuildContext context) =>
-      Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
-      ? NeuPrimaryButton(
-          soft: true,
-          dense: true,
-          color: calculatorActionColor(context, id),
-          onPressed: onPressed,
-          child: DefaultTextStyle.merge(
-            textAlign: TextAlign.center,
-            child: child,
-          ),
-        )
-      : FilledButton(onPressed: onPressed, child: child);
+  Widget build(BuildContext context) {
+    final identity = calculatorIdentity(id);
+    return AccentGlow(
+      color: identity.color,
+      radius: 16,
+      emphasis: 0.5,
+      enabled: onPressed != null,
+      child: Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
+          ? NeuPrimaryButton(
+              soft: true,
+              dense: true,
+              color: calculatorActionColor(context, id),
+              onPressed: onPressed,
+              child: DefaultTextStyle.merge(
+                textAlign: TextAlign.center,
+                child: child,
+              ),
+            )
+          : FilledButton(onPressed: onPressed, child: child),
+    );
+  }
 }
 
-/// Multiline labels remain outside the inset surface at narrow widths.
 class CalculatorFieldLabel extends StatelessWidget {
   const CalculatorFieldLabel({
     super.key,
