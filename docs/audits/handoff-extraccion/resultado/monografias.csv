@@ -1,0 +1,414 @@
+monografia_id,principio_activo,nombre_canonico,nombre_variantes,clave_busqueda,pautas,pautas_normalizadas,pautas_no_normalizables,pautas_no_aplica,paginas,especies,archivos
+pa-acepromazina,Acepromazina,Acepromazina,,acepromazina,2,2,0,0,597;599,Gato;Perro,P
+pa-acepromazina-acp,Acepromazina (ACP),Acepromazina (ACP),ACP,acepromazina acp acp,4,4,0,0,36,Perro;Perro y gato,T
+pa-acepromazina-midazolam-o-diazepam-ketamina,Acepromazina + midazolam o diazepam + ketamina,Acepromazina + midazolam o diazepam + ketamina,,acepromazina midazolam o diazepam ketamina,1,0,1,0,600,Gato,P
+pa-acetato-de-calcio,Acetato de calcio,Acetato de calcio,,acetato de calcio,1,1,0,0,37,Perro y gato,T
+pa-acetazolamida,Acetazolamida,Acetazolamida,,acetazolamida,2,0,2,0,38,Perro,T
+pa-acetilcisteina,Acetilcisteína,Acetilcisteína,,acetilcisteina,6,2,4,0,39,Perro y gato,T
+pa-aciclovir,Aciclovir,Aciclovir,,aciclovir,1,0,1,0,40,Gato,T
+pa-acido-fusidico,Ácido fusídico,Ácido fusídico,,acido fusidico,4,0,2,2,41,Gato;Perro,T
+pa-acido-gadobenico,Ácido gadobénico,Ácido gadobénico,,acido gadobenico,1,1,0,0,575,Perro,T
+pa-acido-gadoxetico,Ácido gadoxético,Ácido gadoxético,,acido gadoxetico,1,1,0,0,575,Perro,T
+pa-acido-micofenolico-mpa,Ácido micofenólico (MPA),Ácido micofenólico (MPA),MPA,acido micofenolico mpa mpa,1,1,0,0,594,Gato,P
+pa-acido-tolfenamico,Ácido tolfenámico,Ácido tolfenámico,,acido tolfenamico,4,4,0,0,42;43,Gato;Perro,T
+pa-acido-ursodesoxicolico-udca,Ácido ursodesoxicólico (UDCA),Ácido ursodesoxicólico (UDCA),UDCA,acido ursodesoxicolico udca udca,1,1,0,0,44,Perro y gato,T
+pa-acido-zoledronico-zoledronato,Ácido zoledrónico (zoledronato),Ácido zoledrónico (zoledronato),Zoledronato,acido zoledronico zoledronato zoledronato,1,1,0,0,558,Perro,T
+pa-adrenalina-epinefrina,Adrenalina (Epinefrina),Adrenalina (Epinefrina),Epinefrina,adrenalina epinefrina epinefrina,3,3,0,0,46;45-46,Perro y gato,T
+pa-afoxolaner,Afoxolaner,Afoxolaner,,afoxolaner,1,1,0,0,47,Perro,T
+pa-aglepristona,Aglepristona,Aglepristona,,aglepristona,6,6,0,0,48,Gato;Perro,T
+pa-alcohol-de-polivinilo,Alcohol de polivinilo,Alcohol de polivinilo,,alcohol de polivinilo,1,0,0,1,49,Perro y gato,T
+pa-alendronato,Alendronato,Alendronato,,alendronato,2,1,1,0,50,Gato;Perro,T
+pa-alfaxalona,Alfaxalona,Alfaxalona,,alfaxalona,5,2,3,0,51;599-600,Gato;Perro;Perro y gato,P;T
+pa-alfentanilo,Alfentanilo,Alfentanilo,,alfentanilo,4,4,0,0,52,Gato;Perro,T
+pa-alopurinol,Alopurinol,Alopurinol,,alopurinol,4,4,0,0,53,Gato;Perro,T
+pa-alprazolam-inferido,Alprazolam (inferido),Alprazolam (inferido),,alprazolam inferido,2,2,0,0,54,Gato;Perro,T
+pa-amantadina,Amantadina,Amantadina,,amantadina,2,2,0,0,55,Gato;Perro,T
+pa-amikacina,Amikacina,Amikacina,,amikacina,2,2,0,0,56,Gato;Perro,T
+pa-amilorida,Amilorida,Amilorida,,amilorida,1,1,0,0,57,Perro y gato,T
+pa-amilorida-hidroclorotiazida,Amilorida + hidroclorotiazida,Amilorida + hidroclorotiazida,,amilorida hidroclorotiazida,1,0,1,0,57,Perro y gato,T
+pa-aminofilina,Aminofilina,Aminofilina,,aminofilina,2,1,1,0,59,Gato;Perro,T
+pa-amiodarona,Amiodarona,Amiodarona,,amiodarona,4,3,0,1,60,Gato;Perro,T
+pa-amitraz,Amitraz,Amitraz,,amitraz,3,0,0,3,62,Gato;Perro,T
+pa-amitriptilina,Amitriptilina,Amitriptilina,,amitriptilina,2,2,0,0,63,Gato;Perro,T
+pa-amlodipino,Amlodipino,Amlodipino,,amlodipino,2,1,1,0,64,Gato;Perro,T
+pa-amoxicilina,Amoxicilina,Amoxicilina,,amoxicilina,3,3,0,0,65,Perro y gato,T
+pa-ampicilina,Ampicilina,Ampicilina,,ampicilina,3,3,0,0,66,Gato;Perro,T
+pa-amprolio,Amprolio,Amprolio,,amprolio,2,0,2,0,67,Gato;Perro,T
+pa-anfotericina-b-convencional,Anfotericina B (convencional),Anfotericina B (convencional),Anfotericina B desoxicolato,anfotericina b convencional anfotericina b desoxicolato,5,4,1,0,68;69,Gato;Perro,T
+pa-anfotericina-b-lipidos,Anfotericina B (lípidos),Anfotericina B (lípidos),,anfotericina b lipidos,3,3,0,0,69,Gato;Perro,T
+pa-antiacidos-de-aluminio,Antiácidos de aluminio,Antiácidos de aluminio,,antiacidos de aluminio,1,0,1,0,70,Perro y gato,T
+pa-antimoniato-de-meglumina,Antimoniato de meglumina,Antimoniato de meglumina,,antimoniato de meglumina,2,0,1,1,71,Gato;Perro,T
+pa-antitiroideo,Antitiroideo,Antitiroideo,,antitiroideo,2,0,2,0,514,Gato;Perro,T
+pa-antitoxina-tetanica,Antitoxina tetánica,Antitoxina tetánica,,antitoxina tetanica,3,2,0,1,72,Gato;Perro,T
+pa-antiveneno-vibora-comun-europea,Antiveneno (víbora común europea),Antiveneno (víbora común europea),,antiveneno vibora comun europea,1,0,1,0,73,Perro y gato,T
+pa-apomorfina,Apomorfina,Apomorfina,,apomorfina,3,2,0,1,74,Gato;Perro,T
+pa-apraclonidina,Apraclonidina,Apraclonidina,,apraclonidina,2,0,0,2,75,Gato;Perro,T
+pa-arginina,Arginina,Arginina,,arginina,2,0,1,1,76,Gato;Perro,T
+pa-arnica,Árnica,Árnica,,arnica,1,0,1,0,77,Perro y gato,T
+pa-asparaginasa,Asparaginasa,Asparaginasa,,asparaginasa,2,1,1,0,78;588,No especificada;Perro y gato,P;T
+pa-asparaginasa-l-asparginasa,Asparaginasa / L-asparginasa,Asparaginasa / L-asparginasa,,asparaginasa l asparginasa,1,1,0,0,586-588,No especificada,P
+pa-aspirina,Aspirina,Aspirina,,aspirina,4,3,1,0,79;592,Gato;Perro,P;T
+pa-atenolol,Atenolol,Atenolol,,atenolol,2,1,1,0,80,Gato;Perro,T
+pa-atipamezol,Atipamezol,Atipamezol,,atipamezol,3,1,0,2,81;82,Gato;Perro,T
+pa-atracurio,Atracurio,Atracurio,,atracurio,1,0,1,0,83,Perro y gato,T
+pa-atropina,Atropina,Atropina,,atropina,4,3,0,1,84,Perro y gato,T
+pa-azatioprina,Azatioprina,Azatioprina,,azatioprina,3,2,0,1,86;592-594,Gato;Perro,P;T
+pa-azitromicina,Azitromicina,Azitromicina,,azitromicina,2,2,0,0,87,Gato;Perro,T
+pa-benazepril,Benazepril,Benazepril,,benazepril,4,4,0,0,90,Gato;Perro,T
+pa-betametasona,Betametasona,Betametasona,,betametasona,5,2,2,1,92,Gato;Perro;Perro y gato,T
+pa-betanecol,Betanecol,Betanecol,,betanecol,2,0,2,0,93,Gato;Perro,T
+pa-betaxolol,Betaxolol,Betaxolol,,betaxolol,2,0,0,2,94,Gato;Perro,T
+pa-bicarbonato-de-sodio,Bicarbonato de sodio,Bicarbonato de sodio,,bicarbonato de sodio,4,3,1,0,95,Perro y gato,T
+pa-bisacodilo,Bisacodilo,Bisacodilo,,bisacodilo,2,0,2,0,96,Gato;Perro,T
+pa-brinzolamida,Brinzolamida,Brinzolamida,,brinzolamida,2,0,0,2,96,Gato;Perro,T
+pa-bromhexina,Bromhexina,Bromhexina,,bromhexina,2,0,2,0,97,Gato;Perro,T
+pa-bromuro-de-potasio,Bromuro de potasio,Bromuro de potasio,,bromuro de potasio,5,4,0,1,99,Gato;Perro,T
+pa-budesonida,Budesonida,Budesonida,,budesonida,3,1,2,0,100,Gato;Perro,T
+pa-bupivacaina,Bupivacaína,Bupivacaína,,bupivacaina,4,2,2,0,101,Gato;Perro,T
+pa-buprenorfina,Buprenorfina,Buprenorfina,,buprenorfina,3,3,0,0,103;597-599,Gato;Perro;Perro y gato,P;T
+pa-busulfan,Busulfán,Busulfán,,busulfan,1,1,0,0,104,Perro y gato,T
+pa-butilescopolamina,Butilescopolamina,Butilescopolamina,,butilescopolamina,2,0,1,1,105,Gato;Perro,T
+pa-butorfanol,Butorfanol,Butorfanol,,butorfanol,4,3,1,0,106;597-599,Gato;Perro;Perro y gato,P;T
+pa-cabergolina,Cabergolina,Cabergolina,,cabergolina,3,3,0,0,108,Gato;Perro,T
+pa-calcitriol,Calcitriol,Calcitriol,Vitamina D (Calcitriol); Vitamina D3,calcitriol vitamina d calcitriol vitamina d3,6,6,0,0,546,Gato;Perro,T
+pa-caolin,Caolín,Caolín,,caolin,1,0,1,0,109,Perro y gato,T
+pa-carbimazol,Carbimazol,Carbimazol,,carbimazol,1,0,1,0,109,Perro y gato,T
+pa-carbomero-980,Carbómero 980,Carbómero 980,,carbomero 980,1,0,0,1,110,Perro y gato,T
+pa-carbon-vegetal-activado,Carbón vegetal (activado),Carbón vegetal (activado),,carbon vegetal activado,1,1,0,0,111,Perro y gato,T
+pa-carbonato-de-lantano,Carbonato de lantano,Carbonato de lantano,,carbonato de lantano,1,0,1,0,111,Perro y gato,T
+pa-casozepina,α-Casozepina,α-Casozepina,,casozepina,2,2,0,0,107,Gato;Perro,T
+pa-ciclofosfamida,Ciclofosfamida,Ciclofosfamida,,ciclofosfamida,7,7,0,0,585;586;587;588-590,No especificada,P
+pa-ciclosporina,Ciclosporina,Ciclosporina,,ciclosporina,1,1,0,0,593,Perro,P
+pa-clorambucilo,Clorambucilo,Clorambucilo,,clorambucilo,3,2,1,0,591;594;586-587,Gato;No especificada;Perro,P
+pa-clorfenamina,Clorfenamina,Clorfenamina,,clorfenamina,1,0,1,0,589-591,Perro,P
+pa-deltametrina,Deltametrina,Deltametrina,,deltametrina,2,0,2,0,172,Gato;Perro,T
+pa-deslorelina,Deslorelina,Deslorelina,,deslorelina,2,0,2,0,173,Gato;Perro,T
+pa-desmopresina,Desmopresina,Desmopresina,,desmopresina,4,1,3,0,174;175,Gato;Perro,T
+pa-dexametasona,Dexametasona,Dexametasona,,dexametasona,13,9,4,0,176;177;592;594;595,Gato;No especificada;Perro,P;T
+pa-dexmedetomidina,Dexmedetomidina,Dexmedetomidina,,dexmedetomidina,5,5,0,0,179;597,Perro;Perro y gato,P;T
+pa-dexrazoxano,Dexrazoxano,Dexrazoxano,,dexrazoxano,2,0,2,0,180,Perro,T
+pa-diazepam,Diazepam,Diazepam,,diazepam,11,9,2,0,182;183;598-599,Gato;Perro;Perro y gato,P;T
+pa-diazoxido,Diazóxido,Diazóxido,,diazoxido,3,1,2,0,184,Gato;Perro,T
+pa-diclofenaco-oftalmico,Diclofenaco (oftálmico),Diclofenaco (oftálmico),,diclofenaco oftalmico,1,0,1,0,185,Perro y gato,T
+pa-diclorofeno,Diclorofeno,Diclorofeno,,diclorofeno,1,0,1,0,186,Perro y gato,T
+pa-difenhidramina,Difenhidramina,Difenhidramina,,difenhidramina,3,2,1,0,186;187,Gato;Perro,T
+pa-difenoxilato,Difenoxilato,Difenoxilato,,difenoxilato,2,1,1,0,187,Gato;Perro,T
+pa-digoxina,Digoxina,Digoxina,,digoxina,4,4,0,0,189,Gato;Perro,T
+pa-dihidrotaquisterol,Dihidrotaquisterol,Dihidrotaquisterol,,dihidrotaquisterol,3,3,0,0,546,Gato;Perro,T
+pa-dihidrotaquisterol-vit-d,Dihidrotaquisterol (vit. D),Dihidrotaquisterol (vit. D),Dihidrotaquisterol; Vitamina D2,dihidrotaquisterol vit d dihidrotaquisterol vitamina d2,1,1,0,0,546,Perro,T
+pa-diltiazem,Diltiazem,Diltiazem,,diltiazem,5,2,3,0,190;191;190-191,Gato;Perro,T
+pa-dimercaprol,Dimercaprol,Dimercaprol,,dimercaprol,1,1,0,0,191-192,Perro y gato,T
+pa-dimetilsulfoxido-dmso,Dimetilsulfóxido (DMSO),Dimetilsulfóxido (DMSO),DMSO,dimetilsulfoxido dmso dmso,4,0,4,0,193,Gato;Perro,T
+pa-dinoprost-trometamina,Dinoprost trometamina,Dinoprost trometamina,,dinoprost trometamina,2,1,1,0,194,Gato;Perro,T
+pa-dinotefuran-vectra-3d,Dinotefuran (Vectra 3D),Dinotefuran (Vectra 3D),,dinotefuran vectra 3d,2,0,2,0,193,Gato;Perro,T
+pa-dirlotapida,Dirlotapida,Dirlotapida,,dirlotapida,2,0,2,0,195,Gato;Perro,T
+pa-dobutamina,Dobutamina,Dobutamina,,dobutamina,2,2,0,0,197,Gato;Perro,T
+pa-docusato-sodico,Docusato sódico,Docusato sódico,,docusato sodico,4,0,2,2,198,Gato;Perro,T
+pa-domperidona,Domperidona,Domperidona,,domperidona,3,1,2,0,199,Gato;Perro,T
+pa-dopamina,Dopamina,Dopamina,,dopamina,2,2,0,0,200,Gato;Perro,T
+pa-dorzolamida,Dorzolamida,Dorzolamida,,dorzolamida,1,0,0,1,201,Perro y gato,T
+pa-doxapram,Doxapram,Doxapram,,doxapram,3,2,0,1,203,Perro y gato,T
+pa-doxepina,Doxepina,Doxepina,,doxepina,2,2,0,0,204,Gato;Perro,T
+pa-doxiciclina,Doxiciclina,Doxiciclina,,doxiciclina,1,1,0,0,205,Perro y gato,T
+pa-doxorrubicina,Doxorrubicina,Doxorrubicina,,doxorrubicina,4,3,1,0,206;586-588;589-591,Gato;No especificada;Perro,P;T
+pa-edetato-de-calcio-disodico,Edetato de calcio disódico,Edetato de calcio disódico,,edetato de calcio disodico,1,1,0,0,207,Perro y gato,T
+pa-efedrina,Efedrina,Efedrina,,efedrina,5,3,2,0,210;211,Gato;Perro,T
+pa-emodepsida,Emodepsida,Emodepsida,,emodepsida,2,1,1,0,211,Gato;Perro,T
+pa-enalapril,Enalapril,Enalapril,,enalapril,4,4,0,0,213,Gato;Perro,T
+pa-enema-de-fosfato,Enema de fosfato,Enema de fosfato,,enema de fosfato,2,0,2,0,213;214,Gato;Perro,T
+pa-enilconazol,Enilconazol,Enilconazol,,enilconazol,3,1,1,1,214,Gato;Perro,T
+pa-enrofloxacina,Enrofloxacina,Enrofloxacina,,enrofloxacina,1,0,1,0,216,Perro y gato,T
+pa-epirubicina,Epirubicina,Epirubicina,,epirubicina,2,1,1,0,218,Gato;Perro,T
+pa-eprinomectina,Eprinomectina,Eprinomectina,,eprinomectina,2,0,2,0,219,Gato;Perro,T
+pa-eritromicina,Eritromicina,Eritromicina,,eritromicina,2,2,0,0,220,Perro y gato,T
+pa-eritropoyetina-epoetina-alfa-beta,Eritropoyetina (Epoetina alfa/beta),Eritropoyetina (Epoetina alfa/beta),,eritropoyetina epoetina alfa beta,1,0,1,0,221,Perro y gato,T
+pa-esmolol,Esmolol,Esmolol,,esmolol,1,0,1,0,223,Perro y gato,T
+pa-espironolactona,Espironolactona,Espironolactona,,espironolactona,1,1,0,0,223,Perro y gato,T
+pa-esterculia,Esterculia,Esterculia,,esterculia,2,0,2,0,224,Gato;Perro,T
+pa-estibogluconato-de-sodio,Estibogluconato de sodio,Estibogluconato de sodio,,estibogluconato de sodio,2,1,1,0,225,Gato;Perro,T
+pa-estreptomicina,Estreptomicina,Estreptomicina,,estreptomicina,1,1,0,0,226,Perro y gato,T
+pa-estriol-oestriol,Estriol (Oestriol),Estriol (Oestriol),Oestriol,estriol oestriol oestriol,2,0,2,0,227,Gato;Perro,T
+pa-etanol,Etanol,Etanol,,etanol,3,0,3,0,228,Gato;Perro,T
+pa-famciclovir,Famciclovir,Famciclovir,,famciclovir,1,1,0,0,230,Gato,T
+pa-famotidina,Famotidina,Famotidina,,famotidina,1,1,0,0,230,Perro y gato,T
+pa-fenbendazol,Fenbendazol,Fenbendazol,,fenbendazol,11,11,0,0,231;232,Gato;Perro,T
+pa-fenilbutazona,Fenilbutazona,Fenilbutazona,,fenilbutazona,1,1,0,0,233,Perro,T
+pa-fenilefrina,Fenilefrina,Fenilefrina,,fenilefrina,5,1,3,1,234,Gato;Perro,T
+pa-fenilpropanolamina,Fenilpropanolamina,Fenilpropanolamina,,fenilpropanolamina,1,1,0,0,235,Perro y gato,T
+pa-fenitoina-fosfenitoina,Fenitoína (fosfenitoína),Fenitoína (fosfenitoína),Fosfenitoína,fenitoina fosfenitoina fosfenitoina,2,1,1,0,237;236-237,Perro,T
+pa-fenobarbital,Fenobarbital,Fenobarbital,,fenobarbital,5,3,2,0,239;240,Gato;Perro,T
+pa-fenoxibenzamina,Fenoxibenzamina,Fenoxibenzamina,,fenoxibenzamina,3,3,0,0,241,Gato;Perro,T
+pa-fentanilo,Fentanilo,Fentanilo,,fentanilo,7,4,3,0,243;244;598,Gato;Perro,P;T
+pa-feromonas-apaciguantes-de-gatos,Feromonas apaciguantes de gatos,Feromonas apaciguantes de gatos,,feromonas apaciguantes de gatos,1,0,1,0,245,Gato,T
+pa-feromonas-apaciguantes-de-perros,Feromonas apaciguantes de perros,Feromonas apaciguantes de perros,,feromonas apaciguantes de perros,1,0,1,0,246,Perro,T
+pa-filgrastim,Filgrastim,Filgrastim,,filgrastim,1,0,1,0,247,Perro y gato,T
+pa-finasterida,Finasterida,Finasterida,,finasterida,1,0,1,0,248,Perro,T
+pa-fipronil,Fipronil,Fipronil,,fipronil,3,0,3,0,249,Gato;Perro,T
+pa-firocoxib,Firocoxib,Firocoxib,,firocoxib,1,1,0,0,251,Perro,T
+pa-florfenicol-con-terbinafina-y-betametasona,Florfenicol (con terbinafina y betametasona),Florfenicol (con terbinafina y betametasona),,florfenicol con terbinafina y betametasona,1,0,1,0,251,Perro,T
+pa-flucitosina,Flucitosina,Flucitosina,,flucitosina,2,0,2,0,252,Gato;Perro,T
+pa-flucloxacilina,Flucloxacilina,Flucloxacilina,,flucloxacilina,1,1,0,0,253,Perro y gato,T
+pa-fluconazol,Fluconazol,Fluconazol,,fluconazol,5,3,2,0,254,Gato;Perro;Perro y gato,T
+pa-fludrocortisona,Fludrocortisona,Fludrocortisona,,fludrocortisona,2,0,2,0,255,Gato;Perro,T
+pa-fluorometolona,Fluorometolona,Fluorometolona,,fluorometolona,1,0,0,1,256,Perro y gato,T
+pa-fluorouracilo-5-fu,Fluorouracilo (5-FU),Fluorouracilo (5-FU),5-FU,fluorouracilo 5 fu 5 fu,1,1,0,0,257,Perro,T
+pa-fluoxetina,Fluoxetina,Fluoxetina,,fluoxetina,2,2,0,0,259,Gato;Perro,T
+pa-fluralaner,Fluralaner,Fluralaner,,fluralaner,1,1,0,0,259,Perro,T
+pa-flurbiprofeno,Flurbiprofeno,Flurbiprofeno,,flurbiprofeno,2,0,1,1,260,Perro y gato,T
+pa-fluticasona,Fluticasona,Fluticasona,,fluticasona,2,0,2,0,261,Gato;Perro,T
+pa-folcodina,Folcodina,Folcodina,,folcodina,1,1,0,0,262,Perro,T
+pa-fomepizol-4-metilpirazol,Fomepizol (4-metilpirazol),Fomepizol (4-metilpirazol),4-metilpirazol,fomepizol 4 metilpirazol 4 metilpirazol,2,0,2,0,263,Gato;Perro,T
+pa-fosfato,Fosfato,Fosfato,,fosfato,2,1,1,0,264,Gato;Perro,T
+pa-fosfato-de-potasio,Fosfato (de potasio),Fosfato (de potasio),,fosfato de potasio,1,1,0,0,264,Perro y gato,T
+pa-fosfato-oral,Fosfato (oral),Fosfato (oral),,fosfato oral,2,2,0,0,264;265,Gato;Perro,T
+pa-fosfato-toldimfos,Fosfato (toldimfos),Fosfato (toldimfos),Toldimfos,fosfato toldimfos toldimfos,2,1,1,0,264,Perro,T
+pa-fraccion-facial-f3-felina,Fracción facial F3 felina,Fracción facial F3 felina,,fraccion facial f3 felina,5,0,5,0,265,Gato;Perro,T
+pa-fraccion-facial-f4-felina,Fracción facial F4 felina,Fracción facial F4 felina,,fraccion facial f4 felina,2,0,2,0,266,Gato;Perro,T
+pa-framicetina,Framicetina,Framicetina,,framicetina,1,0,1,0,267,Perro y gato,T
+pa-furosemida,Furosemida,Furosemida,,furosemida,6,4,2,0,268;269;268-269;588-590,No especificada;Perro y gato,P;T
+pa-gabapentina,Gabapentina,Gabapentina,,gabapentina,2,2,0,0,272,Gato;Perro,T
+pa-gadolinio-ac-gadopentetico-gadoterico-gadoteridol-gadodiamida-gadobutrol-gadoversetamida-excepto-ac-gadoxetico,"Gadolinio: ác. gadopentético, gadotérico, gadoteridol, gadodiamida, gadobutrol, gadoversetamida (excepto ác. gadoxético)","Gadolinio: ác. gadopentético, gadotérico, gadoteridol, gadodiamida, gadobutrol, gadoversetamida (excepto ác. gadoxético)",,gadolinio ac gadopentetico gadoterico gadoteridol gadodiamida gadobutrol gadoversetamida excepto ac gadoxetico,1,1,0,0,575,Perro,T
+pa-ganciclovir,Ganciclovir,Ganciclovir,,ganciclovir,2,0,2,0,273,Gato;Perro,T
+pa-gelatina,Gelatina,Gelatina,,gelatina,1,1,0,0,274,Perro y gato,T
+pa-gentamicina,Gentamicina,Gentamicina,,gentamicina,6,2,3,1,276,Gato;Perro,T
+pa-glicopirronio,Glicopirronio,Glicopirronio,,glicopirronio,2,2,0,0,277,Perro y gato,T
+pa-glipizida,Glipizida,Glipizida,,glipizida,2,1,1,0,278,Gato;Perro,T
+pa-glucagon,Glucagón,Glucagón,,glucagon,1,0,1,0,279,Perro y gato,T
+pa-glucocorticoide-prednisolona-dosis-decrecientes,"Glucocorticoide (prednisolona), dosis decrecientes","Glucocorticoide (prednisolona), dosis decrecientes",,glucocorticoide prednisolona dosis decrecientes,1,0,1,0,593-594,Perro,P
+pa-glucosa-dextrosa,Glucosa (dextrosa),Glucosa (dextrosa),dextrosa,glucosa dextrosa dextrosa,3,0,2,1,280,Gato;Perro,T
+pa-glutamina,Glutamina,Glutamina,,glutamina,1,0,1,0,281,Perro y gato,T
+pa-gonadotropina-corionica,Gonadotropina coriónica,Gonadotropina coriónica,,gonadotropina corionica,3,0,3,0,282,Gato;Perro,T
+pa-halotano,Halotano,Halotano,,halotano,1,0,0,1,284,Perro y gato,T
+pa-heparina-de-bajo-peso-molecular,Heparina de bajo peso molecular,Heparina de bajo peso molecular,,heparina de bajo peso molecular,2,1,1,0,285;592,Perro;Perro y gato,P;T
+pa-heparina-no-fraccionada,Heparina no fraccionada,Heparina no fraccionada,,heparina no fraccionada,2,2,0,0,286;287,Gato;Perro,T
+pa-hialuronato,Hialuronato,Hialuronato,,hialuronato,1,0,1,0,287,Perro y gato,T
+pa-hidralazina,Hidralazina,Hidralazina,,hidralazina,2,1,1,0,288,Gato;Perro,T
+pa-hidroclorotiazida,Hidroclorotiazida,Hidroclorotiazida,,hidroclorotiazida,2,2,0,0,289;290,Gato;Perro,T
+pa-hidrocortisona,Hidrocortisona,Hidrocortisona,,hidrocortisona,5,3,2,0,291,Gato;Perro,T
+pa-hidrocortisona-aceponato,Hidrocortisona aceponato,Hidrocortisona aceponato,,hidrocortisona aceponato,3,0,3,0,292,Gato;Perro,T
+pa-hidroxicarbamida,Hidroxicarbamida,Hidroxicarbamida,,hidroxicarbamida,4,1,3,0,293,Gato;Perro,T
+pa-hidroxizina,Hidroxizina,Hidroxizina,,hidroxizina,1,1,0,0,294,Perro y gato,T
+pa-hipoclorito-sodico-acido-hipocloroso,Hipoclorito sódico (ácido hipocloroso),Hipoclorito sódico (ácido hipocloroso),,hipoclorito sodico acido hipocloroso,1,0,1,0,295,Perro y gato,T
+pa-hipromelosa,Hipromelosa,Hipromelosa,,hipromelosa,1,0,1,0,296,Perro y gato,T
+pa-hormona-estimulante-de-la-tiroides-tsh,Hormona estimulante de la tiroides (TSH),Hormona estimulante de la tiroides (TSH),,hormona estimulante de la tiroides tsh,2,0,2,0,296,Gato;Perro,T
+pa-imepitoina,Imepitoína,Imepitoína,,imepitoina,2,2,0,0,300,Gato;Perro,T
+pa-imidacloprida,Imidacloprida,Imidacloprida,,imidacloprida,2,2,0,0,301,Gato;Perro,T
+pa-imidapril,Imidapril,Imidapril,,imidapril,2,2,0,0,303,Gato;Perro,T
+pa-imidocarb-dipropionato,Imidocarb dipropionato,Imidocarb dipropionato,,imidocarb dipropionato,2,1,1,0,304,Gato;Perro,T
+pa-imipenem,Imipenem,Imipenem,,imipenem,1,1,0,0,305,Perro y gato,T
+pa-imipramina,Imipramina,Imipramina,,imipramina,2,1,1,0,306,Gato;Perro,T
+pa-indoxacarb,Indoxacarb,Indoxacarb,,indoxacarb,2,2,0,0,307,Gato;Perro,T
+pa-infusiones-lipidicas,Infusiones lipídicas,Infusiones lipídicas,,infusiones lipidicas,3,0,1,2,309,Gato;Perro;Perro y gato,T
+pa-inmunoglobulina,Inmunoglobulina,Inmunoglobulina,,inmunoglobulina,1,1,0,0,593,Perro,P
+pa-inmunoglobulinas,Inmunoglobulinas,Inmunoglobulinas,,inmunoglobulinas,2,1,1,0,310,Gato;Perro,T
+pa-insulina,Insulina,Insulina,,insulina,5,0,5,0,312,Gato;Perro,T
+pa-interferon-omega,Interferón omega,Interferón omega,,interferon omega,3,2,1,0,313;314;313-314,Gato;Perro,T
+pa-isetionato-de-pentamidina,Isetionato de pentamidina,Isetionato de pentamidina,,isetionato de pentamidina,2,1,1,0,315,Gato;Perro,T
+pa-isoflurano,Isoflurano,Isoflurano,,isoflurano,2,0,0,2,316,Gato;Perro,T
+pa-isotretinoina,Isotretinoína,Isotretinoína,,isotretinoina,1,1,0,0,541,Perro,T
+pa-isotretinoina-tretinoina,Isotretinoína/tretinoína,Isotretinoína/tretinoína,,isotretinoina tretinoina,1,0,1,0,541,Perro,T
+pa-ispagula-psyllium,Ispágula (Psyllium),Ispágula (Psyllium),Psyllium,ispagula psyllium psyllium,2,0,2,0,317,Gato;Perro,T
+pa-itraconazol,Itraconazol,Itraconazol,,itraconazol,1,1,0,0,318,Perro y gato,T
+pa-ivermectina,Ivermectina,Ivermectina,,ivermectina,5,4,0,1,319,Gato;Perro,T
+pa-ketamina,Ketamina,Ketamina,,ketamina,5,4,1,0,322,Gato;Perro,T
+pa-ketamina-diazepam-o-midazolam,Ketamina + diazepam o midazolam,Ketamina + diazepam o midazolam,,ketamina diazepam o midazolam,1,0,1,0,600,Gato,P
+pa-ketamina-medetomidina,Ketamina + medetomidina,Ketamina + medetomidina,,ketamina medetomidina,1,0,1,0,600,Gato,P
+pa-ketamina-medetomidina-o-dexmedetomidina,Ketamina + medetomidina o dexmedetomidina,Ketamina + medetomidina o dexmedetomidina,,ketamina medetomidina o dexmedetomidina,2,0,2,0,322,Gato;Perro,T
+pa-ketoconazol,Ketoconazol,Ketoconazol,,ketoconazol,4,3,1,0,324,Gato;Perro,T
+pa-ketoprofeno,Ketoprofeno,Ketoprofeno,,ketoprofeno,5,5,0,0,325,Gato;Perro,T
+pa-ketorolaco,Ketorolaco,Ketorolaco,,ketorolaco,1,0,0,1,326,Perro y gato,T
+pa-l-teanina,L‑Teanina,L‑Teanina,,l teanina,1,1,0,0,327,Perro y gato,T
+pa-l-tiroxina-levotiroxina,L‑Tiroxina (levotiroxina),L‑Tiroxina (levotiroxina),Levotiroxina; Levotiroxina (T4); T4,l tiroxina levotiroxina levotiroxina levotiroxina t4 t4,1,1,0,0,328,Perro y gato,T
+pa-lactulosa,Lactulosa,Lactulosa,,lactulosa,4,3,1,0,329;330;329-330,Gato;Perro,T
+pa-lamivudina-3tc,Lamivudina (3TC),Lamivudina (3TC),,lamivudina 3tc,1,1,0,0,330,Gato,T
+pa-latanoprost,Latanoprost,Latanoprost,,latanoprost,1,0,0,1,331,Perro,T
+pa-leflunomida,Leflunomida,Leflunomida,,leflunomida,3,2,1,0,332;593,Gato;Perro,P;T
+pa-lenograstim-rhg-csf,Lenograstim (rhG‑CSF),Lenograstim (rhG‑CSF),rhG‑CSF,lenograstim rhg csf rhg csf,1,1,0,0,334,Perro,T
+pa-levetiracetam,Levetiracetam,Levetiracetam,,levetiracetam,4,4,0,0,335,Perro y gato,T
+pa-lidocaina,Lidocaína,Lidocaína,,lidocaina,9,7,2,0,337,Gato;Perro,T
+pa-lidocaina-crema-emla,Lidocaína (crema EMLA),Lidocaína (crema EMLA),EMLA; Lidocaína + prilocaína,lidocaina crema emla emla lidocaina prilocaina,1,0,1,0,337,Perro,T
+pa-lincomicina,Lincomicina,Lincomicina,,lincomicina,5,5,0,0,339,Perro y gato,T
+pa-liotironina-t3,Liotironina (T3),Liotironina (T3),,liotironina t3,2,1,1,0,339,Gato;Perro,T
+pa-lisina-l-lisina,Lisina (L‑lisina),Lisina (L‑lisina),L‑lisina,lisina l lisina l lisina,2,0,2,0,341,Gato,T
+pa-lomustina-ccnu,Lomustina (CCNU),Lomustina (CCNU),CCNU,lomustina ccnu ccnu,2,2,0,0,341,Gato;Perro,T
+pa-loperamida,Loperamida,Loperamida,,loperamida,1,1,0,0,342,Perro y gato,T
+pa-loratadina,Loratadina,Loratadina,,loratadina,1,0,1,0,343,Perro,T
+pa-lorazepam,Lorazepam,Lorazepam,,lorazepam,1,1,0,0,343,Perro y gato,T
+pa-lufenuron,Lufenurón,Lufenurón,,lufenuron,3,3,0,0,344,Gato;Perro,T
+pa-maleato-de-timolol,Maleato de timolol,Maleato de timolol,,maleato de timolol,2,0,0,2,346,Gato;Perro,T
+pa-manitol,Manitol,Manitol,,manitol,3,3,0,0,347,Perro y gato,T
+pa-marbofloxacina,Marbofloxacina,Marbofloxacina,,marbofloxacina,3,2,0,1,349,Gato;Perro,T
+pa-maropitant,Maropitant,Maropitant,,maropitant,7,7,0,0,351;589-590,Gato;Perro,P;T
+pa-masitinib-mesilato,Masitinib mesilato,Masitinib mesilato,,masitinib mesilato,2,1,1,0,351,Gato;Perro,T
+pa-mavacoxib,Mavacoxib,Mavacoxib,,mavacoxib,1,1,0,0,353,Perro,T
+pa-medetomidina,Medetomidina,Medetomidina,,medetomidina,4,4,0,0,355;597,Perro y gato,P;T
+pa-medetomidina-o-dexmedetomidina-acepromazina,Medetomidina o dexmedetomidina + acepromazina,Medetomidina o dexmedetomidina + acepromazina,,medetomidina o dexmedetomidina acepromazina,1,0,1,0,598,Perro,P
+pa-megestrol-acetato,Megestrol (acetato),Megestrol (acetato),,megestrol acetato,8,3,5,0,356,Gato;Perro,T
+pa-melatonina,Melatonina,Melatonina,,melatonina,1,0,1,0,357,Perro,T
+pa-melfalan,Melfalán,Melfalán,,melfalan,9,9,0,0,358;586-587,Gato;No especificada;Perro,P;T
+pa-meloxicam,Meloxicam,Meloxicam,,meloxicam,6,6,0,0,360;361,Gato;Perro,T
+pa-mepivacaina,Mepivacaína,Mepivacaína,,mepivacaina,1,0,1,0,361,Perro y gato,T
+pa-metadona,Metadona,Metadona,,metadona,6,6,0,0,363;597-599,Gato;Perro;Perro y gato,P;T
+pa-metaflumizona,Metaflumizona,Metaflumizona,,metaflumizona,3,3,0,0,364,Gato;Perro,T
+pa-metamizol-dipirona-butilescopolamina,Metamizol (dipirona) + butilescopolamina,Metamizol (dipirona) + butilescopolamina,,metamizol dipirona butilescopolamina,1,1,0,0,364,Perro,T
+pa-metenamina,Metenamina,Metenamina,,metenamina,4,0,4,0,365,Gato;Perro,T
+pa-metilprednisolona,Metilprednisolona,Metilprednisolona,,metilprednisolona,8,6,2,0,367,Gato;Perro,T
+pa-metionina,Metionina,Metionina,,metionina,2,0,2,0,368,Gato;Perro,T
+pa-metocarbamol,Metocarbamol,Metocarbamol,,metocarbamol,1,1,0,0,369,Perro y gato,T
+pa-metoclopramida,Metoclopramida,Metoclopramida,,metoclopramida,3,3,0,0,370,Perro y gato,T
+pa-metopreno-s-metopreno,Metopreno (S‑metopreno),Metopreno (S‑metopreno),S‑metopreno,metopreno s metopreno s metopreno,1,0,1,0,371,Perro y gato,T
+pa-metotrexato,Metotrexato,Metotrexato,,metotrexato,1,1,0,0,372,Perro y gato,T
+pa-metronidazol,Metronidazol,Metronidazol,,metronidazol,3,3,0,0,373,Perro y gato,T
+pa-metronidazol-espiramicina-stomorgyl,Metronidazol + espiramicina (Stomorgyl),Metronidazol + espiramicina (Stomorgyl),Stomorgyl,metronidazol espiramicina stomorgyl stomorgyl,1,0,1,0,373-374,Perro y gato,T
+pa-mexiletina,Mexiletina,Mexiletina,,mexiletina,1,1,0,0,375,Perro,T
+pa-micofenolato-de-mofetilo,Micofenolato de mofetilo,Micofenolato de mofetilo,,micofenolato de mofetilo,3,3,0,0,376,Gato;Perro,T
+pa-micofenolato-de-mofetilo-mmf,Micofenolato de mofetilo (MMF),Micofenolato de mofetilo (MMF),MMF; Micofenolato mofetilo,micofenolato de mofetilo mmf mmf micofenolato mofetilo,1,0,1,0,592,Perro,P
+pa-micofenolato-mofetilo,Micofenolato mofetilo,Micofenolato mofetilo,,micofenolato mofetilo,1,0,1,0,375,No especificada,T
+pa-miconazol,Miconazol,Miconazol,,miconazol,7,0,4,3,377,Gato;Perro,T
+pa-midazolam,Midazolam,Midazolam,,midazolam,3,3,0,0,378;379;598-599,Perro;Perro y gato,P;T
+pa-mifepristona,Mifepristona,Mifepristona,,mifepristona,1,1,0,0,379,Perro,T
+pa-milbemicina,Milbemicina,Milbemicina,,milbemicina,3,3,0,0,380,Gato;Perro,T
+pa-miltefosina,Miltefosina,Miltefosina,,miltefosina,1,1,0,0,381,Perro,T
+pa-minociclina,Minociclina,Minociclina,,minociclina,1,1,0,0,382,Perro y gato,T
+pa-mirtazapina,Mirtazapina,Mirtazapina,,mirtazapina,2,1,1,0,383,Gato;Perro,T
+pa-misoprostol,Misoprostol,Misoprostol,,misoprostol,3,3,0,0,384,Gato;Perro,T
+pa-mitotano-o-p-ddd,"Mitotano (o,p'-DDD)","Mitotano (o,p'-DDD)","o,p'-DDD",mitotano o p ddd o p ddd,3,2,1,0,385,Gato;Perro,T
+pa-mitoxantrona,Mitoxantrona,Mitoxantrona,,mitoxantrona,2,2,0,0,386,Gato;Perro,T
+pa-morfina,Morfina,Morfina,,morfina,6,4,1,1,388;389,Gato;Perro,T
+pa-moxidectina-imidacloprid,Moxidectina (+ imidacloprid),Moxidectina (+ imidacloprid),,moxidectina imidacloprid,3,2,0,1,390,Gato;Perro,T
+pa-moxifloxacina,Moxifloxacina,Moxifloxacina,,moxifloxacina,1,0,1,0,390,Perro y gato,T
+pa-mupirocina,Mupirocina,Mupirocina,,mupirocina,1,0,1,0,391,Perro y gato,T
+pa-naloxona,Naloxona,Naloxona,,naloxona,3,3,0,0,394,Perro y gato,T
+pa-nandrolona,Nandrolona,Nandrolona,,nandrolona,2,2,0,0,394,Gato;Perro,T
+pa-neomicina,Neomicina,Neomicina,,neomicina,3,1,0,2,396,Perro y gato,T
+pa-neostigmina,Neostigmina,Neostigmina,,neostigmina,7,5,1,1,397;398;397-398,Gato;Perro,T
+pa-nicotinamida-niacinamida,Nicotinamida (niacinamida),Nicotinamida (niacinamida),Vitamina B3 (Niacinamida); Niacinamida; Vitamina B3,nicotinamida niacinamida vitamina b3 niacinamida niacinamida vitamina b3,2,0,2,0,399,Perro,T
+pa-nistatina,Nistatina,Nistatina,,nistatina,1,0,0,1,399,Perro y gato,T
+pa-nitenpiram,Nitenpiram,Nitenpiram,,nitenpiram,1,1,0,0,400,Perro y gato,T
+pa-nitrofurantoina,Nitrofurantoína,Nitrofurantoína,,nitrofurantoina,1,1,0,0,401,Perro y gato,T
+pa-nitroscanato,Nitroscanato,Nitroscanato,,nitroscanato,1,1,0,0,402,Perro,T
+pa-oclacitinib,Oclacitinib,Oclacitinib,,oclacitinib,1,1,0,0,403,Perro y gato,T
+pa-octreotida,Octreotida,Octreotida,,octreotida,1,0,1,0,404,Perro y gato,T
+pa-ofloxacina,Ofloxacina,Ofloxacina,,ofloxacina,1,0,1,0,405,Perro y gato,T
+pa-olsalazina,Olsalazina,Olsalazina,,olsalazina,1,1,0,0,406,Perro,T
+pa-omeprazol,Omeprazol,Omeprazol,,omeprazol,2,2,0,0,407,Gato;Perro,T
+pa-ondansetron,Ondansetrón,Ondansetrón,,ondansetron,2,1,1,0,408,Perro y gato,T
+pa-orbifloxacina,Orbifloxacina,Orbifloxacina,,orbifloxacina,4,3,0,1,409;410,Gato;Perro,T
+pa-osaterona,Osaterona,Osaterona,,osaterona,1,1,0,0,410,Perro,T
+pa-oxido-nitroso,Óxido nitroso,Óxido nitroso,,oxido nitroso,1,0,0,1,412,Perro y gato,T
+pa-oximetazolina,Oximetazolina,Oximetazolina,,oximetazolina,1,0,0,1,412,Perro y gato,T
+pa-oxitetraciclina,Oxitetraciclina,Oxitetraciclina,,oxitetraciclina,3,2,1,0,414,Gato;Perro,T
+pa-oxitocina,Oxitocina,Oxitocina,,oxitocina,4,2,2,0,414,Gato;Perro,T
+pa-pamidronato,Pamidronato,Pamidronato,,pamidronato,3,2,0,1,416;414-415,Gato;Perro,T
+pa-pancuronio,Pancuronio,Pancuronio,,pancuronio,1,1,0,0,417,Perro y gato,T
+pa-pantoprazol,Pantoprazol,Pantoprazol,,pantoprazol,1,1,0,0,417,Perro y gato,T
+pa-papaveretum,Papaveretum,Papaveretum,,papaveretum,3,3,0,0,419;597-599,Gato;Perro;Perro y gato,P;T
+pa-paracetamol,Paracetamol,Paracetamol,,paracetamol,2,1,1,0,420,Gato;Perro,T
+pa-parafina,Parafina,Parafina,,parafina,4,0,1,3,421,Gato;Perro,T
+pa-paroxetina,Paroxetina,Paroxetina,,paroxetina,2,2,0,0,422,Gato;Perro,T
+pa-penicilamina,Penicilamina,Penicilamina,,penicilamina,3,3,0,0,423,Perro,T
+pa-penicilina-g,Penicilina G,Penicilina G,,penicilina g,3,2,1,0,425,Perro y gato,T
+pa-pentobarbital,Pentobarbital,Pentobarbital,,pentobarbital,1,0,1,0,426,Perro y gato,T
+pa-pentosano-polisulfato,Pentosano polisulfato,Pentosano polisulfato,,pentosano polisulfato,3,2,1,0,427,Gato;Perro,T
+pa-pentoxifilina,Pentoxifilina,Pentoxifilina,,pentoxifilina,1,1,0,0,428,Perro,T
+pa-permetrina,Permetrina,Permetrina,,permetrina,2,0,2,0,428;429,Gato;Perro,T
+pa-peroxido-de-benzoilo,Peróxido de benzoilo,Peróxido de benzoilo,,peroxido de benzoilo,1,0,0,1,429,Perro,T
+pa-petidina,Petidina,Petidina,,petidina,1,1,0,0,597-599,Perro y gato,P
+pa-petidina-meperidina,Petidina (meperidina),Petidina (meperidina),Meperidina,petidina meperidina meperidina,2,2,0,0,430,Gato;Perro,T
+pa-pilocarpina,Pilocarpina,Pilocarpina,,pilocarpina,2,0,1,1,431,Perro,T
+pa-pimobendan,Pimobendán,Pimobendán,,pimobendan,2,2,0,0,433,Perro;Perro y gato,T
+pa-piperacilina,Piperacilina,Piperacilina,,piperacilina,1,1,0,0,434,Perro,T
+pa-piperazina,Piperazina,Piperazina,,piperazina,2,2,0,0,435,Perro y gato,T
+pa-pirantel-embonato,Pirantel (embonato),Pirantel (embonato),,pirantel embonato,2,1,1,0,436,Gato;Perro,T
+pa-piridostigmina,Piridostigmina,Piridostigmina,,piridostigmina,2,2,0,0,437,Gato;Perro,T
+pa-pirimetamina,Pirimetamina,Pirimetamina,,pirimetamina,1,1,0,0,438,Perro y gato,T
+pa-piriprol,Piriprol,Piriprol,,piriprol,2,1,1,0,438;439,Gato;Perro,T
+pa-piriproxifeno,Piriproxifeno,Piriproxifeno,,piriproxifeno,3,0,3,0,439,Perro y gato,T
+pa-piroxicam,Piroxicam,Piroxicam,,piroxicam,3,1,2,0,440,Gato;Perro,T
+pa-pivalato-de-desoxicortona,Pivalato de desoxicortona,Pivalato de desoxicortona,,pivalato de desoxicortona,2,2,0,0,441;442,Gato;Perro,T
+pa-polimixina-b,Polimixina B,Polimixina B,,polimixina b,3,0,3,0,442;443,Perro y gato,T
+pa-pradofloxacina,Pradofloxacina,Pradofloxacina,,pradofloxacina,3,3,0,0,444,Gato;Perro,T
+pa-pralidoxima,Pralidoxima,Pralidoxima,,pralidoxima,1,1,0,0,445,Perro y gato,T
+pa-praziquantel,Praziquantel,Praziquantel,,praziquantel,2,0,2,0,446,Gato;Perro,T
+pa-prazosina,Prazosina,Prazosina,,prazosina,3,0,3,0,446,Gato;Perro,T
+pa-prednisolona,Prednisolona,Prednisolona,,prednisolona,11,8,3,0,585;586;587;592;594;595;585-586;588-589;595-596,Gato;No especificada;Perro,P
+pa-ranitidina,Ranitidina,Ranitidina,,ranitidina,1,1,0,0,586-591,No especificada,P
+pa-robenacoxib,Robenacoxib,Robenacoxib,,robenacoxib,2,2,0,0,468,Perro y gato,T
+pa-rocuronio,Rocuronio,Rocuronio,,rocuronio,4,3,1,0,469;469-470,Gato;Perro,T
+pa-ronidazol,Ronidazol,Ronidazol,,ronidazol,2,1,1,0,470,Gato;Perro,T
+pa-ropivacaina,Ropivacaína,Ropivacaína,,ropivacaina,7,4,3,0,471;472;471-472,Gato;Perro,T
+pa-s-adenosilmetionina-same,S-Adenosilmetionina (SAMe),S-Adenosilmetionina (SAMe),SAMe,s adenosilmetionina same same,2,0,2,0,474,Gato;Perro,T
+pa-salbutamol,Salbutamol,Salbutamol,,salbutamol,2,0,2,0,475,Gato;Perro,T
+pa-sales-de-bismuto-de-noltab,Sales de bismuto (De-Noltab),Sales de bismuto (De-Noltab),De-Noltab; Subcitrato de bismuto coloidal,sales de bismuto de noltab de noltab subcitrato de bismuto coloidal,2,0,2,0,477,Gato;Perro,T
+pa-sales-de-bismuto-pepto-bismol,Sales de bismuto (Pepto-Bismol),Sales de bismuto (Pepto-Bismol),Pepto-Bismol; Subsalicilato de bismuto,sales de bismuto pepto bismol pepto bismol subsalicilato de bismuto,2,2,0,0,477,Gato;Perro,T
+pa-sales-de-calcio,Sales de calcio,Sales de calcio,,sales de calcio,6,6,0,0,478;479;478-479,Gato;Perro,T
+pa-sales-de-hierro,Sales de hierro,Sales de hierro,,sales de hierro,3,1,2,0,480,Gato;Perro,T
+pa-sales-de-hierro-hierro-dextrano,Sales de hierro (hierro dextrano),Sales de hierro (hierro dextrano),Hierro dextrano,sales de hierro hierro dextrano hierro dextrano,1,0,1,0,480,Gato,T
+pa-sales-de-magnesio,Sales de magnesio,Sales de magnesio,,sales de magnesio,2,2,0,0,481,Perro y gato,T
+pa-sales-de-potasio,Sales de potasio,Sales de potasio,,sales de potasio,4,0,4,0,483;482-483,Gato;Perro,T
+pa-sales-de-zinc,Sales de zinc,Sales de zinc,,sales de zinc,1,0,1,0,484,Perro y gato,T
+pa-sarolaner,Sarolaner,Sarolaner,,sarolaner,2,1,1,0,485,Gato;Perro,T
+pa-secobarbital-cincocaina,Secobarbital / cincocaína,Secobarbital / cincocaína,,secobarbital cincocaina,1,1,0,0,486,Perro y gato,T
+pa-selamectina,Selamectina,Selamectina,,selamectina,3,3,0,0,487,Perro y gato,T
+pa-selegilina,Selegilina,Selegilina,,selegilina,2,2,0,0,488,Gato;Perro,T
+pa-sertralina,Sertralina,Sertralina,,sertralina,2,2,0,0,489,Gato;Perro,T
+pa-sevelamer,Sevelamer,Sevelamer,,sevelamer,1,1,0,0,489,Perro y gato,T
+pa-sevoflurano,Sevoflurano,Sevoflurano,,sevoflurano,2,0,0,2,490,Perro y gato,T
+pa-sildenafilo,Sildenafilo,Sildenafilo,,sildenafilo,2,2,0,0,491,Gato;Perro,T
+pa-silibina,Silibina,Silibina,,silibina,1,1,0,0,492,Perro y gato,T
+pa-soluciones-de-aminoacidos,Soluciones de aminoácidos,Soluciones de aminoácidos,,soluciones de aminoacidos,5,3,0,2,494,Gato;Perro,T
+pa-soluciones-para-lavado-intestinal,Soluciones para lavado intestinal,Soluciones para lavado intestinal,,soluciones para lavado intestinal,2,2,0,0,495,Gato;Perro,T
+pa-somatotropina,Somatotropina,Somatotropina,,somatotropina,1,1,0,0,496,Perro y gato,T
+pa-sotalol,Sotalol,Sotalol,,sotalol,3,2,1,0,497,Gato;Perro,T
+pa-spinosad,Spinosad,Spinosad,,spinosad,2,2,0,0,498,Gato;Perro,T
+pa-sucralfato,Sucralfato,Sucralfato,,sucralfato,4,0,4,0,499;586-591,Gato;No especificada;Perro,P;T
+pa-sulfadiazina-de-plata,Sulfadiazina de plata,Sulfadiazina de plata,,sulfadiazina de plata,2,0,1,1,500,Perro y gato,T
+pa-sulfasalazina,Sulfasalazina,Sulfasalazina,,sulfasalazina,2,2,0,0,501,Gato;Perro,T
+pa-sulfato-de-protamina,Sulfato de protamina,Sulfato de protamina,,sulfato de protamina,1,0,0,1,501,Perro y gato,T
+pa-suplementos-de-enzimas-pancreaticas,Suplementos de enzimas pancreáticas,Suplementos de enzimas pancreáticas,,suplementos de enzimas pancreaticas,1,0,0,1,502,Perro y gato,T
+pa-suxametonio,Suxametonio,Suxametonio,,suxametonio,2,1,1,0,503,Gato;Perro,T
+pa-tacrolimus,Tacrolimus,Tacrolimus,,tacrolimus,2,0,1,1,506,Gato;Perro,T
+pa-telmisartan,Telmisartán,Telmisartán,,telmisartan,2,2,0,0,507,Gato;Perro,T
+pa-teofilina,Teofilina,Teofilina,,teofilina,3,3,0,0,508,Gato;Perro,T
+pa-terbinafina,Terbinafina,Terbinafina,,terbinafina,1,1,0,0,509,Perro y gato,T
+pa-terbutalina,Terbutalina,Terbutalina,,terbutalina,6,3,3,0,510,Gato;Perro,T
+pa-tetracaina-ametocaina,Tetracaína (ametocaína),Tetracaína (ametocaína),Ametocaína,tetracaina ametocaina ametocaina,1,0,0,1,511,Perro y gato,T
+pa-tetracosactida,Tetracosactida,Tetracosactida,,tetracosactida,2,1,1,0,512,Gato;Perro,T
+pa-tiabendazol,Tiabendazol,Tiabendazol,,tiabendazol,1,0,1,0,512,Perro y gato,T
+pa-ticarcilina,Ticarcilina,Ticarcilina,,ticarcilina,2,1,1,0,515,Perro y gato,T
+pa-ticarcilina-ac-clavulanico,Ticarcilina (+ ác. clavulánico),Ticarcilina (+ ác. clavulánico),Ticarcilina + ácido clavulánico,ticarcilina ac clavulanico ticarcilina acido clavulanico,1,1,0,0,515,Perro y gato,T
+pa-tilosina,Tilosina,Tilosina,,tilosina,3,3,0,0,516,Gato;Perro,T
+pa-tobramicina,Tobramicina,Tobramicina,,tobramicina,2,2,0,0,517,Gato;Perro,T
+pa-toceranib,Toceranib,Toceranib,,toceranib,1,1,0,0,518,Perro,T
+pa-toltrazuril,Toltrazuril,Toltrazuril,,toltrazuril,2,2,0,0,519,Gato;Perro,T
+pa-topiramato,Topiramato,Topiramato,,topiramato,5,4,1,0,520,Gato;Perro,T
+pa-torasemida,Torasemida,Torasemida,,torasemida,3,2,0,1,522,Gato;Perro,T
+pa-tramadol,Tramadol,Tramadol,,tramadol,4,4,0,0,524,Gato;Perro,T
+pa-travoprost,Travoprost,Travoprost,,travoprost,1,0,0,1,525,Perro,T
+pa-trazodona,Trazodona,Trazodona,,trazodona,4,0,4,0,526,Gato;Perro,T
+pa-triamcinolona,Triamcinolona,Triamcinolona,,triamcinolona,5,2,3,0,527,Gato;Perro,T
+pa-trientina-2-2-2-tetramina,"Trientina (2,2,2-tetramina)","Trientina (2,2,2-tetramina)","2,2,2-tetramina",trientina 2 2 2 tetramina 2 2 2 tetramina,1,1,0,0,529,Perro,T
+pa-trilostano,Trilostano,Trilostano,,trilostano,2,1,1,0,529,Gato;Perro,T
+pa-trimetoprim-sulfonamida,Trimetoprim/sulfonamida,Trimetoprim/sulfonamida,,trimetoprim sulfonamida,2,2,0,0,531,Perro y gato,T
+pa-trinitrato-de-glicerina,Trinitrato de glicerina,Trinitrato de glicerina,,trinitrato de glicerina,1,0,0,1,533,Gato,T
+pa-trinitrato-de-glicerina-nitroglicerina,Trinitrato de glicerina (nitroglicerina),Trinitrato de glicerina (nitroglicerina),Nitroglicerina,trinitrato de glicerina nitroglicerina nitroglicerina,1,0,0,1,533,Perro,T
+pa-tropicamida,Tropicamida,Tropicamida,,tropicamida,1,0,0,1,533,Perro y gato,T
+pa-vecuronio,Vecuronio,Vecuronio,,vecuronio,4,4,0,0,536,Perro y gato,T
+pa-verapamilo,Verapamilo,Verapamilo,,verapamilo,4,4,0,0,537,Gato;Perro,T
+pa-vetrabutina,Vetrabutina,Vetrabutina,,vetrabutina,1,1,0,0,539,Perro,T
+pa-vinblastina,Vinblastina,Vinblastina,,vinblastina,1,1,0,0,539,Perro y gato,T
+pa-vincristina,Vincristina,Vincristina,,vincristina,11,11,0,0,541;585;586;587;592;588-590,No especificada;Perro;Perro y gato,P;T
+pa-vitamina-a,Vitamina A,Vitamina A,,vitamina a,3,0,3,0,541;542,Gato;Perro,T
+pa-vitamina-a-retinol,Vitamina A (retinol),Vitamina A (retinol),Retinol,vitamina a retinol retinol,2,0,2,0,541;542,Gato;Perro,T
+pa-vitamina-b1,Vitamina B1,Vitamina B1,,vitamina b1,5,3,2,0,542;543,Gato;Perro,T
+pa-vitamina-b1-tiamina,Vitamina B1 (tiamina),Vitamina B1 (tiamina),Tiamina,vitamina b1 tiamina tiamina,1,0,1,0,542,Perro,T
+pa-vitamina-b12-cianocobalamina-hidroxocobalamina,Vitamina B12 (cianocobalamina / hidroxocobalamina),Vitamina B12 (cianocobalamina / hidroxocobalamina),,vitamina b12 cianocobalamina hidroxocobalamina,1,1,0,0,543,Perro y gato,T
+pa-vitamina-c-acido-ascorbico,Vitamina C (ácido ascórbico),Vitamina C (ácido ascórbico),,vitamina c acido ascorbico,1,1,0,0,544,Perro y gato,T
+pa-vitamina-e,Vitamina E,Vitamina E,,vitamina e,1,1,0,0,547,Gato,T
+pa-vitamina-e-tocoferil-acetato,Vitamina E (α-tocoferil acetato),Vitamina E (α-tocoferil acetato),Alfa-tocoferol; α-tocoferol,vitamina e tocoferil acetato alfa tocoferol tocoferol,1,1,0,0,547,Perro,T
+pa-vitamina-k1,Vitamina K1,Vitamina K1,,vitamina k1,6,6,0,0,548,Perro y gato,T
+pa-vitamina-k1-fitomenadiona,Vitamina K1 (fitomenadiona),Vitamina K1 (fitomenadiona),Fitomenadiona,vitamina k1 fitomenadiona fitomenadiona,1,1,0,0,548,Perro y gato,T
+pa-xilazina,Xilazina,Xilazina,,xilazina,5,5,0,0,552;598,Gato;Perro;Perro y gato,P;T
+pa-zidovudina-azt,Zidovudina (AZT),Zidovudina (AZT),,zidovudina azt,1,1,0,0,556,Gato,T
+pa-zolacepam-tiletamina,Zolacepam/tiletamina,Zolazepam/tiletamina,Zolazepam / Tiletamina; Zolazepam; Tiletamina,zolazepam tiletamina zolazepam tiletamina zolazepam tiletamina,4,4,0,0,557,Gato;Perro,T
+pa-zonisamida,Zonisamida,Zonisamida,,zonisamida,2,2,0,0,559,Gato;Perro,T

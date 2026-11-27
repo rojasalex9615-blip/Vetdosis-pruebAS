@@ -1,10 +1,5 @@
 # Calculadoras sin datos y tablas ya existentes en Supabase
 
-Inventario verificado contra el proyecto `wtrelwtztkddfktrfdpb` el 2026-11������������������������������������������������������������������������������������������������������������������������������姞'MD
-echo "--- corrigiendo ---"
-cat > docs/calculadoras-datos-faltantes-20261119.md <<'MD'
-# Calculadoras sin datos y tablas ya existentes en Supabase
-
 Inventario verificado el 2026-11-19 contra el proyecto `wtrelwtztkddfktrfdpb`
 («Pruebas»). No se modificó ningún dato para hacer este inventario.
 

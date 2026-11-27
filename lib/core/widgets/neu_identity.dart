@@ -147,7 +147,9 @@ class VetDosisBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final mark = VetDosisMark(size: large ? 100 : 34);
+    // 132 en el bloque grande del acceso. Bajo a 100 con el acceso compacto y
+    // la marca se quedaba pequena para ser lo primero que se ve al abrir.
+    final mark = VetDosisMark(size: large ? 132 : 34);
     final name = Text.rich(
       TextSpan(
         children: [

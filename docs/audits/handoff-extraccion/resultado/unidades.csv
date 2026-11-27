@@ -1,0 +1,134 @@
+unidad_original,filas,estado,motivo,unidad_normalizada
+mg/kg,516,normalizada,unidad_masa_por_kg,mg/kg
+—,94,no_normalizable,sin_unidad_declarada,
+mg/m²,41,normalizada,unidad_masa_por_m2,mg/m²
+mg/gato,33,no_normalizable,denominador_animal,
+µg/kg,31,normalizada,unidad_masa_por_kg,µg/kg
+mg/perro,21,no_normalizable,denominador_animal,
+mg,14,no_normalizable,denominador_ausente,
+ml/kg,14,normalizada,unidad_volumen_por_kg,ml/kg
+UI/kg,13,normalizada,unidad_ui_por_kg,UI/kg
+gota,13,no_normalizable,unidad_volumen_desconocido,
+gota/ojo,11,no_aplica,unidad_no_convertible,
+gotas,9,no_normalizable,unidad_volumen_desconocido,
+mg/kg/h,7,normalizada,tasa_por_hora,mg/kg/h
+µg/kg/min,7,normalizada,tasa_por_minuto,µg/kg/min
+g/kg,6,normalizada,unidad_masa_por_kg,g/kg
+UI/perro,5,no_normalizable,denominador_animal,
+mg/kg/min,5,normalizada,tasa_por_minuto,mg/kg/min
+ml,5,no_normalizable,denominador_ausente,
+mmol/kg,5,normalizada,unidad_molar_por_kg,mmol/kg
+ng/kg,5,normalizada,unidad_masa_por_kg,ng/kg
+gota por ojo,4,no_aplica,unidad_no_convertible,
+mg/kg + µg/kg,4,no_normalizable,unidad_multiple,
+mg/kg/día,4,normalizada,tasa_por_dia,mg/kg/día
+pulverización,4,no_normalizable,unidad_aplicacion,
+µg/gato,4,no_normalizable,denominador_animal,
+µg/kg/h,4,normalizada,tasa_por_hora,µg/kg/h
+µg/perro,4,no_normalizable,denominador_animal,
+UI/gato,3,no_normalizable,denominador_animal,
+comprimido,3,no_normalizable,unidad_solida_desconocida,
+gota en cada ojo,3,no_aplica,unidad_no_convertible,
+mg/animal,3,no_normalizable,denominador_animal,
+mmol fosfato/kg/día,3,normalizada,unidad_molar_por_kg_dia,mmol fosfato/kg/día
+pulverizaciones,3,no_normalizable,unidad_aplicacion,
+µg,3,no_normalizable,denominador_ausente,
+%,2,no_aplica,unidad_no_convertible,
+% de concentración espirada,2,no_aplica,unidad_no_convertible,
+% de necesidades energéticas,2,no_aplica,unidad_no_convertible,
+% solución,2,no_aplica,unidad_no_convertible,
+cucharaditas,2,no_normalizable,unidad_volumen_desconocido,
+g/100 kcal,2,no_aplica,unidad_no_convertible,
+gota por ojo afectado,2,no_aplica,unidad_no_convertible,
+implante,2,no_normalizable,unidad_aplicacion,
+mEq,2,no_normalizable,denominador_ausente,
+mg / ml,2,no_aplica,es_concentracion_no_dosis,
+mg/gato; mg/kg,2,no_normalizable,unidad_multiple,
+mg/kg (producto total),2,normalizada,unidad_masa_por_kg,mg/kg
+mg/kg/h o mg/kg,2,no_normalizable,unidad_multiple,
+mg/kg; mg/kg/h,2,no_normalizable,unidad_multiple,
+millones de UI/kg,2,normalizada,unidad_ui_por_kg,millones UI/kg
+ml de solución de etanol al 20 %/kg,2,no_normalizable,concentracion_embebida,
+mm de pomada al 2%,2,no_aplica,unidad_no_convertible,
+pipeta,2,no_normalizable,unidad_aplicacion,
+µg/kg (sol. 1:1000),2,normalizada,unidad_masa_por_kg,µg/kg
+× dosis previa,2,no_aplica,dosis_relativa,
+% (concentración inspirada),1,no_aplica,unidad_no_convertible,
+% concentración alveolar (CAM),1,no_aplica,unidad_no_convertible,
+% de energía,1,no_aplica,unidad_no_convertible,
+Pulverizaciones,1,no_normalizable,unidad_aplicacion,
+Tubo/oído afectado,1,no_normalizable,unidad_aplicacion,
+UI,1,no_normalizable,denominador_ausente,
+UI/kg (µg/kg),1,no_normalizable,unidad_no_reconocida,
+UI/kg por semana,1,normalizada,unidad_ui_por_kg_semana,UI/kg/semana
+UI/kg; UI/kg/h,1,no_normalizable,unidad_multiple,
+UI/kg; g/UI,1,no_normalizable,unidad_multiple,
+UI/m²,1,normalizada,unidad_ui_por_m2,UI/m²
+UI/m²; UI/kg,1,no_normalizable,unidad_multiple,
+Variable,1,no_aplica,dosis_cualitativa,
+cantidad,1,no_aplica,dosis_cualitativa,
+"cantidad (gel 0,15%)",1,no_normalizable,unidad_no_reconocida,
+collar,1,no_normalizable,unidad_aplicacion,
+comprimidos,1,no_normalizable,unidad_solida_desconocida,
+cucharadas,1,no_normalizable,unidad_volumen_desconocido,
+cápsula,1,no_normalizable,unidad_solida_desconocida,
+fracción de dosis de furosemida,1,no_aplica,dosis_relativa,
+g,1,no_normalizable,denominador_ausente,
+g/10 kg (500 µg/kg),1,no_normalizable,unidad_compuesta_ambigua,
+g/kg; g,1,no_normalizable,unidad_multiple,
+g/perro,1,no_normalizable,denominador_animal,
+gel (1 mg/g),1,no_aplica,es_concentracion_no_dosis,
+gel/crema,1,no_normalizable,unidad_aplicacion,
+gota (sol. 1%),1,no_aplica,unidad_no_convertible,
+gota / mg/kg,1,no_normalizable,unidad_multiple,
+gota/fosa nasal,1,no_aplica,unidad_no_convertible,
+gota; cm,1,no_aplica,unidad_no_convertible,
+gotas / ml,1,no_aplica,unidad_no_convertible,
+gotas por oído,1,no_aplica,unidad_no_convertible,
+gotas/oreja,1,no_aplica,unidad_no_convertible,
+gotas/oído,1,no_aplica,unidad_no_convertible,
+gotas/oído (o aplicar sobre la piel),1,no_aplica,unidad_no_convertible,
+gotas/oído afectado,1,no_aplica,unidad_no_convertible,
+mEq/kg,1,normalizada,unidad_molar_por_kg,mEq/kg
+mEq/kg/día,1,normalizada,tasa_por_dia,mEq/kg/día
+mg (por animal),1,no_normalizable,denominador_animal,
+mg (total),1,no_normalizable,denominador_ausente,
+mg o g,1,no_normalizable,denominador_ausente,
+mg o g/perro,1,no_normalizable,unidad_multiple,
+mg/10 kg,1,no_normalizable,denominador_ajustado,
+mg/UI heparina,1,no_aplica,unidad_de_ratio,
+mg/articulación,1,no_normalizable,denominador_region,
+mg/kg o mg/m²,1,no_normalizable,unidad_multiple,
+mg/kg; g/m²,1,no_normalizable,unidad_multiple,
+mg/kg; mg/gato,1,no_normalizable,unidad_multiple,
+mg/kg; mg/kg; mg/kg/h,1,no_normalizable,unidad_multiple,
+mg/kg; ml/kg,1,no_normalizable,unidad_multiple,
+mg/kg; µg/kg/min,1,no_normalizable,unidad_multiple,
+mg/ml,1,no_aplica,es_concentracion_no_dosis,
+mg/m² o mg/kg,1,no_normalizable,unidad_multiple,
+mg/perro; mg/kg,1,no_normalizable,unidad_multiple,
+mg; mmol/kg/día,1,no_normalizable,unidad_multiple,
+ml (volumen total),1,no_normalizable,denominador_ausente,
+ml de solución inyectable 100 mg/ml,1,no_normalizable,concentracion_embebida,
+ml/animal,1,no_normalizable,denominador_animal,
+ml/kg (bombeos/kg),1,no_normalizable,unidad_compuesta_ambigua,
+ml/kg por cada uno de 3 puntos,1,no_normalizable,denominador_region,
+ml/kg por sitio,1,no_normalizable,denominador_region,
+ml/kg/h,1,normalizada,tasa_por_hora,ml/kg/h
+ml/kg; mg/kg,1,no_normalizable,unidad_multiple,
+ml/kg; ml/kg/h,1,no_normalizable,unidad_multiple,
+ml/kg; ml/kg/min,1,no_normalizable,unidad_multiple,
+ml/oreja,1,no_normalizable,denominador_region,
+mm (espesor),1,no_aplica,unidad_no_convertible,
+mm de pasta Katalax,1,no_aplica,unidad_no_convertible,
+mmol,1,no_normalizable,denominador_ausente,
+mmol fosfato (de potasio)/kg,1,normalizada,unidad_molar_por_kg,mmol fosfato/kg
+mmol/kg de fosfato de potasio,1,normalizada,unidad_molar_por_kg,mmol fosfato/kg
+ng/kg/día,1,normalizada,tasa_por_dia,ng/kg/día
+ng/kg; ng/kg/min,1,no_normalizable,unidad_multiple,
+spot-on,1,no_normalizable,unidad_aplicacion,
+µg/animal,1,no_normalizable,denominador_animal,
+µg/h,1,no_normalizable,denominador_ausente,
+µg/kg ó µg/gato,1,no_normalizable,unidad_multiple,
+µg/kg; µg/kg/h,1,no_normalizable,unidad_multiple,
+µg/m²,1,normalizada,unidad_masa_por_m2,µg/m²
