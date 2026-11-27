@@ -21,6 +21,10 @@ import 'alert_preferences_panel.dart';
 import 'statistics_screen.dart';
 import '../../../vet_ui/vet_icons.dart';
 
+/// Inicio: resumen del espacio, accesos a los modulos y proximas citas.
+///
+/// Lo que muestra depende de los permisos de quien entra: cada bloque se
+/// omite si su area no esta visible para esa persona.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
     super.key,
@@ -42,6 +46,8 @@ class DashboardScreen extends StatefulWidget {
   final bool Function(String)? isVisible;
   final IdentityRepository? identity;
   final ClinicExperience? experience;
+
+  /// Contenido opcional sobre el resumen (por ejemplo, el saludo de cumpleaños).
   final Widget? header;
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -53,6 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? timer;
   bool openingCash = false;
 
+  /// Combines server-provided navigation access with clinic preferences.
   bool routeAuthorized(String page) =>
       navigationAllowed(page, model.member, model.moduleAccess);
 
@@ -85,11 +92,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '${d.day}/${d.month}/${d.year} · ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   }
 
+  /// Solo la hora, para la etiqueta de las citas de hoy.
   String hour(DateTime date) {
     final d = model.localTime(date);
     return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   }
 
+  // Una sola tabla de color por seccion, la de workspace_panel.dart, en vez
+  // de esta copia local: la cuadricula de Inicio y el panel pintaban el mismo
+  // modulo de colores distintos.
   Color sectionColor(String page) => sectionAccent(page);
 
   Widget panel(String title, String page, List<Widget> children) =>
@@ -180,20 +191,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (model.member != null &&
         model.canSeePatients &&
         routeVisible('Pacientes'))
-      ('Pacientes', model.patientCount?.toString() ?? '—', VetIcons.paw, VetColors.turquoise),
+      (
+        'Pacientes',
+        model.patientCount?.toString() ?? '—',
+        VetIcons.paw,
+        VetColors.turquoise,
+      ),
     if (model.member != null &&
         model.canSummarize('agenda') &&
         routeVisible('Agenda'))
-      ('Citas por venir', model.agenda == null ? '—' : '${model.upcoming.length}', VetIcons.calendar, VetColors.violet),
+      (
+        'Citas por venir',
+        model.agenda == null ? '—' : '${model.upcoming.length}',
+        VetIcons.calendar,
+        VetColors.violet,
+      ),
     if (model.member != null &&
         model.canSummarize('hospital') &&
         routeVisible('Hospitalización'))
-      ('En hospital', model.ward == null ? '—' : '${model.ward!.stays.length}', VetIcons.hospital, VetColors.cyan),
+      (
+        'En hospital',
+        model.ward == null ? '—' : '${model.ward!.stays.length}',
+        VetIcons.hospital,
+        VetColors.cyan,
+      ),
     if (model.member != null &&
         !model.member!.isPersonal &&
         model.canSummarize('agenda') &&
         routeVisible('Pendientes del equipo'))
-      ('Tareas visibles', model.agenda == null ? '—' : '${model.pendingTasks.length}', VetIcons.checkCircle, VetColors.lilac),
+      (
+        'Tareas visibles',
+        model.agenda == null ? '—' : '${model.pendingTasks.length}',
+        VetIcons.checkCircle,
+        VetColors.lilac,
+      ),
   ];
 
   Future<void> openCash() async {
@@ -213,7 +244,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (_) => RxEntryScreen(
             title: 'Abrir turno de caja',
             fields: const [
-              RxField('opening', 'Fondo inicial de efectivo MXN', required: true),
+              RxField(
+                'opening',
+                'Fondo inicial de efectivo MXN',
+                required: true,
+              ),
             ],
             submit: (data, op) async {
               try {
@@ -244,6 +279,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     listenable: Listenable.merge([model, ?widget.alerts]),
     builder: (context, _) {
       final m = model;
+      final theme = Theme.of(context);
       final totals = m.dayTotals;
       final statisticsPanel = panel('Estadísticas', 'Estadísticas', [
         StatisticsPanel(
@@ -328,6 +364,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ])
                     if (routeVisible(action.$2)) action,
                 ],
+                // Solo datos ya consultados; si aun no llegaron, el modulo
+                // se queda con su pista en vez de mostrar un cero falso.
                 details: {
                   'Inventario': m.stock == null
                       ? 'Productos y lotes'
@@ -357,9 +395,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ('Cálculos clínicos', 'Cálculos clínicos'),
                     ('Escáner', 'Escanear producto'),
                   ].where((a) => routeVisible(a.$2)).toList();
+
                   if (actions.isEmpty) return const SizedBox.shrink();
+
                   const spacing = 10.0;
                   final colWidth = (constraints.maxWidth - spacing) / 2;
+
                   return Wrap(
                     spacing: spacing,
                     runSpacing: spacing,
@@ -416,14 +457,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: VetCard(
                   padding: EdgeInsets.zero,
                   child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
                       shape: const Border(),
                       collapsedShape: const Border(),
                       leading: const Icon(VetIcons.barChart, size: 20),
                       title: const Text(
                         'Ver estadísticas',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                       children: [
                         Padding(
@@ -438,34 +484,157 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (routeAuthorized('Hospitalización') ||
                 routeVisible('Agenda') ||
                 routeVisible('Inventario'))
-              panel('Alertas y recordatorios',
-                routeAuthorized('Hospitalización') ? 'Hospitalización' : routeVisible('Agenda') ? 'Agenda' : 'Inventario',
+              panel(
+                'Alertas y recordatorios',
+                routeAuthorized('Hospitalización')
+                    ? 'Hospitalización'
+                    : routeVisible('Agenda')
+                    ? 'Agenda'
+                    : 'Inventario',
                 [
-                  if (m.canSummarize('hospital') && routeAuthorized('Hospitalización'))
-                    unavailable('Hospitalización', m.ward != null,
-                      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        VetDataRow(label: 'Dosis con horario cumplido', value: '${m.overdue.length}', icon: VetIcons.clock, valueColor: m.overdue.isEmpty ? VetColors.success : VetColors.danger, emphasized: true),
-                        if (m.overdue.isEmpty)
-                          const Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Text('Al día · no hay dosis retrasadas', style: TextStyle(fontSize: 12, color: VetColors.success, fontWeight: FontWeight.w500))),
-                        for (final t in m.overdue.take(3))
-                          ListTile(dense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 4), leading: const Icon(VetIcons.clock, size: 18, color: VetColors.danger), title: Text('${m.patient(t)} · ${t.label}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)), subtitle: Text('Horario: ${time(m.effectiveTime(t))}', style: const TextStyle(fontSize: 12)), trailing: const Icon(VetIcons.chevronRight, size: 16), onTap: () => openPage('Hospitalización')),
-                      ]),
+                  if (m.canSummarize('hospital') &&
+                      routeAuthorized('Hospitalización'))
+                    unavailable(
+                      'Hospitalización',
+                      m.ward != null,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          VetDataRow(
+                            label: 'Dosis con horario cumplido',
+                            value: '${m.overdue.length}',
+                            icon: VetIcons.clock,
+                            valueColor: m.overdue.isEmpty
+                                ? VetColors.success
+                                : VetColors.danger,
+                            emphasized: true,
+                          ),
+                          if (m.overdue.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Al día · no hay dosis retrasadas',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: VetColors.success,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          for (final t in m.overdue.take(3))
+                            ListTile(
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              leading: const Icon(
+                                VetIcons.clock,
+                                size: 18,
+                                color: VetColors.danger,
+                              ),
+                              title: Text(
+                                '${m.patient(t)} · ${t.label}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Horario: ${time(m.effectiveTime(t))}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: const Icon(
+                                VetIcons.chevronRight,
+                                size: 16,
+                              ),
+                              onTap: () => openPage('Hospitalización'),
+                            ),
+                        ],
+                      ),
                     ),
-                  if (m.canSummarize('inventory') && routeVisible('Inventario') && widget.alerts?.stockWarnings != false)
-                    unavailable('Inventario', m.stock != null,
-                      Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        VetDataRow(label: 'Productos con stock en el mínimo', value: '${m.lowStock.length}', icon: VetIcons.box, valueColor: m.lowStock.isEmpty ? VetColors.success : VetColors.warning, emphasized: true),
-                        if (m.lowStock.isEmpty)
-                          const Padding(padding: EdgeInsets.symmetric(vertical: 4), child: Text('Stock en niveles óptimos', style: TextStyle(fontSize: 12, color: VetColors.success, fontWeight: FontWeight.w500))),
-                        for (final p in m.lowStock.take(3))
-                          ListTile(dense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 4), leading: const Icon(VetIcons.alertOctagon, size: 18, color: VetColors.warning), title: Text('${p['nombre']}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)), subtitle: Text('Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}', style: const TextStyle(fontSize: 12)), trailing: const Icon(VetIcons.chevronRight, size: 16), onTap: () => openPage('Inventario')),
-                      ]),
+                  if (m.canSummarize('inventory') &&
+                      routeVisible('Inventario') &&
+                      widget.alerts?.stockWarnings != false)
+                    unavailable(
+                      'Inventario',
+                      m.stock != null,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          VetDataRow(
+                            label: 'Productos con stock en el mínimo',
+                            value: '${m.lowStock.length}',
+                            icon: VetIcons.box,
+                            valueColor: m.lowStock.isEmpty
+                                ? VetColors.success
+                                : VetColors.warning,
+                            emphasized: true,
+                          ),
+                          if (m.lowStock.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4),
+                              child: Text(
+                                'Stock en niveles óptimos',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: VetColors.success,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          for (final p in m.lowStock.take(3))
+                            ListTile(
+                              dense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              leading: const Icon(
+                                VetIcons.alertOctagon,
+                                size: 18,
+                                color: VetColors.warning,
+                              ),
+                              title: Text(
+                                '${p['nombre']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Disponible: ${p['available_stock']} · mínimo ${p['stock_minimo']}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: const Icon(
+                                VetIcons.chevronRight,
+                                size: 16,
+                              ),
+                              onTap: () => openPage('Inventario'),
+                            ),
+                        ],
+                      ),
                     ),
-                  if (m.canSummarize('hospital') && routeAuthorized('Hospitalización') && (widget.alerts?.leadMinutes ?? 0) > 0)
-                    for (final t in m.nextDoses.where((t) => m.effectiveTime(t).difference(m.now()) <= Duration(minutes: widget.alerts!.leadMinutes)).take(3))
-                      ListTile(title: Text('Próxima dosis · ${m.patient(t)} · ${t.label}'), subtitle: Text(time(m.effectiveTime(t))), onTap: () => openPage('Hospitalización')),
+                  if (m.canSummarize('hospital') &&
+                      routeAuthorized('Hospitalización') &&
+                      (widget.alerts?.leadMinutes ?? 0) > 0)
+                    for (final t
+                        in m.nextDoses
+                            .where(
+                              (t) =>
+                                  m.effectiveTime(t).difference(m.now()) <=
+                                  Duration(minutes: widget.alerts!.leadMinutes),
+                            )
+                            .take(3))
+                      ListTile(
+                        title: Text(
+                          'Próxima dosis · ${m.patient(t)} · ${t.label}',
+                        ),
+                        subtitle: Text(time(m.effectiveTime(t))),
+                        onTap: () => openPage('Hospitalización'),
+                      ),
                 ],
               ),
+            // Settings for alarms already on this device remain reachable even
+            // when a clinic hides the hospital navigation shortcut.
             if (widget.alerts != null && routeAuthorized('Hospitalización'))
               ExpansionTile(
                 title: const Text('Configurar avisos en este dispositivo'),
@@ -486,162 +655,478 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             if (m.canSummarize('agenda') && routeVisible('Agenda')) ...[
               panel('Próximas citas de hoy', 'Agenda', [
-                Text(m.clinicTimezone == null ? 'Día y horas del teléfono' : VetFormat.timezone(m.clinicTimezone),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                unavailable('Agenda', m.agenda != null,
-                  Column(children: [
-                    if (m.todayAppointments.isEmpty) const VetEmptyState(text: 'No hay citas futuras agendadas para hoy.', icon: VetIcons.calendar),
-                    for (final a in m.todayAppointments)
-                      HomeAppointmentRow(title: '${a['patient_name']}', subtitle: '${time(m.starts(a)!)} · ${a['kind']}', tag: hour(m.starts(a)!), color: sectionColor('Agenda'), onTap: () => openPage('Agenda')),
-                  ]),
+                Text(
+                  m.clinicTimezone == null
+                      ? 'Día y horas del teléfono'
+                      : VetFormat.timezone(m.clinicTimezone),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                unavailable(
+                  'Agenda',
+                  m.agenda != null,
+                  Column(
+                    children: [
+                      if (m.todayAppointments.isEmpty)
+                        const VetEmptyState(
+                          text: 'No hay citas futuras agendadas para hoy.',
+                          icon: VetIcons.calendar,
+                        ),
+                      for (final a in m.todayAppointments)
+                        HomeAppointmentRow(
+                          title: '${a['patient_name']}',
+                          subtitle: '${time(m.starts(a)!)} · ${a['kind']}',
+                          tag: hour(m.starts(a)!),
+                          color: sectionColor('Agenda'),
+                          onTap: () => openPage('Agenda'),
+                        ),
+                    ],
+                  ),
                 ),
               ]),
               panel('Citas recientes', 'Agenda', [
-                unavailable('Agenda', m.agenda != null,
-                  Column(children: [
-                    if (m.recent.isEmpty) const VetEmptyState(text: 'No hay citas recientes en los datos consultados.', icon: VetIcons.calendarClock),
-                    for (final a in m.recent.take(3))
-                      HomeAppointmentRow(title: '${a['patient_name']}', subtitle: '${time(m.starts(a)!)} · ${a['state']}', color: sectionColor('Agenda'), onTap: () => openPage('Agenda')),
-                  ]),
+                unavailable(
+                  'Agenda',
+                  m.agenda != null,
+                  Column(
+                    children: [
+                      if (m.recent.isEmpty)
+                        const VetEmptyState(
+                          text:
+                              'No hay citas recientes en los datos consultados.',
+                          icon: VetIcons.calendarClock,
+                        ),
+                      for (final a in m.recent.take(3))
+                        HomeAppointmentRow(
+                          title: '${a['patient_name']}',
+                          subtitle: '${time(m.starts(a)!)} · ${a['state']}',
+                          color: sectionColor('Agenda'),
+                          onTap: () => openPage('Agenda'),
+                        ),
+                    ],
+                  ),
                 ),
               ]),
             ],
-            if (m.canSummarize('inventory') && (routeVisible('Inventario') || routeVisible('Caja'))) ...[
+            if (m.canSummarize('inventory') &&
+                (routeVisible('Inventario') || routeVisible('Caja'))) ...[
               if (routeVisible('Inventario'))
                 panel('Inventario', 'Inventario', [
-                  unavailable('Inventario', m.stock != null,
-                    Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      Text('${m.products.length} artículos activos · ${m.lowStock.length} por revisar'),
-                      if (m.canSeeClinicSales && routeVisible('Caja'))
-                        metrics([
-                          ('Valor a costo', m.valueAtCost?.display ?? 'No disponible'),
-                          ('Valor a venta', m.valueAtSale?.display ?? 'No disponible'),
-                          ('Margen potencial', m.potentialMargin?.display ?? 'No disponible'),
-                        ]),
-                      const Text('Existencias disponibles por unidad; no incluye lotes caducados.'),
-                      if (m.stockByUnit == null) const Text('Existencias por unidad no disponibles.'),
-                      for (final e in (m.stockByUnit ?? <String, Quantity>{}).entries) Text('${e.value.display()} ${e.key}'),
-                      const Text('Margen potencial antes de comisiones y gastos; no es utilidad neta.'),
-                      TextField(controller: search, decoration: const InputDecoration(labelText: 'Buscar producto por nombre o código', prefixIcon: Icon(VetIcons.search)), onChanged: (_) => setState(() {})),
-                      if (search.text.trim().isNotEmpty)
-                        for (final p in m.products.where((p) => '${p['nombre']} ${p['codigo_barras'] ?? ''}'.toLowerCase().contains(search.text.trim().toLowerCase())).take(5))
-                          ListTile(title: Text('${p['nombre']}'), subtitle: Text('Disponible: ${p['available_stock']} ${p['stock_unit']}'), onTap: () => openPage('Inventario')),
-                    ]),
+                  unavailable(
+                    'Inventario',
+                    m.stock != null,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '${m.products.length} artículos activos · ${m.lowStock.length} por revisar',
+                        ),
+                        if (m.canSeeClinicSales && routeVisible('Caja'))
+                          metrics([
+                            (
+                              'Valor a costo',
+                              m.valueAtCost?.display ?? 'No disponible',
+                            ),
+                            (
+                              'Valor a venta',
+                              m.valueAtSale?.display ?? 'No disponible',
+                            ),
+                            (
+                              'Margen potencial',
+                              m.potentialMargin?.display ?? 'No disponible',
+                            ),
+                          ]),
+                        const Text(
+                          'Existencias disponibles por unidad; no incluye lotes caducados.',
+                        ),
+                        if (m.stockByUnit == null)
+                          const Text('Existencias por unidad no disponibles.'),
+                        for (final e
+                            in (m.stockByUnit ?? <String, Quantity>{}).entries)
+                          Text('${e.value.display()} ${e.key}'),
+                        const Text(
+                          'Margen potencial antes de comisiones y gastos; no es utilidad neta.',
+                        ),
+                        TextField(
+                          controller: search,
+                          decoration: const InputDecoration(
+                            labelText: 'Buscar producto por nombre o código',
+                            prefixIcon: Icon(VetIcons.search),
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        if (search.text.trim().isNotEmpty)
+                          for (final p
+                              in m.products
+                                  .where(
+                                    (p) =>
+                                        '${p['nombre']} ${p['codigo_barras'] ?? ''}'
+                                            .toLowerCase()
+                                            .contains(
+                                              search.text.trim().toLowerCase(),
+                                            ),
+                                  )
+                                  .take(5))
+                            ListTile(
+                              title: Text('${p['nombre']}'),
+                              subtitle: Text(
+                                'Disponible: ${p['available_stock']} ${p['stock_unit']}',
+                              ),
+                              onTap: () => openPage('Inventario'),
+                            ),
+                      ],
+                    ),
                   ),
                 ]),
               if (routeVisible('Caja'))
                 panel('Caja del turno', 'Caja', [
-                  unavailable('Inventario', m.stock != null,
-                    Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      if (m.ownShift == null) ...[
-                        Row(children: [
-                          Icon(VetIcons.lockOpen, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text('Caja cerrada', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))),
-                        ]),
-                        const SizedBox(height: 4),
-                        Text('Captura el fondo inicial al abrir el turno.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(onPressed: widget.offline || m.busy || openingCash ? null : openCash, icon: const Icon(VetIcons.lockOpen), label: const Text('Abrir caja')),
-                      ] else ...[
-                        Row(children: [
-                          Icon(Icons.check_circle, size: 18, color: VetColors.success),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text('Caja abierta', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))),
-                        ]),
-                        const SizedBox(height: 8),
-                        Text('Fondo inicial', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600, letterSpacing: .8)),
-                        const SizedBox(height: 2),
-                        Text(money(m.ownShift!['opening_cash']), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: VetColors.ink)),
-                        const SizedBox(height: 12),
-                        FilledButton(onPressed: () => openPage('Caja'), child: const Text('Venta o revisión del turno')),
+                  unavailable(
+                    'Inventario',
+                    m.stock != null,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (m.ownShift == null) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                VetIcons.lockOpen,
+                                size: 18,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Caja cerrada',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Captura el fondo inicial al abrir el turno.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: widget.offline || m.busy || openingCash
+                                ? null
+                                : openCash,
+                            icon: const Icon(VetIcons.lockOpen),
+                            label: const Text('Abrir caja'),
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 18,
+                                color: VetColors.successOn(context),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Caja abierta',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Fondo inicial',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: .8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            money(m.ownShift!['opening_cash']),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              // onSurface y no la tinta clara: en el tema
+                              // oscuro el importe quedaría invisible.
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: () => openPage('Caja'),
+                            child: const Text('Venta o revisión del turno'),
+                          ),
+                        ],
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1),
+                        ),
+                        Text(
+                          'ÚLTIMOS CORTES',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        if (m.recentCuts.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'No hay cortes cerrados en los datos consultados.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        for (final sh in m.recentCuts)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              'Cierre: ${time(DateTime.parse(sh['closed_at']))}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Contado: ${money(sh['counted_cash'])}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            onTap: () => openPage('Caja'),
+                          ),
                       ],
-                      const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
-                      Text('ÚLTIMOS CORTES', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
-                      if (m.recentCuts.isEmpty)
-                        Padding(padding: const EdgeInsets.only(top: 6), child: Text('No hay cortes cerrados en los datos consultados.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
-                      for (final sh in m.recentCuts)
-                        ListTile(contentPadding: EdgeInsets.zero, title: Text('Cierre: ${time(DateTime.parse(sh['closed_at']))}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)), subtitle: Text('Contado: ${money(sh['counted_cash'])}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)), onTap: () => openPage('Caja')),
-                    ]),
+                    ),
                   ),
                 ]),
               if (m.canSeeClinicSales && routeVisible('Caja'))
                 panel('Ventas de hoy', 'Caja', [
-                  unavailable('Inventario', totals != null,
-                    Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      Text('Día de la clínica: ${m.stock?['today'] ?? 'no disponible'}'),
-                      metrics([
-                        ('Ventas menos reversos', money(totals?['gross'])),
-                        ('Margen tras costos y comisiones', money(totals?['margin'])),
-                        ('Resultado con gastos capturados', money(totals?['recorded_net'])),
-                      ]),
-                      metrics([
-                        ('Ventas vigentes del día', totals?['sale_count'] is int ? '${totals!['sale_count']}' : 'No disponible'),
-                        ('Ticket promedio de ventas vigentes', totals?['average_ticket'] == null ? 'No disponible' : money(totals!['average_ticket'])),
-                      ]),
-                      for (final entry in [('Efectivo', 'cash'), ('Tarjeta', 'card'), ('Transferencia', 'transfer')])
-                        ListTile(title: Text(entry.$1), trailing: Text(money(totals?[entry.$2]))),
-                      const Padding(padding: EdgeInsets.only(top: 8), child: Text('Importes netos de reversos. No acreditan que estén incluidos todos los gastos ni costos pendientes.', style: TextStyle(fontSize: 12, color: VetColors.muted))),
-                    ]),
+                  unavailable(
+                    'Inventario',
+                    totals != null,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Día de la clínica: ${m.stock?['today'] ?? 'no disponible'}',
+                        ),
+                        metrics([
+                          ('Ventas menos reversos', money(totals?['gross'])),
+                          (
+                            'Margen tras costos y comisiones',
+                            money(totals?['margin']),
+                          ),
+                          (
+                            'Resultado con gastos capturados',
+                            money(totals?['recorded_net']),
+                          ),
+                        ]),
+                        metrics([
+                          (
+                            'Ventas vigentes del día',
+                            totals?['sale_count'] is int
+                                ? '${totals!['sale_count']}'
+                                : 'No disponible',
+                          ),
+                          (
+                            'Ticket promedio de ventas vigentes',
+                            totals?['average_ticket'] == null
+                                ? 'No disponible'
+                                : money(totals!['average_ticket']),
+                          ),
+                        ]),
+                        for (final entry in [
+                          ('Efectivo', 'cash'),
+                          ('Tarjeta', 'card'),
+                          ('Transferencia', 'transfer'),
+                        ])
+                          ListTile(
+                            title: Text(entry.$1),
+                            trailing: Text(money(totals?[entry.$2])),
+                          ),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Importes netos de reversos. No acreditan que estén incluidos todos los gastos ni costos pendientes.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: VetColors.muted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ]),
             ],
-            if (m.canSummarize('hospital') && routeAuthorized('Hospitalización'))
+            if (m.canSummarize('hospital') &&
+                routeAuthorized('Hospitalización'))
               panel('Próximas dosis', 'Hospitalización', [
-                unavailable('Hospitalización', m.ward != null,
-                  Column(children: [
-                    if (m.nextDoses.isEmpty) const VetEmptyState(text: 'No hay dosis futuras pendientes en los datos consultados.', icon: VetIcons.pills),
-                    for (final t in m.nextDoses.take(5))
-                      ListTile(title: Text('${m.patient(t)} · ${t.label}'), subtitle: Text(time(m.effectiveTime(t))), onTap: () => openPage('Hospitalización')),
-                  ]),
+                unavailable(
+                  'Hospitalización',
+                  m.ward != null,
+                  Column(
+                    children: [
+                      if (m.nextDoses.isEmpty)
+                        const VetEmptyState(
+                          text:
+                              'No hay dosis futuras pendientes en los datos consultados.',
+                          icon: VetIcons.pills,
+                        ),
+                      for (final t in m.nextDoses.take(5))
+                        ListTile(
+                          title: Text('${m.patient(t)} · ${t.label}'),
+                          subtitle: Text(time(m.effectiveTime(t))),
+                          onTap: () => openPage('Hospitalización'),
+                        ),
+                    ],
+                  ),
                 ),
               ]),
-            if (m.member != null && m.commissions != null && routeVisible('Servicios'))
+            if (m.member != null &&
+                m.commissions != null &&
+                routeVisible('Servicios'))
               panel('Mis comisiones', 'Servicios', [
-                VetDataRow(label: 'Saldo pendiente de liquidar', value: money(m.ownCommission?['amount'] ?? '0'), icon: VetIcons.coins, emphasized: true),
+                VetDataRow(
+                  label: 'Saldo pendiente de liquidar',
+                  value: money(m.ownCommission?['amount'] ?? '0'),
+                  icon: VetIcons.coins,
+                  emphasized: true,
+                ),
                 if (m.commissions?['schedule'] is Map)
-                  VetDataRow(label: 'Próximo pago', value: VetFormat.dateFromIso((m.commissions!['schedule'] as Map)['next_pay_on']), icon: VetIcons.calendar),
-                const VetNote(text: 'El porcentaje se configura por servicio. Solo cuentan ventas vigentes.', divider: true),
+                  VetDataRow(
+                    label: 'Próximo pago',
+                    value: VetFormat.dateFromIso(
+                      (m.commissions!['schedule'] as Map)['next_pay_on'],
+                    ),
+                    icon: VetIcons.calendar,
+                  ),
+                const VetNote(
+                  text:
+                      'El porcentaje se configura por servicio. Solo cuentan ventas vigentes.',
+                  divider: true,
+                ),
               ]),
-            if (m.member?.isPersonal == false && m.attendanceWeek != null && routeVisible('Control de asistencia'))
+            if (m.member?.isPersonal == false &&
+                m.attendanceWeek != null &&
+                routeVisible('Control de asistencia'))
               panel('Puntualidad y asistencia', 'Control de asistencia', [
                 if (m.attendanceWeek!['week_summary'] is Map) ...[
                   () {
                     final s = m.attendanceWeek!['week_summary'] as Map;
                     final configured = s['configured'] == true;
-                    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      VetDataRow(label: 'Semana desde', value: VetFormat.dateFromIso(s['week_start']), icon: VetIcons.calendar),
-                      VetDataRow(label: 'Asistencias registradas', value: '${s['attended'] ?? 0}', icon: VetIcons.checkCircle, emphasized: true),
-                      if (configured) ...[
-                        VetDataRow(label: 'A tiempo', value: '${s['on_time'] ?? 0}', valueColor: VetColors.success),
-                        VetDataRow(label: 'Retrasos', value: '${s['late'] ?? 0}', valueColor: VetColors.warning),
-                      ] else
-                        const VetNote(text: 'La clínica aún no configuró un horario para medir retrasos.'),
-                      const VetNote(text: 'Administración ve el total del equipo; cada integrante ve sus propios registros.', icon: VetIcons.info, divider: true),
-                    ]);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        VetDataRow(
+                          label: 'Semana desde',
+                          value: VetFormat.dateFromIso(s['week_start']),
+                          icon: VetIcons.calendar,
+                        ),
+                        VetDataRow(
+                          label: 'Asistencias registradas',
+                          value: '${s['attended'] ?? 0}',
+                          icon: VetIcons.checkCircle,
+                          emphasized: true,
+                        ),
+                        if (configured) ...[
+                          VetDataRow(
+                            label: 'A tiempo',
+                            value: '${s['on_time'] ?? 0}',
+                            valueColor: VetColors.success,
+                          ),
+                          VetDataRow(
+                            label: 'Retrasos',
+                            value: '${s['late'] ?? 0}',
+                            valueColor: VetColors.warning,
+                          ),
+                        ] else
+                          const VetNote(
+                            text:
+                                'La clínica aún no configuró un horario para medir retrasos.',
+                          ),
+                        const VetNote(
+                          text:
+                              'Administración ve el total del equipo; cada integrante ve sus propios registros.',
+                          icon: VetIcons.info,
+                          divider: true,
+                        ),
+                      ],
+                    );
                   }(),
                 ],
               ]),
-            if (m.canShowTeamPanel('tasks') && routeVisible('Pendientes del equipo'))
+            if (m.canShowTeamPanel('tasks') &&
+                routeVisible('Pendientes del equipo'))
               panel('Tareas de hoy', 'Pendientes del equipo', [
-                unavailable('Agenda', m.agenda != null,
-                  Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    if (m.todayTasks.isEmpty) const VetEmptyState(text: 'No hay tareas programadas para hoy.', icon: VetIcons.clipboardList),
-                    for (final t in m.todayTasks.take(4))
-                      ListTile(title: Text('${t['title']} · ${t['priority']}'), subtitle: Text(t['assigned_to'] == null ? 'Para el equipo' : staffLabel('${t['assigned_to']}', m.rows(m.agenda, 'people'))), onTap: () => openPage('Pendientes del equipo')),
-                    TextButton(onPressed: () => openPage('Pendientes del equipo'), child: const Text('Crear o revisar pendientes')),
-                  ]),
+                unavailable(
+                  'Agenda',
+                  m.agenda != null,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (m.todayTasks.isEmpty)
+                        const VetEmptyState(
+                          text: 'No hay tareas programadas para hoy.',
+                          icon: VetIcons.clipboardList,
+                        ),
+                      for (final t in m.todayTasks.take(4))
+                        ListTile(
+                          title: Text('${t['title']} · ${t['priority']}'),
+                          subtitle: Text(
+                            t['assigned_to'] == null
+                                ? 'Para el equipo'
+                                : staffLabel(
+                                    '${t['assigned_to']}',
+                                    m.rows(m.agenda, 'people'),
+                                  ),
+                          ),
+                          onTap: () => openPage('Pendientes del equipo'),
+                        ),
+                      TextButton(
+                        onPressed: () => openPage('Pendientes del equipo'),
+                        child: const Text('Crear o revisar pendientes'),
+                      ),
+                    ],
+                  ),
                 ),
               ]),
-            if (m.canShowTeamPanel('messages') && routeVisible('Anuncios y avisos'))
+            if (m.canShowTeamPanel('messages') &&
+                routeVisible('Anuncios y avisos'))
               panel('Anuncios y avisos', 'Anuncios y avisos', [
-                unavailable('Agenda', m.agenda != null,
-                  Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    if (m.notices.isEmpty) const VetEmptyState(text: 'No hay avisos recientes.', icon: VetIcons.bell),
-                    for (final msg in m.notices)
-                      ListTile(title: Text('${msg['category']} · ${msg['body']}'), subtitle: Text('${staffLabel('${msg['author_id']}', m.rows(m.agenda, 'people'))} · ${time(DateTime.parse(msg['created_at']))}')),
-                    TextButton(onPressed: () => openPage('Anuncios y avisos'), child: const Text('Ver avisos')),
-                  ]),
+                unavailable(
+                  'Agenda',
+                  m.agenda != null,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (m.notices.isEmpty)
+                        const VetEmptyState(
+                          text: 'No hay avisos recientes.',
+                          icon: VetIcons.bell,
+                        ),
+                      for (final msg in m.notices)
+                        ListTile(
+                          title: Text('${msg['category']} · ${msg['body']}'),
+                          subtitle: Text(
+                            '${staffLabel('${msg['author_id']}', m.rows(m.agenda, 'people'))} · ${time(DateTime.parse(msg['created_at']))}',
+                          ),
+                        ),
+                      TextButton(
+                        onPressed: () => openPage('Anuncios y avisos'),
+                        child: const Text('Ver avisos'),
+                      ),
+                    ],
+                  ),
                 ),
               ]),
           ],
@@ -652,12 +1137,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   );
 }
 
+/// Botón en cápsula simétrica de 2x2 para las acciones rápidas del Inicio
+/// (Formatos, Estadísticas, Cálculos clínicos, Escáner), con relieve neu
+/// suave y tonalidad lavanda armónica.
 class _DashboardActionCapsule extends StatelessWidget {
   const _DashboardActionCapsule({
     required this.label,
     required this.page,
     required this.onTap,
   });
+
   final String label;
   final String page;
   final VoidCallback onTap;
@@ -668,10 +1157,13 @@ class _DashboardActionCapsule extends StatelessWidget {
     final dark = theme.brightness == Brightness.dark;
     final neu = theme.extension<WorkspaceStyle>()?.neumorphic == true;
     final accent = sectionAccent(page);
+
     final vivid = vividAccent(accent);
+    // Color de panel claro u oscuro con relieve neu y sin el morado anterior
     final surface = dark
         ? VetColors.darkSurface
         : (neu ? neuBackground : VetColors.surface);
+
     final textColor = dark ? const Color(0xFFE2E5EE) : const Color(0xFF1E2638);
 
     return Container(

@@ -54,12 +54,16 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final model = widget.model;
+    // Sin sesion, la pantalla sigue la referencia de «Iniciar sesion»: velo
+    // de marca al fondo, titulo centrado y campos con su icono.
     final veiled = AccessBackdrop.appliesTo(context);
     final entering = model?.signedIn != true;
     return AccessBackdrop(
       child: Scaffold(
         backgroundColor: veiled ? Colors.transparent : null,
         appBar: AppBar(
+          // Con el velo de acceso la marca ya va en el bloque central: repetirla
+          // en la barra duplicaba «VetDosis Pro» y robaba alto a la pantalla.
           title: veiled ? null : const Text('VetDosis Pro'),
           backgroundColor: veiled ? Colors.transparent : null,
           scrolledUnderElevation: veiled ? 0 : null,
@@ -82,6 +86,8 @@ class _AuthScreenState extends State<AuthScreen> {
                         ? 'Registro de usuario'
                         : 'Inicio de sesión',
                     textAlign: veiled && entering ? TextAlign.center : null,
+                    // Un paso por debajo de titleLarge: el título acompañaba
+                    // al formulario, no competía con él.
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -168,6 +174,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   ] else if (model.loadingMemberships) ...[
                     const Center(child: CircularProgressIndicator()),
                   ] else if (!model.signedIn) ...[
+                    // En acceso, el subtítulo de arriba ya dice lo mismo. La
+                    // segunda línea solo hace falta en el estilo clásico.
                     if (!veiled) ...[
                       Text(
                         'Ingresa con tu cuenta para acceder a las clínicas de tu equipo.',
@@ -272,6 +280,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       const SizedBox(height: 14),
                       OutlinedButton(
                         onPressed: model.busy ? null : model.googleSignIn,
+                        // En Neu el acceso con Google va en placa oscura, como
+                        // en la referencia: es el unico boton de la pantalla
+                        // que no es de la marca y asi no compite con «Ingresar».
                         style: veiled
                             ? OutlinedButton.styleFrom(
                                 backgroundBuilder: plainButtonLayer,
@@ -325,7 +336,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               }),
                         child: const Text('Olvidé mi contraseña'),
                       ),
-                  const LegalSmallPrint(preLogin: true),
+                    const LegalSmallPrint(preLogin: true),
                   ] else ...[
                     if (model.error == null) ...[
                       if (model.personalAvailable)
@@ -416,6 +427,9 @@ class ClinicAccountScreen extends StatefulWidget {
     this.personalSpaceBuilder,
   });
   final Widget Function(BuildContext context)? identityBuilder;
+
+  /// Abre «Mi espacio personal» (notas, horarios, ficha de emergencia).
+  /// Es de la persona: no cambia la clinica activa.
   final Widget Function(BuildContext context)? personalSpaceBuilder;
   final AuthViewModel model;
   @override

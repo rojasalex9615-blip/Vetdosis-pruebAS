@@ -1,5 +1,6 @@
 import '../../../core/widgets/accent_glow.dart';
-import '../../../vet_ui/vet_theme.dart';
+import '../../../core/widgets/brand_gradient.dart';
+import '../../../core/widgets/contrast.dart';
 import 'ai_labels.dart';
 import 'dart:convert';
 import 'dart:math' as math;
@@ -7,6 +8,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/neu_identity.dart';
+import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
@@ -142,6 +144,8 @@ class _AiScreenState extends State<AiScreen> {
     vm.load(chat: id);
   }
 
+  /// Historial lateral deslizante para pantallas angostas. Es el mismo contrato
+  /// del riel ancho, abierto como panel para no robar ancho al chat.
   Future<void> openHistoryPanel() async {
     final id = await showModalBottomSheet<String>(
       context: context,
@@ -485,10 +489,18 @@ class _AiScreenState extends State<AiScreen> {
     }
   }
 
+  /// Ancho desde el que el historial se muestra como panel lateral. Por
+  /// debajo, se queda como lista de chips encima de la conversacion, que es lo
+  /// que cabe en un telefono.
   static const double historyRailBreakpoint = 720;
 
+  /// Una consulta de soporte o un borrador reutiliza la pantalla, pero no
+  /// comparte el historial de chats de la app: es una conversacion aparte que
+  /// se revisa antes de enviar, no una sesion del asistente.
   bool get draftMode => widget.initialDraft != null || widget.returnDraft;
 
+  /// El envío exige proveedor, modelo, mensaje y la autorización expresa de
+  /// este mensaje. La autorización se pide de nuevo ante cualquier cambio.
   bool get canSend =>
       !(working ||
           vm.busy ||
@@ -530,6 +542,8 @@ class _AiScreenState extends State<AiScreen> {
     return '${aiProviderLabels[c['provider']] ?? c['provider']} · $model';
   }
 
+  /// Proveedor, modelo, contexto y acciones del chat. Viven en una hoja para
+  /// que la conversación quede limpia; el contrato de privacidad es el mismo.
   Future<void> openOptions() async {
     await showModalBottomSheet<void>(
       context: context,
@@ -739,6 +753,8 @@ class _AiScreenState extends State<AiScreen> {
     );
   }
 
+  /// Conversación: burbujas, aviso «IA · sin verificar» bajo cada respuesta y,
+  /// si el chat es propio, el campo de mensaje con la autorización de envío.
   Widget conversation(BuildContext context) {
     final theme = Theme.of(context);
     final messages = vm.messages;
@@ -868,6 +884,9 @@ class _AiScreenState extends State<AiScreen> {
           text:
               'Asistente IA · respuestas sin verificar. Dosis, normativa y cálculos requieren fuentes verificadas y el motor clínico; este chat no emite recetas ni registra actos.',
         ),
+        // La ayuda de uso de la app ya no vive aquí: se mudó a «Ayuda y
+        // soporte». Esta pantalla es el chat; aquella responde dudas de uso a
+        // partir de la guía pública, sin compartir este historial.
         if (vm.busy || working) const LinearProgressIndicator(),
         if (vm.error != null) Text(vm.error!),
         Row(
@@ -897,6 +916,8 @@ class _AiScreenState extends State<AiScreen> {
               ),
           ],
         ),
+        // En pantalla angosta el historial no cabe al costado; se abre en un
+        // panel lateral deslizante desde el mismo contrato del riel ancho.
         if (!wide && !draftMode && vm.history.isNotEmpty) ...[
           Align(
             alignment: Alignment.centerLeft,
@@ -1005,6 +1026,8 @@ class _AiScreenState extends State<AiScreen> {
   );
 }
 
+/// Historial lateral de la pantalla de IA: los chats propios y los compartidos
+/// autorizados, con el mismo contrato de privacidad que la conversacion.
 class _AiHistoryRail extends StatelessWidget {
   const _AiHistoryRail({
     required this.chats,
@@ -1067,6 +1090,8 @@ class _AiHistoryRail extends StatelessWidget {
   );
 }
 
+/// Aviso destacado de la pantalla de IA, para que las advertencias de uso y de
+/// privacidad se lean como avisos y no como párrafos sueltos.
 class _AiNotice extends StatelessWidget {
   const _AiNotice({required this.icon, required this.text});
   final IconData icon;
@@ -1088,16 +1113,16 @@ class _AiNotice extends StatelessWidget {
   );
 }
 
-/// Degradado de marca del chat: verde (aqua) → azul → morado (lilac).
+/// Degradado de marca del chat: el recorrido aqua → azul → lila que se usa en
+/// el resto de la app (icono de IA, botón de acceso, cabeceras), en vez de los
+/// dos tonos del esquema.
+LinearGradient _aiGradient() => LinearGradient(colors: brandGradientColors);
+
+/// Tinta legible sobre [_aiGradient].
 ///
-/// Antes usaba solo primary → tertiary del tema (púrpura). Ahora recorre los
-/// tres tonos de marca —el verde que ya traía, más el azul y el morado que
-/// pidió Ale— para que el botón y la figura del asistente se lean como parte
-/// de la identidad y no como un color plano.
-LinearGradient _aiGradient(ColorScheme cs) =>
-    LinearGradient(
-      colors: [VetColors.brandAqua, VetColors.brandSky, VetColors.brandLilac],
-    );
+/// Los tres tonos de marca son claros: el blanco fijo daba 1.8:1 sobre el
+/// aqua. Se mide contra el peor tramo, igual que en el botón del escáner.
+final _aiInk = inkOnGradient(brandGradientColors);
 
 /// Icono del asistente: el mismo azul en degradado y el mismo relieve que el
 /// boton de enviar, para que se lea como parte del asistente y no como una
@@ -1107,18 +1132,17 @@ class _AiBotAvatar extends StatelessWidget {
   final double size;
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        gradient: _aiGradient(cs),
+        gradient: _aiGradient(),
         borderRadius: BorderRadius.circular(size * .3),
         boxShadow: [
           ...neuShadows(dark, depth: size / 48),
-          // Glow de marca alrededor de la figura: refuerza el relieve neu con
-          // un halo lilac que la hace destacar en el estado vacío.
+          // Halo de marca: refuerza el relieve neu para que la figura se
+          // despegue del lienzo en el estado vacío.
           BoxShadow(
             color: VetColors.brandLilac.withValues(alpha: .35),
             blurRadius: size * .35,
@@ -1126,15 +1150,13 @@ class _AiBotAvatar extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(
-        Icons.smart_toy_rounded,
-        size: size * .6,
-        color: Colors.white,
-      ),
+      child: Icon(Icons.smart_toy_rounded, size: size * .6, color: _aiInk),
     );
   }
 }
 
+/// Burbuja de mensaje. La del usuario va con el degradado de marca; la del
+/// asistente, sobre superficie clara, con su aviso «IA · sin verificar».
 class _AiBubble extends StatelessWidget {
   const _AiBubble({
     required this.isUser,
@@ -1155,7 +1177,7 @@ class _AiBubble extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: maxWidth),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        gradient: isUser ? _aiGradient(cs) : null,
+        gradient: isUser ? _aiGradient() : null,
         color: isUser ? null : cs.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -1169,7 +1191,7 @@ class _AiBubble extends StatelessWidget {
       child: SelectableText(
         text,
         style: theme.textTheme.bodyLarge?.copyWith(
-          color: isUser ? cs.onPrimary : cs.onSurface,
+          color: isUser ? _aiInk : cs.onSurface,
         ),
       ),
     );
@@ -1211,13 +1233,14 @@ class _AiBubble extends StatelessWidget {
   }
 }
 
+/// Botón circular de envío con el degradado de marca. Sin acción mientras falte
+/// proveedor, modelo, mensaje o autorización.
 class _AiSendButton extends StatelessWidget {
   const _AiSendButton({required this.enabled, required this.onTap});
   final bool enabled;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: 'Solicitar respuesta',
       child: Opacity(
@@ -1226,7 +1249,7 @@ class _AiSendButton extends StatelessWidget {
           color: Colors.transparent,
           child: Ink(
             decoration: BoxDecoration(
-              gradient: _aiGradient(cs),
+              gradient: _aiGradient(),
               shape: BoxShape.circle,
             ),
             child: InkWell(
@@ -1236,7 +1259,7 @@ class _AiSendButton extends StatelessWidget {
               child: SizedBox(
                 width: 48,
                 height: 48,
-                child: Icon(Icons.send_rounded, color: cs.onPrimary, size: 22),
+                child: Icon(Icons.send_rounded, color: _aiInk, size: 22),
               ),
             ),
           ),
@@ -1246,13 +1269,13 @@ class _AiSendButton extends StatelessWidget {
   }
 }
 
+/// Pantalla sin chat abierto: invitación a empezar una conversación.
 class _AiEmptyState extends StatelessWidget {
   const _AiEmptyState({required this.onNew});
   final VoidCallback? onNew;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -1277,14 +1300,13 @@ class _AiEmptyState extends StatelessWidget {
                     color: Colors.transparent,
                     child: Ink(
                       decoration: BoxDecoration(
-                        gradient: _aiGradient(cs),
+                        gradient: _aiGradient(),
                         borderRadius: BorderRadius.circular(28),
-                        // Relieve neu sobre el botón, igual que la figura del
-                        // asistente: antes era plano y no se diferenciaba del
-                        // fondo.
+                        // Relieve neu como el de la figura: plano se confundía
+                        // con el lienzo.
                         boxShadow: neuShadows(
                           theme.brightness == Brightness.dark,
-                          depth: 0.7,
+                          depth: .7,
                         ),
                       ),
                       child: InkWell(
@@ -1298,7 +1320,7 @@ class _AiEmptyState extends StatelessWidget {
                           child: Text(
                             'Nueva Conversación',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              color: cs.onPrimary,
+                              color: _aiInk,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
