@@ -264,12 +264,12 @@ class HomeModuleGrid extends StatelessWidget {
                                           )
                                         : null,
                                   ),
-                                  // El glifo va en el gris de los iconos
-                                  // del menu, no en el tono de marca: la
-                                  // placa ya lleva el color.
+                                  // Los tonos de marca son claros: sobre su
+                                  // propia placa el glifo se oscurece lo justo
+                                  // para ser legible, como en las cifras.
                                   child: Icon(
                                     sectionIcon(actions[i].$2),
-                                    color: readableOn(VetColors.muted, placa),
+                                    color: readableOn(tono, placa),
                                   ),
                                 ),
                               );
