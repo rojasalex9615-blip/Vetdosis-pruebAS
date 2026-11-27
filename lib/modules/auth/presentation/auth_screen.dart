@@ -86,7 +86,11 @@ class _AuthScreenState extends State<AuthScreen> {
                         ? 'Registro de usuario'
                         : 'Inicio de sesión',
                     textAlign: veiled && entering ? TextAlign.center : null,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    // Un paso por debajo de titleLarge: el título acompañaba
+                    // al formulario, no competía con él.
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -332,7 +336,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               }),
                         child: const Text('Olvidé mi contraseña'),
                       ),
-                  const LegalSmallPrint(preLogin: true),
+                    const LegalSmallPrint(preLogin: true),
                   ] else ...[
                     if (model.error == null) ...[
                       if (model.personalAvailable)

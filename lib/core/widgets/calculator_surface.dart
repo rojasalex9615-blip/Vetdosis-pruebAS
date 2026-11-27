@@ -395,19 +395,30 @@ class CalculatorActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Widget child;
   @override
-  Widget build(BuildContext context) =>
-      Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
-      ? NeuPrimaryButton(
-          soft: true,
-          dense: true,
-          color: calculatorActionColor(context, id),
-          onPressed: onPressed,
-          child: DefaultTextStyle.merge(
-            textAlign: TextAlign.center,
-            child: child,
-          ),
-        )
-      : FilledButton(onPressed: onPressed, child: child);
+  Widget build(BuildContext context) {
+    final boton =
+        Theme.of(context).extension<WorkspaceStyle>()?.neumorphic == true
+        ? NeuPrimaryButton(
+            soft: true,
+            dense: true,
+            color: calculatorActionColor(context, id),
+            onPressed: onPressed,
+            child: DefaultTextStyle.merge(
+              textAlign: TextAlign.center,
+              child: child,
+            ),
+          )
+        : FilledButton(onPressed: onPressed, child: child);
+    // Halo del tono de la calculadora: separa el boton del lienzo sin cargar
+    // el relleno. Sin accion no se pinta, para no destacar lo que no responde.
+    return AccentGlow(
+      color: calculatorIdentity(id).color,
+      radius: 16,
+      emphasis: .5,
+      enabled: onPressed != null,
+      child: boton,
+    );
+  }
 }
 
 /// Multiline labels remain outside the inset surface at narrow widths.

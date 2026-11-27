@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vetdosis_pro/core/widgets/brand_gradient.dart';
+import 'package:vetdosis_pro/core/widgets/contrast.dart';
 import 'package:vetdosis_pro/modules/ai/domain/ai_repository.dart';
 import 'package:vetdosis_pro/modules/ai/presentation/ai_view_model.dart';
 import 'package:vetdosis_pro/modules/ai/presentation/ai_screen.dart';
@@ -368,6 +370,56 @@ void main() {
         find.byKey(const ValueKey('ai-send')),
       );
       expect(send.onTap, isNull);
+    },
+  );
+
+  testWidgets(
+    'La burbuja propia y el envío se leen sobre el degradado de marca',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: AiScreen(repository: AiFake(), member: personal),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Historial'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mi chat'));
+      await tester.pumpAndSettle();
+
+      // Los tramos de marca son claros: el blanco fijo que llevaba la burbuja
+      // daba 1.8:1 sobre el aqua. Se mide contra cada tramo, no el promedio.
+      final burbuja = tester
+          .widgetList<SelectableText>(find.byType(SelectableText))
+          .firstWhere((w) => w.data == 'Privado');
+      final tinta = burbuja.style!.color!;
+      for (final tramo in brandGradientColors) {
+        expect(
+          contrastRatio(tinta, tramo),
+          greaterThanOrEqualTo(3),
+          reason: 'el texto de la burbuja se pierde sobre un tramo',
+        );
+      }
+
+      final envio = tester.widget<Icon>(
+        find.descendant(
+          of: find.byKey(const ValueKey('ai-send')),
+          matching: find.byType(Icon),
+        ),
+      );
+      expect(
+        envio.color,
+        tinta,
+        reason: 'el envío no comparte la tinta medida para el degradado',
+      );
     },
   );
 
