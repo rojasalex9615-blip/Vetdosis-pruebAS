@@ -13,8 +13,10 @@ class NeuHeaderCard extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.soft = false,
+    this.showHeader = true,
   });
   final bool soft;
+  final bool showHeader;
   final String title;
   final IconData icon;
   final Color color;
@@ -45,31 +47,34 @@ class NeuHeaderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(color: banda),
-              child: Row(
-                children: [
-                  // El glifo va en el gris del menu, no en el tono de la
-                  // seccion: la franja ya lleva el color.
-                  Icon(
-                    icon,
-                    color: readableOn(VetColors.muted, banda),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+            if (showHeader)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(color: banda),
+                child: Row(
+                  children: [
+                    // El glifo va en el gris del menu, no en el tono de la
+                    // seccion: la franja ya lleva el color.
+                    Icon(
+                      icon,
+                      color: readableOn(VetColors.muted, banda),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                  ),
-                  ?trailing,
-                ],
+                    ?trailing,
+                  ],
+                ),
               ),
-            ),
             child,
           ],
         ),

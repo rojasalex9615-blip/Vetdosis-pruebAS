@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../auth/domain/staff_labels.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -306,7 +307,10 @@ class _AttendanceScreenState extends State<AttendanceScreen>
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Control de asistencia', style: Theme.of(context).textTheme.headlineSmall),
+        const AppPageHeading(
+          title: 'Control de asistencia',
+          screens: {'Control de asistencia'},
+        ),
         const Text(
           'Entrada y salida alternadas. Solo se consulta ubicación al escanear; se guarda distancia y precisión, no tus coordenadas.',
         ),

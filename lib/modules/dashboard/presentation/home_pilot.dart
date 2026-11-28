@@ -339,10 +339,13 @@ class HomeSummary extends StatelessWidget {
       children: [
         Text(
           'Tu espacio en cifras',
-          style: Theme.of(context).textTheme.titleLarge,
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 4),
-        const Text('Datos consultados · según tus permisos'),
+        Text(
+          'Datos consultados · según tus permisos',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 16),
         if (metrics.isEmpty)
           const Text('Elige un espacio con acceso para consultar su resumen.'),
@@ -409,7 +412,7 @@ class HomeSummary extends StatelessWidget {
                           Text(
                             metric.$2,
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleMedium,
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
                           Text(
                             metric.$1,
@@ -428,10 +431,16 @@ class HomeSummary extends StatelessWidget {
         ),
         if (activity != null) ...[
           const SizedBox(height: 20),
-          const Text('Citas consultadas · últimos 7 días'),
+          Text(
+            'Citas consultadas · últimos 7 días',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 12),
           if (activity!.every((day) => day.$2 == 0))
-            const Text('Sin citas en los datos consultados de este periodo.')
+            Text(
+              'Sin citas en los datos consultados de este periodo.',
+              style: Theme.of(context).textTheme.bodySmall,
+            )
           else
             LayoutBuilder(
               builder: (context, constraints) {

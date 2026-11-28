@@ -1,3 +1,4 @@
+import 'widgets/app_heading_scope.dart';
 import '../modules/aviculture/domain/poultry_farm.dart';
 import '../modules/aviculture/domain/rearing_project_repository.dart';
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
@@ -1090,6 +1091,7 @@ class CoreShell extends StatelessWidget {
   /// La hoja del contenido: en Neu sube con esquinas redondeadas sobre la
   /// banda de marca que continua la de la barra.
   Widget _sheet(BuildContext context, Widget child) {
+    child = AppHeadingScope(screen: model.screen, child: child);
     if (!_neu(context)) return child;
     final theme = Theme.of(context);
     return DecoratedBox(
