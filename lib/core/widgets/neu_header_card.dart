@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../vet_ui/vet_theme.dart';
 import 'contrast.dart';
 import 'workspace_panel.dart';
 
@@ -56,13 +55,8 @@ class NeuHeaderCard extends StatelessWidget {
                 decoration: BoxDecoration(color: banda),
                 child: Row(
                   children: [
-                    // El glifo va en el gris del menu, no en el tono de la
-                    // seccion: la franja ya lleva el color.
-                    Icon(
-                      icon,
-                      color: readableOn(VetColors.muted, banda),
-                      size: 22,
-                    ),
+                    // Sobre la franja se usa tinta plana, sin placa ni halo.
+                    Icon(icon, color: inkOn(banda), size: 22),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(

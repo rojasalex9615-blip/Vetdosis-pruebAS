@@ -1,3 +1,4 @@
+import '../core/widgets/contrast.dart';
 import '../core/widgets/app_heading_scope.dart';
 import '../core/widgets/accent_glow.dart';
 import '../core/widgets/neu_identity.dart';
@@ -387,17 +388,22 @@ class VetIconBox extends StatelessWidget {
   final double size;
   @override
   Widget build(BuildContext context) {
-    final vivid = vividAccent(accent);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: .18),
-        borderRadius: BorderRadius.circular(size * .32),
-        boxShadow: neuShadows(dark, depth: size / 48),
+    final surface = Theme.of(context).colorScheme.surface;
+    final plate = Color.alphaBlend(accent.withValues(alpha: .18), surface);
+    final vivid = readableOn(vividAccent(accent), plate);
+    return AccentGlow(
+      color: accent,
+      radius: size * .32,
+      emphasis: 1,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: plate,
+          borderRadius: BorderRadius.circular(size * .32),
+        ),
+        child: Icon(icon, color: vivid, size: size * .52),
       ),
-      child: Icon(icon, color: vivid, size: size * .52),
     );
   }
 }

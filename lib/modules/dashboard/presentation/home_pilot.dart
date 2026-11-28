@@ -1,3 +1,4 @@
+import '../../../vet_ui/vet_components.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/contrast.dart';
 import 'package:flutter/material.dart';
@@ -234,46 +235,10 @@ class HomeModuleGrid extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Cada modulo con su tono, no todos con el mismo
-                          // lavanda y el mismo primary: asi se distinguen de
-                          // un vistazo, que es para lo que esta la cuadricula.
-                          Builder(
-                            builder: (context) {
-                              final tono = sectionAccent(actions[i].$2);
-                              final placa = _placa(context, tono);
-                              return AccentGlow(
-                                color: tono,
-                                radius: 16,
-                                emphasis: .35,
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: placa,
-                                    borderRadius: BorderRadius.circular(16),
-                                    // La placa se levanta un punto sobre la
-                                    // tarjeta, como en las referencias.
-                                    boxShadow:
-                                        Theme.of(context)
-                                                .extension<WorkspaceStyle>()
-                                                ?.neumorphic ==
-                                            true
-                                        ? neuShadows(
-                                            Theme.of(context).brightness ==
-                                                Brightness.dark,
-                                            depth: .45,
-                                          )
-                                        : null,
-                                  ),
-                                  // Los tonos de marca son claros: sobre su
-                                  // propia placa el glifo se oscurece lo justo
-                                  // para ser legible, como en las cifras.
-                                  child: Icon(
-                                    sectionIcon(actions[i].$2),
-                                    color: readableOn(tono, placa),
-                                  ),
-                                ),
-                              );
-                            },
+                          VetIconBox(
+                            icon: sectionIcon(actions[i].$2),
+                            accent: sectionAccent(actions[i].$2),
+                            size: 48,
                           ),
                           const SizedBox(height: 12),
                           Text(
