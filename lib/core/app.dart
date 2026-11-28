@@ -1,3 +1,5 @@
+import '../modules/aviculture/domain/poultry_farm.dart';
+import '../modules/aviculture/domain/rearing_project_repository.dart';
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import '../modules/about/presentation/app_info_screen.dart';
 import 'widgets/accent_glow.dart';
@@ -284,6 +286,8 @@ class VetDosisApp extends StatelessWidget {
     this.exotics,
     this.exoticsWrite,
     this.units,
+    this.rearingProjects,
+    this.poultryFarms,
     this.aviculture,
     this.inboxSeenStore,
     this.laboratory,
@@ -338,6 +342,8 @@ class VetDosisApp extends StatelessWidget {
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
+  final RearingProjectRepository? rearingProjects;
+  final PoultryFarmRepository? poultryFarms;
 
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
@@ -683,6 +689,8 @@ class VetDosisApp extends StatelessWidget {
               exoticsWrite: exoticsWrite,
               aviculture: aviculture,
               units: units,
+              rearingProjects: rearingProjects,
+              poultryFarms: poultryFarms,
               inboxSeenStore: inboxSeenStore,
               personalDoses: personalDoses,
               patients: patients,
@@ -757,6 +765,8 @@ class CoreShell extends StatelessWidget {
     this.exotics,
     this.exoticsWrite,
     this.units,
+    this.rearingProjects,
+    this.poultryFarms,
     this.aviculture,
     this.inboxSeenStore,
   });
@@ -816,6 +826,8 @@ class CoreShell extends StatelessWidget {
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
+  final RearingProjectRepository? rearingProjects;
+  final PoultryFarmRepository? poultryFarms;
 
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
@@ -1496,6 +1508,8 @@ class CoreShell extends StatelessWidget {
                     feed: feed,
                     feedWrite: feedWrite,
                     units: units,
+                    rearingProjects: rearingProjects,
+                    poultryFarms: poultryFarms,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )
                 else if (model.screen == 'Exóticos' ||
@@ -1922,6 +1936,7 @@ class CoreShell extends StatelessWidget {
                           identity: identity,
                           repository: backup!,
                           googleDrive: googleDriveBackup,
+                          rearingProjects: rearingProjects,
                           member: auth!.active!,
                           backupOnly: model.screen == 'Respaldo',
                         )

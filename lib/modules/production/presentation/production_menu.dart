@@ -1,3 +1,7 @@
+import '../../aviculture/presentation/poultry_farm_screen.dart';
+import '../../aviculture/domain/poultry_farm.dart';
+import '../../aviculture/domain/rearing_project_repository.dart';
+import '../../aviculture/presentation/pullet_rearing_screen.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_identity.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +55,8 @@ class ProductionMenu extends StatefulWidget {
     this.feed,
     this.feedWrite,
     this.units,
+    this.rearingProjects,
+    this.poultryFarms,
     this.initialSpecies,
     this.initialViewDashboard = false,
   });
@@ -77,6 +83,8 @@ class ProductionMenu extends StatefulWidget {
   /// Opcional: sin almacen la seccion de unidades no aparece, igual que el
   /// resto de la pantalla sigue funcionando sin sesion.
   final ProductionUnitRepository? units;
+  final RearingProjectRepository? rearingProjects;
+  final PoultryFarmRepository? poultryFarms;
 
   /// Especie con la que abrir directamente el detalle, si aplica.
   final String? initialSpecies;
@@ -557,6 +565,33 @@ class _ProductionMenuState extends State<ProductionMenu> {
       ],
       if (currentSpecies == 'Aves' && activity != null) ...[
         const SizedBox(height: 16),
+        if (activity == 'Postura')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.barn,
+              label: 'Granjas, casetas y sanidad',
+              onPressed: () => open(PoultryFarmScreen(
+                clinicId: widget.member?.clinicId,
+                repository: widget.poultryFarms,
+              )),
+            ),
+          ),
+        if (allowed('Cálculos clínicos') && activity == 'Postura')
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: VetActionButton(
+              icon: VetIcons.bird,
+              label: 'Crianza de pollitas · Bovans, Hy-Line y Lohmann',
+              onPressed: () => open(
+                PulletRearingHub(
+                  member: widget.member,
+                  projects: widget.rearingProjects,
+                  farms: widget.poultryFarms,
+                ),
+              ),
+            ),
+          ),
         if (allowed('Cálculos clínicos') && activity == 'Postura')
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
