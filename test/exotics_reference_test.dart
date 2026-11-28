@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/exotics/domain/exotic_reference.dart';
+import 'package:vetdosis_pro/modules/exotics/domain/exotic_taxon.dart';
 import 'package:vetdosis_pro/modules/exotics/presentation/exotics_menu.dart';
 
 Future<void> host(WidgetTester tester, Widget child) async {
@@ -79,17 +80,46 @@ void main() {
     expect(exoticWorksFor('Ratón'), 1);
   });
 
-  testWidgets('species list shows every species and the planned areas', (
+  testWidgets('el panel abre con el selector de grupo y las especies', (
     tester,
   ) async {
     await host(tester, const ExoticsMenu());
     for (final s in exoticSpecies) {
       expect(find.text(s), findsOneWidget);
     }
-    for (final a in plannedExoticAreas) {
-      expect(find.text(a), findsOneWidget);
+    // Los seis grupos son seleccionables; antes cuatro de ellos solo se
+    // nombraban como «previstos» y no llevaban a ninguna parte.
+    for (final t in ExoticTaxon.values) {
+      expect(
+        find.widgetWithText(ChoiceChip, t.label),
+        findsOneWidget,
+        reason: t.label,
+      );
     }
     expect(find.text('2 obras citadas'), findsWidgets);
+  });
+
+  testWidgets('la calculadora de dosis va antes que las referencias', (
+    tester,
+  ) async {
+    await host(tester, const ExoticsMenu());
+    // El usuario la pidio «lo mas grande y arriba» porque es lo que mas usa:
+    // si una especie quedara por encima, el orden estaria roto.
+    final calculadora = tester.getTopLeft(
+      find.text('Calculadora alométrica y de fluidoterapia'),
+    );
+    final primeraEspecie = tester.getTopLeft(find.text(exoticSpecies.first));
+    expect(calculadora.dy, lessThan(primeraEspecie.dy));
+  });
+
+  testWidgets('sin pacientes el panel lo dice en vez de inventarlos', (
+    tester,
+  ) async {
+    await host(tester, const ExoticsMenu());
+    expect(
+      find.text('Todavía no hay ejemplares registrados para este grupo.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('hamster shows both works side by side with citations', (

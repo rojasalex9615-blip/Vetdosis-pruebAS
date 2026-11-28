@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/neu_header_card.dart';
@@ -106,6 +107,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget panel(String title, String page, List<Widget> children) =>
       NeuHeaderCard(
         title: title,
+        showHeader:
+            !(widget.statisticsOnly &&
+                AppHeadingScope.owns(context, {'Estadísticas'})),
         icon: sectionIcon(page),
         color: sectionColor(page),
         trailing: IconButton(
@@ -148,8 +152,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(v.$2, style: Theme.of(context).textTheme.titleLarge),
-                    Text(v.$1),
+                    Text(v.$2, style: Theme.of(context).textTheme.titleMedium),
+                    Text(v.$1, style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -279,7 +283,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     listenable: Listenable.merge([model, ?widget.alerts]),
     builder: (context, _) {
       final m = model;
+      final theme = Theme.of(context);
       final totals = m.dayTotals;
+      final showHeading =
+          !widget.homePilot &&
+          !AppHeadingScope.owns(context, {
+            widget.statisticsOnly ? 'Estadísticas' : 'Inicio',
+          });
+      final noteStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
       final statisticsPanel = panel('Estadísticas', 'Estadísticas', [
         StatisticsPanel(
           model: model,
@@ -298,12 +311,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  widget.statisticsOnly
-                      ? 'Estadísticas de la clínica'
-                      : 'Resumen de tu espacio',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+                child: showHeading
+                    ? Text(
+                        widget.statisticsOnly
+                            ? 'Estadísticas de la clínica'
+                            : 'Resumen de tu espacio',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      )
+                    : m.updated != null
+                    ? Text(
+                        'Última consulta: ${time(m.updated!)}',
+                        style: noteStyle,
+                      )
+                    : const SizedBox.shrink(),
               ),
               IconButton(
                 tooltip: 'Actualizar resumen',
@@ -330,7 +350,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 'Revisa los permisos de tu cuenta con quien lo administra.',
               ),
             ),
-          if (m.updated != null) Text('Última consulta: ${time(m.updated!)}'),
+          if (showHeading && m.updated != null)
+            Text('Última consulta: ${time(m.updated!)}', style: noteStyle),
           if (m.busy) const LinearProgressIndicator(),
           if (widget.statisticsOnly && routeVisible('Estadísticas'))
             statisticsPanel,
@@ -347,7 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (widget.homePilot) ...[
               Text(
                 'Módulos principales',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
               HomeModuleGrid(
@@ -507,6 +528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ? VetColors.success
                                 : VetColors.danger,
                             emphasized: true,
+                            compactValue: true,
                           ),
                           if (m.overdue.isEmpty)
                             const Padding(
@@ -568,6 +590,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ? VetColors.success
                                 : VetColors.warning,
                             emphasized: true,
+                            compactValue: true,
                           ),
                           if (m.lowStock.isEmpty)
                             const Padding(
@@ -720,6 +743,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(
                           '${m.products.length} artículos activos · ${m.lowStock.length} por revisar',
+                          style: noteStyle,
                         ),
                         if (m.canSeeClinicSales && routeVisible('Caja'))
                           metrics([
@@ -736,17 +760,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               m.potentialMargin?.display ?? 'No disponible',
                             ),
                           ]),
-                        const Text(
-                          'Existencias disponibles por unidad; no incluye lotes caducados.',
+                        const SizedBox(height: 12),
+                        Text(
+                          'Existencias disponibles por unidad',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        const SizedBox(height: 6),
                         if (m.stockByUnit == null)
-                          const Text('Existencias por unidad no disponibles.'),
+                          Text(
+                            'Existencias por unidad no disponibles.',
+                            style: noteStyle,
+                          ),
                         for (final e
                             in (m.stockByUnit ?? <String, Quantity>{}).entries)
-                          Text('${e.value.display()} ${e.key}'),
-                        const Text(
+                          Text(
+                            '${e.value.display()} ${e.key == 'unidad' && e.value.compareTo(Quantity.parse('1')) != 0 ? 'unidades' : e.key}',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        const SizedBox(height: 8),
+                        Text('No incluye lotes caducados.', style: noteStyle),
+                        const SizedBox(height: 8),
+                        Text(
                           'Margen potencial antes de comisiones y gastos; no es utilidad neta.',
+                          style: noteStyle,
                         ),
+                        const SizedBox(height: 20),
                         TextField(
                           controller: search,
                           decoration: const InputDecoration(
@@ -787,9 +825,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (m.ownShift == null) ...[
-                          const Text(
-                            'Tu caja está cerrada. Captura el fondo inicial al abrir.',
+                          Row(
+                            children: [
+                              Icon(
+                                VetIcons.lockOpen,
+                                size: 18,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Caja cerrada',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Captura el fondo inicial al abrir el turno.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           FilledButton.icon(
                             onPressed: widget.offline || m.busy || openingCash
                                 ? null
@@ -798,26 +859,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             label: const Text('Abrir caja'),
                           ),
                         ] else ...[
-                          Text(
-                            'Tu caja está abierta · fondo inicial: ${money(m.ownShift!['opening_cash'])}',
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 18,
+                                color: VetColors.successOn(context),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Caja abierta',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Fondo inicial',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: .8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            money(m.ownShift!['opening_cash']),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              // onSurface y no la tinta clara: en el tema
+                              // oscuro el importe quedaría invisible.
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           FilledButton(
                             onPressed: () => openPage('Caja'),
                             child: const Text('Venta o revisión del turno'),
                           ),
                         ],
-                        const Text('Últimos cortes visibles'),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1),
+                        ),
+                        Text(
+                          'ÚLTIMOS CORTES',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                         if (m.recentCuts.isEmpty)
-                          const Text(
-                            'No hay cortes cerrados en los datos consultados.',
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'No hay cortes cerrados en los datos consultados.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ),
                         for (final sh in m.recentCuts)
                           ListTile(
+                            contentPadding: EdgeInsets.zero,
                             title: Text(
                               'Cierre: ${time(DateTime.parse(sh['closed_at']))}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             subtitle: Text(
                               'Contado: ${money(sh['counted_cash'])}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                             onTap: () => openPage('Caja'),
                           ),
@@ -870,8 +990,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             title: Text(entry.$1),
                             trailing: Text(money(totals?[entry.$2])),
                           ),
-                        const Text(
-                          'Importes netos de reversos. No acreditan que estén incluidos todos los gastos ni costos pendientes.',
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Importes netos de reversos. No acreditan que estén incluidos todos los gastos ni costos pendientes.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: VetColors.muted,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -1113,10 +1240,14 @@ class _DashboardActionCapsule extends StatelessWidget {
                   color: vivid,
                   radius: 10,
                   emphasis: 0.75,
-                  child: Icon(
-                    sectionIcon(page),
-                    size: 19,
-                    color: vivid,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: .15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(sectionIcon(page), size: 18, color: vivid),
                   ),
                 ),
                 const SizedBox(width: 7),

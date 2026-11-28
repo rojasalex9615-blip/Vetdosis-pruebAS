@@ -59,6 +59,45 @@ class PautaWeightReference {
     required this.text,
   });
   final String amount, unit, kg, text;
+
+  /// Interpreta kg de peso vivo/corporal o la referencia exacta «kg de peso».
+  ///
+  /// No convierte «por kg» genérico, kg de alimento/producto ni rangos en
+  /// una dosis por peso vivo. Una referencia sin cifra equivale a 1 kg solo
+  /// cuando declara «por kg de peso vivo» o la referencia exacta «por kg de peso».
+  static PautaWeightReference? parse({
+    required String amount,
+    required String unit,
+    required String reference,
+  }) {
+    final dose = amount.trim();
+    final doseUnit = unit.trim();
+    final source = reference.trim();
+    if (dose.isEmpty || doseUnit.isEmpty || source.isEmpty) return null;
+
+    final normalized = source.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    final match =
+        RegExp(
+          r'\b(?:por\s+(?:cada\s+)?|cada\s+)(?:(\d+(?:[.,]\d+)?)\s*)?kg\s+(?:de\s+)?peso\s+(?:vivo|corporal)\b',
+        ).firstMatch(normalized) ??
+        RegExp(
+          r'^(?:por\s+(?:cada\s+)?|cada\s+)(?:(\d+(?:[.,]\d+)?)\s*)?kg\s+de\s+peso\.?$',
+        ).firstMatch(normalized);
+    if (match == null) return null;
+
+    final numbers = RegExp(
+      r'\d+(?:[.,]\d+)?',
+    ).allMatches(source).map((item) => item.group(0)!).toList();
+    final declaredKg = match.group(1);
+    if (numbers.length != (declaredKg == null ? 0 : 1)) return null;
+
+    return PautaWeightReference(
+      amount: dose,
+      unit: doseUnit,
+      kg: declaredKg?.replaceAll(',', '.') ?? '1',
+      text: source,
+    );
+  }
 }
 
 class ManufacturerPauta {
@@ -148,34 +187,13 @@ class ManufacturerPauta {
       weightReference != null &&
       calculator != null;
 
-  /// Extrae un único peso en kg de la referencia ("por 20 kg de peso vivo").
+  /// Extrae una referencia inequívoca a kg de peso vivo.
   PautaWeightReference? get weightReference {
     if (rule != PautaRule.proportionalToWeight) return null;
-    final amount = doseAmount.trim();
-    final unit = doseUnit.trim();
-    if (amount.isEmpty || unit.isEmpty) return null;
-    final normalized = doseReference.toLowerCase();
-    if (!normalized.contains('kg')) return null;
-    final numbers = RegExp(
-      r'\d+(?:[.,]\d+)?',
-    ).allMatches(doseReference).map((m) => m.group(0)!).toList();
-    // 'por kg de peso vivo' no lleva cifra: la referencia es 1 kg, no un
-    // dato ambiguo. Los rangos ('por 20-40 kg') siguen descartados porque no
-    // tienen un unico peso de referencia.
-    if (numbers.isEmpty && RegExp(r'por\s+kg').hasMatch(normalized)) {
-      return PautaWeightReference(
-        amount: amount,
-        unit: unit,
-        kg: '1',
-        text: doseReference.trim(),
-      );
-    }
-    if (numbers.length != 1) return null;
-    return PautaWeightReference(
-      amount: amount,
-      unit: unit,
-      kg: numbers.single.replaceAll(',', '.'),
-      text: doseReference.trim(),
+    return PautaWeightReference.parse(
+      amount: doseAmount,
+      unit: doseUnit,
+      reference: doseReference,
     );
   }
 
@@ -258,6 +276,84 @@ class ManufacturerPautaCatalog {
   List<ManufacturerPauta> forProduct(String productUrl) =>
       pautas.where((p) => p.productUrl == productUrl).toList(growable: false);
 }
+
+/// Grupos de especie del filtro del vademécum.
+///
+/// La fuente escribe la especie libremente («Caninos y felinos», «Perros y
+/// gatos», «Cerdos»): 435 textos distintos para una docena de grupos. El
+/// filtro trabaja con el grupo, no con el texto literal.
+const especiesDelVademecum = [
+  'Caninos',
+  'Felinos',
+  'Bovinos',
+  'Porcinos',
+  'Ovinos',
+  'Caprinos',
+  'Equinos',
+  'Aves',
+  'Conejos',
+  'Peces',
+  'Abejas',
+  'Reptiles',
+];
+
+const _clavesDeEspecie = <String, List<String>>{
+  'Caninos': ['canin', 'perr', 'cachorr'],
+  'Felinos': ['felin', 'gat'],
+  'Bovinos': ['bovin', 'vaca', 'toro', 'terner', 'becerr', 'buey'],
+  'Porcinos': ['porcin', 'cerd', 'lechon', 'cochin'],
+  'Ovinos': ['ovin', 'ovej', 'cordero', 'borreg'],
+  'Caprinos': ['caprin', 'cabra', 'cabrit', 'chivo'],
+  'Equinos': ['equin', 'caball', 'yegu', 'potro', 'mular', 'burro'],
+  'Aves': [
+    'ave',
+    'aviar',
+    'poll',
+    'gallin',
+    'pavo',
+    'pata',
+    'ganso',
+    'codorniz',
+    'psitac',
+    'loro',
+    'periquito',
+    'canari',
+  ],
+  'Conejos': ['conejo', 'cunicul'],
+  'Peces': ['pez', 'pece', 'tilapia', 'trucha', 'carpa', 'bagre', 'salmon'],
+  'Abejas': ['abej', 'apis'],
+  'Reptiles': [
+    'reptil',
+    'serpient',
+    'lagart',
+    'tortug',
+    'gecko',
+    'iguana',
+    'ofidio',
+  ],
+};
+
+/// Grupo o grupos a los que pertenece el texto de especie de una pauta.
+List<String> gruposDeEspecie(String texto) {
+  final t = normalizeDoseSearch(texto);
+  if (t.isEmpty ||
+      t.contains('no especificado') ||
+      t.contains('sin datos') ||
+      t.contains('no aplica')) {
+    return const ['Sin especificar'];
+  }
+  // Con `contains` a secas, «bovinos» también caería en Ovinos por la cadena
+  // «ovin». La clave tiene que empezar palabra.
+  final out = [
+    for (final entry in _clavesDeEspecie.entries)
+      if (entry.value.any((clave) => RegExp('(?:^|[^a-z])$clave').hasMatch(t)))
+        entry.key,
+  ];
+  return out.isEmpty ? const ['Sin especificar'] : out;
+}
+
+bool pautaDeEspecie(ManufacturerPauta pauta, String grupo) =>
+    grupo == 'Todas' || gruposDeEspecie(pauta.species).contains(grupo);
 
 /// Principio activo con las pautas que lo mencionan.
 ///

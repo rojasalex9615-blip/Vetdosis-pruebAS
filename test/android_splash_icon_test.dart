@@ -37,6 +37,31 @@ void main() {
     }
   });
 
+  test('El icono de arranque lleva respaldo del mismo tono que el fondo', () {
+    for (final path in styles) {
+      final xml = File(path).readAsStringSync();
+
+      String valor(String atributo) {
+        final match = RegExp(
+          '<item name="android:$atributo">([^<]+)</item>',
+        ).firstMatch(xml);
+        expect(match, isNotNull, reason: '$path debe declarar $atributo');
+        return match!.group(1)!.trim();
+      }
+
+      // Sin este atributo Android deja el icono en el hueco grande de 192dp y
+      // compone su fondo transparente sobre negro: en el telefono aparecia un
+      // cuadro negro de 191dp detras de la marca. Con el respaldo declarado el
+      // hueco baja a 160dp y el cuadro desaparece, pero solo si lleva el mismo
+      // tono que el fondo del arranque.
+      expect(
+        valor('windowSplashScreenIconBackgroundColor'),
+        valor('windowSplashScreenBackground'),
+        reason: '$path: el respaldo del icono debe ser el tono del arranque',
+      );
+    }
+  });
+
   test('El icono adaptativo elegido existe y deja el fondo transparente', () {
     final adaptive = File(
       'android/app/src/main/res/mipmap-anydpi-v26/vetdosis_launcher.xml',

@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +9,7 @@ import '../domain/support_repository.dart';
 import 'support_view_model.dart';
 import 'support_operator_screen.dart';
 import '../../../vet_ui/vet_components.dart';
+import '../../../vet_ui/vet_format.dart';
 import '../../../vet_ui/vet_icons.dart';
 
 enum SupportMode { chat, form }
@@ -141,8 +143,10 @@ class _SupportScreenState extends State<SupportScreen> {
   Widget _chat(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text('Ayuda y soporte', style: Theme.of(context).textTheme.headlineSmall),
-      const SizedBox(height: 12),
+      const AppPageHeading(
+        title: 'Ayuda y soporte',
+        screens: {'Ayuda y soporte'},
+      ),
       if (widget.helpPanel != null)
         widget.helpPanel!
       else
@@ -264,7 +268,7 @@ class _SupportScreenState extends State<SupportScreen> {
           ListTile(
             title: Text(t['title'] as String),
             subtitle: Text(
-              '${status(t['status'] as String)} · ${shortDateTime(t['updated_at'])}',
+              '${status(t['status'] as String)} · ${VetFormat.dateTimeFromIso(t['updated_at'])}',
             ),
             onTap: working
                 ? null
@@ -282,7 +286,7 @@ class _SupportScreenState extends State<SupportScreen> {
             ListTile(
               title: Text(m['body'] as String),
               subtitle: Text(
-                '${m['sender'] == 'human' ? 'Soporte humano' : 'Tú'} · ${shortDateTime(m['created_at'])}',
+                '${m['sender'] == 'human' ? 'Soporte humano' : 'Tú'} · ${VetFormat.dateTimeFromIso(m['created_at'])}',
               ),
             ),
           for (final a in vm.detail!['attachments'] as List)
@@ -407,38 +411,4 @@ class SupportContactOptions extends StatelessWidget {
       ],
     );
   }
-}
-
-const _spanishMonths = [
-  'ene',
-  'feb',
-  'mar',
-  'abr',
-  'may',
-  'jun',
-  'jul',
-  'ago',
-  'sep',
-  'oct',
-  'nov',
-  'dic',
-];
-
-/// Fecha corta en español, p. ej. "22 oct 2026". Si el valor no es una
-/// fecha ISO válida se devuelve tal cual, sin romper la pantalla.
-String shortDate(dynamic value) {
-  final parsed = DateTime.tryParse('$value');
-  if (parsed == null) return '$value';
-  final d = parsed.toLocal();
-  return '${d.day} ${_spanishMonths[d.month - 1]} ${d.year}';
-}
-
-/// Fecha y hora cortas, p. ej. "17 nov 2026, 08:05".
-String shortDateTime(dynamic value) {
-  final parsed = DateTime.tryParse('$value');
-  if (parsed == null) return '$value';
-  final d = parsed.toLocal();
-  final hh = d.hour.toString().padLeft(2, '0');
-  final mm = d.minute.toString().padLeft(2, '0');
-  return '${shortDate(value)}, $hh:$mm';
 }

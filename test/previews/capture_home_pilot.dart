@@ -1,3 +1,4 @@
+import 'package:vetdosis_pro/vet_ui/vet_theme.dart';
 // Preview fixtures only: all account, clinic and activity data are synthetic.
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -61,14 +62,20 @@ void main() {
   for (final dark in [false, true]) {
     for (final empty in [false, true]) {
       testWidgets('Home preview dark=$dark empty=$empty', (tester) async {
+        debugDisableShadows = false;
+        addTearDown(() => debugDisableShadows = true);
         tester.view.physicalSize = const Size(390, 1400);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         SharedPreferences.setMockInitialValues({});
-        await (FontLoader(
-          'Roboto',
-        )..addFont(rootBundle.load('assets/fonts/DejaVuSans.ttf'))).load();
+        final fonts = FontLoader(VetTheme.fontFamily);
+        for (final weight in [400, 500, 600, 700, 800]) {
+          fonts.addFont(
+            rootBundle.load('assets/fonts/PlusJakartaSans-$weight.ttf'),
+          );
+        }
+        await fonts.load();
         await (FontLoader(
           'MaterialIcons',
         )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();

@@ -147,7 +147,9 @@ class VetDosisBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final mark = VetDosisMark(size: large ? 100 : 34);
+    // 132 en el bloque grande del acceso. Bajo a 100 con el acceso compacto y
+    // la marca se quedaba pequena para ser lo primero que se ve al abrir.
+    final mark = VetDosisMark(size: large ? 132 : 34);
     final name = Text.rich(
       TextSpan(
         children: [
@@ -172,7 +174,7 @@ class VetDosisBrand extends StatelessWidget {
       'Tu espacio veterinario',
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: large ? 13 : 12,
+        fontSize: large ? 14 : 12,
         color: dark ? const Color(0xFF93C5FD) : const Color(0xFF0E1B45),
       ),
     );

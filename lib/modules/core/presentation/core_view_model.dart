@@ -29,13 +29,20 @@ class CoreViewModel extends ChangeNotifier {
     'dark' => ThemeMode.dark,
     _ => ThemeMode.system,
   };
+  /// Cambiar de rama lleva al tablero de esa rama, no a su catálogo.
+  ///
+  /// Quien elige «Pequeñas especies» cae en Inicio, que ya es su tablero. Por
+  /// simetría, quien elige Producción o Exóticos debe caer en el suyo y no en
+  /// la lista de especies: el catálogo se consulta, el tablero es lo que se
+  /// mira al empezar el día. Cada pantalla conserva su pestaña de catálogo a
+  /// un toque, así que no se pierde nada.
   void selectBranch(ClinicalBranch value) {
     activityPatientId = null;
     activityInstructions = null;
     branch = value;
     screen = switch (value) {
-      ClinicalBranch.production => 'Producción y grandes especies',
-      ClinicalBranch.exotic => 'Exóticos',
+      ClinicalBranch.production => 'Dashboard Pecuario',
+      ClinicalBranch.exotic => 'Dashboard Exóticos',
       ClinicalBranch.management => 'Más',
       _ => 'Inicio',
     };

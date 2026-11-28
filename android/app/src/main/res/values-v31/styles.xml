@@ -8,6 +8,13 @@
              tal cual lo recorta y lo agranda. Se usa el icono de la app, cuyo
              contenido ya va centrado dentro de la zona segura. -->
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/vetdosis_launcher</item>
+        <!-- Sin este color el icono se dibuja en el hueco grande de 192dp y su
+             fondo transparente se compone sobre negro: en el telefono salia un
+             cuadro negro de 191dp detras de la marca. Con el color definido el
+             hueco pasa a 160dp y el respaldo es el mismo tono del arranque, asi
+             que no se ve ningun cuadro. Va en el mismo valor que
+             windowSplashScreenBackground: si se cambia uno, se cambian los dos. -->
+        <item name="android:windowSplashScreenIconBackgroundColor">#E1F8F3</item>
         <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">

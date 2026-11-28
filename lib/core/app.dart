@@ -1,3 +1,6 @@
+import 'widgets/app_heading_scope.dart';
+import '../modules/aviculture/domain/poultry_farm.dart';
+import '../modules/aviculture/domain/rearing_project_repository.dart';
 import '../modules/hospital/presentation/hospital_calculation_access.dart';
 import '../modules/about/presentation/app_info_screen.dart';
 import 'widgets/accent_glow.dart';
@@ -22,17 +25,24 @@ import 'widgets/app_version_label.dart';
 import '../modules/finance/presentation/financial_planning_panel.dart';
 import '../modules/operations/presentation/productivity_screen.dart';
 import '../modules/core/presentation/section_menu.dart';
+import '../modules/exotics/domain/exotic_dashboard.dart';
+import '../modules/exotics/domain/exotic_write_repository.dart';
 import '../modules/exotics/presentation/exotics_menu.dart';
 import '../modules/production/presentation/production_menu.dart';
 import '../modules/production/domain/porcino_repository.dart';
+import '../modules/production/domain/production_farm.dart';
 import '../modules/production/domain/production_unit_repository.dart';
+import '../modules/production/domain/production_write_repository.dart';
+import '../modules/reproduction/domain/gestation.dart';
+import '../modules/reproduction/domain/gestation_write_repository.dart';
+import '../modules/production/domain/feed_inventory.dart';
+import '../modules/production/domain/feed_write_repository.dart';
 import '../modules/dashboard/presentation/home_pilot.dart';
 import '../vet_ui/vet_theme.dart';
 import '../vet_ui/vet_components.dart';
 import 'widgets/neu_identity.dart';
 import '../modules/beta/domain/beta_repository.dart';
 import '../modules/beta/presentation/beta_boundary.dart';
-import '../modules/legal/presentation/legal_links.dart';
 import '../modules/identity/domain/identity_repository.dart';
 import '../modules/identity/presentation/identity_panel.dart';
 import '../modules/dashboard/presentation/alert_preferences_panel.dart';
@@ -268,7 +278,17 @@ class VetDosisApp extends StatelessWidget {
     this.experienceRepository,
     this.reviewCatalog,
     this.porcino,
+    this.farm,
+    this.farmWrite,
+    this.gestation,
+    this.gestationWrite,
+    this.feed,
+    this.feedWrite,
+    this.exotics,
+    this.exoticsWrite,
     this.units,
+    this.rearingProjects,
+    this.poultryFarms,
     this.aviculture,
     this.inboxSeenStore,
     this.laboratory,
@@ -301,12 +321,30 @@ class VetDosisApp extends StatelessWidget {
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
 
+  /// Los lotes, eventos y registros reales de la granja.
+  final ProductionFarmRepository? farm;
+
+  /// Por donde el Dashboard Pecuario guarda lotes, registros y eventos.
+  final ProductionWriteRepository? farmWrite;
+
+  /// Gestaciones. Son compartidas: las usan produccion y exoticos.
+  final GestationRepository? gestation;
+  final GestationWriteRepository? gestationWrite;
+  final FeedInventoryRepository? feed;
+  final FeedWriteRepository? feedWrite;
+
+  /// Los ejemplares exoticos reales, para el dashboard y el panel.
+  final ExoticDashboardRepository? exotics;
+  final ExoticWriteRepository? exoticsWrite;
+
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
   final AvicultureRecordsRepository? aviculture;
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
+  final RearingProjectRepository? rearingProjects;
+  final PoultryFarmRepository? poultryFarms;
 
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
@@ -533,7 +571,7 @@ class VetDosisApp extends StatelessWidget {
               backgroundColor: surface,
               indicatorColor: primary.withValues(alpha: dark ? .26 : .18),
               indicatorShape: GlowRoundedBorder(
-                glow: primary.withValues(alpha: dark ? .42 : .34),
+                glow: primary.withValues(alpha: dark ? .26 : .20),
                 borderRadius: BorderRadius.circular(18),
               ),
               elevation: 0,
@@ -642,8 +680,18 @@ class VetDosisApp extends StatelessWidget {
               moduleAccessRepository: moduleAccess,
               reviewCatalog: reviewCatalog,
               porcino: porcino,
+              farm: farm,
+              farmWrite: farmWrite,
+              gestation: gestation,
+              gestationWrite: gestationWrite,
+              feed: feed,
+              feedWrite: feedWrite,
+              exotics: exotics,
+              exoticsWrite: exoticsWrite,
               aviculture: aviculture,
               units: units,
+              rearingProjects: rearingProjects,
+              poultryFarms: poultryFarms,
               inboxSeenStore: inboxSeenStore,
               personalDoses: personalDoses,
               patients: patients,
@@ -709,7 +757,17 @@ class CoreShell extends StatelessWidget {
     this.onExperienceSaved,
     this.reviewCatalog,
     this.porcino,
+    this.farm,
+    this.farmWrite,
+    this.gestation,
+    this.gestationWrite,
+    this.feed,
+    this.feedWrite,
+    this.exotics,
+    this.exoticsWrite,
     this.units,
+    this.rearingProjects,
+    this.poultryFarms,
     this.aviculture,
     this.inboxSeenStore,
   });
@@ -747,12 +805,30 @@ class CoreShell extends StatelessWidget {
   final ReviewCatalogRepository? reviewCatalog;
   final PorcinoRepository? porcino;
 
+  /// Los lotes, eventos y registros reales de la granja.
+  final ProductionFarmRepository? farm;
+
+  /// Por donde el Dashboard Pecuario guarda lotes, registros y eventos.
+  final ProductionWriteRepository? farmWrite;
+
+  /// Gestaciones. Son compartidas: las usan produccion y exoticos.
+  final GestationRepository? gestation;
+  final GestationWriteRepository? gestationWrite;
+  final FeedInventoryRepository? feed;
+  final FeedWriteRepository? feedWrite;
+
+  /// Los ejemplares exoticos reales, para el dashboard y el panel.
+  final ExoticDashboardRepository? exotics;
+  final ExoticWriteRepository? exoticsWrite;
+
   /// Registros de produccion (M15). Null sin sesion de Supabase: entonces
   /// Estadisticas no ofrece la seccion de produccion en vez de fallar.
   final AvicultureRecordsRepository? aviculture;
 
   /// Donde se guardan las unidades de produccion, si las hay.
   final ProductionUnitRepository? units;
+  final RearingProjectRepository? rearingProjects;
+  final PoultryFarmRepository? poultryFarms;
 
   /// Donde se guarda hasta donde vio la persona la campana. Null usa el
   /// almacen del telefono; las pruebas pasan uno en memoria.
@@ -948,7 +1024,7 @@ class CoreShell extends StatelessWidget {
       'Vademécum' ||
       'Operaciones de dosis' ||
       'Cálculos clínicos' => 'Cálculos',
-      'Producción y grandes especies' || 'Dashboard Pecuario' || 'Producción pecuaria' || 'Exóticos' => 'Inicio',
+      'Producción y grandes especies' || 'Dashboard Pecuario' || 'Producción pecuaria' || 'Exóticos' || 'Dashboard Exóticos' => 'Inicio',
       _ => model.screen,
     };
     final selected = destinations.indexWhere((entry) => entry.$1 == page);
@@ -1015,6 +1091,7 @@ class CoreShell extends StatelessWidget {
   /// La hoja del contenido: en Neu sube con esquinas redondeadas sobre la
   /// banda de marca que continua la de la barra.
   Widget _sheet(BuildContext context, Widget child) {
+    child = AppHeadingScope(screen: model.screen, child: child);
     if (!_neu(context)) return child;
     final theme = Theme.of(context);
     return DecoratedBox(
@@ -1277,8 +1354,27 @@ class CoreShell extends StatelessWidget {
                   focusElevation: 0,
                   hoverElevation: 0,
                   highlightElevation: 0,
-                  onPressed: () =>
-                      model.navigate('Escanear etiqueta para dosis'),
+                  onPressed: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Escanear etiqueta para dosis'),
+                        ),
+                        body: AppHeadingScope(
+                          screen: 'Escanear etiqueta para dosis',
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: DoseLabelScannerScreen(
+                              member: auth!.active!,
+                              personalRepository: personalDoses,
+                              offline: auth!.offline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   child: const Icon(VetIcons.documentScan),
                 ),
               ),
@@ -1325,6 +1421,7 @@ class CoreShell extends StatelessWidget {
                   'Dashboard Pecuario',
                   'Producción pecuaria',
                   'Exóticos',
+                  'Dashboard Exóticos',
                 ].contains(model.screen))
                   DropdownButtonFormField<ClinicalBranch>(
                     initialValue: model.branch,
@@ -1425,11 +1522,35 @@ class CoreShell extends StatelessWidget {
                     access: moduleAccess,
                     onNavigate: model.navigate,
                     porcino: porcino,
+                    farm: farm,
+                    farmWrite: farmWrite,
+                    gestation: gestation,
+                    gestationWrite: gestationWrite,
+                    feed: feed,
+                    feedWrite: feedWrite,
                     units: units,
+                    rearingProjects: rearingProjects,
+                    poultryFarms: poultryFarms,
                     initialViewDashboard: model.screen == 'Dashboard Pecuario' || model.screen == 'Producción pecuaria',
                   )
-                else if (model.screen == 'Exóticos')
-                  ExoticsMenu(allowed: allowed('Exóticos'))
+                else if (model.screen == 'Exóticos' ||
+                    model.screen == 'Dashboard Exóticos')
+                  ExoticsMenu(
+                    allowed: allowed('Exóticos'),
+                    repository: exotics,
+                    writeRepository: exoticsWrite,
+                    gestation: gestation,
+                    gestationWrite: gestationWrite,
+                    member: auth?.active,
+                    initialViewDashboard:
+                        model.screen == 'Dashboard Exóticos',
+                    onNavigate: model.navigate,
+                    // El puente entre paneles solo se ofrece a quien de verdad
+                    // lleva las dos areas; al resto no le aparece.
+                    tambienPecuario:
+                        (experience?.workAreas ?? model.settings.workAreas)
+                            .contains('production'),
+                  )
                 else if (model.screen == 'Cálculo rápido')
                   auth == null ||
                           [
@@ -1797,6 +1918,7 @@ class CoreShell extends StatelessWidget {
                     key: ValueKey((
                       auth?.active?.userId,
                       auth?.active?.clinicId,
+                      auth?.active?.role,
                       auth?.offline,
                       moduleAccess,
                       experience?.revision,
@@ -1836,6 +1958,7 @@ class CoreShell extends StatelessWidget {
                           identity: identity,
                           repository: backup!,
                           googleDrive: googleDriveBackup,
+                          rearingProjects: rearingProjects,
                           member: auth!.active!,
                           backupOnly: model.screen == 'Respaldo',
                         )
@@ -1903,19 +2026,6 @@ class CoreShell extends StatelessWidget {
                   ...settings(context)
                 else
                   ...pending(context),
-                // Términos y aviso acompañan al acceso, Inicio, Planes y las
-                // pantallas de cálculo con la misma versión que sirvió la
-                // puerta beta; no se repiten en Ajustes ni en el menú.
-                if (auth?.active != null &&
-                    const {
-                      'Inicio',
-                      'Planes',
-                      'Cálculo rápido',
-                      'Cálculos',
-                      'Cálculos clínicos',
-                      'Operaciones de dosis',
-                    }.contains(model.screen))
-                  const LegalSmallPrint(),
               ],
             ),
           ),

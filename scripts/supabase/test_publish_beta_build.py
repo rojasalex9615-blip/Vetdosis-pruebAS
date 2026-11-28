@@ -70,6 +70,9 @@ class PublishBetaBuild(unittest.TestCase):
         publish = workflow.index('Publicar APK instalable')
         self.assertLess(register, publish)
         self.assertIn('SUPABASE_ACCESS_TOKEN:-', workflow[register:publish])
+        # A signed beta from an integration branch still needs the beta gate,
+        # build header and native OAuth callback.
+        self.assertIn('--dart-define=APP_CHANNEL=beta', workflow)
 
     def test_out_of_range_never_registers(self):
         status, calls, _, _ = self.run_script({'BETA_VERSION_CODE': '0', 'SUPABASE_ACCESS_TOKEN': 'secreto'}, [ROW])

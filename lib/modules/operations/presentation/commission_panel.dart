@@ -217,10 +217,12 @@ class _CommissionPanelState extends State<CommissionPanel> {
               children: [
                 const Icon(VetIcons.lock, size: 18, color: VetColors.warning),
                 const SizedBox(width: 8),
-                Text(
-                  'Calendario de pagos · solo administración',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+                Expanded(
+                  child: Text(
+                    'Calendario de pagos · solo administración',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -315,10 +317,12 @@ class _CommissionPanelState extends State<CommissionPanel> {
             children: [
               const Icon(VetIcons.history, size: 18),
               const SizedBox(width: 8),
-              Text(
-                'Liquidaciones registradas',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  'Liquidaciones registradas',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],

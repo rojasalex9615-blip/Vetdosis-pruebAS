@@ -1,3 +1,5 @@
+import '../../../vet_ui/vet_format.dart';
+import '../../../core/widgets/app_heading_scope.dart';
 import 'credit_accounts_screen.dart';
 import 'partial_return_screen.dart';
 import '../../../core/widgets/neu_record_card.dart';
@@ -928,9 +930,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Inventario y ventas',
-            style: Theme.of(context).textTheme.headlineSmall,
+          AppPageHeading(
+            title: 'Inventario y ventas',
+            screens: const {'Inventario', 'Caja'},
           ),
           VetCard(
             radius: 18,
@@ -1036,7 +1038,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               padding: const EdgeInsets.only(top: 8, bottom: 4),
               child: Text(
                 'Fecha del servidor en clínica: '
-                '${model.dashboard!['today']} · '
+                '${VetFormat.dateFromIso(model.dashboard!['today'])} · '
                 '${model.dashboard!['timezone']}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),

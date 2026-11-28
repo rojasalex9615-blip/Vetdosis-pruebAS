@@ -52,7 +52,16 @@ class ManufacturerPautaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(pauta.presentation, style: theme.textTheme.titleMedium),
+            Text(
+              pauta.productName,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (pauta.manufacturer.isNotEmpty)
+              Text(pauta.manufacturer, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 4),
+            Text(pauta.presentation),
             const SizedBox(height: 4),
             Text('Especie: ${pauta.species}'),
             if (pauta.route.isNotEmpty) Text('Vía: ${pauta.route}'),

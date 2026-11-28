@@ -1,3 +1,5 @@
+import '../core/widgets/contrast.dart';
+import '../core/widgets/app_heading_scope.dart';
 import '../core/widgets/accent_glow.dart';
 import '../core/widgets/neu_identity.dart';
 import '../core/widgets/workspace_panel.dart';
@@ -79,7 +81,9 @@ class VetCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: forma,
             border: Border.all(
-              color: neu ? Colors.transparent : theme.colorScheme.outlineVariant,
+              color: neu
+                  ? Colors.transparent
+                  : theme.colorScheme.outlineVariant,
             ),
           ),
           child: child,
@@ -274,11 +278,7 @@ class VetPracticeSelector extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
   static const labels = ['Pequeñas especies', 'Exóticos', 'Producción'];
-  static const icons = [
-    VetIcons.paw,
-    VetIcons.rabbit,
-    VetIcons.tractor,
-  ];
+  static const icons = [VetIcons.paw, VetIcons.rabbit, VetIcons.tractor];
   @override
   Widget build(BuildContext context) => Row(
     children: List.generate(3, (i) {
@@ -388,22 +388,22 @@ class VetIconBox extends StatelessWidget {
   final double size;
   @override
   Widget build(BuildContext context) {
-    final vivid = vividAccent(accent);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: .15),
-        borderRadius: BorderRadius.circular(size * .32),
-        boxShadow: [
-          BoxShadow(
-            color: vivid.withValues(alpha: .34),
-            blurRadius: size * .42,
-            spreadRadius: 1,
-          ),
-        ],
+    final surface = Theme.of(context).colorScheme.surface;
+    final plate = Color.alphaBlend(accent.withValues(alpha: .18), surface);
+    final vivid = readableOn(vividAccent(accent), plate);
+    return AccentGlow(
+      color: accent,
+      radius: size * .32,
+      emphasis: 1,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: plate,
+          borderRadius: BorderRadius.circular(size * .32),
+        ),
+        child: Icon(icon, color: vivid, size: size * .52),
       ),
-      child: Icon(icon, color: vivid, size: size * .52),
     );
   }
 }
@@ -445,6 +445,11 @@ class VetSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (large && AppHeadingScope.owns(context, {title})) {
+      return subtitle == null
+          ? const SizedBox.shrink()
+          : Text(subtitle!, style: theme.textTheme.bodySmall);
+    }
     final textTheme = theme.textTheme;
     // El apoyo no lleva el gris fijo de antes: sobre el fondo oscuro
     // #201F25 ese gris queda en 3.6:1, por debajo del minimo de texto. El del
@@ -761,6 +766,7 @@ class VetDataRow extends StatelessWidget {
     this.icon,
     this.valueColor,
     this.emphasized = false,
+    this.compactValue = false,
   });
   final String label;
   final String value;
@@ -774,16 +780,22 @@ class VetDataRow extends StatelessWidget {
   /// El valor es la cifra importante: se pinta más grande.
   final bool emphasized;
 
+  /// Compact alert counters use intrinsic width, with breathing room at the end.
+  final bool compactValue;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final muted = theme.colorScheme.onSurfaceVariant;
-    final valueStyle = (emphasized ? textTheme.titleLarge : textTheme.bodyMedium)
-        ?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: valueColor ?? theme.colorScheme.onSurface,
-        );
+    final valueStyle =
+        (emphasized
+                ? (compactValue ? textTheme.titleMedium : textTheme.titleLarge)
+                : textTheme.bodyMedium)
+            ?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? theme.colorScheme.onSurface,
+            );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -802,9 +814,15 @@ class VetDataRow extends StatelessWidget {
           const SizedBox(width: 12),
           // El valor comparte el ancho para poder partirse en vez de desbordar;
           // el texto se alinea a la derecha, así las cifras quedan en el borde.
-          Expanded(
-            child: Text(value, textAlign: TextAlign.right, style: valueStyle),
-          ),
+          if (compactValue)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Text(value, style: valueStyle),
+            )
+          else
+            Expanded(
+              child: Text(value, textAlign: TextAlign.right, style: valueStyle),
+            ),
         ],
       ),
     );
@@ -1028,9 +1046,7 @@ class VetPlanCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(name, style: theme.textTheme.titleMedium),
-              ),
+              Expanded(child: Text(name, style: theme.textTheme.titleMedium)),
               if (current) ...[
                 const SizedBox(width: 8),
                 VetStatusBadge(label: 'Tu plan', kind: VetBadgeKind.success),
@@ -1093,9 +1109,7 @@ class VetSecondaryButton extends StatelessWidget {
           horizontal: VetSpacing.lg,
           vertical: VetSpacing.md,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.7)),
       ),
       child: Row(
@@ -1155,23 +1169,19 @@ class VetActionChip extends StatelessWidget {
       radius: VetSpacing.radiusMd,
       child: ActionChip(
         avatar: icon != null ? Icon(icon, size: 16, color: color) : null,
-        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         onPressed: onPressed,
         backgroundColor: selected
             ? color.withValues(alpha: .15)
             : isActive
-                ? cs.surface
-                : cs.surfaceContainerLow,
-        side: BorderSide(
-          color: selected ? color : cs.outlineVariant,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 6,
-        ),
+            ? cs.surface
+            : cs.surfaceContainerLow,
+        side: BorderSide(color: selected ? color : cs.outlineVariant),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
     );
   }
@@ -1241,10 +1251,7 @@ class VetSectionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: padding,
-                child: child,
-              ),
+              Padding(padding: padding, child: child),
             ],
           ),
         ),

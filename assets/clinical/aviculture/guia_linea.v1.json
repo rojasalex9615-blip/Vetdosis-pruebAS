@@ -1,0 +1,1528 @@
+{
+  "schemaVersion": 1,
+  "guides": [
+    {
+      "id": "bovans-cage",
+      "brand": "Bovans",
+      "strain": "Bovans Brown",
+      "system": "jaula",
+      "edition": "L6230-1 · sin año impreso",
+      "url": "https://www.bovans.com/documents/2579/Bovans_Brown_CS_product_guide_cage_EN_L6230_-1_HyEGkWM.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "ffa840c7c48cc445165747a4fd831357369eeb99a302c67cf6edc52d824e21c2",
+      "title": "Bovans Brown · Product Guide",
+      "notes": [],
+      "rows": [
+        {
+          "week": 1,
+          "page": 6,
+          "feedMin": "9",
+          "feedMax": "11",
+          "cumulativeMin": "63",
+          "cumulativeMax": "77",
+          "weightMin": "59",
+          "weightMax": "62"
+        },
+        {
+          "week": 2,
+          "page": 6,
+          "feedMin": "15",
+          "feedMax": "17",
+          "cumulativeMin": "168",
+          "cumulativeMax": "196",
+          "weightMin": "117",
+          "weightMax": "123"
+        },
+        {
+          "week": 3,
+          "page": 6,
+          "feedMin": "23",
+          "feedMax": "25",
+          "cumulativeMin": "329",
+          "cumulativeMax": "371",
+          "weightMin": "171",
+          "weightMax": "179"
+        },
+        {
+          "week": 4,
+          "page": 6,
+          "feedMin": "29",
+          "feedMax": "31",
+          "cumulativeMin": "532",
+          "cumulativeMax": "588",
+          "weightMin": "239",
+          "weightMax": "251"
+        },
+        {
+          "week": 5,
+          "page": 6,
+          "feedMin": "34",
+          "feedMax": "36",
+          "cumulativeMin": "770",
+          "cumulativeMax": "840",
+          "weightMin": "332",
+          "weightMax": "349"
+        },
+        {
+          "week": 6,
+          "page": 6,
+          "feedMin": "39",
+          "feedMax": "41",
+          "cumulativeMin": "1043",
+          "cumulativeMax": "1127",
+          "weightMin": "429",
+          "weightMax": "451"
+        },
+        {
+          "week": 7,
+          "page": 6,
+          "feedMin": "43",
+          "feedMax": "45",
+          "cumulativeMin": "1344",
+          "cumulativeMax": "1442",
+          "weightMin": "527",
+          "weightMax": "554"
+        },
+        {
+          "week": 8,
+          "page": 6,
+          "feedMin": "47",
+          "feedMax": "49",
+          "cumulativeMin": "1673",
+          "cumulativeMax": "1785",
+          "weightMin": "614",
+          "weightMax": "646"
+        },
+        {
+          "week": 9,
+          "page": 6,
+          "feedMin": "51",
+          "feedMax": "53",
+          "cumulativeMin": "2030",
+          "cumulativeMax": "2156",
+          "weightMin": "702",
+          "weightMax": "738"
+        },
+        {
+          "week": 10,
+          "page": 6,
+          "feedMin": "55",
+          "feedMax": "57",
+          "cumulativeMin": "2415",
+          "cumulativeMax": "2555",
+          "weightMin": "790",
+          "weightMax": "830"
+        },
+        {
+          "week": 11,
+          "page": 6,
+          "feedMin": "59",
+          "feedMax": "61",
+          "cumulativeMin": "2828",
+          "cumulativeMax": "2982",
+          "weightMin": "878",
+          "weightMax": "923"
+        },
+        {
+          "week": 12,
+          "page": 6,
+          "feedMin": "62",
+          "feedMax": "64",
+          "cumulativeMin": "3262",
+          "cumulativeMax": "3430",
+          "weightMin": "975",
+          "weightMax": "1025"
+        },
+        {
+          "week": 13,
+          "page": 6,
+          "feedMin": "65",
+          "feedMax": "67",
+          "cumulativeMin": "3717",
+          "cumulativeMax": "3899",
+          "weightMin": "1068",
+          "weightMax": "1122"
+        },
+        {
+          "week": 14,
+          "page": 6,
+          "feedMin": "68",
+          "feedMax": "70",
+          "cumulativeMin": "4193",
+          "cumulativeMax": "4389",
+          "weightMin": "1151",
+          "weightMax": "1210"
+        },
+        {
+          "week": 15,
+          "page": 6,
+          "feedMin": "71",
+          "feedMax": "73",
+          "cumulativeMin": "4690",
+          "cumulativeMax": "4900",
+          "weightMin": "1233",
+          "weightMax": "1297"
+        },
+        {
+          "week": 16,
+          "page": 6,
+          "feedMin": "75",
+          "feedMax": "77",
+          "cumulativeMin": "5215",
+          "cumulativeMax": "5439",
+          "weightMin": "1316",
+          "weightMax": "1384"
+        },
+        {
+          "week": 17,
+          "page": 6,
+          "feedMin": "81",
+          "feedMax": "83",
+          "cumulativeMin": "5782",
+          "cumulativeMax": "6020",
+          "weightMin": "1389",
+          "weightMax": "1461"
+        },
+        {
+          "week": 18,
+          "page": 6,
+          "feedMin": "88",
+          "feedMax": "90",
+          "cumulativeMin": "6398",
+          "cumulativeMax": "6650",
+          "weightMin": "1463",
+          "weightMax": "1538"
+        }
+      ]
+    },
+    {
+      "id": "bovans-floor",
+      "brand": "Bovans",
+      "strain": "Bovans Brown",
+      "system": "piso",
+      "edition": "L6230-1 · sin año impreso",
+      "url": "https://www.bovans.com/documents/2577/Bovans_Brown_CS_product_guide_alternative_EN_L6230-1.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "7c6133f0b8fba82a0da0e04931568cfb3f1867031cbeb88c7a1e4a4e9ba1d314",
+      "title": "Bovans Brown · Product Guide",
+      "notes": [],
+      "rows": [
+        {
+          "week": 1,
+          "page": 6,
+          "feedMin": "10",
+          "feedMax": "12",
+          "cumulativeMin": "70",
+          "cumulativeMax": "84",
+          "weightMin": "59",
+          "weightMax": "62"
+        },
+        {
+          "week": 2,
+          "page": 6,
+          "feedMin": "16",
+          "feedMax": "18",
+          "cumulativeMin": "182",
+          "cumulativeMax": "210",
+          "weightMin": "117",
+          "weightMax": "123"
+        },
+        {
+          "week": 3,
+          "page": 6,
+          "feedMin": "24",
+          "feedMax": "26",
+          "cumulativeMin": "350",
+          "cumulativeMax": "392",
+          "weightMin": "171",
+          "weightMax": "179"
+        },
+        {
+          "week": 4,
+          "page": 6,
+          "feedMin": "29",
+          "feedMax": "31",
+          "cumulativeMin": "553",
+          "cumulativeMax": "609",
+          "weightMin": "239",
+          "weightMax": "251"
+        },
+        {
+          "week": 5,
+          "page": 6,
+          "feedMin": "34",
+          "feedMax": "36",
+          "cumulativeMin": "791",
+          "cumulativeMax": "861",
+          "weightMin": "332",
+          "weightMax": "349"
+        },
+        {
+          "week": 6,
+          "page": 6,
+          "feedMin": "39",
+          "feedMax": "41",
+          "cumulativeMin": "1064",
+          "cumulativeMax": "1148",
+          "weightMin": "429",
+          "weightMax": "451"
+        },
+        {
+          "week": 7,
+          "page": 6,
+          "feedMin": "43",
+          "feedMax": "45",
+          "cumulativeMin": "1365",
+          "cumulativeMax": "1463",
+          "weightMin": "527",
+          "weightMax": "554"
+        },
+        {
+          "week": 8,
+          "page": 6,
+          "feedMin": "47",
+          "feedMax": "49",
+          "cumulativeMin": "1694",
+          "cumulativeMax": "1806",
+          "weightMin": "614",
+          "weightMax": "646"
+        },
+        {
+          "week": 9,
+          "page": 6,
+          "feedMin": "51",
+          "feedMax": "53",
+          "cumulativeMin": "2051",
+          "cumulativeMax": "2177",
+          "weightMin": "702",
+          "weightMax": "738"
+        },
+        {
+          "week": 10,
+          "page": 6,
+          "feedMin": "55",
+          "feedMax": "57",
+          "cumulativeMin": "2436",
+          "cumulativeMax": "2576",
+          "weightMin": "790",
+          "weightMax": "830"
+        },
+        {
+          "week": 11,
+          "page": 6,
+          "feedMin": "58",
+          "feedMax": "60",
+          "cumulativeMin": "2842",
+          "cumulativeMax": "2996",
+          "weightMin": "878",
+          "weightMax": "923"
+        },
+        {
+          "week": 12,
+          "page": 6,
+          "feedMin": "61",
+          "feedMax": "63",
+          "cumulativeMin": "3269",
+          "cumulativeMax": "3437",
+          "weightMin": "975",
+          "weightMax": "1025"
+        },
+        {
+          "week": 13,
+          "page": 6,
+          "feedMin": "64",
+          "feedMax": "66",
+          "cumulativeMin": "3717",
+          "cumulativeMax": "3899",
+          "weightMin": "1068",
+          "weightMax": "1122"
+        },
+        {
+          "week": 14,
+          "page": 6,
+          "feedMin": "67",
+          "feedMax": "69",
+          "cumulativeMin": "4186",
+          "cumulativeMax": "4382",
+          "weightMin": "1151",
+          "weightMax": "1210"
+        },
+        {
+          "week": 15,
+          "page": 6,
+          "feedMin": "70",
+          "feedMax": "72",
+          "cumulativeMin": "4676",
+          "cumulativeMax": "4886",
+          "weightMin": "1233",
+          "weightMax": "1297"
+        },
+        {
+          "week": 16,
+          "page": 6,
+          "feedMin": "74",
+          "feedMax": "76",
+          "cumulativeMin": "5194",
+          "cumulativeMax": "5418",
+          "weightMin": "1316",
+          "weightMax": "1384"
+        },
+        {
+          "week": 17,
+          "page": 6,
+          "feedMin": "80",
+          "feedMax": "82",
+          "cumulativeMin": "5754",
+          "cumulativeMax": "5992",
+          "weightMin": "1389",
+          "weightMax": "1461"
+        },
+        {
+          "week": 18,
+          "page": 6,
+          "feedMin": "87",
+          "feedMax": "89",
+          "cumulativeMin": "6361",
+          "cumulativeMax": "6613",
+          "weightMin": "1463",
+          "weightMax": "1538"
+        }
+      ]
+    },
+    {
+      "id": "hyline-cage",
+      "brand": "Hy-Line",
+      "strain": "Hy-Line Brown",
+      "system": "jaula",
+      "edition": "Diciembre 2025",
+      "url": "https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/BRN%20STD%20ENG.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "61c900e76110f6e57f8ae63dd46b7d39682307f78e936190b413f3f4ec5c385c",
+      "title": "Hy-Line Brown · Performance Standards Guide",
+      "notes": [
+        "La semana 18, si está incluida, procede de la tabla de producción; no se reutiliza su mortalidad reiniciada para crianza."
+      ],
+      "rows": [
+        {
+          "week": 1,
+          "page": 4,
+          "mortality": "0.40",
+          "weightMin": "69",
+          "weightMax": "73",
+          "feedMin": "16",
+          "feedMax": "17",
+          "cumulativeMin": "110",
+          "cumulativeMax": "117",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 2,
+          "page": 4,
+          "mortality": "0.55",
+          "weightMin": "119",
+          "weightMax": "126",
+          "feedMin": "18",
+          "feedMax": "19",
+          "cumulativeMin": "234",
+          "cumulativeMax": "248",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 3,
+          "page": 4,
+          "mortality": "0.65",
+          "weightMin": "186",
+          "weightMax": "197",
+          "feedMin": "21",
+          "feedMax": "23",
+          "cumulativeMin": "378",
+          "cumulativeMax": "406",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 4,
+          "page": 4,
+          "mortality": "0.75",
+          "weightMin": "266",
+          "weightMax": "281",
+          "feedMin": "26",
+          "feedMax": "28",
+          "cumulativeMin": "557",
+          "cumulativeMax": "599",
+          "uniformityMin": "80",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 5,
+          "page": 4,
+          "mortality": "0.85",
+          "weightMin": "357",
+          "weightMax": "377",
+          "feedMin": "31",
+          "feedMax": "33",
+          "cumulativeMin": "777",
+          "cumulativeMax": "832",
+          "uniformityMin": "80",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 6,
+          "page": 4,
+          "mortality": "0.95",
+          "weightMin": "456",
+          "weightMax": "482",
+          "feedMin": "37",
+          "feedMax": "40",
+          "cumulativeMin": "1039",
+          "cumulativeMax": "1114",
+          "uniformityMin": "80",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 7,
+          "page": 4,
+          "mortality": "1.05",
+          "weightMin": "561",
+          "weightMax": "593",
+          "feedMin": "43",
+          "feedMax": "46",
+          "cumulativeMin": "1341",
+          "cumulativeMax": "1438",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 8,
+          "page": 4,
+          "mortality": "1.15",
+          "weightMin": "668",
+          "weightMax": "706",
+          "feedMin": "48",
+          "feedMax": "52",
+          "cumulativeMin": "1679",
+          "cumulativeMax": "1802",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 9,
+          "page": 4,
+          "mortality": "1.25",
+          "weightMin": "772",
+          "weightMax": "816",
+          "feedMin": "53",
+          "feedMax": "57",
+          "cumulativeMin": "2050",
+          "cumulativeMax": "2201",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 10,
+          "page": 4,
+          "mortality": "1.35",
+          "weightMin": "871",
+          "weightMax": "921",
+          "feedMin": "57",
+          "feedMax": "61",
+          "cumulativeMin": "2449",
+          "cumulativeMax": "2628",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 11,
+          "page": 4,
+          "mortality": "1.45",
+          "weightMin": "963",
+          "weightMax": "1018",
+          "feedMin": "61",
+          "feedMax": "65",
+          "cumulativeMin": "2876",
+          "cumulativeMax": "3082",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 12,
+          "page": 4,
+          "mortality": "1.55",
+          "weightMin": "1046",
+          "weightMax": "1105",
+          "feedMin": "63",
+          "feedMax": "68",
+          "cumulativeMin": "3316",
+          "cumulativeMax": "3557",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 13,
+          "page": 4,
+          "mortality": "1.63",
+          "weightMin": "1120",
+          "weightMax": "1184",
+          "feedMin": "66",
+          "feedMax": "70",
+          "cumulativeMin": "3777",
+          "cumulativeMax": "4045",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 14,
+          "page": 4,
+          "mortality": "1.70",
+          "weightMin": "1186",
+          "weightMax": "1254",
+          "feedMin": "68",
+          "feedMax": "73",
+          "cumulativeMin": "4251",
+          "cumulativeMax": "4554",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 15,
+          "page": 4,
+          "mortality": "1.78",
+          "weightMin": "1246",
+          "weightMax": "1317",
+          "feedMin": "70",
+          "feedMax": "75",
+          "cumulativeMin": "4740",
+          "cumulativeMax": "5077",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 16,
+          "page": 4,
+          "mortality": "1.85",
+          "weightMin": "1302",
+          "weightMax": "1377",
+          "feedMin": "73",
+          "feedMax": "78",
+          "cumulativeMin": "5249",
+          "cumulativeMax": "5620",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 17,
+          "page": 4,
+          "mortality": "2.00",
+          "weightMin": "1357",
+          "weightMax": "1434",
+          "feedMin": "77",
+          "feedMax": "82",
+          "cumulativeMin": "5786",
+          "cumulativeMax": "6191",
+          "uniformityMin": "90",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 18,
+          "page": 5,
+          "weightMin": "1411",
+          "weightMax": "1492",
+          "feedMin": "81",
+          "feedMax": "86"
+        }
+      ]
+    },
+    {
+      "id": "hyline-floor",
+      "brand": "Hy-Line",
+      "strain": "Hy-Line Brown",
+      "system": "piso",
+      "edition": "Mayo 2026",
+      "url": "https://www.hyline.com/filesimages/Hy-Line-Products/Hy-Line-Product-PDFs/Brown/Brown%20Alt/BRN%20ALT%20STD%20ENG.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "cada0ff2b8530b49582ce7e1088febd153b8ca0c05c45ec26cc904ce4e4b3412",
+      "title": "Hy-Line Brown · Performance Standards Guide",
+      "notes": [
+        "La semana 18, si está incluida, procede de la tabla de producción; no se reutiliza su mortalidad reiniciada para crianza."
+      ],
+      "rows": [
+        {
+          "week": 1,
+          "page": 4,
+          "mortality": "0.40",
+          "weightMin": "65",
+          "weightMax": "76",
+          "feedMin": "17",
+          "feedMax": "19",
+          "cumulativeMin": "120",
+          "cumulativeMax": "130",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 2,
+          "page": 4,
+          "mortality": "0.56",
+          "weightMin": "113",
+          "weightMax": "132",
+          "feedMin": "20",
+          "feedMax": "21",
+          "cumulativeMin": "260",
+          "cumulativeMax": "290",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 3,
+          "page": 4,
+          "mortality": "0.67",
+          "weightMin": "177",
+          "weightMax": "205",
+          "feedMin": "23",
+          "feedMax": "25",
+          "cumulativeMin": "420",
+          "cumulativeMax": "460",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 4,
+          "page": 4,
+          "mortality": "0.79",
+          "weightMin": "254",
+          "weightMax": "292",
+          "feedMin": "28",
+          "feedMax": "31",
+          "cumulativeMin": "620",
+          "cumulativeMax": "680",
+          "uniformityMin": "80",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 5,
+          "page": 4,
+          "mortality": "0.92",
+          "weightMin": "343",
+          "weightMax": "391",
+          "feedMin": "35",
+          "feedMax": "38",
+          "cumulativeMin": "860",
+          "cumulativeMax": "940",
+          "uniformityMin": "80",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 6,
+          "page": 4,
+          "mortality": "1.04",
+          "weightMin": "440",
+          "weightMax": "499",
+          "feedMin": "41",
+          "feedMax": "45",
+          "cumulativeMin": "1150",
+          "cumulativeMax": "1260",
+          "uniformityMin": "80",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 7,
+          "page": 4,
+          "mortality": "1.18",
+          "weightMin": "543",
+          "weightMax": "611",
+          "feedMin": "47",
+          "feedMax": "51",
+          "cumulativeMin": "1480",
+          "cumulativeMax": "1620",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 8,
+          "page": 4,
+          "mortality": "1.31",
+          "weightMin": "649",
+          "weightMax": "725",
+          "feedMin": "53",
+          "feedMax": "57",
+          "cumulativeMin": "1850",
+          "cumulativeMax": "2020",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 9,
+          "page": 4,
+          "mortality": "1.44",
+          "weightMin": "753",
+          "weightMax": "835",
+          "feedMin": "58",
+          "feedMax": "62",
+          "cumulativeMin": "2260",
+          "cumulativeMax": "2450",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 10,
+          "page": 4,
+          "mortality": "1.57",
+          "weightMin": "853",
+          "weightMax": "939",
+          "feedMin": "62",
+          "feedMax": "67",
+          "cumulativeMin": "2690",
+          "cumulativeMax": "2920",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 11,
+          "page": 4,
+          "mortality": "1.69",
+          "weightMin": "946",
+          "weightMax": "1034",
+          "feedMin": "66",
+          "feedMax": "71",
+          "cumulativeMin": "3160",
+          "cumulativeMax": "3410",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 12,
+          "page": 4,
+          "mortality": "1.81",
+          "weightMin": "1032",
+          "weightMax": "1119",
+          "feedMin": "69",
+          "feedMax": "73",
+          "cumulativeMin": "3630",
+          "cumulativeMax": "3920",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 13,
+          "page": 4,
+          "mortality": "1.91",
+          "weightMin": "1109",
+          "weightMax": "1195",
+          "feedMin": "71",
+          "feedMax": "75",
+          "cumulativeMin": "4130",
+          "cumulativeMax": "4450",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 14,
+          "page": 4,
+          "mortality": "1.99",
+          "weightMin": "1179",
+          "weightMax": "1261",
+          "feedMin": "73",
+          "feedMax": "78",
+          "cumulativeMin": "4640",
+          "cumulativeMax": "5000",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 15,
+          "page": 4,
+          "mortality": "2.09",
+          "weightMin": "1243",
+          "weightMax": "1320",
+          "feedMin": "75",
+          "feedMax": "79",
+          "cumulativeMin": "5170",
+          "cumulativeMax": "5550",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 16,
+          "page": 4,
+          "mortality": "2.18",
+          "weightMin": "1304",
+          "weightMax": "1375",
+          "feedMin": "78",
+          "feedMax": "82",
+          "cumulativeMin": "5720",
+          "cumulativeMax": "6130",
+          "uniformityMin": "85",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 17,
+          "page": 4,
+          "mortality": "2.37",
+          "weightMin": "1363",
+          "weightMax": "1428",
+          "feedMin": "82",
+          "feedMax": "86",
+          "cumulativeMin": "6300",
+          "cumulativeMax": "6730",
+          "uniformityMin": "90",
+          "uniformityQualifier": ">"
+        },
+        {
+          "week": 18,
+          "page": 5,
+          "weightMin": "1418",
+          "weightMax": "1485",
+          "feedMin": "87",
+          "feedMax": "91"
+        }
+      ],
+      "densityReferences": [
+        {
+          "week": 15,
+          "birdsPerM2": "15",
+          "page": 4,
+          "note": "Densidad útil al transferir en la semana indicada; no es densidad para toda la crianza."
+        },
+        {
+          "week": 16,
+          "birdsPerM2": "14",
+          "page": 4,
+          "note": "Densidad útil al transferir en la semana indicada; no es densidad para toda la crianza."
+        },
+        {
+          "week": 17,
+          "birdsPerM2": "13",
+          "page": 4,
+          "note": "Densidad útil al transferir en la semana indicada; no es densidad para toda la crianza."
+        },
+        {
+          "week": 18,
+          "birdsPerM2": "12",
+          "page": 4,
+          "note": "Densidad útil al transferir en la semana indicada; no es densidad para toda la crianza."
+        }
+      ]
+    },
+    {
+      "id": "lohmann-cage-2019",
+      "brand": "Lohmann",
+      "strain": "Lohmann Brown-Classic",
+      "system": "jaula",
+      "edition": "Diciembre 2019 · archivo histórico",
+      "url": "https://lohmann-breeders.com/media/2020/07/ManagementGuideLBClassicCage-EN.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "1321a74af08f44243fe86ac74fa96823aff798670c0cb6a0d973af5fde1391ca",
+      "title": "Lohmann Brown-Classic · Management Guide",
+      "notes": [
+        "Las cifras de alimento son orientativas para presupuesto. La guía indica alimentación a libre acceso; no son límites de ración.",
+        "Edición histórica: se conserva identificada, sin mezclar sus cifras con otras ediciones."
+      ],
+      "rows": [
+        {
+          "week": 1,
+          "page": 15,
+          "weightMin": "73",
+          "weightMax": "77",
+          "feedMin": "11",
+          "feedMax": "11",
+          "cumulativeMin": "77",
+          "cumulativeMax": "77"
+        },
+        {
+          "week": 2,
+          "page": 15,
+          "weightMin": "126",
+          "weightMax": "134",
+          "feedMin": "17",
+          "feedMax": "17",
+          "cumulativeMin": "196",
+          "cumulativeMax": "196"
+        },
+        {
+          "week": 3,
+          "page": 15,
+          "weightMin": "189",
+          "weightMax": "201",
+          "feedMin": "22",
+          "feedMax": "22",
+          "cumulativeMin": "350",
+          "cumulativeMax": "350"
+        },
+        {
+          "week": 4,
+          "page": 15,
+          "weightMin": "267",
+          "weightMax": "283",
+          "feedMin": "28",
+          "feedMax": "28",
+          "cumulativeMin": "546",
+          "cumulativeMax": "546"
+        },
+        {
+          "week": 5,
+          "page": 15,
+          "weightMin": "360",
+          "weightMax": "382",
+          "feedMin": "35",
+          "feedMax": "35",
+          "cumulativeMin": "791",
+          "cumulativeMax": "791"
+        },
+        {
+          "week": 6,
+          "page": 15,
+          "weightMin": "460",
+          "weightMax": "488",
+          "feedMin": "41",
+          "feedMax": "41",
+          "cumulativeMin": "1078",
+          "cumulativeMax": "1078"
+        },
+        {
+          "week": 7,
+          "page": 15,
+          "weightMin": "561",
+          "weightMax": "595",
+          "feedMin": "47",
+          "feedMax": "47",
+          "cumulativeMin": "1407",
+          "cumulativeMax": "1407"
+        },
+        {
+          "week": 8,
+          "page": 15,
+          "weightMin": "659",
+          "weightMax": "699",
+          "feedMin": "51",
+          "feedMax": "51",
+          "cumulativeMin": "1764",
+          "cumulativeMax": "1764"
+        },
+        {
+          "week": 9,
+          "page": 15,
+          "weightMin": "752",
+          "weightMax": "798",
+          "feedMin": "55",
+          "feedMax": "55",
+          "cumulativeMin": "2149",
+          "cumulativeMax": "2149"
+        },
+        {
+          "week": 10,
+          "page": 15,
+          "weightMin": "841",
+          "weightMax": "893",
+          "feedMin": "58",
+          "feedMax": "58",
+          "cumulativeMin": "2555",
+          "cumulativeMax": "2555"
+        },
+        {
+          "week": 11,
+          "page": 15,
+          "weightMin": "927",
+          "weightMax": "985",
+          "feedMin": "60",
+          "feedMax": "60",
+          "cumulativeMin": "2975",
+          "cumulativeMax": "2975"
+        },
+        {
+          "week": 12,
+          "page": 15,
+          "weightMin": "1011",
+          "weightMax": "1073",
+          "feedMin": "64",
+          "feedMax": "64",
+          "cumulativeMin": "3423",
+          "cumulativeMax": "3423"
+        },
+        {
+          "week": 13,
+          "page": 15,
+          "weightMin": "1092",
+          "weightMax": "1160",
+          "feedMin": "65",
+          "feedMax": "65",
+          "cumulativeMin": "3878",
+          "cumulativeMax": "3878"
+        },
+        {
+          "week": 14,
+          "page": 15,
+          "weightMin": "1171",
+          "weightMax": "1243",
+          "feedMin": "68",
+          "feedMax": "68",
+          "cumulativeMin": "4354",
+          "cumulativeMax": "4354"
+        },
+        {
+          "week": 15,
+          "page": 15,
+          "weightMin": "1247",
+          "weightMax": "1325",
+          "feedMin": "70",
+          "feedMax": "70",
+          "cumulativeMin": "4844",
+          "cumulativeMax": "4844"
+        },
+        {
+          "week": 16,
+          "page": 15,
+          "weightMin": "1322",
+          "weightMax": "1404",
+          "feedMin": "71",
+          "feedMax": "71",
+          "cumulativeMin": "5341",
+          "cumulativeMax": "5341"
+        },
+        {
+          "week": 17,
+          "page": 15,
+          "weightMin": "1394",
+          "weightMax": "1480",
+          "feedMin": "72",
+          "feedMax": "72",
+          "cumulativeMin": "5845",
+          "cumulativeMax": "5845"
+        },
+        {
+          "week": 18,
+          "page": 15,
+          "weightMin": "1464",
+          "weightMax": "1554",
+          "feedMin": "75",
+          "feedMax": "75",
+          "cumulativeMin": "6370",
+          "cumulativeMax": "6370"
+        },
+        {
+          "week": 19,
+          "page": 15,
+          "weightMin": "1531",
+          "weightMax": "1625",
+          "feedMin": "81",
+          "feedMax": "81",
+          "cumulativeMin": "6937",
+          "cumulativeMax": "6937"
+        }
+      ]
+    },
+    {
+      "id": "lohmann-cage-v01-24",
+      "brand": "Lohmann",
+      "strain": "Lohmann Brown-Classic",
+      "system": "jaula",
+      "edition": "08/21_V01-24 · sin año único impreso",
+      "url": "https://lohmann-breeders.com/files/downloads/MG/Cage/LB_MG_Cage_LB-Classic_EN.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "961f3d126ac366b7989935a099ff80ce7cb82dee7bc1bdf4eb39afadc3cc9fea",
+      "title": "Lohmann Brown-Classic · Management Guide",
+      "notes": [
+        "Las cifras de alimento son orientativas para presupuesto. La guía indica alimentación a libre acceso; no son límites de ración.",
+        "Esta edición publica peso corporal pero no consumo semanal en la tabla 4. Captura tu consumo o elige otra edición explícitamente."
+      ],
+      "rows": [
+        {
+          "week": 1,
+          "page": 15,
+          "weightMin": "73",
+          "weightMax": "77"
+        },
+        {
+          "week": 2,
+          "page": 15,
+          "weightMin": "126",
+          "weightMax": "134"
+        },
+        {
+          "week": 3,
+          "page": 15,
+          "weightMin": "189",
+          "weightMax": "201"
+        },
+        {
+          "week": 4,
+          "page": 15,
+          "weightMin": "265",
+          "weightMax": "281"
+        },
+        {
+          "week": 5,
+          "page": 15,
+          "weightMin": "355",
+          "weightMax": "377"
+        },
+        {
+          "week": 6,
+          "page": 15,
+          "weightMin": "455",
+          "weightMax": "483"
+        },
+        {
+          "week": 7,
+          "page": 15,
+          "weightMin": "556",
+          "weightMax": "590"
+        },
+        {
+          "week": 8,
+          "page": 15,
+          "weightMin": "657",
+          "weightMax": "697"
+        },
+        {
+          "week": 9,
+          "page": 15,
+          "weightMin": "754",
+          "weightMax": "800"
+        },
+        {
+          "week": 10,
+          "page": 15,
+          "weightMin": "847",
+          "weightMax": "899"
+        },
+        {
+          "week": 11,
+          "page": 15,
+          "weightMin": "934",
+          "weightMax": "992"
+        },
+        {
+          "week": 12,
+          "page": 15,
+          "weightMin": "1016",
+          "weightMax": "1078"
+        },
+        {
+          "week": 13,
+          "page": 15,
+          "weightMin": "1094",
+          "weightMax": "1162"
+        },
+        {
+          "week": 14,
+          "page": 15,
+          "weightMin": "1169",
+          "weightMax": "1241"
+        },
+        {
+          "week": 15,
+          "page": 15,
+          "weightMin": "1241",
+          "weightMax": "1317"
+        },
+        {
+          "week": 16,
+          "page": 15,
+          "weightMin": "1310",
+          "weightMax": "1392"
+        },
+        {
+          "week": 17,
+          "page": 15,
+          "weightMin": "1378",
+          "weightMax": "1464"
+        },
+        {
+          "week": 18,
+          "page": 15,
+          "weightMin": "1448",
+          "weightMax": "1538"
+        },
+        {
+          "week": 19,
+          "page": 15,
+          "weightMin": "1518",
+          "weightMax": "1612"
+        }
+      ]
+    },
+    {
+      "id": "lohmann-floor-2018",
+      "brand": "Lohmann",
+      "strain": "Lohmann Brown-Classic",
+      "system": "piso",
+      "edition": "Abril 2018 · archivo histórico",
+      "url": "https://lohmann-breeders.com/media/2021/03/LTZ_MG_management-systems_EN.pdf",
+      "retrieved": "2026-11-27",
+      "sha256": "6c780a74bfdee589b66fdf104b75ccb48b234e6c917ecfef7379923613f11788",
+      "title": "Lohmann Brown-Classic · Management Guide",
+      "notes": [
+        "Las cifras de alimento son orientativas para presupuesto. La guía indica alimentación a libre acceso; no son límites de ración.",
+        "Edición histórica: se conserva identificada, sin mezclar sus cifras con otras ediciones.",
+        "El programa de luz de la página 15 corresponde a naves cerradas; no se aplica automáticamente a naves abiertas."
+      ],
+      "rows": [
+        {
+          "week": 1,
+          "page": 24,
+          "feedMin": "11",
+          "feedMax": "11",
+          "weightMin": "75",
+          "weightMax": "75",
+          "weightPage": 22
+        },
+        {
+          "week": 2,
+          "page": 24,
+          "feedMin": "17",
+          "feedMax": "17",
+          "weightMin": "130",
+          "weightMax": "130",
+          "weightPage": 22,
+          "lightMin": "16",
+          "lightMax": "16",
+          "lightPage": 15
+        },
+        {
+          "week": 3,
+          "page": 24,
+          "feedMin": "22",
+          "feedMax": "22",
+          "weightMin": "195",
+          "weightMax": "195",
+          "weightPage": 22,
+          "lightMin": "14",
+          "lightMax": "14",
+          "lightPage": 15
+        },
+        {
+          "week": 4,
+          "page": 24,
+          "feedMin": "28",
+          "feedMax": "28",
+          "weightMin": "275",
+          "weightMax": "275",
+          "weightPage": 22,
+          "lightMin": "12",
+          "lightMax": "12",
+          "lightPage": 15
+        },
+        {
+          "week": 5,
+          "page": 24,
+          "feedMin": "35",
+          "feedMax": "35",
+          "weightMin": "367",
+          "weightMax": "367",
+          "weightPage": 22,
+          "lightMin": "11",
+          "lightMax": "11",
+          "lightPage": 15
+        },
+        {
+          "week": 6,
+          "page": 24,
+          "feedMin": "41",
+          "feedMax": "41",
+          "weightMin": "475",
+          "weightMax": "475",
+          "weightPage": 22,
+          "lightMin": "10",
+          "lightMax": "10",
+          "lightPage": 15
+        },
+        {
+          "week": 7,
+          "page": 24,
+          "feedMin": "47",
+          "feedMax": "47",
+          "weightMin": "583",
+          "weightMax": "583",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 8,
+          "page": 24,
+          "feedMin": "51",
+          "feedMax": "51",
+          "weightMin": "685",
+          "weightMax": "685",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 9,
+          "page": 24,
+          "feedMin": "55",
+          "feedMax": "55",
+          "weightMin": "782",
+          "weightMax": "782",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 10,
+          "page": 24,
+          "feedMin": "58",
+          "feedMax": "58",
+          "weightMin": "874",
+          "weightMax": "874",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 11,
+          "page": 24,
+          "feedMin": "60",
+          "feedMax": "60",
+          "weightMin": "961",
+          "weightMax": "961",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 12,
+          "page": 24,
+          "feedMin": "64",
+          "feedMax": "64",
+          "weightMin": "1043",
+          "weightMax": "1043",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 13,
+          "page": 24,
+          "feedMin": "65",
+          "feedMax": "65",
+          "weightMin": "1123",
+          "weightMax": "1123",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 14,
+          "page": 24,
+          "feedMin": "68",
+          "feedMax": "68",
+          "weightMin": "1197",
+          "weightMax": "1197",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 15,
+          "page": 24,
+          "feedMin": "70",
+          "feedMax": "70",
+          "weightMin": "1264",
+          "weightMax": "1264",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 16,
+          "page": 24,
+          "feedMin": "71",
+          "feedMax": "71",
+          "weightMin": "1330",
+          "weightMax": "1330",
+          "weightPage": 22,
+          "lightMin": "9",
+          "lightMax": "9",
+          "lightPage": 15
+        },
+        {
+          "week": 17,
+          "page": 24,
+          "feedMin": "72",
+          "feedMax": "72",
+          "weightMin": "1400",
+          "weightMax": "1400",
+          "weightPage": 22,
+          "lightMin": "10",
+          "lightMax": "10",
+          "lightPage": 15
+        },
+        {
+          "week": 18,
+          "page": 24,
+          "feedMin": "75",
+          "feedMax": "75",
+          "weightMin": "1475",
+          "weightMax": "1475",
+          "weightPage": 22,
+          "lightMin": "11",
+          "lightMax": "11",
+          "lightPage": 15
+        },
+        {
+          "week": 19,
+          "page": 24,
+          "feedMin": "81",
+          "feedMax": "81",
+          "weightMin": "1555",
+          "weightMax": "1555",
+          "weightPage": 22,
+          "lightMin": "12",
+          "lightMax": "12",
+          "lightPage": 15
+        }
+      ]
+    }
+  ],
+  "equipmentDefaults": [
+    {
+      "name": "Vitrolero",
+      "basis": "birds",
+      "coverage": "60",
+      "source": "Proyecto de crianza aportado por Ale; razón editable, no recomendación del fabricante."
+    },
+    {
+      "name": "Charola de iniciación",
+      "basis": "birds",
+      "coverage": "60",
+      "source": "Proyecto de crianza aportado por Ale; razón editable, no recomendación del fabricante."
+    },
+    {
+      "name": "Mini tolva",
+      "basis": "birds",
+      "coverage": "50",
+      "source": "Proyecto de crianza aportado por Ale; razón editable, no recomendación del fabricante."
+    },
+    {
+      "name": "Criadora de gas",
+      "basis": "birds",
+      "coverage": "800",
+      "source": "Proyecto de crianza aportado por Ale; razón editable, no recomendación del fabricante."
+    },
+    {
+      "name": "Bebedero de campana",
+      "basis": "birds",
+      "coverage": "80",
+      "source": "Proyecto de crianza aportado por Ale; razón editable, no recomendación del fabricante."
+    },
+    {
+      "name": "Tolva de desarrollo",
+      "basis": "birds",
+      "coverage": "40",
+      "source": "Proyecto de crianza aportado por Ale; razón editable, no recomendación del fabricante."
+    }
+  ]
+}

@@ -85,7 +85,12 @@ void main() {
     await tester.ensureVisible(find.text('Reproducción y gestación'));
     await tester.tap(find.text('Reproducción y gestación'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Flujo reproductivo'));
+    await tester.tap(find.text('Flujo reproductivo'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Usar ejemplo Modelo 2400'));
+    await tester.pumpAndSettle();
+    expect(find.text('Usar ejemplo Modelo 2400').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Usar ejemplo Modelo 2400'));
     await tester.pumpAndSettle();
     expect(find.text('384'), findsOneWidget);
@@ -125,14 +130,16 @@ void main() {
     await tester.ensureVisible(find.text('Bioseguridad y ambiente'));
     await tester.tap(find.text('Bioseguridad y ambiente'));
     await tester.pumpAndSettle();
+    for (final label in ['Bioseguridad','Impacto de indicadores','Balance de la UPP de referencia','Nitrógeno y huella hídrica','Ambiente y bienestar']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(find.byType(PorcinoBiosecurityPanel), findsNothing);
+    await tester.ensureVisible(find.text('Bioseguridad'));
+    await tester.tap(find.text('Bioseguridad'));
+    await tester.pumpAndSettle();
     expect(find.byType(PorcinoBiosecurityPanel), findsOneWidget);
-    expect(find.byType(PorcinoKpiImpactPanel), findsOneWidget);
-    expect(find.byType(PorcinoUppPanel), findsOneWidget);
-    expect(find.byType(PorcinoNitrogenPanel), findsOneWidget);
-    expect(find.byType(PorcinoEnvironmentPanel), findsOneWidget);
     expect(find.text('0 de 20 revisados'), findsOneWidget);
-    // Sin repositorio no aparecen los paneles remotos.
-    expect(find.byType(PorcinoBiosecurityRefsPanel), findsNothing);
+    expect(find.byType(PorcinoEnvironmentPanel), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -201,6 +208,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Planeación financiera'));
     await tester.tap(find.text('Planeación financiera'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Inversión y costos'));
+    await tester.tap(find.text('Inversión y costos'));
     await tester.pumpAndSettle();
     expect(find.byType(PorcinoInvestmentPanel), findsOneWidget);
 

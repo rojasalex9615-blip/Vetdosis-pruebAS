@@ -1,3 +1,7 @@
+import 'modules/aviculture/domain/poultry_farm.dart';
+import 'modules/aviculture/data/supabase_poultry_farm_repository.dart';
+import 'modules/aviculture/domain/rearing_project_repository.dart';
+import 'modules/aviculture/data/local_rearing_project_store.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -39,6 +43,22 @@ import 'modules/production/domain/porcino_repository.dart';
 import 'modules/production/domain/production_unit_repository.dart';
 import 'modules/production/data/local_production_unit_store.dart';
 import 'modules/production/data/supabase_porcino_repository.dart';
+import 'modules/production/data/supabase_production_farm_repository.dart';
+import 'modules/production/data/supabase_production_write_repository.dart';
+import 'modules/exotics/data/supabase_exotic_repository.dart';
+import 'modules/exotics/data/supabase_exotic_write_repository.dart';
+import 'modules/exotics/domain/exotic_dashboard.dart';
+import 'modules/exotics/domain/exotic_write_repository.dart';
+import 'modules/production/domain/production_farm.dart';
+import 'modules/production/domain/production_write_repository.dart';
+import 'modules/reproduction/domain/gestation.dart';
+import 'modules/reproduction/domain/gestation_write_repository.dart';
+import 'modules/reproduction/data/supabase_gestation_repository.dart';
+import 'modules/reproduction/data/supabase_gestation_write_repository.dart';
+import 'modules/production/domain/feed_inventory.dart';
+import 'modules/production/domain/feed_write_repository.dart';
+import 'modules/production/data/supabase_feed_inventory_repository.dart';
+import 'modules/production/data/supabase_feed_write_repository.dart';
 import 'modules/aviculture/domain/aviculture_records_repository.dart';
 import 'modules/aviculture/data/supabase_aviculture_records_repository.dart';
 import 'modules/calculations/data/reference_library_repository.dart';
@@ -81,7 +101,8 @@ Future<void> main() async {
     defaultValue: true,
   );
   const googleEnabled = bool.fromEnvironment('SUPABASE_GOOGLE_ENABLED');
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android &&
+  if (!kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android &&
       channel == 'beta') {
     try {
       await Firebase.initializeApp();
@@ -114,7 +135,17 @@ Future<void> main() async {
   ClinicExperienceRepository? experienceRepository;
   ReviewCatalogRepository? reviewCatalog;
   PorcinoRepository? porcino;
+  ProductionFarmRepository? farm;
+  ProductionWriteRepository? farmWrite;
+  GestationRepository? gestation;
+  GestationWriteRepository? gestationWrite;
+  FeedInventoryRepository? feed;
+  FeedWriteRepository? feedWrite;
+  ExoticDashboardRepository? exotics;
+  ExoticWriteRepository? exoticsWrite;
   ProductionUnitRepository? productionUnits;
+  RearingProjectRepository? rearingProjects;
+  PoultryFarmRepository? poultryFarms;
   AvicultureRecordsRepository? aviculture;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
@@ -134,7 +165,9 @@ Future<void> main() async {
     clinical = SupabaseClinicalRepository(Supabase.instance.client);
     laboratory = SupabaseLabRepository(Supabase.instance.client);
     prescribing = SupabasePrescribingRepository(Supabase.instance.client);
-    referenceLibrary = SupabaseReferenceLibraryRepository(Supabase.instance.client);
+    referenceLibrary = SupabaseReferenceLibraryRepository(
+      Supabase.instance.client,
+    );
     inventory = SupabaseInventoryRepository(Supabase.instance.client);
     operations = SupabaseOperationsRepository(Supabase.instance.client);
     personalSpace = SupabasePersonalSpaceRepository(Supabase.instance.client);
@@ -144,14 +177,26 @@ Future<void> main() async {
     support = SupabaseSupportRepository(Supabase.instance.client);
     subscriptions = SupabaseSubscriptionRepository(Supabase.instance.client);
     moduleAccess = SupabaseModuleAccessRepository(Supabase.instance.client);
-    experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
+    experienceRepository = SupabaseClinicExperienceRepository(
+      Supabase.instance.client,
+    );
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     porcino = SupabasePorcinoRepository(Supabase.instance.client);
+    farm = SupabaseProductionFarmRepository(Supabase.instance.client);
+    farmWrite = SupabaseProductionWriteRepository(Supabase.instance.client);
+    gestation = SupabaseGestationRepository(Supabase.instance.client);
+    gestationWrite = SupabaseGestationWriteRepository(Supabase.instance.client);
+    feed = SupabaseFeedInventoryRepository(Supabase.instance.client);
+    feedWrite = SupabaseFeedWriteRepository(Supabase.instance.client);
+    exotics = SupabaseExoticRepository(Supabase.instance.client);
+    exoticsWrite = SupabaseExoticWriteRepository(Supabase.instance.client);
     aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
+    poultryFarms = SupabasePoultryFarmRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     // Las unidades de produccion viven en la misma base local que el resto del
     // modo sin conexion: no hace falta otro archivo para ellas.
     productionUnits = LocalProductionUnitStore(localStore.database);
+    rearingProjects = LocalRearingProjectStore(localStore.database);
     final authRepository = SupabaseAuthRepository(
       Supabase.instance.client,
       existingSchema: existingSchema,
@@ -184,8 +229,11 @@ Future<void> main() async {
   );
   final alerts = HospitalAlerts(backend, await SharedPreferences.getInstance());
   await alerts.initialize();
-  if (auth != null && Firebase.apps.isNotEmpty && channel == 'beta' &&
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+  if (auth != null &&
+      Firebase.apps.isNotEmpty &&
+      channel == 'beta' &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android) {
     final service = HospitalPushService(
       Supabase.instance.client,
       FirebaseMessaging.instance,
@@ -248,8 +296,18 @@ Future<void> main() async {
       experienceRepository: experienceRepository,
       reviewCatalog: reviewCatalog,
       porcino: porcino,
+      farm: farm,
+      farmWrite: farmWrite,
+      gestation: gestation,
+      gestationWrite: gestationWrite,
+      feed: feed,
+      feedWrite: feedWrite,
+      exotics: exotics,
+      exoticsWrite: exoticsWrite,
       aviculture: aviculture,
       units: productionUnits,
+      rearingProjects: rearingProjects,
+      poultryFarms: poultryFarms,
       hospitalAlerts: alerts,
       requireAuth: true,
     ),

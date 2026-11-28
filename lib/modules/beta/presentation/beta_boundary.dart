@@ -335,6 +335,7 @@ class _BetaBoundaryState extends State<BetaBoundary> {
                 children: [
                   if (banner != null)
                     SafeArea(
+                      key: const ValueKey('beta-banner'),
                       bottom: false,
                       child: Material(
                         color: Theme.of(context).colorScheme.secondaryContainer,
@@ -346,10 +347,12 @@ class _BetaBoundaryState extends State<BetaBoundary> {
                     ),
                   if (state?.termsPending == true)
                     TextButton(
+                      key: const ValueKey('beta-terms-button'),
                       onPressed: () => setState(() => termsReadOnly = false),
                       child: const Text('Leer y aceptar términos actualizados'),
                     ),
                   Expanded(
+                    key: const ValueKey('beta-content'),
                     child: LegalScope(
                       // El par ya verificado por la puerta beta es el unico que
                       // ven Inicio, Planes y los calculos: misma version y

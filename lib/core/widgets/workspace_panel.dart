@@ -102,6 +102,7 @@ IconData sectionIcon(String page) => switch (page) {
   'Operaciones de dosis' => VetIcons.syringe,
   'Cálculos clínicos' => VetIcons.flask,
   'Exóticos' => VetIcons.rabbit,
+  'Dashboard Exóticos' => VetIcons.lizard,
   'Producción y grandes especies' => VetIcons.barn,
   'Escanear producto' => VetIcons.qrScan,
   'Hospitalización' => VetIcons.hospital,

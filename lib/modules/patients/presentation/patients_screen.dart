@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../domain/patient_contacts.dart';
 import '../../ai/domain/ai_repository.dart';
@@ -269,11 +270,10 @@ class _PatientsScreenState extends State<PatientsScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Pacientes y expedientes',
-            style: Theme.of(context).textTheme.headlineMedium,
+          AppPageHeading(
+            title: 'Pacientes y expedientes',
+            screens: const {'Pacientes'},
           ),
-          const SizedBox(height: 16),
           Wrap(
             spacing: 12,
             runSpacing: 8,

@@ -6,12 +6,13 @@ import '../domain/manufacturer_pauta.dart';
 import 'commercial_package_dose_screen.dart';
 import 'manufacturer_pauta_section.dart';
 
-/// Vademécum por fármaco: índice de principios activos de las pautas.
+/// Vademécum por principio activo: índice de agentes de las pautas.
 ///
 /// Es la vista de consulta de la calculadora por agente farmacéutico (mg/kg).
-/// No convierte una mezcla comercial en una dosis: solo dice qué pautas
-/// mencionan cada principio activo. El campo de búsqueda lo pone el padre.
-class VademecumDrugView extends StatelessWidget {
+/// No convierte una mezcla comercial en una dosis: dice qué marcas contienen
+/// cada principio activo y qué pautas lo mencionan. Tiene su propia búsqueda y
+/// su filtro de especie: no comparte estado con el vademécum comercial.
+class VademecumDrugView extends StatefulWidget {
   const VademecumDrugView({
     super.key,
     required this.pautas,
@@ -20,73 +21,141 @@ class VademecumDrugView extends StatelessWidget {
     this.onOpenDrugCalculator,
   });
   final List<ManufacturerPauta> pautas;
+
+  /// Búsqueda con la que abre la vista. Después manda el campo de la pantalla.
   final String query;
+
   final bool canCalculate;
   final VoidCallback? onOpenDrugCalculator;
 
   @override
+  State<VademecumDrugView> createState() => _VademecumDrugViewState();
+}
+
+class _VademecumDrugViewState extends State<VademecumDrugView> {
+  late String _query = widget.query;
+  String _especie = 'Todas';
+  bool _verTodo = false;
+
+  @override
+  void didUpdateWidget(VademecumDrugView old) {
+    super.didUpdateWidget(old);
+    if (old.query != widget.query) _query = widget.query;
+  }
+
+  void _cambiarEspecie(String especie) => setState(() {
+    _especie = especie;
+    _verTodo = false;
+  });
+
+  @override
   Widget build(BuildContext context) {
-    final index = indexByIngredient(pautas);
-    final needle = normalizeDoseSearch(query);
+    final porEspecie = [
+      for (final p in widget.pautas)
+        if (pautaDeEspecie(p, _especie)) p,
+    ];
+    final index = indexByIngredient(porEspecie);
+    final needle = normalizeDoseSearch(_query);
     final matches = needle.isEmpty
-        ? index.take(15).toList()
+        ? index
         : index
               .where((i) => normalizeDoseSearch(i.name).contains(needle))
-              .take(40)
               .toList();
+    final adelanto = needle.isEmpty ? 15 : 40;
+    final shown = _verTodo ? matches : matches.take(adelanto).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        TextField(
+          decoration: const InputDecoration(
+            labelText: 'Buscar principio activo',
+            prefixIcon: Icon(VetIcons.search),
+          ),
+          onChanged: (value) => setState(() {
+            _query = value;
+            _verTodo = false;
+          }),
+        ),
+        const SizedBox(height: 8),
+        SpeciesFilter(
+          pautas: widget.pautas,
+          seleccion: _especie,
+          onChanged: _cambiarEspecie,
+        ),
+        const SizedBox(height: 8),
         Text(
-          '${index.length} principios activos en ${pautas.length} '
-          'pautas del fabricante',
+          '${index.length} principios activos en ${porEspecie.length} pautas '
+          'del fabricante',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const Text(
-          'Consulta por principio activo. La dosis en mg/kg se calcula en la '
-          'calculadora por agente farmacéutico con el catálogo verificado.',
+          'Consulta por principio activo: qué marcas lo contienen y en qué '
+          'especie. La dosis en mg/kg se calcula en la calculadora por agente '
+          'farmacéutico con el catálogo verificado.',
         ),
-        if (onOpenDrugCalculator != null) ...[
+        if (widget.onOpenDrugCalculator != null) ...[
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: onOpenDrugCalculator,
+            onPressed: widget.onOpenDrugCalculator,
             icon: const Icon(VetIcons.calculator),
             label: const Text('Abrir calculadora por agente farmacéutico'),
           ),
         ],
         const SizedBox(height: 8),
-        if (needle.isEmpty)
-          const Text('Los 15 principios con más pautas. Escribe para buscar.'),
-        if (needle.isNotEmpty && matches.isEmpty)
-          const Text('No hay principios activos que coincidan.'),
+        if (needle.isEmpty && index.isNotEmpty)
+          Text(
+            'Mostrando ${shown.length} de ${index.length}, los de más pautas '
+            'primero. Escribe para buscar.',
+          ),
         if (needle.isNotEmpty) Text('${matches.length} resultados'),
-        for (final ingredient in matches)
+        if (matches.isEmpty && needle.isNotEmpty)
+          const Text('No hay principios activos que coincidan.'),
+        for (final ingredient in shown)
           Card(
             margin: const EdgeInsets.only(top: 8),
             child: ListTile(
               leading: const CircleAvatar(child: Icon(VetIcons.pills)),
               title: Text(ingredient.name),
-              subtitle: Text(
-                '${ingredient.pautas.length} pauta(s) · '
-                '${ingredient.products.length} producto(s)',
-              ),
+              subtitle: Text(_marcas(ingredient)),
+              isThreeLine: true,
               trailing: const Icon(VetIcons.chevronRight),
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => PautaListScreen(
                     title: ingredient.name,
-                    subtitle: 'Principio activo · solo consulta',
+                    subtitle:
+                        'Principio activo · ${ingredient.products.length} '
+                        'marca(s)',
                     pautas: ingredient.pautas,
-                    canCalculate: canCalculate,
-                    onOpenDrugCalculator: onOpenDrugCalculator,
+                    canCalculate: widget.canCalculate,
+                    onOpenDrugCalculator: widget.onOpenDrugCalculator,
                   ),
                 ),
               ),
             ),
           ),
+        if (matches.length > shown.length)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton(
+              onPressed: () => setState(() => _verTodo = true),
+              child: Text('Ver los ${matches.length} principios activos'),
+            ),
+          ),
       ],
     );
+  }
+
+  /// «3 pauta(s) · 2 producto(s)» y las primeras marcas, para que el nombre
+  /// comercial aparezca junto al principio activo y no solo dentro de la ficha.
+  String _marcas(ManufacturerIngredient ingredient) {
+    final productos = ingredient.products.toList()..sort();
+    final muestra = productos.take(2).join(', ');
+    final resto = productos.length - 2;
+    final marcas = resto > 0 ? '$muestra y $resto más' : muestra;
+    return '${ingredient.pautas.length} pauta(s) · '
+        '${productos.length} producto(s)\n$marcas';
   }
 }
 
@@ -95,7 +164,7 @@ class VademecumDrugView extends StatelessWidget {
 /// Es la vista de consulta de la calculadora de dosis de empaque (mL,
 /// tableta o sobre por kg). La calculadora solo aparece con una pauta
 /// proporcional al peso y sin avisos de integridad.
-class VademecumCommercialView extends StatelessWidget {
+class VademecumCommercialView extends StatefulWidget {
   const VademecumCommercialView({
     super.key,
     required this.pautas,
@@ -103,12 +172,37 @@ class VademecumCommercialView extends StatelessWidget {
     this.canCalculate = false,
   });
   final List<ManufacturerPauta> pautas;
+
+  /// Búsqueda con la que abre la vista. Después manda el campo de la pantalla.
   final String query;
+
   final bool canCalculate;
+
+  @override
+  State<VademecumCommercialView> createState() =>
+      _VademecumCommercialViewState();
+}
+
+class _VademecumCommercialViewState extends State<VademecumCommercialView> {
+  late String _query = widget.query;
+  String _especie = 'Todas';
+  bool _verTodo = false;
+
+  @override
+  void didUpdateWidget(VademecumCommercialView old) {
+    super.didUpdateWidget(old);
+    if (old.query != widget.query) _query = widget.query;
+  }
+
+  void _cambiarEspecie(String especie) => setState(() {
+    _especie = especie;
+    _verTodo = false;
+  });
 
   List<_ProductGroup> _groups(String needle) {
     final map = <String, _ProductGroup>{};
-    for (final pauta in pautas) {
+    for (final pauta in widget.pautas) {
+      if (!pautaDeEspecie(pauta, _especie)) continue;
       final key = '${pauta.productName}|${pauta.manufacturer}';
       if (needle.isNotEmpty &&
           !normalizeDoseSearch(
@@ -131,28 +225,48 @@ class VademecumCommercialView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final needle = normalizeDoseSearch(query);
+    final needle = normalizeDoseSearch(_query);
     final all = _groups(needle);
-    final shown = all.take(needle.isEmpty ? 20 : 40).toList();
+    final adelanto = needle.isEmpty ? 20 : 40;
+    final shown = _verTodo ? all : all.take(adelanto).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        TextField(
+          decoration: const InputDecoration(
+            labelText: 'Buscar marca, laboratorio o principio activo',
+            prefixIcon: Icon(VetIcons.search),
+          ),
+          onChanged: (value) => setState(() {
+            _query = value;
+            _verTodo = false;
+          }),
+        ),
+        const SizedBox(height: 8),
+        SpeciesFilter(
+          pautas: widget.pautas,
+          seleccion: _especie,
+          onChanged: _cambiarEspecie,
+        ),
+        const SizedBox(height: 8),
         Text(
-          '${all.length} productos comerciales · ${pautas.length} pautas',
+          '${all.length} productos comerciales · ${widget.pautas.length} pautas',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const Text(
-          'Consulta por nombre comercial. El texto literal manda; la '
-          'calculadora de empaque solo precarga reglas proporcionales.',
+          'Consulta por nombre comercial: qué contiene la marca y qué pautas '
+          'indica el fabricante. El texto literal manda; la calculadora de '
+          'empaque solo precarga reglas proporcionales.',
         ),
         const SizedBox(height: 8),
-        if (needle.isEmpty)
-          const Text(
-            'Los primeros 20 productos. Escribe para buscar entre todos.',
+        if (needle.isEmpty && all.isNotEmpty)
+          Text(
+            'Mostrando ${shown.length} de ${all.length}, en orden alfabético. '
+            'Escribe para buscar.',
           ),
-        if (needle.isNotEmpty && shown.isEmpty)
+        if (needle.isNotEmpty) Text('${all.length} resultados'),
+        if (all.isEmpty && needle.isNotEmpty)
           const Text('No hay productos que coincidan.'),
-        if (needle.isNotEmpty) Text('${shown.length} resultados'),
         for (final group in shown)
           Card(
             margin: const EdgeInsets.only(top: 8),
@@ -160,7 +274,9 @@ class VademecumCommercialView extends StatelessWidget {
               leading: const CircleAvatar(child: Icon(VetIcons.medicineBottle)),
               title: Text(group.name),
               subtitle: Text(
-                '${group.manufacturer}\n${group.pautas.length} pauta(s)',
+                '${group.manufacturer}\n'
+                '${group.pautas.length} pauta(s) · '
+                '${group.pautas.first.ingredients}',
               ),
               isThreeLine: true,
               trailing: const Icon(VetIcons.chevronRight),
@@ -171,13 +287,72 @@ class VademecumCommercialView extends StatelessWidget {
                     title: group.name,
                     subtitle: group.manufacturer,
                     pautas: group.pautas,
-                    canCalculate: canCalculate,
+                    canCalculate: widget.canCalculate,
                   ),
                 ),
               ),
             ),
           ),
+        if (all.length > shown.length)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton(
+              onPressed: () => setState(() => _verTodo = true),
+              child: Text('Ver los ${all.length} productos'),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+/// Filtro por especie. Cuenta las pautas de cada grupo y solo enseña los que
+/// aparecen en el archivo, para no llenar la fila de ceros.
+class SpeciesFilter extends StatelessWidget {
+  const SpeciesFilter({
+    super.key,
+    required this.pautas,
+    required this.seleccion,
+    required this.onChanged,
+  });
+
+  final List<ManufacturerPauta> pautas;
+  final String seleccion;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final conteo = <String, int>{};
+    for (final pauta in pautas) {
+      for (final grupo in gruposDeEspecie(pauta.species)) {
+        conteo[grupo] = (conteo[grupo] ?? 0) + 1;
+      }
+    }
+    final grupos = [
+      'Todas',
+      ...especiesDelVademecum.where((g) => (conteo[g] ?? 0) > 0),
+      if ((conteo['Sin especificar'] ?? 0) > 0) 'Sin especificar',
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          for (final grupo in grupos)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(
+                  grupo == 'Todas'
+                      ? 'Todas (${pautas.length})'
+                      : '$grupo (${conteo[grupo]})',
+                ),
+                selected: seleccion == grupo,
+                onSelected: (_) => onChanged(grupo),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'farmacologico_dose_screen.dart';
+import '../../../core/widgets/app_heading_scope.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
@@ -23,10 +25,16 @@ List<DrugDose> doseLabelSuggestions(DoseCatalog catalog, String label) {
     final term = normalizeDoseLabel(value);
     return term.length >= 4 && padded.contains(' $term ');
   }
-  return catalog.drugs.where(
-    (drug) => matches(drug.name) ||
-        drug.presentations.any((presentation) => matches(presentation.brand)),
-  ).toList(growable: false);
+
+  return catalog.drugs
+      .where(
+        (drug) =>
+            matches(drug.name) ||
+            drug.presentations.any(
+              (presentation) => matches(presentation.brand),
+            ),
+      )
+      .toList(growable: false);
 }
 
 typedef DoseLabelReader = Future<String?> Function(ImageSource source);
@@ -85,10 +93,12 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
     ClinicRole.mvz,
   }.contains(widget.member.role);
 
-  bool get supportsCamera => widget.reader != null ||
+  bool get supportsCamera =>
+      widget.reader != null ||
       (!kIsWeb &&
           const <TargetPlatform>{
-            TargetPlatform.android, TargetPlatform.iOS,
+            TargetPlatform.android,
+            TargetPlatform.iOS,
           }.contains(defaultTargetPlatform));
 
   @override
@@ -103,8 +113,8 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
 
   Future<void> loadCatalog() async {
     try {
-      final found = await (widget.catalogRepository ??
-              AssetCatalogRepository()).load();
+      final found = await (widget.catalogRepository ?? AssetCatalogRepository())
+          .load();
       if (mounted) {
         setState(() {
           catalog = found;
@@ -134,15 +144,18 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
       setState(() {
         recognizedText = text?.trim() ?? '';
         if (text != null && recognizedText.isEmpty) {
-          message = 'No se encontró texto legible. Puedes tomar otra foto o '
+          message =
+              'No se encontró texto legible. Puedes tomar otra foto o '
               'buscar el fármaco manualmente.';
         }
       });
     } catch (_) {
       if (mounted) {
-        setState(() => message =
-            'No se pudo leer la etiqueta. Revisa la cámara o los permisos '
-            'y vuelve a intentarlo.');
+        setState(
+          () => message =
+              'No se pudo leer la etiqueta. Revisa la cámara o los permisos '
+              'y vuelve a intentarlo.',
+        );
       }
     } finally {
       if (mounted) setState(() => busy = false);
@@ -189,8 +202,10 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
   @override
   Widget build(BuildContext context) {
     if (!clinicalRole) {
-      return const Text('La lectura para cálculos requiere acceso de MVZ o '
-          'administrador.');
+      return const Text(
+        'La lectura para cálculos requiere acceso de MVZ o '
+        'administrador.',
+      );
     }
     final matches = results;
     final theme = Theme.of(context);
@@ -198,7 +213,10 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Escanear etiqueta para dosis', style: theme.textTheme.headlineMedium),
+        const AppPageHeading(
+          title: 'Escanear etiqueta para dosis',
+          screens: {'Escanear etiqueta para dosis'},
+        ),
         const SizedBox(height: 6),
         Text(
           'Fotografía el nombre del medicamento o selecciona una imagen. '
@@ -206,6 +224,21 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
           style: theme.textTheme.bodySmall?.copyWith(color: muted),
         ),
         const SizedBox(height: 16),
+        if (catalog != null && catalog!.drugs.isEmpty)
+          OutlinedButton.icon(
+            icon: const Icon(VetIcons.pills),
+            label: const Text('Consultar catálogo por principio activo'),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => Scaffold(
+                  appBar: AppBar(
+                    title: const Text('Dosis por principio activo'),
+                  ),
+                  body: const FarmacologicoDoseLoader(),
+                ),
+              ),
+            ),
+          ),
         Text('Cómo funciona', style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
         const _ScannerStep(
@@ -218,7 +251,8 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
         ),
         const _ScannerStep(
           number: 3,
-          text: 'Confirma el fármaco en el catálogo antes de calcular la dosis.',
+          text:
+              'Confirma el fármaco en el catálogo antes de calcular la dosis.',
         ),
         const VetCallout(
           text:
@@ -264,8 +298,10 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
           ),
         if (recognizedText.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text('Texto reconocido (sin verificar)',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Texto reconocido (sin verificar)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           SelectableText(recognizedText),
         ],
         const SizedBox(height: 20),
@@ -281,20 +317,28 @@ class _DoseLabelScannerScreenState extends State<DoseLabelScannerScreen> {
         const SizedBox(height: 12),
         if (!loading && catalog == null)
           const Text('Catálogo no disponible. No se pueden sugerir dosis.'),
-        if (!loading && catalog != null &&
-            recognizedText.isNotEmpty && matches.isEmpty &&
+        if (!loading &&
+            catalog != null &&
+            recognizedText.isNotEmpty &&
+            matches.isEmpty &&
             search.text.trim().isEmpty)
-          const Text('La etiqueta no coincide con un registro conocido. '
-              'Corrige la búsqueda manualmente; no se inventará una dosis.'),
+          const Text(
+            'La etiqueta no coincide con un registro conocido. '
+            'Corrige la búsqueda manualmente; no se inventará una dosis.',
+          ),
         if (matches.isNotEmpty) ...[
-          Text('Coincidencias para revisar',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Coincidencias para revisar',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           for (final item in matches)
             ListTile(
               title: Text(item.name),
-              subtitle: Text('${item.species} · '
-                  '${item.evidence.verified ? 'Fuente verificada' : 'Sin verificar'}'
-                  ' · ${item.presentations.map((e) => e.brand).join(', ')}'),
+              subtitle: Text(
+                '${item.species} · '
+                '${item.evidence.verified ? 'Fuente verificada' : 'Sin verificar'}'
+                ' · ${item.presentations.map((e) => e.brand).join(', ')}',
+              ),
               trailing: const Icon(VetIcons.chevronRight),
               onTap: () => choose(item),
             ),

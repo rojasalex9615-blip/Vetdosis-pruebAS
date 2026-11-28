@@ -1,5 +1,5 @@
-import 'accent_glow.dart';
 import 'package:flutter/material.dart';
+import 'contrast.dart';
 import 'workspace_panel.dart';
 
 class NeuHeaderCard extends StatelessWidget {
@@ -12,8 +12,10 @@ class NeuHeaderCard extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.soft = false,
+    this.showHeader = true,
   });
   final bool soft;
+  final bool showHeader;
   final String title;
   final IconData icon;
   final Color color;
@@ -33,7 +35,7 @@ class NeuHeaderCard extends StatelessWidget {
         .withSaturation(hsl.saturation.clamp(0, .6).toDouble())
         .withLightness(dark ? .62 : .42)
         .toColor();
-    final vivid = vividAccent(color);
+    final banda = Color.lerp(base, quiet, dark ? .22 : .12)!;
 
     return WorkspacePanel(
       radius: soft ? 32 : 24,
@@ -44,36 +46,29 @@ class NeuHeaderCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Color.lerp(base, quiet, dark ? .22 : .12),
-              ),
-              child: Row(
-                children: [
-                  AccentGlow(
-                    color: vivid,
-                    radius: 12,
-                    emphasis: 0.8,
-                    child: Icon(
-                      icon,
-                      color: vivid,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+            if (showHeader)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(color: banda),
+                child: Row(
+                  children: [
+                    // Sobre la franja se usa tinta plana, sin placa ni halo.
+                    Icon(icon, color: inkOn(banda), size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                  ),
-                  ?trailing,
-                ],
+                    ?trailing,
+                  ],
+                ),
               ),
-            ),
             child,
           ],
         ),

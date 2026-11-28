@@ -278,10 +278,12 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                       color: VetColors.purple,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Módulos y submódulos',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        'Módulos y submódulos',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -431,10 +433,12 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                   children: [
                     const Icon(VetIcons.bell, size: 20, color: VetColors.mint),
                     const SizedBox(width: 8),
-                    Text(
-                      'Notificaciones de hospitalización',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        'Notificaciones de hospitalización',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -505,10 +509,12 @@ class _ClinicExperienceScreenState extends State<ClinicExperienceScreen> {
                       color: VetColors.violet,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Proveedor IA predeterminado',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        'Proveedor IA predeterminado',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],

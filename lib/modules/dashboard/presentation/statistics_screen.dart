@@ -328,17 +328,54 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
       children: [
         Expanded(child: Text(label)),
         const SizedBox(width: 12),
-        Text(value, style: Theme.of(context).textTheme.titleMedium),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
       ],
     ),
   );
 
   Widget _listTile(String title, String trailing, [String? subtitle]) =>
-      ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(title),
-        subtitle: subtitle == null ? null : Text(subtitle),
-        trailing: Text(trailing),
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final theme = Theme.of(context);
+            final description = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title),
+                if (subtitle != null)
+                  Text(subtitle, style: theme.textTheme.bodySmall),
+              ],
+            );
+            if (constraints.maxWidth < 360 ||
+                MediaQuery.textScalerOf(context).scale(1) > 1.3) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  description,
+                  const SizedBox(height: 4),
+                  Text(trailing, style: theme.textTheme.bodySmall),
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: description),
+                const SizedBox(width: 12),
+                Flexible(child: Text(trailing, textAlign: TextAlign.end)),
+              ],
+            );
+          },
+        ),
       );
 
   // -- Exportar / compartir (punto 6) -------------------------------------
@@ -825,9 +862,11 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    'Citas no canceladas del mes por especie',
-                    style: Theme.of(context).textTheme.titleSmall,
+                  Expanded(
+                    child: Text(
+                      'Citas no canceladas del mes por especie',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
                 ],
               ),

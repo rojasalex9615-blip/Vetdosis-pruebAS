@@ -6,18 +6,21 @@
 --     Omeprazol comparten F094).
 --   · Dosis: 'dosis_103_113_emergencia' y 'dosis_103_114_gastro' comparten
 --     D103; 'dosis_103_114_gastro' y 'dosis_114_125_equinos' comparten D114.
---   · Marcas: referencian F094..F101 sin decir de qué lote, así que el cruce
---     es ambiguo.
+--   · Marcas: en esta base usan marcas_qwen_1/2/3; su principio_activo
+--     coincide con el fármaco y no hay marcas del bloque de gastro. El
+--     UPDATE de marcas_qwen_gastro queda como salvaguarda para otras bases.
+--
 -- La clave única real era (bloque_origen, id), pero quien cruza por
 -- id_farmaco_original —que es lo natural— obtiene dos moléculas a la vez.
 -- D152 (Propofol, 4-8 mg/kg IV) y D103 (Omeprazol, 0.5-1 mg/kg PO) caen sobre
 -- el mismo F094: un cruce ahí es un error de medicación.
 --
--- QUÉ HACE. (1) Renumera el bloque de gastro a F123..F130 y D203..D205, que
--- estaban libres. (2) Añade private.qwen_drug_key / qwen_dose_key como clave
--- estable (bloque + id) para que futuras fusiones no vuelvan a colisionar.
--- (3) Añade índices y restricciones de unicidad global sobre esas claves.
--- (4) Comprueba que no quedan colisiones ni huérfanos y aborta si las hay.
+-- QUÉ HACE. (1) Renumera el bloque de gastro a F123..F130 y D203..D204, que
+-- estaban libres. (2) Añade columnas clave_global (bloque + id) para que
+-- futuras fusiones no vuelvan a colisionar. (3) Añade índices únicos globales
+-- sobre id_farmaco_original e id_dosis_original, e índices de apoyo por
+-- fármaco. (4) Comprueba que no quedan colisiones ni huérfanos y aborta si las
+-- hay.
 --
 -- LO QUE NO HACE. No valida ninguna dosis, no cambia estados de revisión, no
 -- copia posología a las tablas de la calculadora y no toca las 1197 pautas.

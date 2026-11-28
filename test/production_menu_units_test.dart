@@ -72,12 +72,15 @@ void main() {
     await tester.pumpWidget(_menu());
     await _tocar(tester, 'Porcinos');
     await _tocar(tester, 'Maternidad y destete');
+    await _tocar(tester, 'Registros');
 
     expect(tester.takeException(), isNull);
     expect(find.text('Abrir unidades'), findsOneWidget);
   });
 
-  testWidgets('Sin almacen de unidades no se ofrece la seccion', (tester) async {
+  testWidgets('Sin almacen de unidades no se ofrece la seccion', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -89,6 +92,7 @@ void main() {
     );
     await _tocar(tester, 'Porcinos');
     await _tocar(tester, 'Maternidad y destete');
+    await _tocar(tester, 'Registros');
 
     expect(tester.takeException(), isNull);
     expect(find.text('Abrir unidades'), findsNothing);
@@ -98,6 +102,7 @@ void main() {
     await tester.pumpWidget(_menu());
     await _tocar(tester, 'Porcinos');
     await _tocar(tester, 'Maternidad y destete');
+    await _tocar(tester, 'Registros');
     await _tocar(tester, 'Abrir unidades');
 
     expect(find.byType(ProductionUnitsScreen), findsOneWidget);

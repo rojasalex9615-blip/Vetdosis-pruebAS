@@ -1,10 +1,14 @@
 import '../../../core/widgets/accent_glow.dart';
+import '../../../core/widgets/brand_gradient.dart';
+import '../../../core/widgets/contrast.dart';
 import 'ai_labels.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../../core/widgets/neu_identity.dart';
+import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../patients/presentation/patient_view_model.dart'
     show newOperationId;
@@ -1109,40 +1113,44 @@ class _AiNotice extends StatelessWidget {
   );
 }
 
-/// Degradado de marca del chat (menta → lavanda), tomado del esquema de color
-/// del tema para no fijar colores propios.
-LinearGradient _aiGradient(ColorScheme cs) =>
-    LinearGradient(colors: [cs.primary, cs.tertiary]);
+/// Degradado de marca del chat: el recorrido aqua → azul → lila que se usa en
+/// el resto de la app (icono de IA, botón de acceso, cabeceras), en vez de los
+/// dos tonos del esquema.
+LinearGradient _aiGradient() => LinearGradient(colors: brandGradientColors);
 
-/// Icono del asistente sobre una pastilla clara.
+/// Tinta legible sobre [_aiGradient].
+///
+/// Los tres tonos de marca son claros: el blanco fijo daba 1.8:1 sobre el
+/// aqua. Se mide contra el peor tramo, igual que en el botón del escáner.
+final _aiInk = inkOnGradient(brandGradientColors);
+
+/// Icono del asistente: el mismo azul en degradado y el mismo relieve que el
+/// boton de enviar, para que se lea como parte del asistente y no como una
+/// caja aparte.
 class _AiBotAvatar extends StatelessWidget {
   const _AiBotAvatar({this.size = 36});
   final double size;
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: cs.surface,
+        gradient: _aiGradient(),
         borderRadius: BorderRadius.circular(size * .3),
         boxShadow: [
+          ...neuShadows(dark, depth: size / 48),
+          // Halo de marca: refuerza el relieve neu para que la figura se
+          // despegue del lienzo en el estado vacío.
           BoxShadow(
-            color: cs.shadow.withValues(alpha: .08),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: VetColors.brandLilac.withValues(alpha: .35),
+            blurRadius: size * .35,
+            spreadRadius: size * .04,
           ),
         ],
       ),
-      child: ShaderMask(
-        shaderCallback: (rect) => _aiGradient(cs).createShader(rect),
-        child: Icon(
-          Icons.smart_toy_rounded,
-          size: size * .6,
-          color: Colors.white,
-        ),
-      ),
+      child: Icon(Icons.smart_toy_rounded, size: size * .6, color: _aiInk),
     );
   }
 }
@@ -1169,7 +1177,7 @@ class _AiBubble extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: maxWidth),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        gradient: isUser ? _aiGradient(cs) : null,
+        gradient: isUser ? _aiGradient() : null,
         color: isUser ? null : cs.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -1183,7 +1191,7 @@ class _AiBubble extends StatelessWidget {
       child: SelectableText(
         text,
         style: theme.textTheme.bodyLarge?.copyWith(
-          color: isUser ? cs.onPrimary : cs.onSurface,
+          color: isUser ? _aiInk : cs.onSurface,
         ),
       ),
     );
@@ -1233,7 +1241,6 @@ class _AiSendButton extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: 'Solicitar respuesta',
       child: Opacity(
@@ -1242,7 +1249,7 @@ class _AiSendButton extends StatelessWidget {
           color: Colors.transparent,
           child: Ink(
             decoration: BoxDecoration(
-              gradient: _aiGradient(cs),
+              gradient: _aiGradient(),
               shape: BoxShape.circle,
             ),
             child: InkWell(
@@ -1252,7 +1259,7 @@ class _AiSendButton extends StatelessWidget {
               child: SizedBox(
                 width: 48,
                 height: 48,
-                child: Icon(Icons.send_rounded, color: cs.onPrimary, size: 22),
+                child: Icon(Icons.send_rounded, color: _aiInk, size: 22),
               ),
             ),
           ),
@@ -1269,7 +1276,6 @@ class _AiEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -1294,8 +1300,14 @@ class _AiEmptyState extends StatelessWidget {
                     color: Colors.transparent,
                     child: Ink(
                       decoration: BoxDecoration(
-                        gradient: _aiGradient(cs),
+                        gradient: _aiGradient(),
                         borderRadius: BorderRadius.circular(28),
+                        // Relieve neu como el de la figura: plano se confundía
+                        // con el lienzo.
+                        boxShadow: neuShadows(
+                          theme.brightness == Brightness.dark,
+                          depth: .7,
+                        ),
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(28),
@@ -1308,7 +1320,7 @@ class _AiEmptyState extends StatelessWidget {
                           child: Text(
                             'Nueva Conversación',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              color: cs.onPrimary,
+                              color: _aiInk,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

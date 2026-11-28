@@ -1,3 +1,4 @@
+import '../../doses/presentation/commercial_package_dose_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/workspace_panel.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -154,9 +155,10 @@ class _SectionMenuState extends State<SectionMenu> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        leading: Icon(
-                          sectionIcon(page),
-                          color: _groupAccents[index % _groupAccents.length],
+                        leading: VetIconBox(
+                          icon: sectionIcon(page),
+                          accent: _groupAccents[index % _groupAccents.length],
+                          size: 36,
                         ),
                         title: Text(page),
                         trailing: const Icon(
@@ -203,6 +205,10 @@ class CalculationMenu extends StatelessWidget {
     final canDose =
         navigationAllowed('Cálculo rápido', member, access) &&
         (experience?.visible('Cálculo rápido') ?? true);
+    final canAgentDose =
+        canDose &&
+        (member == null ||
+            [ClinicRole.admin, ClinicRole.mvz].contains(member!.role));
     final canClinical =
         navigationAllowed('Cálculos clínicos', member, access) &&
         (experience?.visible('Cálculos clínicos') ?? true);
@@ -226,13 +232,25 @@ class CalculationMenu extends StatelessWidget {
                 'Consulta fichas de la app, compartidas con la clínica y personales.',
             onTap: () => onNavigate('Vademécum'),
           ),
-        if (canDose)
+        if (canAgentDose)
           _CalculationChoice(
-            icon: VetIcons.gauge,
-            title: 'Calcular dosis de un producto',
+            icon: VetIcons.pills,
+            title: 'Dosis por principio activo',
             description:
                 'Usa un catálogo con fuente y concentración por presentación; requiere revisión y confirmación.',
             onTap: () => onNavigate('Cálculo rápido'),
+          ),
+        if (canDose)
+          _CalculationChoice(
+            icon: VetIcons.medicineBottle,
+            title: 'Dosis por marca comercial',
+            description:
+                'Pauta del fabricante o parámetros del empaque, con revisión y confirmación.',
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => const CommercialPackageDoseScreen(),
+              ),
+            ),
           ),
         if (navigationAllowed('Operaciones de dosis', member, access) &&
             (experience?.visible('Operaciones de dosis') ?? true))
