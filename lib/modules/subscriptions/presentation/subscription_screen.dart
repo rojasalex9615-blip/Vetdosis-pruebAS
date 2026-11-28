@@ -123,15 +123,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final grants = model.data['grants'] as List? ?? [];
-    final effective = model.data['effective'] as Map?;
-    final workspace = model.data['workspace'] as Map?;
-
-    return ListenableBuilder(
-      listenable: model,
-      builder: (context, _) => Column(
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: model,
+    builder: (context, _) {
+      final theme = Theme.of(context);
+      final grants = model.data['grants'] as List? ?? [];
+      final effective = model.data['effective'] as Map?;
+      final workspace = model.data['workspace'] as Map?;
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
@@ -200,14 +199,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
                         const VetStatusBadge(
                           label: 'Plan activo',
                           kind: VetBadgeKind.success,
                         ),
                         if (workspace != null &&
-                            VetFormat.enumLabel(workspace['kind']).toLowerCase() !=
+                            VetFormat.enumLabel(
+                                  workspace['kind'],
+                                ).toLowerCase() !=
                                 '${effective['name']}'.toLowerCase()) ...[
-                          const SizedBox(width: 6),
                           VetStatusBadge(
                             label: VetFormat.enumLabel(workspace['kind']),
                             kind: VetBadgeKind.information,
@@ -309,7 +316,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 name: '${p['name']}',
                 price: p['code'] == 'free'
                     ? 'Gratis'
-                    : price(p[period == 'annual' ? 'annual_cents' : 'monthly_cents']),
+                    : price(
+                        p[period == 'annual'
+                            ? 'annual_cents'
+                            : 'monthly_cents'],
+                      ),
                 current: effective?['code'] == p['code'],
                 rows: [
                   VetDataRow(
@@ -331,7 +342,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 note: p['team'] == true
                     ? 'Todos los integrantes de la clínica; sin cobro por asiento.'
                     : 'Inventario, ventas y corte manual propios; sin equipo compartido.',
-                footer: p['code'] != 'free' &&
+                footer:
+                    p['code'] != 'free' &&
                         canManageWorkspace &&
                         (workspace?['kind'] == 'personal') ==
                             (p['code'] == 'individual')
@@ -421,9 +433,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             ),
           ],
         ],
-      ),
-    );
-  }
+      );
+    },
+  );
 }
 
 class PaymentHistoryPanel extends StatefulWidget {
@@ -479,7 +491,10 @@ class _PaymentHistoryPanelState extends State<PaymentHistoryPanel> {
                   ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(VetIcons.checkCircle, color: VetColors.success),
+                    leading: const Icon(
+                      VetIcons.checkCircle,
+                      color: VetColors.success,
+                    ),
                     title: Text(
                       'Pago confirmado · \$${((p['amount_cents'] as num) / 100).toStringAsFixed(2)} ${p['currency']}',
                       style: const TextStyle(fontWeight: FontWeight.w600),
@@ -521,8 +536,8 @@ String grantTitle(dynamic source, dynamic planCode) {
   final s = '$source'.toLowerCase() == 'beta' || '$source' == 'beta_grant'
       ? 'Acceso anticipado beta'
       : '$source' == 'founder_gift'
-          ? 'Cortesía de lanzamiento'
-          : '$source';
+      ? 'Cortesía de lanzamiento'
+      : '$source';
   final p = switch ('$planCode'.toLowerCase()) {
     'clinic' => 'Clínica',
     'individual' => 'Individual',

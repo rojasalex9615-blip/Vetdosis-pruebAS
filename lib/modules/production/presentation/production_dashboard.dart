@@ -702,88 +702,97 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
             label: Text('Calculadoras de $_selectedSpecies'),
             onPressed: () => widget.onOpenTools!(_selectedSpecies),
           ),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          // 1.35 dejaba la celda en 118 dp y el rotulo a dos lineas no cabia.
-          childAspectRatio: 1.2,
-          children: [
-            if (_selectedSpecies == 'Bovinos')
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final scale = MediaQuery.textScalerOf(context).scale(1);
+            final columns = constraints.maxWidth >= 600 && scale < 1.4
+                ? 3
+                : constraints.maxWidth >= 300 && scale < 1.4
+                ? 2
+                : 1;
+            final width = (constraints.maxWidth - 10 * (columns - 1)) / columns;
+            final tools = <Widget>[
+              if (_selectedSpecies == 'Bovinos')
+                ProductionToolTile(
+                  title: 'Calculadora de Ración',
+                  subtitle: 'Requerimientos por etapa',
+                  icon: VetIcons.feedBag,
+                  accent: VetColors.turquoise,
+                  onTap: () => _openCalculatorDialog('ration'),
+                ),
+              if (_selectedSpecies == 'Bovinos')
+                ProductionToolTile(
+                  title: 'FCA / Conversión',
+                  subtitle: 'Factor conversión alimenticia',
+                  icon: VetIcons.balance,
+                  accent: VetColors.violet,
+                  onTap: () => _openCalculatorDialog('fca'),
+                ),
+              if (_selectedSpecies == 'Bovinos')
+                ProductionToolTile(
+                  title: 'Densidad Animal',
+                  subtitle: 'kg/m² o cabezas/corral',
+                  icon: VetIcons.grid,
+                  accent: VetColors.cyan,
+                  onTap: () => _openCalculatorDialog('density'),
+                ),
+              if (_selectedSpecies == 'Bovinos')
+                ProductionToolTile(
+                  title: 'Capacidad de Caseta/Nave',
+                  subtitle: 'Dimensiones y ventilación',
+                  icon: VetIcons.barn,
+                  accent: VetColors.warning,
+                  onTap: () => _openCalculatorDialog('capacity'),
+                ),
+              if (_selectedSpecies == 'Bovinos')
+                ProductionToolTile(
+                  title: 'Dosis Seminales',
+                  subtitle: 'Concentración y diluyente',
+                  icon: VetIcons.microscope,
+                  accent: VetColors.pink,
+                  onTap: () => _openCalculatorDialog('semen'),
+                ),
+              // Vivia en la fila de «Ejecución Diaria», que se retiro por pintar
+              // un calendario de ejemplo. La dosificacion masiva no es un dato
+              // inventado sino una calculadora, asi que se conserva aqui.
+              if (_selectedSpecies == 'Bovinos')
+                ProductionToolTile(
+                  title: 'Dosificación Masiva',
+                  subtitle: 'Agua mg/L y alimento ppm',
+                  icon: VetIcons.dropper,
+                  accent: VetColors.brandSky,
+                  onTap: _openMassMedicationDialog,
+                ),
               ProductionToolTile(
-                title: 'Calculadora de Ración',
-                subtitle: 'Requerimientos por etapa',
-                icon: VetIcons.feedBag,
+                title: 'Constantes Fisiológicas',
+                subtitle: 'Rango normal de $_selectedSpecies',
+                icon: VetIcons.heartPulse,
                 accent: VetColors.turquoise,
-                onTap: () => _openCalculatorDialog('ration'),
+                onTap: _openVitals,
               ),
-            if (_selectedSpecies == 'Bovinos')
               ProductionToolTile(
-                title: 'FCA / Conversión',
-                subtitle: 'Factor conversión alimenticia',
-                icon: VetIcons.balance,
-                accent: VetColors.violet,
-                onTap: () => _openCalculatorDialog('fca'),
+                title: 'Vademécum Pecuario',
+                subtitle: 'Fármacos y tiempos de retiro',
+                icon: VetIcons.pills,
+                accent: VetColors.lilac,
+                onTap: () => _openVademecumDialog(),
               ),
-            if (_selectedSpecies == 'Bovinos')
               ProductionToolTile(
-                title: 'Densidad Animal',
-                subtitle: 'kg/m² o cabezas/corral',
-                icon: VetIcons.grid,
-                accent: VetColors.cyan,
-                onTap: () => _openCalculatorDialog('density'),
+                title: 'Registros Productivos',
+                subtitle: 'Pesajes, consumo y mortalidad',
+                icon: VetIcons.clipboardChecks,
+                accent: VetColors.turquoise,
+                onTap: () => _showQuickRecordModal(),
               ),
-            if (_selectedSpecies == 'Bovinos')
-              ProductionToolTile(
-                title: 'Capacidad de Caseta/Nave',
-                subtitle: 'Dimensiones y ventilación',
-                icon: VetIcons.barn,
-                accent: VetColors.warning,
-                onTap: () => _openCalculatorDialog('capacity'),
-              ),
-            if (_selectedSpecies == 'Bovinos')
-              ProductionToolTile(
-                title: 'Dosis Seminales',
-                subtitle: 'Concentración y diluyente',
-                icon: VetIcons.microscope,
-                accent: VetColors.pink,
-                onTap: () => _openCalculatorDialog('semen'),
-              ),
-            // Vivia en la fila de «Ejecución Diaria», que se retiro por pintar
-            // un calendario de ejemplo. La dosificacion masiva no es un dato
-            // inventado sino una calculadora, asi que se conserva aqui.
-            if (_selectedSpecies == 'Bovinos')
-              ProductionToolTile(
-                title: 'Dosificación Masiva',
-                subtitle: 'Agua mg/L y alimento ppm',
-                icon: VetIcons.dropper,
-                accent: VetColors.brandSky,
-                onTap: _openMassMedicationDialog,
-              ),
-            ProductionToolTile(
-              title: 'Constantes Fisiológicas',
-              subtitle: 'Rango normal de $_selectedSpecies',
-              icon: VetIcons.heartPulse,
-              accent: VetColors.turquoise,
-              onTap: _openVitals,
-            ),
-            ProductionToolTile(
-              title: 'Vademécum Pecuario',
-              subtitle: 'Fármacos y tiempos de retiro',
-              icon: VetIcons.pills,
-              accent: VetColors.lilac,
-              onTap: () => _openVademecumDialog(),
-            ),
-            ProductionToolTile(
-              title: 'Registros Productivos',
-              subtitle: 'Pesajes, consumo y mortalidad',
-              icon: VetIcons.clipboardChecks,
-              accent: VetColors.turquoise,
-              onTap: () => _showQuickRecordModal(),
-            ),
-          ],
+            ];
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final tool in tools) SizedBox(width: width, child: tool),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -977,9 +986,10 @@ class ProductionToolTile extends StatelessWidget {
         radius: 16,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
           children: [
             VetIconBox(icon: icon, accent: accent, size: 36),
+            const SizedBox(height: 12),
             // En un telefono de 360 dp la celda deja 133 dp de texto util, y
             // con una sola linea se cortaban casi todos los rotulos:
             // «Capacidad de Caseta/Nave» mide 153 dp y «Factor conversion
@@ -993,14 +1003,10 @@ class ProductionToolTile extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   subtitle,
                   style: const TextStyle(fontSize: 12, color: VetColors.muted),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

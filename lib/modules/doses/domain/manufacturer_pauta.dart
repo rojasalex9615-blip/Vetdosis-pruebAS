@@ -81,10 +81,9 @@ class PautaWeightReference {
     ).firstMatch(normalized);
     if (match == null) return null;
 
-    final numbers = RegExp(r'\d+(?:[.,]\d+)?')
-        .allMatches(source)
-        .map((item) => item.group(0)!)
-        .toList();
+    final numbers = RegExp(
+      r'\d+(?:[.,]\d+)?',
+    ).allMatches(source).map((item) => item.group(0)!).toList();
     final declaredKg = match.group(1);
     if (numbers.length != (declaredKg == null ? 0 : 1)) return null;
 
@@ -184,7 +183,6 @@ class ManufacturerPauta {
       weightReference != null &&
       calculator != null;
 
-  /// Extrae un único peso en kg de la referencia ("por 20 kg de peso vivo").
   /// Extrae una referencia inequívoca a kg de peso vivo.
   PautaWeightReference? get weightReference {
     if (rule != PautaRule.proportionalToWeight) return null;
@@ -194,6 +192,7 @@ class ManufacturerPauta {
       reference: doseReference,
     );
   }
+
   factory ManufacturerPauta.read(Map<String, dynamic> row) {
     String text(String key) => (row[key] as String?)?.trim() ?? '';
     final warnings = (row['warnings'] as List?)?.cast<String>() ?? const [];

@@ -11,26 +11,27 @@ class NeuRecordCard extends StatelessWidget {
   Widget build(BuildContext context) => WorkspacePanel(
     child: Padding(
       padding: const EdgeInsets.all(14),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AccentGlow(
+      child: Stack(
+        children: [
+          Padding(padding: const EdgeInsets.only(left: 17), child: child),
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 5,
+            child: AccentGlow(
               color: color,
               radius: 4,
               emphasis: .6,
-              child: Container(
-                width: 5,
+              child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(child: child),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );

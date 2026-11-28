@@ -174,7 +174,7 @@ class VetDosisBrand extends StatelessWidget {
       'Tu espacio veterinario',
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: large ? 13 : 12,
+        fontSize: large ? 14 : 12,
         color: dark ? const Color(0xFF93C5FD) : const Color(0xFF0E1B45),
       ),
     );
