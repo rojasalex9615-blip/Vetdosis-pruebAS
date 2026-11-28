@@ -1,5 +1,7 @@
 # Prueba operativa completa por etapas
 
+> Plan vigente del 28 nov 2026: [aceptación, mapa de módulos y preparación del grupo pequeño](product/beta/plan-piloto-20261128.md), con [matriz editable](product/beta/matriz-aceptacion-20261128.csv). Los apartados siguientes conservan la evidencia histórica de octubre y no acreditan la candidata actual en teléfono.
+
 La titular eligió probar todas las funciones con datos ficticios. El perfil
 `operational_beta_v1` concede por persona, a la titular de una sola clínica de
 prueba, 26 permisos no profesionales y no ligados a un procedimiento. Concesiones
