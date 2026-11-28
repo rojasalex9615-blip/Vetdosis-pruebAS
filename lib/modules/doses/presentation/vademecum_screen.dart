@@ -142,15 +142,16 @@ class _VademecumScreenState extends State<VademecumScreen> {
       children: [
         const AppPageHeading(title: 'Vademécum', screens: {'Vademécum'}),
         const Text(
-          'Dos vademécums, uno por calculadora: por fármaco para la dosis en '
-          'mg/kg y por nombre comercial para la dosis de empaque.',
+          'Dos vademécums distintos. Por principio activo: qué pautas '
+          'mencionan el agente y en qué especie. Por nombre comercial: qué '
+          'contiene la marca y qué indica el fabricante.',
         ),
         const SizedBox(height: 12),
         SegmentedButton<String>(
           segments: const [
             ButtonSegment(
               value: 'farmaco',
-              label: Text('Por fármaco'),
+              label: Text('Por principio activo'),
               icon: Icon(VetIcons.pills),
             ),
             ButtonSegment(
@@ -168,16 +169,6 @@ class _VademecumScreenState extends State<VademecumScreen> {
             error!,
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
-        const SizedBox(height: 12),
-        TextField(
-          decoration: InputDecoration(
-            labelText: mode == 'farmaco'
-                ? 'Buscar fármaco, principio activo o nombre comercial'
-                : 'Buscar nombre comercial, laboratorio o principio activo',
-            prefixIcon: const Icon(VetIcons.search),
-          ),
-          onChanged: (value) => setState(() => query = value),
-        ),
         const SizedBox(height: 12),
         if (mode == 'farmaco') ...[
           if (widget.personal != null &&
@@ -203,46 +194,54 @@ class _VademecumScreenState extends State<VademecumScreen> {
                 'Agregar ficha personal o solicitar compartirla',
               ),
             ),
-          // El filtro de fichas verificadas: la base de la app, la clínica o
-          // las personales. El índice de pautas va debajo y no se filtra por
-          // origen porque todas son del fabricante.
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                for (final option in const [
-                  ('todos', 'Todas'),
-                  ('Base de la app', 'Base de la app'),
-                  ('Clínica', 'Compartidas con la clínica'),
-                  ('Personal', 'Solo mías'),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(option.$2),
-                      selected: scope == option.$1,
-                      onSelected: (_) => setState(() => scope = option.$1),
+          // Las fichas verificadas son otra fuente: solo se enseñan cuando
+          // existen, con su buscador y su filtro de origen. El índice de
+          // pautas del fabricante va aparte y no se mezcla con ellas.
+          if (entries.isNotEmpty) ...[
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Buscar en las fichas verificadas',
+                prefixIcon: Icon(VetIcons.search),
+              ),
+              onChanged: (value) => setState(() => query = value),
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  for (final option in const [
+                    ('todos', 'Todas'),
+                    ('Base de la app', 'Base de la app'),
+                    ('Clínica', 'Compartidas con la clínica'),
+                    ('Personal', 'Solo mías'),
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(option.$2),
+                        selected: scope == option.$1,
+                        onSelected: (_) => setState(() => scope = option.$1),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (!busy && visible.isEmpty && query.trim().isEmpty)
+            for (final entry in visible) _fichaCard(context, entry),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+          ] else if (!busy)
             const Text(
-              'Aún no hay fichas verificadas en esta vista. Añade una ficha '
-              'con fuente verificable o usa el índice de pautas del fabricante.',
+              'Aún no hay fichas verificadas con dosis por especie. El índice '
+              'de abajo sale de las pautas del fabricante.',
             ),
-          for (final entry in visible) _fichaCard(context, entry),
-          const SizedBox(height: 16),
-          const Divider(),
-          const SizedBox(height: 8),
           if (pautas == null)
             const Text('No se pudieron cargar las pautas del fabricante.')
           else
             VademecumDrugView(
               pautas: pautaList,
-              query: query,
               canCalculate: canCalculateDrug,
               onOpenDrugCalculator: canCalculateDrug
                   ? () => openDoseCalculator(context)
@@ -268,7 +267,6 @@ class _VademecumScreenState extends State<VademecumScreen> {
           else
             VademecumCommercialView(
               pautas: pautaList,
-              query: query,
               canCalculate:
                   widget.canCalculateManufacturer || widget.canCalculate,
             ),

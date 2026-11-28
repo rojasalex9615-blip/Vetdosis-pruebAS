@@ -154,9 +154,10 @@ class _SectionMenuState extends State<SectionMenu> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        leading: Icon(
-                          sectionIcon(page),
-                          color: _groupAccents[index % _groupAccents.length],
+                        leading: VetIconBox(
+                          icon: sectionIcon(page),
+                          accent: _groupAccents[index % _groupAccents.length],
+                          size: 36,
                         ),
                         title: Text(page),
                         trailing: const Icon(

@@ -23,6 +23,30 @@ const _pautasJson = '''
 ]}
 ''';
 
+String _pautasGrandes(int cuantas) {
+  final items = [
+    for (var i = 0; i < cuantas; i++)
+      '{"id":"p$i","product_name":"PRODUCTO $i","manufacturer":"LAB $i",'
+          '"product_url":"https://example.test/p$i","ingredients":"Agente $i",'
+          '"dose_amount":"1","dose_unit":"mL","dose_reference":"por 10 kg",'
+          '"rule":"proporcional al peso","species":"Caninos",'
+          '"literal":"1 mL por 10 kg"}',
+  ];
+  return '{"schema_version":1,"note":"","pautas":[${items.join(',')}]}';
+}
+
+String _pautasMixtas() =>
+    '{"schema_version":1,"note":"","pautas":['
+    '{"id":"c1","product_name":"CANINO 1","manufacturer":"LAB C",'
+    '"product_url":"https://example.test/c1","ingredients":"Fenbendazol",'
+    '"dose_amount":"1","dose_unit":"mL","dose_reference":"por 10 kg",'
+    '"rule":"proporcional al peso","species":"Caninos","literal":"1 mL/10 kg"},'
+    '{"id":"b1","product_name":"BOVINO 1","manufacturer":"LAB B",'
+    '"product_url":"https://example.test/b1","ingredients":"Oxitetraciclina",'
+    '"dose_amount":"5","dose_unit":"mg","dose_reference":"por 1 kg",'
+    '"rule":"proporcional al peso","species":"Bovinos","literal":"5 mg/kg"}'
+    ']}';
+
 class _EmptyCatalog implements CatalogRepository {
   @override
   Future<DoseCatalog> load() async => DoseCatalog.parse(
@@ -140,7 +164,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Por fármaco'), findsOneWidget);
+    expect(find.text('Por principio activo'), findsOneWidget);
     expect(find.text('Por nombre comercial'), findsOneWidget);
     await tester.tap(find.text('Por nombre comercial'));
     await tester.pumpAndSettle();
@@ -163,5 +187,97 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('El adelanto no esconde el resto del índice', (tester) async {
+    final grande = ManufacturerPautaCatalog.parse(_pautasGrandes(25));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumDrugView(pautas: grande.pautas),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Mostrando 15 de 25'), findsOneWidget);
+    await tester.ensureVisible(find.text('Ver los 25 principios activos'));
+    await tester.tap(find.text('Ver los 25 principios activos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agente 24'), findsOneWidget);
+  });
+
+  testWidgets('El vademécum comercial tampoco esconde productos', (
+    tester,
+  ) async {
+    final grande = ManufacturerPautaCatalog.parse(_pautasGrandes(25));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumCommercialView(pautas: grande.pautas),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Mostrando 20 de 25'), findsOneWidget);
+    await tester.ensureVisible(find.text('Ver los 25 productos'));
+    await tester.tap(find.text('Ver los 25 productos'));
+    await tester.pumpAndSettle();
+    expect(find.text('PRODUCTO 24'), findsOneWidget);
+  });
+
+  test('El filtro de especie agrupa los textos libres de la fuente', () {
+    expect(
+      gruposDeEspecie('Caninos y felinos'),
+      containsAll(['Caninos', 'Felinos']),
+    );
+    expect(
+      gruposDeEspecie('Perros y gatos'),
+      containsAll(['Caninos', 'Felinos']),
+    );
+    expect(gruposDeEspecie('Cerdos'), ['Porcinos']);
+    expect(gruposDeEspecie('Bovinos'), ['Bovinos']);
+    expect(gruposDeEspecie('no especificado'), ['Sin especificar']);
+  });
+
+  testWidgets('El índice nombra la marca junto al principio activo', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumDrugView(pautas: catalog.pautas),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('PRODUCTO A · LAB A'), findsWidgets);
+    expect(find.textContaining('(1)'), findsWidgets);
+  });
+
+  testWidgets('El filtro de especie recorta el índice', (tester) async {
+    final mixto = ManufacturerPautaCatalog.parse(_pautasMixtas());
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: VademecumDrugView(pautas: mixto.pautas),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Fenbendazol'), findsOneWidget);
+    expect(find.text('Oxitetraciclina'), findsOneWidget);
+    await tester.ensureVisible(find.text('Bovinos (1)'));
+    await tester.tap(find.text('Bovinos (1)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Oxitetraciclina'), findsOneWidget);
+    expect(find.text('Fenbendazol'), findsNothing);
   });
 }

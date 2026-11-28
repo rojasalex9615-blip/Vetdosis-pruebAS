@@ -283,6 +283,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     listenable: Listenable.merge([model, ?widget.alerts]),
     builder: (context, _) {
       final m = model;
+      final theme = Theme.of(context);
       final totals = m.dayTotals;
       final showHeading =
           !widget.homePilot &&
@@ -824,9 +825,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (m.ownShift == null) ...[
-                          const Text(
-                            'Tu caja está cerrada. Captura el fondo inicial al abrir.',
+                          Row(
+                            children: [
+                              Icon(
+                                VetIcons.lockOpen,
+                                size: 18,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Caja cerrada',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Captura el fondo inicial al abrir el turno.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           FilledButton.icon(
                             onPressed: widget.offline || m.busy || openingCash
                                 ? null
@@ -835,26 +859,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             label: const Text('Abrir caja'),
                           ),
                         ] else ...[
-                          Text(
-                            'Tu caja está abierta · fondo inicial: ${money(m.ownShift!['opening_cash'])}',
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 18,
+                                color: VetColors.successOn(context),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Caja abierta',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Fondo inicial',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: .8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            money(m.ownShift!['opening_cash']),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              // onSurface y no la tinta clara: en el tema
+                              // oscuro el importe quedaría invisible.
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
                           FilledButton(
                             onPressed: () => openPage('Caja'),
                             child: const Text('Venta o revisión del turno'),
                           ),
                         ],
-                        const Text('Últimos cortes visibles'),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1),
+                        ),
+                        Text(
+                          'ÚLTIMOS CORTES',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                         if (m.recentCuts.isEmpty)
-                          const Text(
-                            'No hay cortes cerrados en los datos consultados.',
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'No hay cortes cerrados en los datos consultados.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ),
                         for (final sh in m.recentCuts)
                           ListTile(
+                            contentPadding: EdgeInsets.zero,
                             title: Text(
                               'Cierre: ${time(DateTime.parse(sh['closed_at']))}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             subtitle: Text(
                               'Contado: ${money(sh['counted_cash'])}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                             onTap: () => openPage('Caja'),
                           ),
@@ -1157,7 +1240,15 @@ class _DashboardActionCapsule extends StatelessWidget {
                   color: vivid,
                   radius: 10,
                   emphasis: 0.75,
-                  child: Icon(sectionIcon(page), size: 19, color: vivid),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: .15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(sectionIcon(page), size: 18, color: vivid),
+                  ),
                 ),
                 const SizedBox(width: 7),
                 Flexible(
