@@ -83,6 +83,42 @@ void main() {
     expect(aves.canCalculate, true);
   });
 
+  test('solo interpreta kg cuando la referencia declara peso vivo', () {
+    final exacta = PautaWeightReference.parse(
+      amount: '1',
+      unit: 'mL',
+      reference: 'por kg de peso vivo',
+    );
+    expect(exacta, isNotNull);
+    expect(exacta!.kg, '1');
+
+    final numerica = PautaWeightReference.parse(
+      amount: '2',
+      unit: 'mL',
+      reference: 'por 20 kg de peso vivo',
+    );
+    expect(numerica, isNotNull);
+    expect(numerica!.kg, '20');
+
+    for (final reference in [
+      'por kg',
+      'por kg de alimento',
+      'por kg de producto',
+      'por 20-40 kg de peso vivo',
+      'por 20 kg de peso vivo durante 3 días',
+    ]) {
+      expect(
+        PautaWeightReference.parse(
+          amount: '1',
+          unit: 'mL',
+          reference: reference,
+        ),
+        isNull,
+        reason: 'No debe inferirse una base de peso vivo desde: $reference',
+      );
+    }
+  });
+
   test('un rango de kg sigue sin precargar aunque diga por kg', () {
     final rangos = catalog.pautas.where(
       (p) =>
