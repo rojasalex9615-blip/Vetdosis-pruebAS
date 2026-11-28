@@ -604,7 +604,9 @@ ExoticTaxon? taxonDeEspecie(String especie) {
 
   bool tiene(List<String> claves) => claves.any(
     (clave) => RegExp(
-      r'(?<![\p{L}\p{N}])' + RegExp.escape(clave) + r'(?![\p{L}\p{N}])',
+      r'(?<![\p{L}\p{N}])' +
+          RegExp.escape(clave) +
+          r'(?:s|es)?(?![\p{L}\p{N}])',
       unicode: true,
     ).hasMatch(s),
   );
@@ -612,6 +614,8 @@ ExoticTaxon? taxonDeEspecie(String especie) {
   if (tiene([
     'ave',
     'aves',
+    'avestruz',
+    'avestruces',
     'loro',
     'perico',
     'guacamaya',

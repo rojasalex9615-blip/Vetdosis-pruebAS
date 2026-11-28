@@ -316,6 +316,10 @@ void main() {
   test('La clasificación de exóticos reconoce palabras completas', () {
     expect(taxonDeEspecie('Iguana verde'), ExoticTaxon.reptiles);
     expect(taxonDeEspecie('Rana dorada'), ExoticTaxon.anfibios);
+    expect(taxonDeEspecie('Reptiles'), ExoticTaxon.reptiles);
+    expect(taxonDeEspecie('Tortugas'), ExoticTaxon.reptiles);
+    expect(taxonDeEspecie('Avestruz'), ExoticTaxon.aves);
+    expect(taxonDeEspecie('Avestruces'), ExoticTaxon.aves);
     expect(taxonDeEspecie('Labrador con hepatopatía'), isNull);
     expect(taxonDeEspecie('Caracal'), isNull);
   });

@@ -20,7 +20,7 @@ Se leyó el tablón #31 y sus novedades. El trabajo visual de #149 figura integr
 - Las calculadoras de producción y dosificación masiva empiezan vacías. Un dato ausente, no numérico, infinito o negativo no se sustituye por 1. Admiten coma decimal y validan concentración de hasta 100 %. Se liberan sus controladores al cerrar.
 - Los dashboards de exóticos/producción y los paneles de alimento/reproducción invalidan solicitudes anteriores al cambiar de clínica, usuario o repositorio. Producción también captura la especie de cada consulta. Se vacían los datos anteriores mientras carga; una respuesta tardía no puede reemplazar el resultado vigente ni su estado de error. El buscador de exóticos también pierde los resultados anteriores.
 - El selector de grupo de exóticos actualiza la especie y constante de la calculadora alométrica. Se descartan entradas no finitas en esa pantalla, conservando sus fórmulas.
-- La clasificación de especies reconoce términos completos; «hepatopatía» no convierte un paciente en ave por contener «pato».
+- La clasificación de especies reconoce términos completos, conserva los plurales y el caso de avestruz; «hepatopatía» no convierte un paciente en ave por contener «pato».
 - Las fechas obligatorias de los repositorios no se reemplazan por la fecha actual. Un registro incompleto produce un fallo de lectura en vez de aparentar una medición reciente.
 - Las consultas paralelas de ambos repositorios se esperan juntas, incluyendo sus errores.
 - Los cuatro traductores de errores conservan las excepciones que ya estaban traducidas. Así se muestran correctamente la métrica obligatoria, el error de conexión y el reintento.
@@ -30,9 +30,12 @@ Se leyó el tablón #31 y sus novedades. El trabajo visual de #149 figura integr
 
 Flutter 3.50.0 / Dart 3.14.0. SDK y cachés instalados en el directorio de trabajo.
 
-- `flutter analyze`: 0 errores y 0 warnings; avisos informativos preexistentes de deprecación de `material.dart`.
+- `flutter analyze --no-pub --no-fatal-infos`: 0 errores, 0 warnings y 321 avisos informativos de deprecación de `material.dart`.
 - 12 regresiones nuevas en `test/dashboard_data_integrity_test.dart`: respuestas atrasadas, cambio de clínica, buscador, rutas reales, captura, especie del catálogo, entradas de calculadoras, selector de grupo, fechas y clasificación.
-- Suite completa: pendiente de terminar en esta nota de trabajo.
+- `flutter test --no-pub --concurrency 4 --reporter expanded`: **1387 aprobadas, 1 omitida, 0 fallos**, sobre `8bc7bd1`.
+- Después se amplió el reconocimiento de plurales y avestruz para conservar las especies que reconocía el clasificador anterior: **45 pruebas de integridad y exóticos aprobadas** sobre ese ajuste final, y análisis repetido sin errores ni warnings.
+- Las 28 pruebas enfocadas de dashboard, calculadoras y unidades también aprobaron.
+- En GitHub pasaron los contratos Flutter, contratos de pacientes/contactos/cobros, SQL de módulos/dashboard, finanzas y actualización aislada sobre `8bc7bd1`. La validación de Flutter/APK sintética seguía en ejecución en esa consulta. Octopus omitió la revisión por ser borrador; no hay revisión externa favorable acreditada.
 
 ## Límites
 
