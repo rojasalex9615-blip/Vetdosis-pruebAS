@@ -1,3 +1,4 @@
+import '../../../core/widgets/horizontal_choice_strip.dart';
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
@@ -70,10 +71,8 @@ class AquacultureSpeciesPanel extends StatelessWidget {
 
 // ----------------------------------------------------------- Utilidades
 
-class _Gap extends StatelessWidget {
-  const _Gap();
-  @override
-  Widget build(BuildContext context) => const SizedBox(height: 16);
+class _Gap extends SizedBox {
+  const _Gap() : super(height: 16);
 }
 
 double _decimal(TextEditingController c, String label) {
@@ -216,7 +215,7 @@ class _SpeciesButtons extends StatelessWidget {
       children: [
         Text('Especie', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 8),
-        Wrap(
+        HorizontalChoiceStrip(
           spacing: 8,
           runSpacing: 8,
           children: [

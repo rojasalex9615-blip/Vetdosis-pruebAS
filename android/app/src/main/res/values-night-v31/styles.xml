@@ -13,6 +13,10 @@
         <!-- Igual que en values-v31: el arte full-bleed se recortaria en el
              circulo de Android 12+, asi que se usa el icono de la app. -->
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/vetdosis_launcher</item>
+        <!-- Igual que en values-v31, con el grafito del modo oscuro: define el
+             respaldo del icono para que la transparencia no acabe en negro y
+             deja el hueco en 160dp en vez de 192dp. -->
+        <item name="android:windowSplashScreenIconBackgroundColor">#201F25</item>
         <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">

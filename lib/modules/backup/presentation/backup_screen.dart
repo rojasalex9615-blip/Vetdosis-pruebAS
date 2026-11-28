@@ -1,3 +1,5 @@
+import '../../aviculture/domain/rearing_project_repository.dart';
+import '../../aviculture/domain/rearing_project_backup.dart';
 import 'package:http/http.dart' as http;
 import '../data/drive_backup_client.dart';
 import '../data/drive_backup_authorization.dart';
@@ -149,12 +151,14 @@ class BackupScreen extends StatefulWidget {
     this.identity,
     this.googleDrive,
     this.backupOnly = false,
+    this.rearingProjects,
   });
   final BackupRepository repository;
   final ClinicMembership member;
   final IdentityRepository? identity;
   final drive_auth.DriveBackupClient? googleDrive;
   final bool backupOnly;
+  final RearingProjectRepository? rearingProjects;
   @override
   State<BackupScreen> createState() => _BackupScreenState();
 }
@@ -261,6 +265,15 @@ class _BackupScreenState extends State<BackupScreen> {
       widget.repository,
       widget.member.clinicId,
       scope: scope,
+      deviceAssets: widget.rearingProjects == null
+          ? const {}
+          : {
+              RearingProjectBackup.assetName: await RearingProjectBackup.capture(
+                widget.rearingProjects!,
+                widget.member.userId,
+                widget.member.clinicId,
+              ),
+            },
       clinicalAssets: {
         for (final name in scope == BackupScope.clinic
             ? [
@@ -269,6 +282,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 'regulatory.catalog.v1.json',
                 'forms.reference.v1.json',
                 'forms.clinical.v1.json',
+                'aviculture/guia_linea.v1.json',
               ]
             : <String>[])
           name: await rootBundle.loadString('assets/clinical/$name'),
@@ -392,6 +406,15 @@ class _BackupScreenState extends State<BackupScreen> {
       widget.repository,
       widget.member.clinicId,
       scope: scope,
+      deviceAssets: widget.rearingProjects == null
+          ? const {}
+          : {
+              RearingProjectBackup.assetName: await RearingProjectBackup.capture(
+                widget.rearingProjects!,
+                widget.member.userId,
+                widget.member.clinicId,
+              ),
+            },
       clinicalAssets: {
         for (final name
             in scope == BackupScope.clinic
@@ -401,6 +424,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     'regulatory.catalog.v1.json',
                     'forms.reference.v1.json',
                     'forms.clinical.v1.json',
+                    'aviculture/guia_linea.v1.json',
                   ]
                 : <String>[])
           name: await rootBundle.loadString('assets/clinical/$name'),

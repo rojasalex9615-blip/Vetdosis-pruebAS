@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_header_card.dart';
@@ -681,11 +682,10 @@ class _HospitalScreenState extends State<HospitalScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Hospitalización',
-            style: Theme.of(context).textTheme.headlineMedium,
+          const AppPageHeading(
+            title: 'Hospitalización',
+            screens: {'Hospitalización'},
           ),
-          const SizedBox(height: 16),
           if (widget.initialInstructions != null)
             const Padding(
               padding: EdgeInsets.all(16),

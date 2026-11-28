@@ -254,9 +254,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                 model.signIn(_email.text, _password.text);
                               }
                             },
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 48),
-                      ),
+                      // Sin alto forzado: el de Material 3 son 40, y a 48 el
+                      // boton se veia hinchado frente a los campos. El area
+                      // tactil sigue siendo de 48 porque los botones usan
+                      // MaterialTapTargetSize.padded, asi que no se pierde
+                      // accesibilidad al dejar la altura visual en 40.
                       child: Text(
                         _reset
                             ? 'Enviar enlace de recuperación'
@@ -292,7 +294,6 @@ class _AuthScreenState extends State<AuthScreen> {
                                   0x662B2B31,
                                 ),
                                 side: BorderSide.none,
-                                minimumSize: const Size(0, 48),
                               )
                             : null,
                         child: const Row(
@@ -301,7 +302,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           children: [
                             GoogleMark(size: 18),
                             SizedBox(width: 10),
-                            Text('Continuar con Google'),
+                            Flexible(child: Text('Continuar con Google')),
                           ],
                         ),
                       ),

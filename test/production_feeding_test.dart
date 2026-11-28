@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetdosis_pro/modules/production/domain/feeding_calculation.dart';
-import 'package:vetdosis_pro/modules/production/presentation/aquaculture_panels.dart';
 import 'package:vetdosis_pro/modules/production/presentation/feeding_panel.dart';
 import 'package:vetdosis_pro/modules/production/presentation/production_menu.dart';
 import 'package:vetdosis_pro/modules/production/presentation/growth_panel.dart';
@@ -96,10 +95,10 @@ void main() {
     await tester.ensureVisible(find.text('Tilapia'));
     await tester.tap(find.text('Tilapia'));
     await tester.pumpAndSettle();
-    expect(find.byType(AquacultureSeedPanel), findsOneWidget);
+    expect(find.text('Siembra y biomasa'), findsOneWidget);
     await tester.pumpWidget(app(member));
     await tester.pumpAndSettle();
-    expect(find.byType(AquacultureSeedPanel), findsNothing);
+    expect(find.text('Siembra y biomasa'), findsNothing);
     await tester.ensureVisible(find.text('Volver a especies'));
     await tester.tap(find.text('Volver a especies'));
     await tester.pumpAndSettle();
@@ -115,7 +114,7 @@ void main() {
     expect(find.byType(GrowthPanel), findsNothing);
     await tester.pumpWidget(app(admin));
     await tester.pumpAndSettle();
-    expect(find.byType(GrowthPanel), findsOneWidget);
+    expect(find.text('Crecimiento y conversión del lote'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -12,6 +12,7 @@ class BackupArchive {
     String clinic, {
     BackupScope scope = BackupScope.clinic,
     Map<String, String> clinicalAssets = const {},
+    Map<String, String> deviceAssets = const {},
   }) async {
     final snapshot = await repository.snapshot(clinic, scope: scope);
     final data = jsonDecode(snapshot) as Map;
@@ -50,6 +51,13 @@ class BackupArchive {
       'snapshot_json': snapshot,
       'snapshot_sha256': sha256.convert(utf8.encode(snapshot)).toString(),
       'attachments': attachments,
+      'device_assets': {
+        for (final e in deviceAssets.entries)
+          e.key: {
+            'json': e.value,
+            'sha256': sha256.convert(utf8.encode(e.value)).toString(),
+          },
+      },
       'clinical_assets': {
         for (final e in clinicalAssets.entries)
           e.key: {
@@ -117,6 +125,14 @@ class BackupArchive {
         throw const FormatException('Un catálogo no coincide con su hash.');
       }
     }
+    for (final asset in (a['device_assets'] as Map? ?? {}).values) {
+      if (sha256.convert(utf8.encode(asset['json'] as String)).toString() !=
+          asset['sha256']) {
+        throw const FormatException(
+          'Un proyecto del dispositivo no coincide con su hash.',
+        );
+      }
+    }
     final snapshot = Map<String, dynamic>.from(
       jsonDecode(a['snapshot_json'] as String) as Map,
     );
@@ -161,6 +177,15 @@ class BackupArchive {
       }
     }
     return snapshot;
+  }
+
+  /// Reads only after checking the complete archive, including its original snapshot.
+  static Map<String, String> deviceAssets(Uint8List bytes) {
+    verify(bytes);
+    final a = jsonDecode(utf8.decode(bytes)) as Map;
+    return (a['device_assets'] as Map? ?? {}).map(
+      (key, value) => MapEntry(key as String, value['json'] as String),
+    );
   }
 
   static String tableCsv(List<Map<String, dynamic>> rows) {

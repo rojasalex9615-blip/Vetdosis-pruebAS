@@ -37,6 +37,17 @@ stages:
   - verify
   - build
 
+# Revisa que ninguna fila de la interfaz se salga del ancho de un telefono de
+# 360 dp. Es analisis estatico del arbol de widgets, no necesita Flutter ni el
+# SDK de Android, asi que termina en segundos y adelanta el fallo antes de la
+# compilacion larga.
+desbordes-interfaz:
+  stage: verify
+  image: python:3.12-slim
+  timeout: 5m
+  script:
+    - python3 scripts/validation/audit_overflow.py --fail-on-overflow
+
 # Reproduce 15M y sus contratos en PostgreSQL 17 efimero.
 # No toca Supabase Pruebas ni requiere secretos.
 sql-lab-results:

@@ -476,7 +476,9 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                       children: [
                         Icon(VetIcons.cloudCheck, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
-                        Text('Global (solo lectura): ${reviewStatusLabel(item.globalStatus)}', style: Theme.of(context).textTheme.bodySmall),
+                        Expanded(
+                          child: Text('Global (solo lectura): ${reviewStatusLabel(item.globalStatus)}', style: Theme.of(context).textTheme.bodySmall),
+                        ),
                       ],
                     ),
                   ),
@@ -500,7 +502,9 @@ class _ReviewCatalogScreenState extends State<ReviewCatalogScreen> {
                       children: [
                         Icon(VetIcons.clinic, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(width: 6),
-                        Text('Clínica: ${reviewStatusLabel(item.status)}', style: Theme.of(context).textTheme.bodySmall),
+                        Expanded(
+                          child: Text('Clínica: ${reviewStatusLabel(item.status)}', style: Theme.of(context).textTheme.bodySmall),
+                        ),
                       ],
                     ),
                   ),

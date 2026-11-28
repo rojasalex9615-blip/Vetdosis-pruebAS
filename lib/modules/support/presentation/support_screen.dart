@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -141,8 +142,10 @@ class _SupportScreenState extends State<SupportScreen> {
   Widget _chat(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text('Ayuda y soporte', style: Theme.of(context).textTheme.headlineSmall),
-      const SizedBox(height: 12),
+      const AppPageHeading(
+        title: 'Ayuda y soporte',
+        screens: {'Ayuda y soporte'},
+      ),
       if (widget.helpPanel != null)
         widget.helpPanel!
       else

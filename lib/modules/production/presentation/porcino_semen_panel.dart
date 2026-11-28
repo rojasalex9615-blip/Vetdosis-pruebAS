@@ -1,3 +1,4 @@
+import '../../../core/widgets/horizontal_choice_strip.dart';
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_theme.dart';
@@ -189,7 +190,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
           ]),
 
           _Step(title: '2. Concentración', children: [
-            Wrap(
+            HorizontalChoiceStrip(
               spacing: 8,
               runSpacing: 8,
               children: [
@@ -225,7 +226,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Wrap(
+                child: HorizontalChoiceStrip(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
@@ -314,7 +315,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
           _Step(title: '4. Dosis y diluyente', children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Wrap(
+              child: HorizontalChoiceStrip(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
@@ -350,7 +351,7 @@ class _PorcinoSemenPanelState extends State<PorcinoSemenPanel> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Wrap(
+              child: HorizontalChoiceStrip(
                 spacing: 8,
                 runSpacing: 8,
                 children: [

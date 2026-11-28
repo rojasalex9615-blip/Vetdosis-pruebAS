@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../core/widgets/neu_identity.dart';
 import '../../../core/widgets/neu_header_card.dart';
@@ -106,6 +107,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget panel(String title, String page, List<Widget> children) =>
       NeuHeaderCard(
         title: title,
+        showHeader:
+            !(widget.statisticsOnly &&
+                AppHeadingScope.owns(context, {'Estadísticas'})),
         icon: sectionIcon(page),
         color: sectionColor(page),
         trailing: IconButton(
@@ -148,8 +152,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(v.$2, style: Theme.of(context).textTheme.titleLarge),
-                    Text(v.$1),
+                    Text(v.$2, style: Theme.of(context).textTheme.titleMedium),
+                    Text(v.$1, style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -281,6 +285,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final m = model;
       final theme = Theme.of(context);
       final totals = m.dayTotals;
+      final showHeading =
+          !widget.homePilot &&
+          !AppHeadingScope.owns(context, {
+            widget.statisticsOnly ? 'Estadísticas' : 'Inicio',
+          });
+      final noteStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
       final statisticsPanel = panel('Estadísticas', 'Estadísticas', [
         StatisticsPanel(
           model: model,
@@ -299,12 +311,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  widget.statisticsOnly
-                      ? 'Estadísticas de la clínica'
-                      : 'Resumen de tu espacio',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+                child: showHeading
+                    ? Text(
+                        widget.statisticsOnly
+                            ? 'Estadísticas de la clínica'
+                            : 'Resumen de tu espacio',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      )
+                    : m.updated != null
+                    ? Text(
+                        'Última consulta: ${time(m.updated!)}',
+                        style: noteStyle,
+                      )
+                    : const SizedBox.shrink(),
               ),
               IconButton(
                 tooltip: 'Actualizar resumen',
@@ -331,7 +350,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 'Revisa los permisos de tu cuenta con quien lo administra.',
               ),
             ),
-          if (m.updated != null) Text('Última consulta: ${time(m.updated!)}'),
+          if (showHeading && m.updated != null)
+            Text('Última consulta: ${time(m.updated!)}', style: noteStyle),
           if (m.busy) const LinearProgressIndicator(),
           if (widget.statisticsOnly && routeVisible('Estadísticas'))
             statisticsPanel,
@@ -508,6 +528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ? VetColors.success
                                 : VetColors.danger,
                             emphasized: true,
+                            compactValue: true,
                           ),
                           if (m.overdue.isEmpty)
                             const Padding(
@@ -569,6 +590,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ? VetColors.success
                                 : VetColors.warning,
                             emphasized: true,
+                            compactValue: true,
                           ),
                           if (m.lowStock.isEmpty)
                             const Padding(
@@ -721,6 +743,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         Text(
                           '${m.products.length} artículos activos · ${m.lowStock.length} por revisar',
+                          style: noteStyle,
                         ),
                         if (m.canSeeClinicSales && routeVisible('Caja'))
                           metrics([
@@ -737,17 +760,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               m.potentialMargin?.display ?? 'No disponible',
                             ),
                           ]),
-                        const Text(
-                          'Existencias disponibles por unidad; no incluye lotes caducados.',
+                        const SizedBox(height: 12),
+                        Text(
+                          'Existencias disponibles por unidad',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
+                        const SizedBox(height: 6),
                         if (m.stockByUnit == null)
-                          const Text('Existencias por unidad no disponibles.'),
+                          Text(
+                            'Existencias por unidad no disponibles.',
+                            style: noteStyle,
+                          ),
                         for (final e
                             in (m.stockByUnit ?? <String, Quantity>{}).entries)
-                          Text('${e.value.display()} ${e.key}'),
-                        const Text(
+                          Text(
+                            '${e.value.display()} ${e.key == 'unidad' && e.value.compareTo(Quantity.parse('1')) != 0 ? 'unidades' : e.key}',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        const SizedBox(height: 8),
+                        Text('No incluye lotes caducados.', style: noteStyle),
+                        const SizedBox(height: 8),
+                        Text(
                           'Margen potencial antes de comisiones y gastos; no es utilidad neta.',
+                          style: noteStyle,
                         ),
+                        const SizedBox(height: 20),
                         TextField(
                           controller: search,
                           decoration: const InputDecoration(

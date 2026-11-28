@@ -1,3 +1,4 @@
+import '../../../core/widgets/horizontal_choice_strip.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -296,7 +297,7 @@ class _SemenReferenceScreenState extends State<SemenReferenceScreen> {
   ]);
 
   Widget _concentrationCard() => _card('2. Concentración', [
-    Wrap(
+    HorizontalChoiceStrip(
       spacing: 8,
       runSpacing: 8,
       children: [

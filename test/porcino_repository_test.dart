@@ -232,7 +232,13 @@ void main() {
     await tester.ensureVisible(find.text('Bioseguridad y ambiente'));
     await tester.tap(find.text('Bioseguridad y ambiente'));
     await tester.pumpAndSettle();
-    expect(find.byType(PorcinoEnvironmentPanel), findsOneWidget);
+    expect(find.text('Ambiente y bienestar'), findsOneWidget);
+    await tester.ensureVisible(find.text('Referencias'));
+    await tester.tap(find.text('Referencias'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Referencias de bioseguridad'));
+    await tester.tap(find.text('Referencias de bioseguridad'));
+    await tester.pumpAndSettle();
     expect(find.byType(PorcinoBiosecurityRefsPanel), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

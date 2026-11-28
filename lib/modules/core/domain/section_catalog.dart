@@ -34,7 +34,10 @@ const sectionGroups = [
     'Producción y grandes especies',
     'Dashboard Pecuario',
   ], area: 'production'),
-  SectionGroup('Exóticos y silvestres', ['Exóticos'], area: 'exotic'),
+  SectionGroup('Exóticos y silvestres', [
+    'Exóticos',
+    'Dashboard Exóticos',
+  ], area: 'exotic'),
   SectionGroup('Administración y finanzas', [
     'Caja',
     'Planeación financiera',

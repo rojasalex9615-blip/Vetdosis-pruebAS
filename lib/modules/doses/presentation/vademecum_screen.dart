@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import 'manufacturer_catalog_screen.dart';
 import '../../../core/widgets/contrast.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -139,7 +140,7 @@ class _VademecumScreenState extends State<VademecumScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Vademécum', style: Theme.of(context).textTheme.headlineMedium),
+        const AppPageHeading(title: 'Vademécum', screens: {'Vademécum'}),
         const Text(
           'Dos vademécums distintos. Por principio activo: qué pautas '
           'mencionan el agente y en qué especie. Por nombre comercial: qué '

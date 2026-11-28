@@ -63,6 +63,7 @@ navegación; "sale hacia" es lo que ofrece dentro.
 | Producción y grandes especies | `ProductionMenu` | Grupo Producción | Menú por especie. Sale a las calculadoras de producción (por cabeza y lote, agua y alimento). |
 | Dashboard Pecuario | `ProductionDashboard` | Producción → pestaña | Tablero independiente: KPIs, biomasa, silos, calendario zoosanitario y herramientas por especie. |
 | Exóticos | `ExoticsMenu` | Grupo Exóticos | Catálogo de exóticos y la calculadora de peso metabólico; respeta permiso. |
+| Dashboard Exóticos | `ExoticsDashboard` | Grupo Exóticos | Tablero independiente por grupo taxonómico: censo, biometría, recintos y alertas. |
 | Cálculo rápido | `DoseScreen` | Cálculos / Inicio | Dosis por paciente. Sale a elegir paciente o escanear etiqueta. |
 | Escanear etiqueta para dosis | `DoseLabelScannerScreen` | Cálculo rápido | Lee etiqueta y devuelve datos al cálculo. |
 | Vademécum | `VademecumScreen` | Cálculos / Inicio | Consulta de medicamentos. |

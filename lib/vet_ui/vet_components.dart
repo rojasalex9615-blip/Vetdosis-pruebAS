@@ -1,3 +1,5 @@
+import '../core/widgets/contrast.dart';
+import '../core/widgets/app_heading_scope.dart';
 import '../core/widgets/accent_glow.dart';
 import '../core/widgets/neu_identity.dart';
 import '../core/widgets/workspace_panel.dart';
@@ -386,17 +388,22 @@ class VetIconBox extends StatelessWidget {
   final double size;
   @override
   Widget build(BuildContext context) {
-    final vivid = vividAccent(accent);
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: .18),
-        borderRadius: BorderRadius.circular(size * .32),
-        boxShadow: neuShadows(dark, depth: size / 48),
+    final surface = Theme.of(context).colorScheme.surface;
+    final plate = Color.alphaBlend(accent.withValues(alpha: .18), surface);
+    final vivid = readableOn(vividAccent(accent), plate);
+    return AccentGlow(
+      color: accent,
+      radius: size * .32,
+      emphasis: 1,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: plate,
+          borderRadius: BorderRadius.circular(size * .32),
+        ),
+        child: Icon(icon, color: vivid, size: size * .52),
       ),
-      child: Icon(icon, color: vivid, size: size * .52),
     );
   }
 }
@@ -438,6 +445,11 @@ class VetSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (large && AppHeadingScope.owns(context, {title})) {
+      return subtitle == null
+          ? const SizedBox.shrink()
+          : Text(subtitle!, style: theme.textTheme.bodySmall);
+    }
     final textTheme = theme.textTheme;
     // El apoyo no lleva el gris fijo de antes: sobre el fondo oscuro
     // #201F25 ese gris queda en 3.6:1, por debajo del minimo de texto. El del
@@ -754,6 +766,7 @@ class VetDataRow extends StatelessWidget {
     this.icon,
     this.valueColor,
     this.emphasized = false,
+    this.compactValue = false,
   });
   final String label;
   final String value;
@@ -767,16 +780,22 @@ class VetDataRow extends StatelessWidget {
   /// El valor es la cifra importante: se pinta más grande.
   final bool emphasized;
 
+  /// Compact alert counters use intrinsic width, with breathing room at the end.
+  final bool compactValue;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final muted = theme.colorScheme.onSurfaceVariant;
     final valueStyle =
-        (emphasized ? textTheme.titleLarge : textTheme.bodyMedium)?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: valueColor ?? theme.colorScheme.onSurface,
-        );
+        (emphasized
+                ? (compactValue ? textTheme.titleMedium : textTheme.titleLarge)
+                : textTheme.bodyMedium)
+            ?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: valueColor ?? theme.colorScheme.onSurface,
+            );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -795,9 +814,15 @@ class VetDataRow extends StatelessWidget {
           const SizedBox(width: 12),
           // El valor comparte el ancho para poder partirse en vez de desbordar;
           // el texto se alinea a la derecha, así las cifras quedan en el borde.
-          Expanded(
-            child: Text(value, textAlign: TextAlign.right, style: valueStyle),
-          ),
+          if (compactValue)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Text(value, style: valueStyle),
+            )
+          else
+            Expanded(
+              child: Text(value, textAlign: TextAlign.right, style: valueStyle),
+            ),
         ],
       ),
     );

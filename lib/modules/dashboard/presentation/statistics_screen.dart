@@ -825,9 +825,11 @@ class _StatisticsPanelState extends State<StatisticsPanel> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    'Citas no canceladas del mes por especie',
-                    style: Theme.of(context).textTheme.titleSmall,
+                  Expanded(
+                    child: Text(
+                      'Citas no canceladas del mes por especie',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
                 ],
               ),
