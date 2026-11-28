@@ -41,17 +41,17 @@ class FarmBatch {
   int diasEnEtapa(DateTime ahora) => ahora.difference(fechaInicio).inDays;
 
   static FarmBatch read(Map<String, dynamic> row) => FarmBatch(
-        id: '${row['id']}',
-        codigo: '${row['codigo'] ?? ''}',
-        nombre: '${row['nombre'] ?? ''}',
-        especie: '${row['especie'] ?? ''}',
-        proposito: '${row['proposito'] ?? ''}',
-        estado: '${row['estado'] ?? ''}',
-        cabezas: _entero(row['cabezas']) ?? 0,
-        fechaInicio: _fecha(row['fecha_inicio']) ?? DateTime.now(),
-        sistema: row['sistema'] as String?,
-        identificadorHato: row['identificador_hato'] as String?,
-      );
+    id: '${row['id']}',
+    codigo: '${row['codigo'] ?? ''}',
+    nombre: '${row['nombre'] ?? ''}',
+    especie: '${row['especie'] ?? ''}',
+    proposito: '${row['proposito'] ?? ''}',
+    estado: '${row['estado'] ?? ''}',
+    cabezas: _entero(row['cabezas']) ?? 0,
+    fechaInicio: _fechaObligatoria(row['fecha_inicio']),
+    sistema: row['sistema'] as String?,
+    identificadorHato: row['identificador_hato'] as String?,
+  );
 }
 
 /// Un evento de `produccion_eventos`: vacuna, resguardo, parto, baja.
@@ -82,14 +82,14 @@ class FarmEvent {
   }
 
   static FarmEvent read(Map<String, dynamic> row) => FarmEvent(
-        id: '${row['id']}',
-        loteId: '${row['lote_id']}',
-        fecha: _fecha(row['fecha']) ?? DateTime.now(),
-        tipo: '${row['tipo'] ?? ''}',
-        subtipo: '${row['subtipo'] ?? ''}',
-        detalle: _mapa(row['detalle']),
-        animalesAfectados: _entero(row['animales_afectados']),
-      );
+    id: '${row['id']}',
+    loteId: '${row['lote_id']}',
+    fecha: _fechaObligatoria(row['fecha']),
+    tipo: '${row['tipo'] ?? ''}',
+    subtipo: '${row['subtipo'] ?? ''}',
+    detalle: _mapa(row['detalle']),
+    animalesAfectados: _entero(row['animales_afectados']),
+  );
 }
 
 /// Un registro productivo de `produccion_registros`.
@@ -118,11 +118,11 @@ class FarmRecord {
   }
 
   static FarmRecord read(Map<String, dynamic> row) => FarmRecord(
-        id: '${row['id']}',
-        loteId: '${row['lote_id']}',
-        fecha: _fecha(row['fecha']) ?? DateTime.now(),
-        metricas: _mapa(row['metricas']),
-      );
+    id: '${row['id']}',
+    loteId: '${row['lote_id']}',
+    fecha: _fechaObligatoria(row['fecha']),
+    metricas: _mapa(row['metricas']),
+  );
 }
 
 /// Definicion de una metrica en `produccion_metricas`.
@@ -156,13 +156,13 @@ class FarmMetricDef {
   }
 
   static FarmMetricDef read(Map<String, dynamic> row) => FarmMetricDef(
-        especie: '${row['especie'] ?? ''}',
-        clave: '${row['clave'] ?? ''}',
-        etiqueta: '${row['etiqueta'] ?? ''}',
-        unidad: '${row['unidad'] ?? ''}',
-        minimo: _decimal(row['minimo']),
-        maximo: _decimal(row['maximo']),
-      );
+    especie: '${row['especie'] ?? ''}',
+    clave: '${row['clave'] ?? ''}',
+    etiqueta: '${row['etiqueta'] ?? ''}',
+    unidad: '${row['unidad'] ?? ''}',
+    minimo: _decimal(row['minimo']),
+    maximo: _decimal(row['maximo']),
+  );
 }
 
 /// Todo lo que el panel necesita de una especie, en una sola lectura.
@@ -181,8 +181,7 @@ class FarmSnapshot {
 
   /// Instantanea sin nada del usuario. El catalogo de metricas no cuenta:
   /// es referencia, existe siempre y no dice nada de esta granja.
-  bool get sinDatos =>
-      batches.isEmpty && events.isEmpty && records.isEmpty;
+  bool get sinDatos => batches.isEmpty && events.isEmpty && records.isEmpty;
 
   /// Cabezas sumadas de los lotes activos.
   int get totalCabezas => batches
@@ -232,10 +231,7 @@ abstract class ProductionFarmRepository {
   ///
   /// [especies] son los codigos de `produccion_especies`, no la etiqueta que
   /// se ve en pantalla: se obtienen de [codigosDeEspecie].
-  Future<FarmSnapshot> load(
-    String clinicId, {
-    required List<String> especies,
-  });
+  Future<FarmSnapshot> load(String clinicId, {required List<String> especies});
 }
 
 int? _entero(Object? v) {
@@ -251,10 +247,9 @@ double? _decimal(Object? v) {
   return null;
 }
 
-DateTime? _fecha(Object? v) {
-  if (v is DateTime) return v;
-  if (v is String) return DateTime.tryParse(v);
-  return null;
+DateTime _fechaObligatoria(Object? value) {
+  if (value is DateTime) return value;
+  return DateTime.parse('$value');
 }
 
 Map<String, dynamic> _mapa(Object? v) {

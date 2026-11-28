@@ -18,14 +18,12 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
   Future<ExoticSnapshot> load(String clinicId) async {
     // Los recintos no dependen de que haya pacientes: un criadero puede tener
     // terrarios montados antes de dar de alta al primer ejemplar.
-    final recintosPendiente = _recintos(clinicId);
-    final lecturasPendiente = _lecturas(clinicId);
-    final nidadasPendiente = _nidadas(clinicId);
-    final ejemplares = await _ejemplares(clinicId);
-
-    final recintos = await recintosPendiente;
-    final lecturas = await lecturasPendiente;
-    final nidadas = await nidadasPendiente;
+    final (recintos, lecturas, nidadas, ejemplares) = await (
+      _recintos(clinicId),
+      _lecturas(clinicId),
+      _nidadas(clinicId),
+      _ejemplares(clinicId),
+    ).wait;
 
     if (ejemplares.isEmpty) {
       return ExoticSnapshot(
@@ -37,19 +35,14 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
 
     final ids = ejemplares.map((e) => e.id).toList();
     // Ninguna de estas lecturas depende de las otras: se lanzan a la vez.
-    final eventosPendiente = _eventos(clinicId, ids);
-    final estanciasPendiente = _estancias(clinicId, ids);
-    final marcajesPendiente = _marcajes(clinicId, ids);
-    final legalPendiente = _legal(clinicId, ids);
-    final tomasPendiente = _tomas(clinicId, ids);
-    final fisioPendiente = _fisiologicos(clinicId, ids);
-
-    final eventos = await eventosPendiente;
-    final estancias = await estanciasPendiente;
-    final marcajes = await marcajesPendiente;
-    final legal = await legalPendiente;
-    final tomas = await tomasPendiente;
-    final fisio = await fisioPendiente;
+    final (eventos, estancias, marcajes, legal, tomas, fisio) = await (
+      _eventos(clinicId, ids),
+      _estancias(clinicId, ids),
+      _marcajes(clinicId, ids),
+      _legal(clinicId, ids),
+      _tomas(clinicId, ids),
+      _fisiologicos(clinicId, ids),
+    ).wait;
 
     return ExoticSnapshot(
       specimens: ejemplares,
@@ -141,8 +134,7 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
         .map(
           (r) => ExoticReading(
             enclosureId: '${r['enclosure_id']}',
-            medidoEn:
-                DateTime.tryParse('${r['medido_en'] ?? ''}') ?? DateTime.now(),
+            medidoEn: DateTime.parse('${r['medido_en'] ?? ''}'),
             tempCaliente: _num(r['temp_caliente']),
             tempFria: _num(r['temp_fria']),
             humedad: _num(r['humedad']),
@@ -170,15 +162,15 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
           (r) => ExoticClutch(
             id: '${r['id']}',
             especie: '${r['especie'] ?? ''}',
-            puestaEl:
-                DateTime.tryParse('${r['puesta_el'] ?? ''}') ?? DateTime.now(),
+            puestaEl: DateTime.parse('${r['puesta_el'] ?? ''}'),
             huevos: (r['huevos'] as num?)?.toInt() ?? 0,
             estado: '${r['estado'] ?? ''}',
             fertiles: (r['fertiles'] as num?)?.toInt(),
             tempObjetivo: _num(r['temp_objetivo']),
             humedadObjetivo: _num(r['humedad_objetivo']),
-            eclosionEstimada:
-                DateTime.tryParse('${r['eclosion_estimada'] ?? ''}'),
+            eclosionEstimada: DateTime.tryParse(
+              '${r['eclosion_estimada'] ?? ''}',
+            ),
           ),
         )
         .toList();
@@ -200,16 +192,13 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
         id: '${r['id']}',
         specimenId: '${r['patient_id']}',
         tipo: '${r['kind'] ?? ''}',
-        fecha: DateTime.tryParse('${r['created_at'] ?? ''}') ?? DateTime.now(),
+        fecha: DateTime.parse('${r['created_at'] ?? ''}'),
         datos: mapa,
       );
     }).toList();
   }
 
-  Future<List<ExoticStay>> _estancias(
-    String clinicId,
-    List<String> ids,
-  ) async {
+  Future<List<ExoticStay>> _estancias(String clinicId, List<String> ids) async {
     // Solo las abiertas: una estancia ya dada de alta no ocupa jaula ni
     // cuenta como ejemplar en cuarentena.
     final rows = await client
@@ -238,9 +227,7 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
           (r) => ExoticStay(
             id: '${r['id']}',
             specimenId: '${r['patient_id']}',
-            ingreso:
-                DateTime.tryParse('${r['admitted_at'] ?? ''}') ??
-                    DateTime.now(),
+            ingreso: DateTime.parse('${r['admitted_at'] ?? ''}'),
             recinto: '${r['cage'] ?? ''}',
             diasAislamiento: diasPorEstancia['${r['id']}'],
           ),
@@ -305,9 +292,7 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
         .map(
           (r) => ExoticFeeding(
             specimenId: '${r['patient_id']}',
-            ofrecidoEn:
-                DateTime.tryParse('${r['ofrecido_en'] ?? ''}') ??
-                    DateTime.now(),
+            ofrecidoEn: DateTime.parse('${r['ofrecido_en'] ?? ''}'),
             alimento: '${r['alimento'] ?? ''}',
             aceptado: r['aceptado'] == true,
           ),
@@ -331,8 +316,7 @@ class SupabaseExoticRepository implements ExoticDashboardRepository {
           (r) => ExoticPhysioEvent(
             specimenId: '${r['patient_id']}',
             tipo: '${r['tipo'] ?? ''}',
-            ocurrioEn:
-                DateTime.tryParse('${r['ocurrio_en'] ?? ''}') ?? DateTime.now(),
+            ocurrioEn: DateTime.parse('${r['ocurrio_en'] ?? ''}'),
             detalle: '${r['detalle'] ?? ''}',
           ),
         )

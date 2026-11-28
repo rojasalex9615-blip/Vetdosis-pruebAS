@@ -90,6 +90,7 @@ class ProductionMenu extends StatefulWidget {
 
 class _ProductionMenuState extends State<ProductionMenu> {
   String? species, activity;
+  String? _dashboardSpecies;
   late int _viewMode; // 0: Catálogo, 1: Dashboard, 2: Reproducción, 3: Alimento
 
   @override
@@ -118,126 +119,27 @@ class _ProductionMenuState extends State<ProductionMenu> {
   }
 
   void _openVademecum(String currentSpecies) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => ProductionVademecumModal(species: currentSpecies),
-    );
+    if (allowed('Vademécum')) widget.onNavigate('Vademécum');
   }
 
   void _openPrescription({
     required bool quantified,
     required String currentSpecies,
   }) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => PecuariaPrescriptionModal(
-        quantified: quantified,
-        species: currentSpecies,
-        clinicName: widget.member?.clinicName ?? 'Granja / Clínica Pecuaria',
-        mvzName: widget.member?.userId ?? 'MVZ Responsable',
-      ),
-    );
+    if (allowed('Receta')) widget.onNavigate('Receta');
   }
 
   void _showVitalsDialog(String currentSpecies) {
-    final metrics =
-        speciesDataCatalog[currentSpecies] ?? speciesDataCatalog['Bovinos']!;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(VetIcons.heartPulse, color: VetColors.turquoise),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Constantes: $currentSpecies')),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final v in metrics.vitals) ...[
-              ListTile(
-                dense: true,
-                title: Text(
-                  v.parameter,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                trailing: Text(
-                  '${v.range} ${v.unit}',
-                  style: const TextStyle(
-                    color: VetColors.turquoise,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
+    if (allowed('Cálculos clínicos')) widget.onNavigate('Cálculos clínicos');
   }
 
-  void _showQuickRecordDialog() {
-    final pesoCtrl = TextEditingController();
-    final mortCtrl = TextEditingController();
-    final consCtrl = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Nuevo Registro Productivo'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: pesoCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Pesaje promedio del lote (kg o g)',
-              ),
-            ),
-            TextField(
-              controller: mortCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Mortalidad del día (cabezas)',
-              ),
-            ),
-            TextField(
-              controller: consCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Consumo de alimento diario (kg)',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Registro productivo guardado con éxito.'),
-                  backgroundColor: VetColors.success,
-                ),
-              );
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
+  void _openDashboard() {
+    setState(() {
+      _dashboardSpecies = species ?? _dashboardSpecies;
+      species = null;
+      activity = null;
+      _viewMode = 1;
+    });
   }
 
   @override
@@ -288,7 +190,8 @@ class _ProductionMenuState extends State<ProductionMenu> {
             units: widget.units,
             farm: widget.farm,
             farmWrite: widget.farmWrite,
-            initialSpecies: 'Bovinos',
+            initialSpecies:
+                _dashboardSpecies ?? widget.initialSpecies ?? 'Bovinos',
           )
         else if (_viewMode == 2)
           // La misma pantalla que abre exoticos: la gestacion no es de un
@@ -485,7 +388,10 @@ class _ProductionMenuState extends State<ProductionMenu> {
           kind: VetBadgeKind.success,
         ),
       ],
-      _ => [const VetStatusBadge(label: 'Organización de actividades'), registros],
+      _ => [
+        const VetStatusBadge(label: 'Organización de actividades'),
+        registros,
+      ],
     };
   }
 
@@ -529,10 +435,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             label: const Text('Volver a especies'),
           ),
           TextButton.icon(
-            onPressed: () => setState(() {
-              _viewMode = 1;
-              species = null;
-            }),
+            onPressed: _openDashboard,
             icon: const Icon(VetIcons.dashboard, size: 16),
             label: const Text('Ver en Dashboard'),
           ),
@@ -836,7 +739,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             subtitle: 'Pesajes, consumo y mortalidad',
             icon: VetIcons.clipboardChecks,
             accent: VetColors.turquoise,
-            onTap: () => _showQuickRecordDialog(),
+            onTap: _openDashboard,
           ),
         ],
       ),
@@ -857,15 +760,12 @@ class _ProductionMenuState extends State<ProductionMenu> {
       const SizedBox(height: 8),
       VetCard(
         child: VetEmptyState(
-          text: 'Tus lotes y alertas se consultan en el Dashboard Pecuario, '
+          text:
+              'Tus lotes y alertas se consultan en el Dashboard Pecuario, '
               'que los lee de tus propios registros.',
           icon: VetIcons.barn,
           actionLabel: 'Abrir Dashboard Pecuario',
-          onAction: () => setState(() {
-            _viewMode = 1;
-            species = null;
-            activity = null;
-          }),
+          onAction: _openDashboard,
         ),
       ),
       const SizedBox(height: 24),

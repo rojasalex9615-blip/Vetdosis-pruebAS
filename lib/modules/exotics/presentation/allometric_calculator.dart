@@ -49,6 +49,16 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
   }
 
   @override
+  void didUpdateWidget(covariant AllometricCalculatorCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.taxonInicial != widget.taxonInicial &&
+        widget.taxonInicial != null) {
+      _taxonDestino = widget.taxonInicial!;
+      _kDestino = constantesDe(_taxonDestino).first;
+    }
+  }
+
+  @override
   void dispose() {
     _dosis.dispose();
     _pesoModelo.dispose();
@@ -61,7 +71,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
   /// pasan a kilos solo para entrar en la fórmula.
   double? _kg(TextEditingController c) {
     final g = double.tryParse(c.text.trim().replaceAll(',', '.'));
-    return (g == null || g <= 0) ? null : g / 1000;
+    return (g == null || !g.isFinite || g <= 0) ? null : g / 1000;
   }
 
   @override
@@ -75,6 +85,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
 
     AllometricResult? resultado;
     if (dosis != null &&
+        dosis.isFinite &&
         dosis > 0 &&
         pesoModeloKg != null &&
         pesoDestinoKg != null &&
@@ -90,7 +101,7 @@ class _AllometricCalculatorCardState extends State<AllometricCalculatorCard> {
     }
 
     MicroVolume? volumen;
-    if (resultado != null && conc != null && conc > 0) {
+    if (resultado != null && conc != null && conc.isFinite && conc > 0) {
       volumen = calcularMicroVolumen(
         dosisMg: resultado.dosisDestinoMg,
         concentracionMgMl: conc,

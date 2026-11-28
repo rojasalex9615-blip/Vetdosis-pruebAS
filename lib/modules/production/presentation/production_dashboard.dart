@@ -5,95 +5,11 @@ import '../../../vet_ui/vet_icons.dart';
 import '../../../vet_ui/vet_theme.dart';
 import '../../auth/domain/clinic_membership.dart';
 import '../../core/domain/module_access.dart';
+import '../../core/domain/navigation_access.dart';
 import '../domain/production_farm.dart';
 import '../domain/production_write_repository.dart';
 import 'production_capture_forms.dart';
 import '../domain/production_unit_repository.dart';
-
-/// Datos zootécnicos y analíticos por especie para el dashboard de producción.
-class SpeciesMetrics {
-  const SpeciesMetrics({required this.vitals});
-
-  /// Rangos de referencia por especie. Es lo unico de este catalogo que es un
-  /// dato real y general: no depende de la granja de nadie.
-  ///
-  /// Aqui vivian ademas unos costos, una conversion alimenticia, unos silos y
-  /// unos lotes de una granja inventada de 480 vacas. Ya no se pintaban en
-  /// ningun lado, pero seguian escritos, y lo que esta escrito acaba
-  /// enchufandose. Lo real vive ahora en el inventario de alimento y en los
-  /// lotes de Supabase.
-  final List<VitalSign> vitals;
-}
-
-class VitalSign {
-  const VitalSign({
-    required this.parameter,
-    required this.range,
-    required this.unit,
-  });
-  final String parameter;
-  final String range;
-  final String unit;
-}
-
-/// Diccionario de métricas y datos operativos zootécnicos por especie
-final Map<String, SpeciesMetrics> speciesDataCatalog = {
-  'Bovinos': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Temperatura rectal', range: '38.0 - 39.3', unit: '°C'),
-      VitalSign(parameter: 'Frecuencia cardíaca', range: '60 - 80', unit: 'lpm'),
-      VitalSign(parameter: 'Frecuencia respiratoria', range: '15 - 35', unit: 'rpm'),
-      VitalSign(parameter: 'Movimientos ruminales', range: '2 - 3', unit: 'mov / 2 min'),
-    ],
-  ),
-  'Porcinos': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Temperatura rectal', range: '38.5 - 39.5', unit: '°C'),
-      VitalSign(parameter: 'Frecuencia cardíaca', range: '70 - 100', unit: 'lpm'),
-      VitalSign(parameter: 'Frecuencia respiratoria', range: '20 - 40', unit: 'rpm'),
-      VitalSign(parameter: 'Consumo diario agua', range: '8 - 15', unit: 'L / cerdo final'),
-    ],
-  ),
-  'Aves': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Temperatura corporal', range: '40.6 - 41.7', unit: '°C'),
-      VitalSign(parameter: 'Frecuencia respiratoria', range: '25 - 40', unit: 'rpm'),
-      VitalSign(parameter: 'Frecuencia cardíaca', range: '250 - 400', unit: 'lpm'),
-      VitalSign(parameter: 'Relación agua:alimento', range: '1.8 : 1 a 2.0 : 1', unit: 'L / kg'),
-    ],
-  ),
-  'Ovinos / caprinos': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Temperatura rectal', range: '38.5 - 40.0', unit: '°C'),
-      VitalSign(parameter: 'Frecuencia cardíaca', range: '70 - 90', unit: 'lpm'),
-      VitalSign(parameter: 'Frecuencia respiratoria', range: '16 - 34', unit: 'rpm'),
-      VitalSign(parameter: 'Movimientos ruminales', range: '2 - 3', unit: 'mov / 2 min'),
-    ],
-  ),
-  'Peces': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Oxígeno disuelto ideal', range: '> 5.0', unit: 'mg/L'),
-      VitalSign(parameter: 'Temperatura de agua (Tilapia)', range: '26.0 - 30.0', unit: '°C'),
-      VitalSign(parameter: 'pH del agua', range: '6.5 - 8.5', unit: 'pH'),
-      VitalSign(parameter: 'Amonio total (TAN)', range: '< 0.05', unit: 'mg/L tóxico'),
-    ],
-  ),
-  'Abejas': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Temperatura en cámara de cría', range: '34.5 - 35.5', unit: '°C'),
-      VitalSign(parameter: 'Humedad relativa en colmena', range: '55 - 65', unit: '%'),
-      VitalSign(parameter: 'Postura diaria reina', range: '1,500 - 2,000', unit: 'huevos/día'),
-    ],
-  ),
-  'Equinos': const SpeciesMetrics(
-    vitals: [
-      VitalSign(parameter: 'Temperatura rectal', range: '37.2 - 38.3', unit: '°C'),
-      VitalSign(parameter: 'Frecuencia cardíaca en reposo', range: '28 - 44', unit: 'lpm'),
-      VitalSign(parameter: 'Frecuencia respiratoria', range: '8 - 16', unit: 'rpm'),
-      VitalSign(parameter: 'Tiempo de llenado capilar (TLLC)', range: '< 2', unit: 'segundos'),
-    ],
-  ),
-};
 
 /// Widget principal del Dashboard Independiente de Producción Pecuaria
 class ProductionDashboard extends StatefulWidget {
@@ -163,20 +79,43 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     _cargarGranja();
   }
 
-  Future<void> _cargarGranja() async {
-    // Cede el turno antes de tocar el estado. La primera llamada sale de
-    // initState, y ahi el widget todavia se esta montando: un setState
-    // sincrono en ese momento revienta. Con esto, todo lo que sigue ocurre
-    // ya montado, venga de initState o de un cambio de especie.
-    await Future<void>.delayed(Duration.zero);
-    if (!mounted) return;
+  int _loadGeneration = 0;
 
+  @override
+  void didUpdateWidget(covariant ProductionDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final speciesChanged = oldWidget.initialSpecies != widget.initialSpecies;
+    if (speciesChanged) {
+      _selectedSpecies = _speciesList.contains(widget.initialSpecies)
+          ? widget.initialSpecies
+          : 'Bovinos';
+    }
+    if (oldWidget.farm != widget.farm ||
+        oldWidget.member?.clinicId != widget.member?.clinicId ||
+        oldWidget.member?.userId != widget.member?.userId ||
+        speciesChanged) {
+      _cargarGranja();
+    }
+  }
+
+  Future<void> _cargarGranja() async {
+    final request = ++_loadGeneration;
     final repo = widget.farm;
     final clinicId = widget.member?.clinicId;
+    final species = List<String>.of(
+      codigosDeEspecie[_selectedSpecies] ?? const [],
+    );
+    setState(() {
+      _granja = null;
+      _cargandoGranja = true;
+      _falloGranja = null;
+    });
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || request != _loadGeneration) return;
     if (repo == null || clinicId == null || clinicId.isEmpty) {
       // Sin repositorio o sin area de trabajo no hay nada que leer. Se queda
       // en vacio, que es la verdad, en lugar de rellenar con el catalogo.
-      if (mounted) {
+      if (mounted && request == _loadGeneration) {
         setState(() {
           _granja = const FarmSnapshot();
           _cargandoGranja = false;
@@ -190,17 +129,14 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       _falloGranja = null;
     });
     try {
-      final datos = await repo.load(
-        clinicId,
-        especies: codigosDeEspecie[_selectedSpecies] ?? const [],
-      );
-      if (!mounted) return;
+      final datos = await repo.load(clinicId, especies: species);
+      if (!mounted || request != _loadGeneration) return;
       setState(() {
         _granja = datos;
         _cargandoGranja = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       // Un fallo de red no es «no hay datos»: se distinguen en pantalla para
       // que nadie lea un corte de conexion como una granja sin lotes.
       setState(() {
@@ -209,13 +145,6 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       });
     }
   }
-
-  /// Etiquetas, unidades y rangos de referencia de la especie.
-  ///
-  /// De aqui ya NO salen cifras de la granja: solo los textos que describen
-  /// que se mide y en que unidad. Lo que es del usuario viene de [_granja].
-  SpeciesMetrics get _currentMetrics =>
-      speciesDataCatalog[_selectedSpecies] ?? speciesDataCatalog['Bovinos']!;
 
   void _openCalculatorDialog(String calcType) {
     showDialog<void>(
@@ -235,27 +164,19 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
   }
 
   void _openPrescriptionDialog({required bool quantified}) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => PecuariaPrescriptionModal(
-        quantified: quantified,
-        species: _selectedSpecies,
-        clinicName: widget.member?.clinicName ?? 'Granja / Clínica Pecuaria',
-        mvzName: widget.member?.userId ?? 'MVZ Responsable',
-      ),
-    );
+    if (navigationAllowed('Receta', widget.member, widget.access)) {
+      widget.onNavigate('Receta');
+    }
   }
 
   void _openVademecumDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => ProductionVademecumModal(species: _selectedSpecies),
-    );
+    if (navigationAllowed('Vademécum', widget.member, widget.access)) {
+      widget.onNavigate('Vademécum');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final metrics = _currentMetrics;
     final (specIcon, specAccent) = _speciesVisual(_selectedSpecies);
 
     return Column(
@@ -273,7 +194,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
         // 2. Herramientas de la especie elegida (tarjetas interactivas)
         // No dependen de la granja: son calculadoras y referencias, y siguen
         // sirviendo aunque todavia no se haya dado de alta ningun lote.
-        _buildSpeciesToolsSection(metrics, specIcon, specAccent),
+        _buildSpeciesToolsSection(specIcon, specAccent),
         const SizedBox(height: 24),
 
         // 5. Recetas y control (acceso directo a receta cuantificada / simple)
@@ -456,11 +377,11 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           Text(
             especieSinCatalogo
                 ? 'Esta especie todavía no forma parte del catálogo '
-                    'productivo, así que no hay lotes ni registros que mostrar.'
+                      'productivo, así que no hay lotes ni registros que mostrar.'
                 : 'Empieza con «Nuevo lote» y captura su registro diario: '
-                    'aquí irán apareciendo tus cabezas, curvas y eventos. No '
-                    'mostramos cifras de ejemplo para que nada se confunda '
-                    'con datos de tu granja.',
+                      'aquí irán apareciendo tus cabezas, curvas y eventos. No '
+                      'mostramos cifras de ejemplo para que nada se confunda '
+                      'con datos de tu granja.',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12, color: VetColors.muted),
           ),
@@ -627,8 +548,8 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                       e.tipo == 'resguardo'
                           ? VetIcons.alertOctagon
                           : (e.tipo == 'parto'
-                              ? VetIcons.heart
-                              : VetIcons.bell),
+                                ? VetIcons.heart
+                                : VetIcons.bell),
                       color: e.tipo == 'resguardo'
                           ? VetColors.danger
                           : VetColors.warning,
@@ -752,13 +673,14 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
   }
 
   // 2. HERRAMIENTAS DE LA ESPECIE ELEGIDA (Tarjetas)
-  Widget _buildSpeciesToolsSection(SpeciesMetrics metrics, IconData specIcon, Color specAccent) {
+  Widget _buildSpeciesToolsSection(IconData specIcon, Color specAccent) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         VetSectionHeader(
           title: 'Herramientas de $_selectedSpecies',
-          subtitle: 'Calculadoras zootécnicas, constantes fisiológicas, vademécum y registros',
+          subtitle:
+              'Calculadoras zootécnicas, constantes fisiológicas, vademécum y registros',
         ),
         const SizedBox(height: 10),
         GridView.count(
@@ -820,7 +742,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               subtitle: 'Rango normal de $_selectedSpecies',
               icon: VetIcons.heartPulse,
               accent: VetColors.turquoise,
-              onTap: () => _showVitalsModal(metrics),
+              onTap: _openVitals,
             ),
             ProductionToolTile(
               title: 'Vademécum Pecuario',
@@ -842,85 +764,30 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     );
   }
 
-  void _showVitalsModal(SpeciesMetrics metrics) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(VetIcons.heartPulse, color: VetColors.turquoise),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Constantes: $_selectedSpecies')),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final v in metrics.vitals) ...[
-              ListTile(
-                dense: true,
-                title: Text(v.parameter, style: const TextStyle(fontWeight: FontWeight.w600)),
-                trailing: Text(
-                  '${v.range} ${v.unit}',
-                  style: const TextStyle(color: VetColors.turquoise, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
-        ],
-      ),
-    );
+  void _openVitals() {
+    if (navigationAllowed('Cálculos clínicos', widget.member, widget.access)) {
+      widget.onNavigate('Cálculos clínicos');
+    }
   }
 
   void _showQuickRecordModal() {
-    final pesoCtrl = TextEditingController();
-    final mortCtrl = TextEditingController();
-    final consCtrl = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Nuevo Registro Productivo'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: pesoCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Pesaje promedio del lote (kg o g)'),
-            ),
-            TextField(
-              controller: mortCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Mortalidad del día (cabezas)'),
-            ),
-            TextField(
-              controller: consCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Consumo de alimento diario (kg)'),
-            ),
-          ],
+    final repo = widget.farmWrite;
+    final clinicId = widget.member?.clinicId;
+    final granja = _granja;
+    if (repo == null ||
+        clinicId == null ||
+        granja == null ||
+        _cargandoGranja ||
+        _falloGranja != null ||
+        !puedeCapturarProduccion(widget.member)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La captura de producción no está disponible.'),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Registro productivo guardado con éxito.'),
-                  backgroundColor: VetColors.success,
-                ),
-              );
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
+      );
+      return;
+    }
+    _abrirRegistro(repo, clinicId, granja);
   }
 
   // 5. RECETAS Y CONTROL
@@ -930,7 +797,8 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       children: [
         const VetSectionHeader(
           title: 'Recetas y Control Oficial',
-          subtitle: 'Acceso directo a receta médica pecuaria simple y cuantificada',
+          subtitle:
+              'Acceso directo a receta médica pecuaria simple y cuantificada',
         ),
         const SizedBox(height: 10),
         Row(
@@ -985,7 +853,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                         children: [
                           Text(
                             'Grandes Especies: Cirugía y Clínica Avanzada',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
                           ),
                           Text(
                             'Protocolos quirúrgicos de campo, cesáreas y laparotomía',
@@ -994,7 +865,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                         ],
                       ),
                     ),
-                    VetStatusBadge(label: 'En desarrollo', kind: VetBadgeKind.unverified),
+                    VetStatusBadge(
+                      label: 'En desarrollo',
+                      kind: VetBadgeKind.unverified,
+                    ),
                   ],
                 ),
               ),
@@ -1012,7 +886,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                         children: [
                           Text(
                             'Manejo de Efluentes, Desechos y Bioseguridad',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                            ),
                           ),
                           Text(
                             'Lagunas de oxidación, compostaje de mortalidad y biodigestores',
@@ -1021,7 +898,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
                         ],
                       ),
                     ),
-                    VetStatusBadge(label: 'En desarrollo', kind: VetBadgeKind.unverified),
+                    VetStatusBadge(
+                      label: 'En desarrollo',
+                      kind: VetBadgeKind.unverified,
+                    ),
                   ],
                 ),
               ),
@@ -1044,7 +924,6 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
   'Equinos' => (VetIcons.horse, VetColors.purpleDeep),
   _ => (VetIcons.paw, VetColors.turquoise),
 };
-
 
 // Botón de herramienta
 class ProductionToolTile extends StatelessWidget {
@@ -1085,7 +964,10 @@ class ProductionToolTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1116,88 +998,76 @@ class ProductionCalculatorModal extends StatefulWidget {
   final String species;
 
   @override
-  State<ProductionCalculatorModal> createState() => ProductionCalculatorModalState();
+  State<ProductionCalculatorModal> createState() =>
+      ProductionCalculatorModalState();
 }
 
 class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
-  final numAnimalsCtrl = TextEditingController(text: '100');
+  final numAnimalsCtrl = TextEditingController();
   final paramCtrl1 = TextEditingController();
   final paramCtrl2 = TextEditingController();
   final paramCtrl3 = TextEditingController();
-  String _result = '';
+  String _result = 'Captura los datos para calcular.';
 
   @override
-  void initState() {
-    super.initState();
-    _initParams();
-  }
-
-  void _initParams() {
-    switch (widget.calcType) {
-      case 'ration':
-        paramCtrl1.text = '45'; // Peso prom kg
-        paramCtrl2.text = '3.0'; // % peso vivo
-        _calculate();
-        break;
-      case 'fca':
-        paramCtrl1.text = '5200'; // Alimento consumido kg
-        paramCtrl2.text = '2100'; // Ganancia de peso kg
-        _calculate();
-        break;
-      case 'density':
-        paramCtrl1.text = '120'; // Superficie m²
-        paramCtrl2.text = '150'; // Animales
-        _calculate();
-        break;
-      case 'capacity':
-        paramCtrl1.text = '12'; // Ancho nave m
-        paramCtrl2.text = '100'; // Largo nave m
-        paramCtrl3.text = '12'; // Densidad objetivo (aves/m² o lechones/m²)
-        _calculate();
-        break;
-      case 'semen':
-        paramCtrl1.text = '200'; // Volumen eyaculado mL
-        paramCtrl2.text = '300'; // Millones esp/mL
-        paramCtrl3.text = '3000'; // Millones esp por dosis
-        _calculate();
-        break;
-    }
+  void dispose() {
+    numAnimalsCtrl.dispose();
+    paramCtrl1.dispose();
+    paramCtrl2.dispose();
+    paramCtrl3.dispose();
+    super.dispose();
   }
 
   void _calculate() {
+    final fields = [
+      paramCtrl1,
+      paramCtrl2,
+      if (widget.calcType == 'ration') numAnimalsCtrl,
+      if (widget.calcType == 'capacity' || widget.calcType == 'semen')
+        paramCtrl3,
+    ];
+    if (fields.any((c) => _positiveNumber(c.text) == null)) {
+      setState(() => _result = 'Captura valores numéricos mayores que cero.');
+      return;
+    }
     setState(() {
       if (widget.calcType == 'ration') {
-        final n = double.tryParse(numAnimalsCtrl.text) ?? 1;
-        final peso = double.tryParse(paramCtrl1.text) ?? 1;
-        final pct = (double.tryParse(paramCtrl2.text) ?? 1) / 100.0;
+        final n = _positiveNumber(numAnimalsCtrl.text)!;
+        final peso = _positiveNumber(paramCtrl1.text)!;
+        final pct = (_positiveNumber(paramCtrl2.text)!) / 100.0;
         final porAnimal = peso * pct;
         final totalDia = porAnimal * n;
-        _result = '${porAnimal.toStringAsFixed(2)} kg / animal / día\nTotal lote: ${totalDia.toStringAsFixed(1)} kg/día (${(totalDia/1000).toStringAsFixed(2)} Ton)';
+        _result =
+            '${porAnimal.toStringAsFixed(2)} kg / animal / día\nTotal lote: ${totalDia.toStringAsFixed(1)} kg/día (${(totalDia / 1000).toStringAsFixed(2)} Ton)';
       } else if (widget.calcType == 'fca') {
-        final alim = double.tryParse(paramCtrl1.text) ?? 1;
-        final peso = double.tryParse(paramCtrl2.text) ?? 1;
+        final alim = _positiveNumber(paramCtrl1.text)!;
+        final peso = _positiveNumber(paramCtrl2.text)!;
         final fca = peso > 0 ? (alim / peso) : 0.0;
-        _result = 'FCA: ${fca.toStringAsFixed(2)} : 1\n(Se requieren ${fca.toStringAsFixed(2)} kg de alimento para producir 1 kg vivo)';
+        _result =
+            'FCA: ${fca.toStringAsFixed(2)} : 1\n(Se requieren ${fca.toStringAsFixed(2)} kg de alimento para producir 1 kg vivo)';
       } else if (widget.calcType == 'density') {
-        final sup = double.tryParse(paramCtrl1.text) ?? 1;
-        final anim = double.tryParse(paramCtrl2.text) ?? 1;
+        final sup = _positiveNumber(paramCtrl1.text)!;
+        final anim = _positiveNumber(paramCtrl2.text)!;
         final dens = sup > 0 ? (anim / sup) : 0.0;
         final m2PorAnimal = anim > 0 ? (sup / anim) : 0.0;
-        _result = '${dens.toStringAsFixed(2)} animales / m²\nEspacio por animal: ${m2PorAnimal.toStringAsFixed(2)} m²/cabeza';
+        _result =
+            '${dens.toStringAsFixed(2)} animales / m²\nEspacio por animal: ${m2PorAnimal.toStringAsFixed(2)} m²/cabeza';
       } else if (widget.calcType == 'capacity') {
-        final ancho = double.tryParse(paramCtrl1.text) ?? 1;
-        final largo = double.tryParse(paramCtrl2.text) ?? 1;
-        final dens = double.tryParse(paramCtrl3.text) ?? 1;
+        final ancho = _positiveNumber(paramCtrl1.text)!;
+        final largo = _positiveNumber(paramCtrl2.text)!;
+        final dens = _positiveNumber(paramCtrl3.text)!;
         final area = ancho * largo;
         final cap = area * dens;
-        _result = 'Área útil: ${area.toStringAsFixed(0)} m²\nCapacidad total recomendada: ${cap.toStringAsFixed(0)} animales';
+        _result =
+            'Área útil: ${area.toStringAsFixed(0)} m²\nCapacidad según la densidad capturada: ${cap.toStringAsFixed(0)} animales';
       } else if (widget.calcType == 'semen') {
-        final vol = double.tryParse(paramCtrl1.text) ?? 1;
-        final conc = double.tryParse(paramCtrl2.text) ?? 1;
-        final dosisReq = double.tryParse(paramCtrl3.text) ?? 1;
+        final vol = _positiveNumber(paramCtrl1.text)!;
+        final conc = _positiveNumber(paramCtrl2.text)!;
+        final dosisReq = _positiveNumber(paramCtrl3.text)!;
         final totalEsp = vol * conc; // millones
         final numDosis = dosisReq > 0 ? (totalEsp / dosisReq).floor() : 0;
-        _result = 'Total espermatozoides: ${totalEsp.toStringAsFixed(0)} M\nDosis seminales obtenibles: $numDosis dosis';
+        _result =
+            'Total espermatozoides: ${totalEsp.toStringAsFixed(0)} M\nDosis seminales obtenibles: $numDosis dosis';
       }
     });
   }
@@ -1222,83 +1092,109 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
               TextField(
                 controller: numAnimalsCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Número de animales en lote'),
+                decoration: const InputDecoration(
+                  labelText: 'Número de animales en lote',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl1,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Peso promedio por animal (kg)'),
+                decoration: const InputDecoration(
+                  labelText: 'Peso promedio por animal (kg)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl2,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: '% de peso vivo a consumir (ej. 2.5 - 3.5%)'),
+                decoration: const InputDecoration(
+                  labelText: '% de peso vivo a consumir (ej. 2.5 - 3.5%)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
             ] else if (widget.calcType == 'fca') ...[
               TextField(
                 controller: paramCtrl1,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Total alimento consumido en periodo (kg)'),
+                decoration: const InputDecoration(
+                  labelText: 'Total alimento consumido en periodo (kg)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl2,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Ganancia de peso total en periodo (kg)'),
+                decoration: const InputDecoration(
+                  labelText: 'Ganancia de peso total en periodo (kg)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
             ] else if (widget.calcType == 'density') ...[
               TextField(
                 controller: paramCtrl1,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Superficie de corral / nave (m²)'),
+                decoration: const InputDecoration(
+                  labelText: 'Superficie de corral / nave (m²)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl2,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Número de animales alojados'),
+                decoration: const InputDecoration(
+                  labelText: 'Número de animales alojados',
+                ),
                 onChanged: (_) => _calculate(),
               ),
             ] else if (widget.calcType == 'capacity') ...[
               TextField(
                 controller: paramCtrl1,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Ancho de la nave (m)'),
+                decoration: const InputDecoration(
+                  labelText: 'Ancho de la nave (m)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl2,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Largo de la nave (m)'),
+                decoration: const InputDecoration(
+                  labelText: 'Largo de la nave (m)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl3,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Densidad meta (animales / m²)'),
+                decoration: const InputDecoration(
+                  labelText: 'Densidad meta (animales / m²)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
             ] else if (widget.calcType == 'semen') ...[
               TextField(
                 controller: paramCtrl1,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Volumen eyaculado (mL)'),
+                decoration: const InputDecoration(
+                  labelText: 'Volumen eyaculado (mL)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl2,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Concentración (millones esp / mL)'),
+                decoration: const InputDecoration(
+                  labelText: 'Concentración (millones esp / mL)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl3,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Concentración objetivo por dosis (millones)'),
+                decoration: const InputDecoration(
+                  labelText: 'Concentración objetivo por dosis (millones)',
+                ),
                 onChanged: (_) => _calculate(),
               ),
             ],
@@ -1308,11 +1204,16 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
               decoration: BoxDecoration(
                 color: VetColors.turquoise.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetColors.turquoise.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: VetColors.turquoise.withValues(alpha: 0.4),
+                ),
               ),
               child: Text(
                 _result,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -1320,7 +1221,10 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cerrar'),
+        ),
       ],
     );
   }
@@ -1338,43 +1242,63 @@ class MassMedicationModal extends StatefulWidget {
 class MassMedicationModalState extends State<MassMedicationModal> {
   int _tab = 0; // 0: Agua mg/L, 1: Alimento ppm
 
-  final waterVolCtrl = TextEditingController(text: '1000'); // Litros tinaco
-  final waterMgLCtrl = TextEditingController(text: '100'); // mg/L deseados
-  final waterPctCtrl = TextEditingController(text: '10'); // Concentración producto %
+  final waterVolCtrl = TextEditingController(); // Litros tinaco
+  final waterMgLCtrl = TextEditingController(); // mg/L deseados
+  final waterPctCtrl = TextEditingController(); // Concentración producto %
 
-  final feedTonCtrl = TextEditingController(text: '5'); // Toneladas alimento
-  final feedPpmCtrl = TextEditingController(text: '200'); // ppm producto
-  final feedPrePctCtrl = TextEditingController(text: '20'); // Premezcla %
+  final feedTonCtrl = TextEditingController(); // Toneladas alimento
+  final feedPpmCtrl = TextEditingController(); // ppm producto
+  final feedPrePctCtrl = TextEditingController(); // Premezcla %
 
-  String _calcOutput = '';
+  String _calcOutput = 'Captura los datos para calcular.';
 
   @override
-  void initState() {
-    super.initState();
-    _recalc();
+  void dispose() {
+    waterVolCtrl.dispose();
+    waterMgLCtrl.dispose();
+    waterPctCtrl.dispose();
+    feedTonCtrl.dispose();
+    feedPpmCtrl.dispose();
+    feedPrePctCtrl.dispose();
+    super.dispose();
   }
 
   void _recalc() {
+    final fields = _tab == 0
+        ? [waterVolCtrl, waterMgLCtrl, waterPctCtrl]
+        : [feedTonCtrl, feedPpmCtrl, feedPrePctCtrl];
+    final concentration = _positiveNumber(fields.last.text);
+    if (fields.any((c) => _positiveNumber(c.text) == null) ||
+        concentration == null ||
+        concentration > 100) {
+      setState(
+        () => _calcOutput =
+            'Captura valores mayores que cero y una concentración de hasta 100 %.',
+      );
+      return;
+    }
     setState(() {
       if (_tab == 0) {
-        final l = double.tryParse(waterVolCtrl.text) ?? 1;
-        final mgL = double.tryParse(waterMgLCtrl.text) ?? 1;
-        final concPct = (double.tryParse(waterPctCtrl.text) ?? 1) / 100.0;
+        final l = _positiveNumber(waterVolCtrl.text)!;
+        final mgL = _positiveNumber(waterMgLCtrl.text)!;
+        final concPct = (_positiveNumber(waterPctCtrl.text)!) / 100.0;
         final mgActivoTotal = l * mgL;
         final gActivoTotal = mgActivoTotal / 1000.0;
         final gProducto = concPct > 0 ? (gActivoTotal / concPct) : 0.0;
-        _calcOutput = 'Principio activo total: ${gActivoTotal.toStringAsFixed(1)} g\n'
-            'Agregar de producto comercial ($concPct*100%):\n'
-            '👉 ${gProducto.toStringAsFixed(1)} gramos (o ${(gProducto/1000).toStringAsFixed(2)} kg) para los ${l.toStringAsFixed(0)} L';
+        _calcOutput =
+            'Principio activo total: ${gActivoTotal.toStringAsFixed(1)} g\n'
+            'Agregar de producto comercial (${(concPct * 100).toStringAsFixed(1)} %):\n'
+            '👉 ${gProducto.toStringAsFixed(1)} gramos (o ${(gProducto / 1000).toStringAsFixed(2)} kg) para los ${l.toStringAsFixed(0)} L';
       } else {
-        final ton = double.tryParse(feedTonCtrl.text) ?? 1;
-        final ppm = double.tryParse(feedPpmCtrl.text) ?? 1; // 1 ppm = 1 g/Ton
-        final prePct = (double.tryParse(feedPrePctCtrl.text) ?? 1) / 100.0;
+        final ton = _positiveNumber(feedTonCtrl.text)!;
+        final ppm = _positiveNumber(feedPpmCtrl.text)!; // 1 ppm = 1 g/Ton
+        final prePct = (_positiveNumber(feedPrePctCtrl.text)!) / 100.0;
         final gActivoTotal = ton * ppm;
         final gPremezcla = prePct > 0 ? (gActivoTotal / prePct) : 0.0;
-        _calcOutput = 'Activo requerido: ${gActivoTotal.toStringAsFixed(0)} g\n'
+        _calcOutput =
+            'Activo requerido: ${gActivoTotal.toStringAsFixed(0)} g\n'
             'Mezclar en planta por batch:\n'
-            '👉 ${(gPremezcla/1000).toStringAsFixed(2)} kg de premezcla para las ${ton.toStringAsFixed(1)} Ton';
+            '👉 ${(gPremezcla / 1000).toStringAsFixed(2)} kg de premezcla para las ${ton.toStringAsFixed(1)} Ton';
       }
     });
   }
@@ -1405,38 +1329,50 @@ class MassMedicationModalState extends State<MassMedicationModal> {
               TextField(
                 controller: waterVolCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Volumen tinaco / bebedero (Litros)'),
+                decoration: const InputDecoration(
+                  labelText: 'Volumen tinaco / bebedero (Litros)',
+                ),
                 onChanged: (_) => _recalc(),
               ),
               TextField(
                 controller: waterMgLCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Dosis meta en agua (mg / L o ppm)'),
+                decoration: const InputDecoration(
+                  labelText: 'Dosis meta en agua (mg / L o ppm)',
+                ),
                 onChanged: (_) => _recalc(),
               ),
               TextField(
                 controller: waterPctCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Concentración producto comercial (%)'),
+                decoration: const InputDecoration(
+                  labelText: 'Concentración producto comercial (%)',
+                ),
                 onChanged: (_) => _recalc(),
               ),
             ] else ...[
               TextField(
                 controller: feedTonCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Toneladas de alimento a mezclar'),
+                decoration: const InputDecoration(
+                  labelText: 'Toneladas de alimento a mezclar',
+                ),
                 onChanged: (_) => _recalc(),
               ),
               TextField(
                 controller: feedPpmCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Concentración objetivo en alimento (ppm o g/Ton)'),
+                decoration: const InputDecoration(
+                  labelText: 'Concentración objetivo en alimento (ppm o g/Ton)',
+                ),
                 onChanged: (_) => _recalc(),
               ),
               TextField(
                 controller: feedPrePctCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Concentración de la premezcla comercial (%)'),
+                decoration: const InputDecoration(
+                  labelText: 'Concentración de la premezcla comercial (%)',
+                ),
                 onChanged: (_) => _recalc(),
               ),
             ],
@@ -1446,187 +1382,33 @@ class MassMedicationModalState extends State<MassMedicationModal> {
               decoration: BoxDecoration(
                 color: VetColors.violet.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetColors.violet.withValues(alpha: 0.35)),
+                border: Border.all(
+                  color: VetColors.violet.withValues(alpha: 0.35),
+                ),
               ),
               child: Text(
                 _calcOutput,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cerrar'),
+        ),
       ],
     );
   }
 }
 
-// Modal de Vademécum Pecuario Oficial SENASICA
-class ProductionVademecumModal extends StatelessWidget {
-  const ProductionVademecumModal({super.key, required this.species});
-  final String species;
-
-  @override
-  Widget build(BuildContext context) {
-    final List<(String, String, String, String)> drugs = [
-      ('Oxitetraciclina 200 LA', 'Antimicrobiano amplio espectro', '28 días carne / 7 días leche', '20 mg/kg IM/SC'),
-      ('Tilmicosina 300 mg/mL', 'Neumonías y complejo respiratorio', '28 días carne / Prohibido en leche humana', '10 mg/kg SC única'),
-      ('Florfenicol 300 mg/mL', 'Respiratorio y pododermatitis', '28 - 38 días carne / No en lactancia', '20 mg/kg IM (48h) o 40 mg/kg SC'),
-      ('Ivermectina 1%', 'Endectocida sistémico', '28 - 35 días carne / No en leche para consumo', '200 mcg/kg SC'),
-      ('Flunixin Meglumine 50mg', 'Antiinflamatorio no esteroideo (AINE)', '4 días carne / 36 h leche', '1.1 - 2.2 mg/kg IV/IM'),
-      ('Tilosina Tartrato', 'Disentería porcina, micoplasmosis', '5 - 7 días carne', '10 - 20 mg/kg agua'),
-    ];
-
-    return AlertDialog(
-      title: Text('Vademécum Pecuario: $species'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.separated(
-          shrinkWrap: true,
-          itemCount: drugs.length,
-          separatorBuilder: (_, _) => const Divider(height: 14),
-          itemBuilder: (ctx, i) {
-            final (name, cat, retiro, dose) = drugs[i];
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(cat, style: const TextStyle(fontSize: 12, color: VetColors.muted)),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: VetColors.danger.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Retiro oficial: $retiro',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: VetColors.danger),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text('Dosis referencia: $dose', style: const TextStyle(fontSize: 12)),
-              ],
-            );
-          },
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
-      ],
-    );
-  }
-}
-
-// Modal de Receta Médica Pecuaria (Simple y Cuantificada)
-class PecuariaPrescriptionModal extends StatefulWidget {
-  const PecuariaPrescriptionModal({
-    super.key,
-    required this.quantified,
-    required this.species,
-    required this.clinicName,
-    required this.mvzName,
-  });
-
-  final bool quantified;
-  final String species;
-  final String clinicName;
-  final String mvzName;
-
-  @override
-  State<PecuariaPrescriptionModal> createState() => PecuariaPrescriptionModalState();
-}
-
-class PecuariaPrescriptionModalState extends State<PecuariaPrescriptionModal> {
-  final uppCtrl = TextEditingController(text: 'UPP-04-129-882');
-  final loteCtrl = TextEditingController(text: 'Lote Principal');
-  final drugCtrl = TextEditingController(text: 'Oxitetraciclina 200 LA');
-  final doseCtrl = TextEditingController(text: '20 mg/kg IM cada 48h por 3 dosis');
-  final withdrawalCtrl = TextEditingController(text: '28 días en carne');
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            widget.quantified ? VetIcons.documentCheck : VetIcons.document,
-            color: widget.quantified ? VetColors.turquoise : VetColors.violet,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              widget.quantified ? 'Receta Médica Cuantificada' : 'Receta Médica Simple',
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Médico: ${widget.mvzName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  Text('Granja / UPP: ${widget.clinicName}', style: const TextStyle(fontSize: 12, color: VetColors.muted)),
-                  Text('Especie destino: ${widget.species}', style: const TextStyle(fontSize: 12, color: VetColors.muted)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: uppCtrl,
-              decoration: const InputDecoration(labelText: 'Clave UPP / PSG oficial'),
-            ),
-            TextField(
-              controller: loteCtrl,
-              decoration: const InputDecoration(labelText: 'Lote / Corral / Nave destino'),
-            ),
-            TextField(
-              controller: drugCtrl,
-              decoration: const InputDecoration(labelText: 'Principio activo y concentración comercial'),
-            ),
-            TextField(
-              controller: doseCtrl,
-              decoration: const InputDecoration(labelText: 'Pauta posológica e indicación terapéutica'),
-            ),
-            TextField(
-              controller: withdrawalCtrl,
-              decoration: const InputDecoration(labelText: 'Tiempo de retiro obligatorio prescrito'),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        FilledButton(
-          onPressed: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  widget.quantified
-                      ? 'Receta cuantificada foliada y registrada con folio oficial.'
-                      : 'Receta simple generada exitosamente.',
-                ),
-                backgroundColor: VetColors.success,
-              ),
-            );
-          },
-          child: const Text('Emitir Receta'),
-        ),
-      ],
-    );
-  }
+// No sustituir campos vacíos o inválidos por una dosis de ejemplo.
+double? _positiveNumber(String text) {
+  final value = double.tryParse(text.trim().replaceAll(',', '.'));
+  return value != null && value.isFinite && value > 0 ? value : null;
 }

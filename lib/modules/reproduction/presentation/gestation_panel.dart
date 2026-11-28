@@ -56,14 +56,29 @@ class _GestationPanelState extends State<GestationPanel> {
     _cargar();
   }
 
-  Future<void> _cargar() async {
-    // Cede el turno: la primera llamada sale de initState y ahi el widget
-    // todavia se esta montando.
-    await Future<void>.delayed(Duration.zero);
-    if (!mounted) return;
+  int _loadGeneration = 0;
 
+  @override
+  void didUpdateWidget(covariant GestationPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.repository != widget.repository ||
+        oldWidget.member?.clinicId != widget.member?.clinicId ||
+        oldWidget.member?.userId != widget.member?.userId) {
+      _cargar();
+    }
+  }
+
+  Future<void> _cargar() async {
+    final request = ++_loadGeneration;
     final repo = widget.repository;
     final clinicId = widget.member?.clinicId;
+    setState(() {
+      _datos = null;
+      _cargando = true;
+      _fallo = null;
+    });
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || request != _loadGeneration) return;
     if (repo == null || clinicId == null || clinicId.isEmpty) {
       setState(() {
         _datos = const GestationSnapshot();
@@ -78,13 +93,13 @@ class _GestationPanelState extends State<GestationPanel> {
     });
     try {
       final d = await repo.load(clinicId);
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       setState(() {
         _datos = d;
         _cargando = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       setState(() {
         _fallo = e;
         _cargando = false;
@@ -206,9 +221,7 @@ class _GestationPanelState extends State<GestationPanel> {
     final abiertas = vista.abiertas();
     final vencidas = vista.vencidas(ahora);
     final proximas = vista.proximas(ahora);
-    final cerradas = vista.gestaciones
-        .where((g) => !g.estado.abierta)
-        .toList()
+    final cerradas = vista.gestaciones.where((g) => !g.estado.abierta).toList()
       ..sort((a, b) => b.servicio.compareTo(a.servicio));
 
     return Column(
@@ -241,9 +254,7 @@ class _GestationPanelState extends State<GestationPanel> {
           ],
 
           if (proximas.isNotEmpty) ...[
-            const VetSectionHeader(
-              title: 'Paren en los próximos 30 días',
-            ),
+            const VetSectionHeader(title: 'Paren en los próximos 30 días'),
             for (final g in proximas) _tarjeta(g, ahora),
             const SizedBox(height: 16),
           ],
@@ -410,7 +421,8 @@ class _GestationPanelState extends State<GestationPanel> {
                 ),
                 if (g.criasTotales != null)
                   VetStatusBadge(
-                    label: '${g.criasVivas ?? 0} vivas'
+                    label:
+                        '${g.criasVivas ?? 0} vivas'
                         '${(g.criasMuertas ?? 0) > 0 ? ", ${g.criasMuertas} muertas" : ""}',
                     kind: VetBadgeKind.information,
                   ),

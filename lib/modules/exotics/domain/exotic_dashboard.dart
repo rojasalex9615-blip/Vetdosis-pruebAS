@@ -266,9 +266,11 @@ class ExoticLegalStatus {
   int? diasParaVencer(DateTime ahora) {
     final hasta = vigenciaHasta;
     if (hasta == null) return null;
-    return DateTime(hasta.year, hasta.month, hasta.day)
-        .difference(DateTime(ahora.year, ahora.month, ahora.day))
-        .inDays;
+    return DateTime(
+      hasta.year,
+      hasta.month,
+      hasta.day,
+    ).difference(DateTime(ahora.year, ahora.month, ahora.day)).inDays;
   }
 
   bool vencido(DateTime ahora) => (diasParaVencer(ahora) ?? 1) < 0;
@@ -323,9 +325,11 @@ class ExoticClutch {
   int? diasParaEclosion(DateTime ahora) {
     final e = eclosionEstimada;
     if (e == null) return null;
-    return DateTime(e.year, e.month, e.day)
-        .difference(DateTime(ahora.year, ahora.month, ahora.day))
-        .inDays;
+    return DateTime(
+      e.year,
+      e.month,
+      e.day,
+    ).difference(DateTime(ahora.year, ahora.month, ahora.day)).inDays;
   }
 }
 
@@ -345,14 +349,14 @@ class ExoticPhysioEvent {
 
   /// Como se lee el tipo en pantalla.
   String get etiqueta => switch (tipo) {
-        'ecdisis' => 'Muda',
-        'ecdisis_retenida' => 'Muda retenida',
-        'postura' => 'Postura',
-        'vocalizacion' => 'Vocalización',
-        'actividad_anormal' => 'Actividad anormal',
-        'enriquecimiento' => 'Enriquecimiento',
-        _ => 'Otro',
-      };
+    'ecdisis' => 'Muda',
+    'ecdisis_retenida' => 'Muda retenida',
+    'postura' => 'Postura',
+    'vocalizacion' => 'Vocalización',
+    'actividad_anormal' => 'Actividad anormal',
+    'enriquecimiento' => 'Enriquecimiento',
+    _ => 'Otro',
+  };
 
   /// La muda retenida estrangula dedos y cola: es la que hay que destacar.
   bool get urgente => tipo == 'ecdisis_retenida';
@@ -473,8 +477,8 @@ class ExoticSnapshot {
         final esperado = min != null && max != null
             ? '${_num(min)}-${_num(max)}'
             : min != null
-                ? '≥ ${_num(min)}'
-                : '≤ ${_num(max!)}';
+            ? '≥ ${_num(min)}'
+            : '≤ ${_num(max!)}';
         fuera.add(
           EnclosureDeviation(
             enclosure: e,
@@ -486,8 +490,13 @@ class ExoticSnapshot {
         );
       }
 
-      revisar('Punto caliente', r.tempCaliente, e.tempCalienteMin,
-          e.tempCalienteMax, '°C');
+      revisar(
+        'Punto caliente',
+        r.tempCaliente,
+        e.tempCalienteMin,
+        e.tempCalienteMax,
+        '°C',
+      );
       revisar('Punto frío', r.tempFria, e.tempFriaMin, e.tempFriaMax, '°C');
       revisar('Humedad', r.humedad, e.humedadMin, e.humedadMax, '%');
       revisar('Índice UV', r.uvIndex, e.uvMin, e.uvMax, '');
@@ -502,14 +511,13 @@ class ExoticSnapshot {
   }
 
   /// Registros legales vencidos o a punto de vencer.
-  List<ExoticLegalStatus> legalEnRiesgo(DateTime ahora) => legal
-      .where((l) => l.vencido(ahora) || l.porVencer(ahora))
-      .toList()
-    ..sort((a, b) {
-      final da = a.diasParaVencer(ahora) ?? 9999;
-      final db = b.diasParaVencer(ahora) ?? 9999;
-      return da.compareTo(db);
-    });
+  List<ExoticLegalStatus> legalEnRiesgo(DateTime ahora) =>
+      legal.where((l) => l.vencido(ahora) || l.porVencer(ahora)).toList()
+        ..sort((a, b) {
+          final da = a.diasParaVencer(ahora) ?? 9999;
+          final db = b.diasParaVencer(ahora) ?? 9999;
+          return da.compareTo(db);
+        });
 
   /// Ejemplares sin ningun marcaje registrado.
   List<ExoticSpecimen> sinMarcaje() {
@@ -522,8 +530,10 @@ class ExoticSnapshot {
   /// Se cuentan los rechazos consecutivos mas recientes: dos seguidos ya
   /// merecen una mirada, y en reptiles y aves suelen preceder al resto de
   /// signos clinicos.
-  List<({ExoticSpecimen specimen, int rechazos, DateTime desde})> rachaDeRechazos() {
-    final salida = <({ExoticSpecimen specimen, int rechazos, DateTime desde})>[];
+  List<({ExoticSpecimen specimen, int rechazos, DateTime desde})>
+  rachaDeRechazos() {
+    final salida =
+        <({ExoticSpecimen specimen, int rechazos, DateTime desde})>[];
     for (final e in specimens) {
       final tomas = feedings.where((f) => f.specimenId == e.id).toList()
         ..sort((a, b) => b.ofrecidoEn.compareTo(a.ofrecidoEn));
@@ -592,11 +602,20 @@ ExoticTaxon? taxonDeEspecie(String especie) {
   final s = especie.toLowerCase().trim();
   if (s.isEmpty) return null;
 
-  bool tiene(List<String> claves) => claves.any(s.contains);
+  bool tiene(List<String> claves) => claves.any(
+    (clave) => RegExp(
+      r'(?<![\p{L}\p{N}])' +
+          RegExp.escape(clave) +
+          r'(?:s|es)?(?![\p{L}\p{N}])',
+      unicode: true,
+    ).hasMatch(s),
+  );
 
   if (tiene([
     'ave',
     'aves',
+    'avestruz',
+    'avestruces',
     'loro',
     'perico',
     'guacamaya',
@@ -641,7 +660,16 @@ ExoticTaxon? taxonDeEspecie(String especie) {
   ])) {
     return ExoticTaxon.reptiles;
   }
-  if (tiene(['anfibio', 'rana', 'sapo', 'ajolote', 'axolotl', 'salamandra', 'triton', 'tritón'])) {
+  if (tiene([
+    'anfibio',
+    'rana',
+    'sapo',
+    'ajolote',
+    'axolotl',
+    'salamandra',
+    'triton',
+    'tritón',
+  ])) {
     return ExoticTaxon.anfibios;
   }
   if (tiene([
@@ -678,7 +706,16 @@ ExoticTaxon? taxonDeEspecie(String especie) {
   ])) {
     return ExoticTaxon.mamiferosPequenos;
   }
-  if (tiene(['silvestre', 'mapache', 'tlacuache', 'zarigueya', 'coati', 'coatí', 'venado', 'mono'])) {
+  if (tiene([
+    'silvestre',
+    'mapache',
+    'tlacuache',
+    'zarigueya',
+    'coati',
+    'coatí',
+    'venado',
+    'mono',
+  ])) {
     return ExoticTaxon.faunaSilvestre;
   }
   return null;

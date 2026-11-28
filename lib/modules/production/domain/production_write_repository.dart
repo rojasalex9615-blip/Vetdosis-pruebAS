@@ -24,6 +24,7 @@ class ProductionWriteException implements Exception {
 
 /// Traduce el error crudo de Postgres a una frase en español.
 ProductionWriteException traducirErrorProduccion(Object error) {
+  if (error is ProductionWriteException) return error;
   final crudo = error.toString();
   String? hallado;
   for (final c in _mensajes.keys) {

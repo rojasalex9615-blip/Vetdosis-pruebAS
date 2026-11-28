@@ -12,6 +12,7 @@ class GestationWriteException implements Exception {
 
 /// Traduce el error crudo de Postgres a una frase en español.
 GestationWriteException traducirErrorGestacion(Object error) {
+  if (error is GestationWriteException) return error;
   final crudo = error.toString();
   String? hallado;
   for (final c in _mensajes.keys) {
@@ -50,8 +51,7 @@ const _mensajes = <String, String>{
   'invalid_estado': 'Elige un cierre válido.',
   'parto_requerido': 'Para cerrar como parida hace falta la fecha del parto.',
   'crias_requeridas': 'Para cerrar como parida hace falta el número de crías.',
-  'parto_antes_del_servicio':
-      'El parto no puede ser anterior al servicio.',
+  'parto_antes_del_servicio': 'El parto no puede ser anterior al servicio.',
   'invalid_parto': 'La fecha del parto no puede estar en el futuro.',
   'invalid_crias': 'El número de crías no parece válido.',
   'notas_too_long': 'Las notas admiten 2000 caracteres.',

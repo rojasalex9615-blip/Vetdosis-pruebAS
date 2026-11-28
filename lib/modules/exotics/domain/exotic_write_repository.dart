@@ -33,6 +33,7 @@ class ExoticWriteException implements Exception {
 /// enseñar el volcado de Postgres: a quien captura no le sirve, y a veces
 /// incluye nombres de tablas que no tiene por qué ver.
 ExoticWriteException traducirErrorExotico(Object error) {
+  if (error is ExoticWriteException) return error;
   final crudo = error.toString();
 
   // El mensaje de PostgrestException trae el codigo dentro de una frase, asi
@@ -62,7 +63,8 @@ const _mensajes = <String, String>{
   'exotic_legal_write_required':
       'El estatus legal solo lo puede firmar un administrador o un MVZ.',
   'patient_wrong_clinic': 'Ese ejemplar no pertenece a esta clínica.',
-  'enclosure_not_found': 'Ese recinto ya no existe. Actualiza y vuelve a '
+  'enclosure_not_found':
+      'Ese recinto ya no existe. Actualiza y vuelve a '
       'elegirlo.',
   'stay_not_found': 'Esa hospitalización ya no está abierta.',
   'clutch_not_found': 'Esa nidada ya no existe.',
@@ -72,7 +74,8 @@ const _mensajes = <String, String>{
       'si es el mismo animal o si hay un error de captura.',
   'operation_payload_changed':
       'Los datos cambiaron a mitad del guardado. Revisa y vuelve a intentarlo.',
-  'invalid_operation': 'Error interno al preparar el guardado. Inténtalo otra '
+  'invalid_operation':
+      'Error interno al preparar el guardado. Inténtalo otra '
       'vez.',
   'invalid_nombre': 'El nombre no puede quedar vacío y admite 80 caracteres.',
   'invalid_tipo': 'Elige un tipo válido.',
