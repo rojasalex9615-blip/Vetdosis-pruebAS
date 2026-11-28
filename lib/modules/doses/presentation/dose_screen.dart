@@ -1,3 +1,4 @@
+import 'farmacologico_dose_screen.dart';
 import '../../../core/widgets/calculator_surface.dart';
 import 'dart:convert';
 import '../../patients/domain/recorded_weight.dart';
@@ -307,7 +308,7 @@ class _DoseScreenState extends State<DoseScreen> {
         children: [
           const CalculatorHeading(
             id: 'dose',
-            title: 'Calcular dosis de un producto',
+            title: 'Dosis por principio activo',
           ),
           const SizedBox(height: 16),
           if (widget.recordedWeight == null && widget.onChoosePatient != null)
@@ -412,15 +413,35 @@ class _DoseScreenState extends State<DoseScreen> {
           if (catalog == null)
             Text(model.error ?? 'Catálogo no disponible.')
           else if (catalog.drugs.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  'El Vademécum no tiene fármacos disponibles para calcular. Importa un catálogo con fuente, dosis por peso y concentración por presentación. No se calculará una dosis ingresada libremente en este modo.',
-                ),
-              ),
+            FarmacologicoDoseLoader(
+              embedded: true,
+              recordedWeight: widget.recordedWeight,
+              validateRecordedWeight: widget.validateRecordedWeight,
+              onChoosePatient: widget.onChoosePatient,
             )
           else ...[
+            OutlinedButton.icon(
+              icon: const Icon(VetIcons.book),
+              label: const Text(
+                'Consultar catálogo bibliográfico por principio activo',
+              ),
+              onPressed: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(
+                      title: const Text('Dosis por principio activo'),
+                    ),
+                    body: FarmacologicoDoseLoader(
+                      recordedWeight: widget.recordedWeight,
+                      validateRecordedWeight: widget.validateRecordedWeight,
+                      onChoosePatient: widget.onChoosePatient,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: species,
               decoration: const InputDecoration(labelText: 'Especie'),

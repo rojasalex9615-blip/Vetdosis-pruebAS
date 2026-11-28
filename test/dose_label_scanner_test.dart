@@ -12,8 +12,7 @@ import 'dose_test.dart' show fixture;
 
 class LabelCatalog implements CatalogRepository {
   @override
-  Future<DoseCatalog> load() async =>
-      DoseCatalog.parse(jsonEncode(fixture()));
+  Future<DoseCatalog> load() async => DoseCatalog.parse(jsonEncode(fixture()));
 }
 
 const testClinician = ClinicMembership(
@@ -27,8 +26,7 @@ void main() {
   test('recognition matches full drug or brand without inferring doses', () {
     final catalog = DoseCatalog.parse(jsonEncode(fixture()));
     expect(
-      doseLabelSuggestions(catalog, 'MARCA FICTICIA\n10 mg/ml')
-          .single.name,
+      doseLabelSuggestions(catalog, 'MARCA FICTICIA\n10 mg/ml').single.name,
       'Ficticio',
     );
     expect(
@@ -43,49 +41,55 @@ void main() {
   testWidgets('local label capture only suggests; clinician chooses item', (
     tester,
   ) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SingleChildScrollView(
-          child: DoseLabelScannerScreen(
-            member: testClinician,
-            catalogRepository: LabelCatalog(),
-            reader: (source) async {
-              expect(source, ImageSource.camera);
-              return 'MARCA FICTICIA\n10 mg/ml\nLote sintético';
-            },
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: DoseLabelScannerScreen(
+              member: testClinician,
+              catalogRepository: LabelCatalog(),
+              reader: (source) async {
+                expect(source, ImageSource.camera);
+                return 'MARCA FICTICIA\n10 mg/ml\nLote sintético';
+              },
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
     expect(find.textContaining('no identifica por'), findsOneWidget);
-    expect(find.text('Calcular dosis de un producto'), findsNothing);
+    expect(find.text('Dosis por principio activo'), findsNothing);
     await tester.tap(find.text('Tomar foto de etiqueta'));
     await tester.pumpAndSettle();
     expect(find.text('Texto reconocido (sin verificar)'), findsOneWidget);
     expect(find.text('Ficticio'), findsOneWidget);
-    expect(find.text('Calcular dosis de un producto'), findsNothing);
+    expect(find.text('Dosis por principio activo'), findsNothing);
     await tester.ensureVisible(find.text('Ficticio'));
     await tester.tap(find.text('Ficticio'));
     await tester.pumpAndSettle();
     expect(find.text('Revisar dosis'), findsOneWidget);
-    expect(find.text('Calcular dosis de un producto'), findsOneWidget);
+    expect(find.text('Dosis por principio activo'), findsOneWidget);
     // This appears only after DoseScreen receives the selected initialDrug.
     expect(find.text('Ficticio · Especie ficticia'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('nonclinical role cannot scan dose labels', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: DoseLabelScannerScreen(
-        member: ClinicMembership(
-          clinicId: 'clinic-test',
-          clinicName: 'Clínica de prueba',
-          userId: 'reception',
-          role: ClinicRole.recepcion,
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: DoseLabelScannerScreen(
+            member: ClinicMembership(
+              clinicId: 'clinic-test',
+              clinicName: 'Clínica de prueba',
+              userId: 'reception',
+              role: ClinicRole.recepcion,
+            ),
+          ),
         ),
-      )),
-    ));
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Tomar foto de etiqueta'), findsNothing);
     expect(

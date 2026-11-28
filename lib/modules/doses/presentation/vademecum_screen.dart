@@ -8,7 +8,10 @@ import '../data/catalog_repository.dart';
 import '../data/personal_dose_repository.dart';
 import '../domain/catalog.dart';
 import '../domain/manufacturer_pauta.dart';
+import '../domain/pauta_farmacologica.dart';
 import 'dose_screen.dart';
+import 'farmacologico_dose_screen.dart';
+import 'farmacologico_views.dart';
 import 'personal_dose_screen.dart';
 import 'vademecum_views.dart';
 import '../../../vet_ui/vet_icons.dart';
@@ -25,6 +28,7 @@ class VademecumScreen extends StatefulWidget {
     this.canCalculateManufacturer = false,
     this.offline = false,
     this.pautas,
+    this.farmacologico,
   });
   final CatalogRepository catalog;
   final PersonalDoseRepository? personal;
@@ -34,6 +38,10 @@ class VademecumScreen extends StatefulWidget {
   /// Pautas ya cargadas. En la app se leen del activo; las pruebas inyectan
   /// un catálogo pequeño para no depender del archivo completo.
   final ManufacturerPautaCatalog? pautas;
+
+  /// Vademécum farmacológico ya cargado. Las pruebas inyectan uno pequeño para
+  /// no depender del archivo completo.
+  final FarmacologicoCatalog? farmacologico;
 
   /// Calculadora aritmética de la dosis del empaque. La abre también el revisor
   /// para comprobar la pauta; la dosis clínica por paciente sigue en
@@ -46,6 +54,7 @@ class VademecumScreen extends StatefulWidget {
 class _VademecumScreenState extends State<VademecumScreen> {
   DoseCatalog? catalog;
   ManufacturerPautaCatalog? pautas;
+  FarmacologicoCatalog? farmacologico;
   List<PersonalDoseEntry> personal = [];
   String query = '', scope = 'todos', mode = 'farmaco';
   bool busy = false;
@@ -77,11 +86,23 @@ class _VademecumScreenState extends State<VademecumScreen> {
           pautaCatalog = null;
         }
       }
+      // El vademécum farmacológico es la fuente principal del índice por
+      // principio activo; si el activo falta, se avisa en su pestaña y el
+      // vademécum comercial sigue funcionando.
+      FarmacologicoCatalog? farmacoCatalog = widget.farmacologico;
+      if (farmacoCatalog == null) {
+        try {
+          farmacoCatalog = await FarmacologicoCatalog.load();
+        } catch (_) {
+          farmacoCatalog = null;
+        }
+      }
       if (mounted) {
         setState(() {
           catalog = general;
           personal = entries;
           pautas = pautaCatalog;
+          farmacologico = farmacoCatalog;
         });
       }
     } catch (_) {
@@ -97,21 +118,16 @@ class _VademecumScreenState extends State<VademecumScreen> {
   }
 
   void openDoseCalculator(BuildContext context) {
+    final dosis = farmacologico;
+    if (dosis == null) return;
     Navigator.push<void>(
       context,
       MaterialPageRoute(
         builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Dosis por agente farmacéutico')),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: DoseScreen(
-              repository: widget.catalog,
-              personalRepository: widget.personal,
-              clinicId: widget.clinicId,
-              userId: widget.userId,
-              admin: widget.admin,
-              offline: widget.offline,
-            ),
+          appBar: AppBar(title: const Text('Dosis por principio activo')),
+          body: FarmacologicoDoseScreen(
+            catalog: dosis,
+            marcas: pautas?.pautas ?? const [],
           ),
         ),
       ),
@@ -234,15 +250,17 @@ class _VademecumScreenState extends State<VademecumScreen> {
             const SizedBox(height: 8),
           ] else if (!busy)
             const Text(
-              'Aún no hay fichas verificadas con dosis por especie. El índice '
-              'de abajo sale de las pautas del fabricante.',
+              'Las fichas verificadas y personales se muestran aquí cuando están disponibles. El catálogo bibliográfico por principio activo se consulta abajo.',
             ),
-          if (pautas == null)
-            const Text('No se pudieron cargar las pautas del fabricante.')
+          if (farmacologico == null)
+            const Text(
+              'No se pudo cargar el vademécum de dosis. Revisa el activo '
+              'farmacologico.v1.json.',
+            )
           else
-            VademecumDrugView(
-              pautas: pautaList,
-              canCalculate: canCalculateDrug,
+            VademecumFarmacologicoView(
+              catalog: farmacologico!,
+              marcas: pautaList,
               onOpenDrugCalculator: canCalculateDrug
                   ? () => openDoseCalculator(context)
                   : null,
