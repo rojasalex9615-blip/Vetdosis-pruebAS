@@ -1,3 +1,5 @@
+import '../../../core/widgets/horizontal_choice_strip.dart';
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../../core/widgets/accent_glow.dart';
 import 'staff_medical_screen.dart';
 import '../domain/service_catalog.dart';
@@ -72,7 +74,11 @@ class _OperationsScreenState extends State<OperationsScreen>
       model.careWindow != null;
   String? appointmentState;
   String? filterProfessional;
-  List<Map<String, dynamic>> get visibleAppointments => model
+  List<Map<String, dynamic>> get visibleAppointments {
+    // CodeRabbit, PR #146, linea 91: professionalIds se recalculaba por
+    // cada cita dentro del predicado; se calcula una sola vez por llamada.
+    final multipleProfessionals = professionalIds.length >= 2;
+    return model
       .rows('appointments')
       .where(
         (a) =>
@@ -88,6 +94,7 @@ class _OperationsScreenState extends State<OperationsScreen>
                 a['patient_id'] == widget.initialPatientId) &&
             (appointmentState == null || a['state'] == appointmentState) &&
             (filterProfessional == null ||
+                !multipleProfessionals ||
                 a['professional_id'] == filterProfessional) &&
             (calendarDay == null ||
                 DateUtils.isSameDay(
@@ -96,17 +103,39 @@ class _OperationsScreenState extends State<OperationsScreen>
                 )),
       )
       .toList();
+  }
   bool get admin => widget.member.role == ClinicRole.admin;
 
-  // Filtro por responsable: solo aparece si hay 2 o más profesionales
-  // con citas. "Todos" no filtra.
-  Widget _professionalFilter() {
+  // Profesionales con citas. El filtro por responsable solo existe si hay
+  // 2 o más; con uno solo no filtra nada (Octopus Review, PR #111: el filtro
+  // quedaba activo en silencio cuando su menú se ocultaba).
+  Set<String> get professionalIds {
     final ids = <String>{};
     for (final a in model.rows('appointments')) {
       final id = a['professional_id'];
       if (id is String && id.isNotEmpty) ids.add(id);
     }
-    if (ids.length < 2) return const SizedBox.shrink();
+    return ids;
+  }
+
+  // Filtro por responsable: solo aparece si hay 2 o más profesionales
+  // con citas. "Todos" no filtra.
+  Widget _professionalFilter() {
+    final ids = professionalIds;
+    if (ids.length < 2) {
+      // El filtro quedó activo de cuando había 2+ profesionales: se limpia
+      // para que no siga filtrando en silencio sin menú visible. Se hace
+      // fuera del build (post-frame) para no llamar a setState construyendo.
+      if (filterProfessional != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (filterProfessional != null && professionalIds.length < 2) {
+            setState(() => filterProfessional = null);
+          }
+        });
+      }
+      return const SizedBox.shrink();
+    }
     final options = {...ids, ?filterProfessional};
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -128,6 +157,7 @@ class _OperationsScreenState extends State<OperationsScreen>
       ),
     );
   }
+
   int? supplierVisitDays(Map<String, dynamic> supplier) {
     final visit = DateTime.tryParse('${supplier['visit_on'] ?? ''}');
     if (visit == null) return null;
@@ -192,6 +222,7 @@ class _OperationsScreenState extends State<OperationsScreen>
     }
     return person(id);
   }
+
   @override
   void initState() {
     super.initState();
@@ -506,11 +537,17 @@ class _OperationsScreenState extends State<OperationsScreen>
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          activeSection == 'blocked'
-              ? sectionTitle(section)
-              : sectionTitle(activeSection),
-          style: Theme.of(context).textTheme.headlineSmall,
+        AppPageHeading(
+          title: sectionTitle(
+            activeSection == 'blocked' ? section : activeSection,
+          ),
+          screens: {
+            switch (activeSection == 'blocked' ? section : activeSection) {
+              'appointments' => 'Agenda',
+              'messages' => 'Equipo y avisos',
+              final value => sectionTitle(value),
+            },
+          },
         ),
         const Text(
           'La agenda y los servicios no autorizan procedimientos ni sustituyen el registro clínico.',
@@ -521,59 +558,71 @@ class _OperationsScreenState extends State<OperationsScreen>
             icon: const Icon(VetIcons.clock),
             label: const Text('Horarios, faltas y coberturas'),
           ),
-        Wrap(
-          spacing: 8,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final e in {
-              'appointments': 'Agenda y citas',
-              'services': 'Servicios',
-              if (!widget.member.isPersonal) 'tasks': 'Pendientes',
-              if (!widget.member.isPersonal) 'notices': 'Avisos',
-              if (!widget.member.isPersonal) 'messages': 'Grupo',
-              if (!widget.member.isPersonal) 'private_messages': 'Privados',
-              'acts': 'Desempeño',
-            }.entries)
-              if (!model.explicitPermissions || model.sectionAllowed(e.key))
-                glowChip(ChoiceChip(
-                  label: Text(e.value),
-                  selected: section == e.key,
-                  onSelected: (_) => setState(() => section = e.key),
-                )),
-            TextButton(
-              onPressed: model.busy
-                  ? null
-                  : () => form(
-                      'Mi nombre visible en la clínica',
-                      'display_name',
-                      const [
-                        RxField(
-                          'name',
-                          'Nombre que verán los integrantes de esta clínica',
-                          required: true,
-                        ),
-                      ],
-                      initial: {
-                        'name':
-                            model
-                                .rows('people')
-                                .where(
-                                  (p) => p['user_id'] == widget.member.userId,
-                                )
-                                .firstOrNull?['display_name'] ??
-                            '',
-                      },
+            HorizontalChoiceStrip(
+              children: [
+                for (final e in {
+                  'appointments': 'Agenda y citas',
+                  'services': 'Servicios',
+                  if (!widget.member.isPersonal) 'tasks': 'Pendientes',
+                  if (!widget.member.isPersonal) 'notices': 'Avisos',
+                  if (!widget.member.isPersonal) 'messages': 'Grupo',
+                  if (!widget.member.isPersonal) 'private_messages': 'Privados',
+                  'acts': 'Desempeño',
+                }.entries)
+                  if (!model.explicitPermissions || model.sectionAllowed(e.key))
+                    glowChip(
+                      ChoiceChip(
+                        label: Text(e.value),
+                        selected: section == e.key,
+                        onSelected: (_) => setState(() => section = e.key),
+                      ),
                     ),
-              child: const Text('Mi nombre en el equipo'),
+              ],
             ),
-            if (!model.explicitPermissions)
-              TextButton(
-                onPressed: model.busy ? null : medical,
-                child: const Text('Ficha médica privada'),
-              ),
-            IconButton(
-              tooltip: 'Actualizar registros',
-              onPressed: model.busy ? null : model.load,
-              icon: const Icon(VetIcons.refresh),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton(
+                  onPressed: model.busy
+                      ? null
+                      : () => form(
+                          'Mi nombre visible en la clínica',
+                          'display_name',
+                          const [
+                            RxField(
+                              'name',
+                              'Nombre que verán los integrantes de esta clínica',
+                              required: true,
+                            ),
+                          ],
+                          initial: {
+                            'name':
+                                model
+                                    .rows('people')
+                                    .where(
+                                      (p) =>
+                                          p['user_id'] == widget.member.userId,
+                                    )
+                                    .firstOrNull?['display_name'] ??
+                                '',
+                          },
+                        ),
+                  child: const Text('Mi nombre en el equipo'),
+                ),
+                if (!model.explicitPermissions)
+                  TextButton(
+                    onPressed: model.busy ? null : medical,
+                    child: const Text('Ficha médica privada'),
+                  ),
+                IconButton(
+                  tooltip: 'Actualizar registros',
+                  onPressed: model.busy ? null : model.load,
+                  icon: const Icon(VetIcons.refresh),
+                ),
+              ],
             ),
           ],
         ),
@@ -618,11 +667,13 @@ class _OperationsScreenState extends State<OperationsScreen>
             ),
           if (!model.busy && model.error == null) _professionalFilter(),
           if (careEnabled) ...[
-            glowChip(FilterChip(
-              label: const Text('Atención del día y pendientes anteriores'),
-              selected: careDay,
-              onSelected: (value) => setState(() => careDay = value),
-            )),
+            glowChip(
+              FilterChip(
+                label: const Text('Atención del día y pendientes anteriores'),
+                selected: careDay,
+                onSelected: (value) => setState(() => careDay = value),
+              ),
+            ),
             if (model.careWindow != null && careDay)
               Text(
                 '${model.careWindow!['day']} · ${model.careWindow!['timezone']} · ${visibleAppointments.length} citas',
@@ -1319,9 +1370,9 @@ class _OperationsScreenState extends State<OperationsScreen>
             padding: EdgeInsets.all(16),
             child: Text('Sin registros visibles en esta sección.'),
           ),
-          // Espacio libre al final para que el botón flotante del
-          // escáner no tape el último elemento de la lista.
-          const SizedBox(height: 100),
+        // Espacio libre al final para que el botón flotante del
+        // escáner no tape el último elemento de la lista.
+        const SizedBox(height: 100),
       ],
     ),
   );

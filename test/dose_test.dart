@@ -134,6 +134,28 @@ void main() {
     final d = DoseCatalog.parse(jsonEncode(map)).drugs.single;
     expect(() => calc(d), throwsFormatException);
   });
+  test('Presentation without concentration parses, dose still blocked', () {
+    final map = fixture();
+    final p = map['farmacos'][0]['presentaciones'][0];
+    p.remove('concentracion');
+    p.remove('unidad_concentracion');
+    final d = DoseCatalog.parse(jsonEncode(map)).drugs.single;
+    expect(d.presentations.single.concentration, isNull);
+    expect(() => calc(d), throwsFormatException);
+  });
+  test('Concentration in a unit other than mg/ml rejected', () {
+    final map = fixture();
+    map['farmacos'][0]['presentaciones'][0]['unidad_concentracion'] = 'g/ml';
+    expect(() => DoseCatalog.parse(jsonEncode(map)), throwsFormatException);
+  });
+  test('Unit declared without concentration value is ignored', () {
+    final map = fixture();
+    final p = map['farmacos'][0]['presentaciones'][0];
+    p.remove('concentracion');
+    p['unidad_concentracion'] = 'g/ml';
+    final d = DoseCatalog.parse(jsonEncode(map)).drugs.single;
+    expect(d.presentations.single.concentration, isNull);
+  });
   test('Unverified, missing range and missing route block confirmation', () {
     final map = fixture();
     map['farmacos'][0]['estado'] = 'sin verificar';
