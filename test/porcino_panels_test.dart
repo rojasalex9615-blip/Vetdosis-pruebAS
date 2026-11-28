@@ -89,6 +89,8 @@ void main() {
     await tester.tap(find.text('Flujo reproductivo'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Usar ejemplo Modelo 2400'));
+    await tester.pumpAndSettle();
+    expect(find.text('Usar ejemplo Modelo 2400').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Usar ejemplo Modelo 2400'));
     await tester.pumpAndSettle();
     expect(find.text('384'), findsOneWidget);

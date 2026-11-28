@@ -186,10 +186,13 @@ void main() {
       find.textContaining('Silo para maternidad y destete'),
       findsOneWidget,
     );
+    await tester.ensureVisible(find.text('Registros'));
+    await tester.tap(find.text('Registros'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Agenda del espacio'));
     await tester.tap(find.text('Agenda del espacio'));
     expect(opened, 'Agenda');
-    expect(find.textContaining('todavía no aplican un filtro'), findsOneWidget);
+    expect(find.textContaining('sin filtro por especie'), findsWidgets);
   });
 
   testWidgets(

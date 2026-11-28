@@ -116,9 +116,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Leche'));
     await tester.pumpAndSettle();
-    expect(find.text('Calculadoras de producción'), findsOneWidget);
-    expect(find.text('Por cabeza y lote'), findsNWidgets(2));
-    expect(find.text('Medicación en agua'), findsNWidgets(2));
-    expect(find.text('Medicación en alimento'), findsNWidgets(2));
+    expect(find.text('Calculadoras'), findsOneWidget);
+    expect(find.text('Por cabeza y lote'), findsOneWidget);
+    expect(find.text('Medicación en agua'), findsOneWidget);
+    expect(find.text('Medicación en alimento'), findsOneWidget);
   });
 }

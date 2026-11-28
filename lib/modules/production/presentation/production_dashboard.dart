@@ -1,3 +1,4 @@
+import '../domain/production_session_math.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/accent_glow.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -51,6 +52,7 @@ class ProductionDashboard extends StatefulWidget {
 
 class _ProductionDashboardState extends State<ProductionDashboard> {
   late String _selectedSpecies;
+  DateTime? _checked;
 
   final List<String> _speciesList = const [
     'Bovinos',
@@ -109,6 +111,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
     );
     setState(() {
       _granja = null;
+      _checked = null;
       _cargandoGranja = true;
       _falloGranja = null;
     });
@@ -135,6 +138,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
       if (!mounted || request != _loadGeneration) return;
       setState(() {
         _granja = datos;
+        _checked = DateTime.now();
         _cargandoGranja = false;
       });
     } catch (e) {
@@ -149,7 +153,16 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
   }
 
   void _openCalculatorDialog(String calcType) {
-    Navigator.push<void>(context, MaterialPageRoute(builder: (_) => ProductionCalculatorModal(calcType: calcType, species: _selectedSpecies, fullScreen: true)));
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductionCalculatorModal(
+          calcType: calcType,
+          species: _selectedSpecies,
+          fullScreen: true,
+        ),
+      ),
+    );
   }
 
   void _openMassMedicationDialog() {
@@ -620,6 +633,10 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           subtitle: 'Panel independiente de gestión zootécnica y financiera',
           large: true,
         ),
+        if (_checked != null)
+          Text(
+            'Datos compartidos · consulta confirmada: ${_checked!.day}/${_checked!.month}/${_checked!.year} · ${TimeOfDay.fromDateTime(_checked!).format(context)}',
+          ),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -680,12 +697,12 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
         ),
         const SizedBox(height: 10),
         if (_selectedSpecies != 'Bovinos' && widget.onOpenTools != null)
-        OutlinedButton.icon(
-          icon: const Icon(VetIcons.calculator),
-          label: Text('Calculadoras de $_selectedSpecies'),
-          onPressed: () => widget.onOpenTools!(_selectedSpecies),
-        ),
-      GridView.count(
+          OutlinedButton.icon(
+            icon: const Icon(VetIcons.calculator),
+            label: Text('Calculadoras de $_selectedSpecies'),
+            onPressed: () => widget.onOpenTools!(_selectedSpecies),
+          ),
+        GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -694,51 +711,57 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           // 1.35 dejaba la celda en 118 dp y el rotulo a dos lineas no cabia.
           childAspectRatio: 1.2,
           children: [
-            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
-              title: 'Calculadora de Ración',
-              subtitle: 'Requerimientos por etapa',
-              icon: VetIcons.feedBag,
-              accent: VetColors.turquoise,
-              onTap: () => _openCalculatorDialog('ration'),
-            ),
-            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
-              title: 'FCA / Conversión',
-              subtitle: 'Factor conversión alimenticia',
-              icon: VetIcons.balance,
-              accent: VetColors.violet,
-              onTap: () => _openCalculatorDialog('fca'),
-            ),
-            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
-              title: 'Densidad Animal',
-              subtitle: 'kg/m² o cabezas/corral',
-              icon: VetIcons.grid,
-              accent: VetColors.cyan,
-              onTap: () => _openCalculatorDialog('density'),
-            ),
-            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
-              title: 'Capacidad de Caseta/Nave',
-              subtitle: 'Dimensiones y ventilación',
-              icon: VetIcons.barn,
-              accent: VetColors.warning,
-              onTap: () => _openCalculatorDialog('capacity'),
-            ),
-            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
-              title: 'Dosis Seminales',
-              subtitle: 'Concentración y diluyente',
-              icon: VetIcons.microscope,
-              accent: VetColors.pink,
-              onTap: () => _openCalculatorDialog('semen'),
-            ),
+            if (_selectedSpecies == 'Bovinos')
+              ProductionToolTile(
+                title: 'Calculadora de Ración',
+                subtitle: 'Requerimientos por etapa',
+                icon: VetIcons.feedBag,
+                accent: VetColors.turquoise,
+                onTap: () => _openCalculatorDialog('ration'),
+              ),
+            if (_selectedSpecies == 'Bovinos')
+              ProductionToolTile(
+                title: 'FCA / Conversión',
+                subtitle: 'Factor conversión alimenticia',
+                icon: VetIcons.balance,
+                accent: VetColors.violet,
+                onTap: () => _openCalculatorDialog('fca'),
+              ),
+            if (_selectedSpecies == 'Bovinos')
+              ProductionToolTile(
+                title: 'Densidad Animal',
+                subtitle: 'kg/m² o cabezas/corral',
+                icon: VetIcons.grid,
+                accent: VetColors.cyan,
+                onTap: () => _openCalculatorDialog('density'),
+              ),
+            if (_selectedSpecies == 'Bovinos')
+              ProductionToolTile(
+                title: 'Capacidad de Caseta/Nave',
+                subtitle: 'Dimensiones y ventilación',
+                icon: VetIcons.barn,
+                accent: VetColors.warning,
+                onTap: () => _openCalculatorDialog('capacity'),
+              ),
+            if (_selectedSpecies == 'Bovinos')
+              ProductionToolTile(
+                title: 'Dosis Seminales',
+                subtitle: 'Concentración y diluyente',
+                icon: VetIcons.microscope,
+                accent: VetColors.pink,
+                onTap: () => _openCalculatorDialog('semen'),
+              ),
             // Vivia en la fila de «Ejecución Diaria», que se retiro por pintar
             // un calendario de ejemplo. La dosificacion masiva no es un dato
             // inventado sino una calculadora, asi que se conserva aqui.
-            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
-              title: 'Dosificación Masiva',
-              subtitle: 'Agua mg/L y alimento ppm',
-              icon: VetIcons.dropper,
-              accent: VetColors.brandSky,
-              onTap: _openMassMedicationDialog,
-            ),
+            if (_selectedSpecies == 'Bovinos')
+              ProductionToolTile(
+                title: 'Dosificación Masiva',
+                subtitle: 'Agua mg/L y alimento ppm',
+                icon: VetIcons.dropper,
+                accent: VetColors.brandSky,
+                onTap: _openMassMedicationDialog,
+              ),
             ProductionToolTile(
               title: 'Constantes Fisiológicas',
               subtitle: 'Rango normal de $_selectedSpecies',
@@ -1034,6 +1057,21 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
       setState(() => _result = 'Captura valores numéricos mayores que cero.');
       return;
     }
+    if ((widget.calcType == 'ration' &&
+            _positiveNumber(numAnimalsCtrl.text)! % 1 != 0) ||
+        (widget.calcType == 'density' &&
+            _positiveNumber(paramCtrl2.text)! % 1 != 0)) {
+      setState(() => _result = 'El número de animales debe ser entero.');
+      return;
+    }
+    if (widget.calcType == 'ration' &&
+        _positiveNumber(paramCtrl2.text)! > 100) {
+      setState(
+        () => _result =
+            'El porcentaje debe ser mayor que cero y como máximo 100.',
+      );
+      return;
+    }
     setState(() {
       if (widget.calcType == 'ration') {
         final n = _positiveNumber(numAnimalsCtrl.text)!;
@@ -1048,7 +1086,7 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
         final peso = _positiveNumber(paramCtrl2.text)!;
         final fca = peso > 0 ? (alim / peso) : 0.0;
         _result =
-            'FCA: ${fca.toStringAsFixed(2)} : 1\n(Se requieren ${fca.toStringAsFixed(2)} kg de alimento para producir 1 kg vivo)';
+            'FCA: ${fca.toStringAsFixed(2)} : 1\n(Se requieren ${fca.toStringAsFixed(2)} kg de alimento por 1 kg de ganancia de peso)';
       } else if (widget.calcType == 'density') {
         final sup = _positiveNumber(paramCtrl1.text)!;
         final anim = _positiveNumber(paramCtrl2.text)!;
@@ -1057,13 +1095,17 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
         _result =
             '${dens.toStringAsFixed(2)} animales / m²\nEspacio por animal: ${m2PorAnimal.toStringAsFixed(2)} m²/cabeza';
       } else if (widget.calcType == 'capacity') {
-        final ancho = _positiveNumber(paramCtrl1.text)!;
-        final largo = _positiveNumber(paramCtrl2.text)!;
-        final dens = _positiveNumber(paramCtrl3.text)!;
-        final area = ancho * largo;
-        final cap = area * dens;
-        _result =
-            'Área útil: ${area.toStringAsFixed(0)} m²\nCapacidad según la densidad capturada: ${cap.toStringAsFixed(0)} animales';
+        try {
+          final capacity = CapturedCapacity(
+            width: paramCtrl1.text,
+            length: paramCtrl2.text,
+            animalsPerM2: paramCtrl3.text,
+          );
+          _result =
+              'Área útil: ${capacity.area.display(places: 6)} m²\nCapacidad según la densidad capturada: ${capacity.animals} animales';
+        } on FormatException catch (e) {
+          _result = e.message;
+        }
       } else if (widget.calcType == 'semen') {
         final vol = _positiveNumber(paramCtrl1.text)!;
         final conc = _positiveNumber(paramCtrl2.text)!;
@@ -1082,7 +1124,7 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
     if (widget.calcType == 'ration') title = 'Cálculo de Ración Diaria';
     if (widget.calcType == 'fca') title = 'Factor Conversión Alimenticia (FCA)';
     if (widget.calcType == 'density') title = 'Densidad Animal';
-    if (widget.calcType == 'capacity') title = 'Capacidad de Nave / Caseta';
+    if (widget.calcType == 'capacity') title = 'Capacidad por superficie';
     if (widget.calcType == 'semen') title = 'Dosis Seminales e Inseminación';
 
     final dialog = AlertDialog(
@@ -1155,17 +1197,13 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
               TextField(
                 controller: paramCtrl1,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Ancho de la nave (m)',
-                ),
+                decoration: const InputDecoration(labelText: 'Ancho útil (m)'),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
                 controller: paramCtrl2,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Largo de la nave (m)',
-                ),
+                decoration: const InputDecoration(labelText: 'Largo útil (m)'),
                 onChanged: (_) => _calculate(),
               ),
               TextField(
@@ -1231,7 +1269,15 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
         ),
       ],
     );
-    return widget.fullScreen ? Scaffold(appBar: AppBar(title: Text('${widget.species} · $title')), body: Padding(padding: const EdgeInsets.all(16), child: dialog.content)) : dialog;
+    return widget.fullScreen
+        ? Scaffold(
+            appBar: AppBar(title: Text('${widget.species} · $title')),
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: dialog.content,
+            ),
+          )
+        : dialog;
   }
 }
 
