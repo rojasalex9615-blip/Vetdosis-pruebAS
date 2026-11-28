@@ -60,11 +60,11 @@ class PautaWeightReference {
   });
   final String amount, unit, kg, text;
 
-  /// Interpreta únicamente referencias explícitas a kg de peso vivo.
+  /// Interpreta kg de peso vivo/corporal o la referencia exacta «kg de peso».
   ///
   /// No convierte «por kg» genérico, kg de alimento/producto ni rangos en
   /// una dosis por peso vivo. Una referencia sin cifra equivale a 1 kg solo
-  /// cuando declara expresamente «por kg de peso vivo».
+  /// cuando declara «por kg de peso vivo» o la referencia exacta «por kg de peso».
   static PautaWeightReference? parse({
     required String amount,
     required String unit,
@@ -76,9 +76,13 @@ class PautaWeightReference {
     if (dose.isEmpty || doseUnit.isEmpty || source.isEmpty) return null;
 
     final normalized = source.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
-    final match = RegExp(
-      r'\b(?:por\s+(?:cada\s+)?|cada\s+)(?:(\d+(?:[.,]\d+)?)\s*)?kg\s+(?:de\s+)?peso\s+vivo\b',
-    ).firstMatch(normalized);
+    final match =
+        RegExp(
+          r'\b(?:por\s+(?:cada\s+)?|cada\s+)(?:(\d+(?:[.,]\d+)?)\s*)?kg\s+(?:de\s+)?peso\s+(?:vivo|corporal)\b',
+        ).firstMatch(normalized) ??
+        RegExp(
+          r'^(?:por\s+(?:cada\s+)?|cada\s+)(?:(\d+(?:[.,]\d+)?)\s*)?kg\s+de\s+peso\.?$',
+        ).firstMatch(normalized);
     if (match == null) return null;
 
     final numbers = RegExp(

@@ -6,7 +6,7 @@ Ronda del 28 de noviembre de 2026, sobre la beta de profesores. La autorización
 
 - PR 158 fusionado a beta en `990b6c2cd6c974b3723c6d3b46ae3323b59588da`: reúne #145 y #153–#157, Producción, calendario, jerarquía de Inicio e iconos.
 - PR 159 fusionado después, en `f3e9b354d4e533fa88f5c4cb96537e73fc0772a1`: plan y matriz del piloto. Las filas manuales continúan pendientes.
-- Esta rama incorpora las correcciones pendientes de #147 (fechas), #146 (filtro de responsable en agenda) y #143 (referencia inequívoca de peso vivo), preservando las mejoras posteriores de beta.
+- Esta rama incorpora las correcciones pendientes de #147 (fechas), #146 (filtro de responsable en agenda) y #143 (referencia inequívoca de peso vivo), preservando las mejoras posteriores de beta. La integración admite también «peso corporal» y la referencia exacta «por kg de peso», usadas por el catálogo actual; sigue rechazando kg genéricos, alimento/producto, peso seco y rangos.
 - Se incorporan las ramas documentales #130, #114 y #113. La extracción de fuentes #114 ya coincidía con el contenido de beta; el merge conserva su procedencia. El cambio #130 solo aclara comentarios del SQL 17A: no ejecuta esa migración ni valida dosis.
 - Se traslada selectivamente el cambio #148: una presentación sin concentración puede consultarse; el cálculo sigue bloqueado sin concentración. Una concentración declarada debe usar la unidad admitida. No se une la historia antigua a beta.
 - #121 corresponde a una escala tipográfica que ya tiene tema, guard y cambios posteriores en beta. Se conserva el diseño reciente y se corrige el tamaño condicional residual de 13 a 14; no se restauran capturas o geometrías antiguas.

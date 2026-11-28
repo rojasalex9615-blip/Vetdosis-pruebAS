@@ -73,7 +73,7 @@ void main() {
   });
 
   test('una referencia por kg sin cifra usa 1 kg y si precarga', () {
-    // 'por kg de peso vivo' es inequivoco: la dosis es por cada kilo.
+    // La fuente declara exactamente 'por kg de peso', no kg de alimento.
     final aves = catalog.pautas.firstWhere(
       (p) => p.id == 'AGROVET-SULTRIVET-AVES',
     );
@@ -92,6 +92,24 @@ void main() {
     expect(exacta, isNotNull);
     expect(exacta!.kg, '1');
 
+    expect(
+      PautaWeightReference.parse(
+        amount: '1',
+        unit: 'mL',
+        reference: 'por 20 kg de peso',
+      )!.kg,
+      '20',
+    );
+
+    expect(
+      PautaWeightReference.parse(
+        amount: '1',
+        unit: 'mL',
+        reference: 'por cada 15 kg peso corporal',
+      )!.kg,
+      '15',
+    );
+
     final numerica = PautaWeightReference.parse(
       amount: '2',
       unit: 'mL',
@@ -103,6 +121,8 @@ void main() {
     for (final reference in [
       'por kg',
       'por kg de alimento',
+      'por kg de peso seco',
+      'por kg de peso de producto',
       'por kg de producto',
       'por 20-40 kg de peso vivo',
       'por 20 kg de peso vivo durante 3 días',
