@@ -1354,8 +1354,27 @@ class CoreShell extends StatelessWidget {
                   focusElevation: 0,
                   hoverElevation: 0,
                   highlightElevation: 0,
-                  onPressed: () =>
-                      model.navigate('Escanear etiqueta para dosis'),
+                  onPressed: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Escanear etiqueta para dosis'),
+                        ),
+                        body: AppHeadingScope(
+                          screen: 'Escanear etiqueta para dosis',
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: DoseLabelScannerScreen(
+                              member: auth!.active!,
+                              personalRepository: personalDoses,
+                              offline: auth!.offline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   child: const Icon(VetIcons.documentScan),
                 ),
               ),
@@ -1899,6 +1918,7 @@ class CoreShell extends StatelessWidget {
                     key: ValueKey((
                       auth?.active?.userId,
                       auth?.active?.clinicId,
+                      auth?.active?.role,
                       auth?.offline,
                       moduleAccess,
                       experience?.revision,

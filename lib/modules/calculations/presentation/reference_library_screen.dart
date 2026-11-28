@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_icons.dart';
 import '../../doses/domain/manufacturer_pauta.dart';
+import '../../doses/domain/pauta_farmacologica.dart';
+import '../../doses/presentation/farmacologico_views.dart';
 import '../../doses/presentation/vademecum_views.dart';
 import '../data/reference_library_repository.dart';
 
@@ -17,6 +19,7 @@ class ReferenceLibraryScreen extends StatelessWidget {
     this.canCalculate = false,
     this.onOpenDrugCalculator,
     this.pautas,
+    this.farmacologico,
   });
   final ReferenceLibraryRepository repository;
   final String clinicId;
@@ -24,6 +27,7 @@ class ReferenceLibraryScreen extends StatelessWidget {
   final bool canCalculate;
   final VoidCallback? onOpenDrugCalculator;
   final ManufacturerPautaCatalog? pautas;
+  final FarmacologicoCatalog? farmacologico;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -49,6 +53,7 @@ class ReferenceLibraryScreen extends StatelessWidget {
             canCalculate: canCalculate,
             onOpenDrugCalculator: onOpenDrugCalculator,
             pautas: pautas,
+            farmacologico: farmacologico,
           ),
         ],
       ),
@@ -71,6 +76,7 @@ class ReferenceLibraryPanel extends StatefulWidget {
     this.canCalculate = false,
     this.onOpenDrugCalculator,
     this.pautas,
+    this.farmacologico,
   });
   final ReferenceLibraryRepository repository;
   final String clinicId;
@@ -87,6 +93,9 @@ class ReferenceLibraryPanel extends StatefulWidget {
   /// Pautas ya cargadas; en la app se leen del activo.
   final ManufacturerPautaCatalog? pautas;
 
+  /// Vademécum farmacológico ya cargado; en la app se lee del activo.
+  final FarmacologicoCatalog? farmacologico;
+
   @override
   State<ReferenceLibraryPanel> createState() => _ReferenceLibraryPanelState();
 }
@@ -96,6 +105,7 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
   late String section = widget.initialSection;
   List<Map<String, dynamic>> items = [];
   ManufacturerPautaCatalog? pautas;
+  FarmacologicoCatalog? farmacologico;
   bool pautasLoading = false;
   bool pautasFailed = false;
   int total = 0;
@@ -109,7 +119,8 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
   void initState() {
     super.initState();
     pautas = widget.pautas;
-    if (pautas == null) loadPautas();
+    farmacologico = widget.farmacologico;
+    if (pautas == null || farmacologico == null) loadPautas();
     load(reset: true);
   }
 
@@ -121,11 +132,27 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
 
   /// Las pautas integradas son las mismas para las dos vistas locales.
   Future<void> loadPautas() async {
-    if (pautas != null || pautasLoading) return;
+    if (pautasLoading) return;
+    if (pautas != null && farmacologico != null) return;
     pautasLoading = true;
+    final catalogo = pautas;
+    final dosis = farmacologico;
     try {
-      final catalog = await ManufacturerPautaCatalog.load();
-      if (mounted) setState(() => pautas = catalog);
+      final pautasCargadas = catalogo ?? await ManufacturerPautaCatalog.load();
+      FarmacologicoCatalog? dosisCargadas = dosis;
+      if (dosisCargadas == null) {
+        try {
+          dosisCargadas = await FarmacologicoCatalog.load();
+        } catch (_) {
+          dosisCargadas = null;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          pautas = pautasCargadas;
+          farmacologico = dosisCargadas;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => pautasFailed = true);
     } finally {
@@ -299,11 +326,14 @@ class _ReferenceLibraryPanelState extends State<ReferenceLibraryPanel> {
       return const Text('No se pudieron cargar los vademécums integrados.');
     }
     final list = pautas!.pautas;
+    if (section == 'farmacologia' && farmacologico == null) {
+      return const Text('No se pudo cargar el vademécum de dosis.');
+    }
     return section == 'farmacologia'
-        ? VademecumDrugView(
-            pautas: list,
+        ? VademecumFarmacologicoView(
+            catalog: farmacologico!,
+            marcas: list,
             query: searchController.text,
-            canCalculate: widget.canCalculate,
             onOpenDrugCalculator: widget.onOpenDrugCalculator,
           )
         : VademecumCommercialView(

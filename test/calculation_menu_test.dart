@@ -1,3 +1,4 @@
+import 'package:vetdosis_pro/modules/doses/presentation/commercial_package_dose_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,7 +25,13 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Calcular dosis de un producto'), findsOneWidget);
+    expect(find.text('Dosis por principio activo'), findsOneWidget);
+    expect(find.text('Dosis por marca comercial'), findsOneWidget);
+    await tester.tap(find.text('Dosis por marca comercial'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CommercialPackageDoseScreen), findsOneWidget);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
     expect(find.text('Otras operaciones de dosis'), findsOneWidget);
     expect(find.text('Cálculos clínicos'), findsOneWidget);
     await tester.tap(find.text('Otras operaciones de dosis'));

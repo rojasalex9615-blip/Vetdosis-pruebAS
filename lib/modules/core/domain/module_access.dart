@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show mapEquals;
 import '../../auth/domain/clinic_membership.dart';
 
 abstract interface class ModuleAccessRepository {
@@ -69,10 +70,27 @@ class ModuleAccess {
       throw const FormatException('Capacidades de módulos inválidas.');
     }
     return ModuleAccess._(
-      raw.cast<String, bool>(),
-      rawSummaries.cast<String, bool>(),
+      Map<String, bool>.unmodifiable(raw.cast<String, bool>()),
+      Map<String, bool>.unmodifiable(rawSummaries.cast<String, bool>()),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ModuleAccess &&
+          mapEquals(modules, other.modules) &&
+          mapEquals(summaries, other.summaries);
+
+  @override
+  int get hashCode => Object.hash(
+    Object.hashAllUnordered(
+      modules.entries.map((e) => Object.hash(e.key, e.value)),
+    ),
+    Object.hashAllUnordered(
+      summaries.entries.map((e) => Object.hash(e.key, e.value)),
+    ),
+  );
 
   bool module(String name) => modules[name] == true;
   bool summary(String name) => summaries[name] == true;
