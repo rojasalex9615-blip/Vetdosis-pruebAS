@@ -25,10 +25,10 @@ class SupabaseProductionFarmRepository implements ProductionFarmRepository {
 
     // Las dos lecturas no dependen entre si: se lanzan a la vez y se esperan
     // despues, asi el panel aguarda un viaje en lugar de dos encadenados.
-    final lotesPendiente = _lotes(clinicId, especies);
-    final defsPendiente = _metricas(especies);
-    final lotes = await lotesPendiente;
-    final defs = await defsPendiente;
+    final (lotes, defs) = await (
+      _lotes(clinicId, especies),
+      _metricas(especies),
+    ).wait;
 
     // Eventos y registros cuelgan de los lotes: sin lotes no hay nada que
     // pedir, y asi nos ahorramos dos consultas en el caso vacio, que hoy es
@@ -38,21 +38,20 @@ class SupabaseProductionFarmRepository implements ProductionFarmRepository {
     }
 
     final ids = lotes.map((l) => l.id).toList();
-    final eventosPendiente = _eventos(clinicId, ids);
-    final registrosPendiente = _registros(clinicId, ids);
+    final (eventos, registros) = await (
+      _eventos(clinicId, ids),
+      _registros(clinicId, ids),
+    ).wait;
 
     return FarmSnapshot(
       batches: lotes,
-      events: await eventosPendiente,
-      records: await registrosPendiente,
+      events: eventos,
+      records: registros,
       metricDefs: defs,
     );
   }
 
-  Future<List<FarmBatch>> _lotes(
-    String clinicId,
-    List<String> especies,
-  ) async {
+  Future<List<FarmBatch>> _lotes(String clinicId, List<String> especies) async {
     final rows = await client
         .from('lotes_produccion')
         .select(
@@ -62,7 +61,9 @@ class SupabaseProductionFarmRepository implements ProductionFarmRepository {
         .eq('clinic_id', clinicId)
         .inFilter('especie', especies)
         .order('fecha_inicio', ascending: false);
-    return rows.map((r) => FarmBatch.read(Map<String, dynamic>.from(r))).toList();
+    return rows
+        .map((r) => FarmBatch.read(Map<String, dynamic>.from(r)))
+        .toList();
   }
 
   Future<List<FarmEvent>> _eventos(
@@ -75,7 +76,9 @@ class SupabaseProductionFarmRepository implements ProductionFarmRepository {
         .eq('clinic_id', clinicId)
         .inFilter('lote_id', loteIds)
         .order('fecha');
-    return rows.map((r) => FarmEvent.read(Map<String, dynamic>.from(r))).toList();
+    return rows
+        .map((r) => FarmEvent.read(Map<String, dynamic>.from(r)))
+        .toList();
   }
 
   Future<List<FarmRecord>> _registros(
@@ -88,7 +91,9 @@ class SupabaseProductionFarmRepository implements ProductionFarmRepository {
         .eq('clinic_id', clinicId)
         .inFilter('lote_id', loteIds)
         .order('fecha');
-    return rows.map((r) => FarmRecord.read(Map<String, dynamic>.from(r))).toList();
+    return rows
+        .map((r) => FarmRecord.read(Map<String, dynamic>.from(r)))
+        .toList();
   }
 
   /// Catalogo de referencia: no lleva `clinic_id` porque es igual para todos.

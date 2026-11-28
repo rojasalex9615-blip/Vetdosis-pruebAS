@@ -65,14 +65,32 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
     super.dispose();
   }
 
-  Future<void> _cargar() async {
-    // Cede el turno: la primera llamada sale de initState y ahí el widget
-    // todavía se está montando, donde un setState síncrono revienta.
-    await Future<void>.delayed(Duration.zero);
-    if (!mounted) return;
+  int _loadGeneration = 0;
 
+  @override
+  void didUpdateWidget(covariant ExoticsDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTaxon != widget.initialTaxon) {
+      _taxon = widget.initialTaxon;
+    }
+    if (oldWidget.repository != widget.repository ||
+        oldWidget.member?.clinicId != widget.member?.clinicId ||
+        oldWidget.member?.userId != widget.member?.userId) {
+      _cargar();
+    }
+  }
+
+  Future<void> _cargar() async {
+    final request = ++_loadGeneration;
     final repo = widget.repository;
     final clinicId = widget.member?.clinicId;
+    setState(() {
+      _datos = null;
+      _cargando = true;
+      _fallo = null;
+    });
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || request != _loadGeneration) return;
     if (repo == null || clinicId == null || clinicId.isEmpty) {
       setState(() {
         _datos = const ExoticSnapshot();
@@ -87,13 +105,13 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
     });
     try {
       final datos = await repo.load(clinicId);
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       setState(() {
         _datos = datos;
         _cargando = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       // Un corte de red no es «no hay ejemplares»: se distinguen para que
       // nadie lea una caída de conexión como un censo vacío.
       setState(() {
@@ -303,7 +321,9 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
   ///
   /// Devuelve lista vacia cuando no hay permiso o no hay repositorio de
   /// escritura, de modo que la fila se dibuja igual pero sin botones muertos.
-  List<Widget> _barraDeCaptura(List<(String, IconData, Future<bool> Function())> acciones) {
+  List<Widget> _barraDeCaptura(
+    List<(String, IconData, Future<bool> Function())> acciones,
+  ) {
     if (!_puedeCapturar || acciones.isEmpty) return const [];
     return [
       Wrap(
@@ -375,7 +395,9 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
   /// (microchip, anillo cerrado, muesca), que viven en `exotic_identifiers`.
   Widget _buscadorPorIdentificador() {
     final datos = _datos;
-    final resultados = datos == null ? const <ExoticSpecimen>[] : datos.buscar(_busqueda);
+    final resultados = datos == null
+        ? const <ExoticSpecimen>[]
+        : datos.buscar(_busqueda);
     return VetCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,7 +431,11 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(VetIcons.paw, size: 16, color: VetColors.muted),
+                      const Icon(
+                        VetIcons.paw,
+                        size: 16,
+                        color: VetColors.muted,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -671,11 +697,7 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  VetIcons.tagPaw,
-                  size: 16,
-                  color: VetColors.warning,
-                ),
+                const Icon(VetIcons.tagPaw, size: 16, color: VetColors.warning),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -794,8 +816,10 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
   /// Ejemplares en cuarentena u hospitalización. Esto sí tiene tabla.
   Widget _cuarentena(ExoticSnapshot datos, DateTime ahora) {
     final delGrupo = datos.delTaxon(_taxon).map((e) => e.id).toSet();
-    final estancias =
-        datos.enCurso().where((s) => delGrupo.contains(s.specimenId)).toList();
+    final estancias = datos
+        .enCurso()
+        .where((s) => delGrupo.contains(s.specimenId))
+        .toList();
 
     return VetCard(
       child: Column(
@@ -804,7 +828,11 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(VetIcons.shieldCheck, size: 20, color: VetColors.turquoise),
+              const Icon(
+                VetIcons.shieldCheck,
+                size: 20,
+                color: VetColors.turquoise,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -1057,7 +1085,9 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
           (
             cuando: e.ocurrioEn,
             quien: _nombreDe(datos, e.specimenId),
-            que: e.detalle.isEmpty ? e.etiqueta : '${e.etiqueta} · ${e.detalle}',
+            que: e.detalle.isEmpty
+                ? e.etiqueta
+                : '${e.etiqueta} · ${e.detalle}',
             urgente: e.urgente,
           ),
       for (final e in datos.events)
@@ -1125,7 +1155,8 @@ class _ExoticsDashboardState extends State<ExoticsDashboard> {
     final lugar = s.recinto.isEmpty ? '' : '${s.recinto} · ';
     if (restantes == null) return '$lugar${s.diasDentro(ahora)} d';
     if (restantes <= 0) return '${lugar}Aislamiento cumplido';
-    return '$lugar''Faltan $restantes d';
+    return '$lugar'
+        'Faltan $restantes d';
   }
 
   String _nombreDe(ExoticSnapshot datos, String id) {

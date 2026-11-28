@@ -15,6 +15,7 @@ class FeedWriteException implements Exception {
 /// Gana la coincidencia más larga: `invalid_kg_por_unidad` contiene
 /// `invalid_kg`, y el mensaje bueno es el específico.
 FeedWriteException traducirErrorAlimento(Object error) {
+  if (error is FeedWriteException) return error;
   final crudo = error.toString();
   String? hallado;
   for (final c in _mensajes.keys) {

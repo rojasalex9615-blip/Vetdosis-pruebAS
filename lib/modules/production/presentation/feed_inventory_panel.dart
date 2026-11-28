@@ -49,14 +49,29 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
     _cargar();
   }
 
-  Future<void> _cargar() async {
-    // Cede el turno: la primera llamada sale de initState y ahi el widget
-    // todavia se esta montando.
-    await Future<void>.delayed(Duration.zero);
-    if (!mounted) return;
+  int _loadGeneration = 0;
 
+  @override
+  void didUpdateWidget(covariant FeedInventoryPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.repository != widget.repository ||
+        oldWidget.member?.clinicId != widget.member?.clinicId ||
+        oldWidget.member?.userId != widget.member?.userId) {
+      _cargar();
+    }
+  }
+
+  Future<void> _cargar() async {
+    final request = ++_loadGeneration;
     final repo = widget.repository;
     final clinicId = widget.member?.clinicId;
+    setState(() {
+      _datos = null;
+      _cargando = true;
+      _fallo = null;
+    });
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || request != _loadGeneration) return;
     if (repo == null || clinicId == null || clinicId.isEmpty) {
       setState(() {
         _datos = const FeedSnapshot.vacio();
@@ -71,13 +86,13 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
     });
     try {
       final d = await repo.load(clinicId);
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       setState(() {
         _datos = d;
         _cargando = false;
       });
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _loadGeneration) return;
       setState(() {
         _fallo = e;
         _cargando = false;
@@ -179,9 +194,7 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
     final ahora = DateTime.now();
     final porAgotarse = d.silosPorAgotarse(ahora);
     final enRojo = d.existenciasNegativas;
-    final conAlimento = d.eficiencias
-        .where((e) => e.tieneAlimento)
-        .toList();
+    final conAlimento = d.eficiencias.where((e) => e.tieneAlimento).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +210,8 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
           const SizedBox(height: 16),
           const VetSectionHeader(
             title: 'Silos y bodegas',
-            subtitle: 'Lo que hay y cuánto aguanta al ritmo de los últimos '
+            subtitle:
+                'Lo que hay y cuánto aguanta al ritmo de los últimos '
                 '30 días',
             icon: VetIcons.barn,
           ),
@@ -207,10 +221,7 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
         ],
         if (d.alimentos.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const VetSectionHeader(
-            title: 'Alimentos',
-            icon: VetIcons.feedBag,
-          ),
+          const VetSectionHeader(title: 'Alimentos', icon: VetIcons.feedBag),
           const SizedBox(height: 8),
           for (final a in d.alimentos.where((x) => x.activo))
             _tarjetaAlimento(d, a),
@@ -218,7 +229,8 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
         const SizedBox(height: 16),
         const VetSectionHeader(
           title: 'Conversión y costo por lote',
-          subtitle: 'Sale de lo que de verdad se cargó y de lo que el lote '
+          subtitle:
+              'Sale de lo que de verdad se cargó y de lo que el lote '
               'produjo',
           icon: VetIcons.kgToMeat,
         ),
@@ -227,7 +239,8 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
           const VetCard(
             child: VetEmptyState(
               icon: VetIcons.trough,
-              text: 'Todavía no se ha cargado alimento a ningún lote. En '
+              text:
+                  'Todavía no se ha cargado alimento a ningún lote. En '
                   'cuanto registres el primer consumo aparecen aquí la '
                   'conversión y el costo por litro o por kilo.',
             ),
@@ -405,10 +418,7 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              s.nombre,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(s.nombre, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 2),
             Text(
               cap == null
@@ -447,9 +457,7 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
                     kind: VetBadgeKind.unverified,
                   ),
                 if (lleno != null)
-                  VetStatusBadge(
-                    label: '${(lleno * 100).round()} % lleno',
-                  ),
+                  VetStatusBadge(label: '${(lleno * 100).round()} % lleno'),
               ],
             ),
             if (_puedeCatalogo) ...[
@@ -500,9 +508,7 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
                     kind: VetBadgeKind.unverified,
                   ),
                 if (a.materiaSecaPct != null)
-                  VetStatusBadge(
-                    label: '${_miles(a.materiaSecaPct!)} % MS',
-                  )
+                  VetStatusBadge(label: '${_miles(a.materiaSecaPct!)} % MS')
                 else
                   const VetStatusBadge(
                     label: 'Sin materia seca',
@@ -512,7 +518,8 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
                   VetStatusBadge(label: '${_miles(a.proteinaPct!)} % PC'),
                 if (!a.seCompraEnKilos)
                   VetStatusBadge(
-                    label: '1 ${a.unidad.label.toLowerCase()} = '
+                    label:
+                        '1 ${a.unidad.label.toLowerCase()} = '
                         '${_miles(a.kgPorUnidad)} kg',
                   ),
               ],
@@ -604,16 +611,10 @@ class _FeedInventoryPanelState extends State<FeedInventoryPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(
-              titulo,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: Text(titulo, style: Theme.of(context).textTheme.bodyMedium),
           ),
           if (valor != null)
-            Text(
-              valor,
-              style: Theme.of(context).textTheme.titleMedium,
-            )
+            Text(valor, style: Theme.of(context).textTheme.titleMedium)
           else
             const VetStatusBadge(
               label: 'Sin dato',
