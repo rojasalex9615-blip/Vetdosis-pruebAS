@@ -91,6 +91,19 @@ abstract final class VetFormat {
     return parsed == null ? text : date(parsed);
   }
 
+  /// Fecha y hora cortas a partir de ISO: `17 nov 2026, 08:05`.
+  /// Devuelve la entrada si no es fecha.
+  static String dateTimeFromIso(Object? value) {
+    final text = '${value ?? ''}'.trim();
+    if (text.isEmpty) return '';
+    final parsed = DateTime.tryParse(text);
+    if (parsed == null) return text;
+    final d = parsed.toLocal();
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    return '${date(d)}, $hh:$mm';
+  }
+
   /// Rango de fechas: `22 oct 2026 → 21 dic 2026`.
   static String dateRange(Object? start, Object? end) =>
       '${dateFromIso(start)} → ${dateFromIso(end)}';
