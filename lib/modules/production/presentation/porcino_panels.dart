@@ -1,3 +1,4 @@
+import '../../../core/widgets/horizontal_choice_strip.dart';
 import 'package:flutter/material.dart';
 import '../../../vet_ui/vet_components.dart';
 import '../../../vet_ui/vet_format.dart';
@@ -160,10 +161,8 @@ List<VentStage> _ventStages(List<String> names) => [
   for (final n in names) ventilationStages.firstWhere((s) => s.name == n),
 ];
 
-class _Gap extends StatelessWidget {
-  const _Gap();
-  @override
-  Widget build(BuildContext context) => const SizedBox(height: 16);
+class _Gap extends SizedBox {
+  const _Gap() : super(height: 16);
 }
 
 double _decimal(TextEditingController c, String label) {
@@ -514,7 +513,7 @@ class _PorcinoSiloPanelState extends State<PorcinoSiloPanel> {
           if (widget.phases.length > 1)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Wrap(
+              child: HorizontalChoiceStrip(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
@@ -639,7 +638,7 @@ class _PorcinoSpacePanelState extends State<PorcinoSpacePanel> {
           ),
           Text('Peso del animal', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -658,7 +657,7 @@ class _PorcinoSpacePanelState extends State<PorcinoSpacePanel> {
           const SizedBox(height: 12),
           Text('Tipo de piso', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -825,7 +824,7 @@ class _PorcinoVentilationPanelState extends State<PorcinoVentilationPanel> {
           if (widget.stages.length > 1)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Wrap(
+              child: HorizontalChoiceStrip(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
@@ -843,7 +842,7 @@ class _PorcinoVentilationPanelState extends State<PorcinoVentilationPanel> {
                 ],
               ),
             ),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -862,7 +861,7 @@ class _PorcinoVentilationPanelState extends State<PorcinoVentilationPanel> {
           if (hasMetric)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Wrap(
+              child: HorizontalChoiceStrip(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
@@ -1013,7 +1012,7 @@ class _PorcinoInverseCapacityPanelState
             subtitle:
                 'Para remodelar o redimensionar: cuántos vientres sostiene una producción semanal.',
           ),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -1797,7 +1796,7 @@ class _PorcinoPenCapacityPanelState extends State<PorcinoPenCapacityPanel> {
           ),
           Text('Peso del animal', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -1816,7 +1815,7 @@ class _PorcinoPenCapacityPanelState extends State<PorcinoPenCapacityPanel> {
           const SizedBox(height: 12),
           Text('Tipo de piso', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -1951,7 +1950,7 @@ class _PorcinoFacilitySizingPanelState
           ),
           Text('Peso del animal', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -1970,7 +1969,7 @@ class _PorcinoFacilitySizingPanelState
           const SizedBox(height: 12),
           Text('Tipo de piso', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -2321,7 +2320,7 @@ class _PorcinoGrowthProjectionPanelState
           ),
           Text('Peso del animal', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -2340,7 +2339,7 @@ class _PorcinoGrowthProjectionPanelState
           const SizedBox(height: 12),
           Text('Tipo de piso', style: textTheme.titleSmall),
           const SizedBox(height: 6),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -3114,7 +3113,7 @@ class _PorcinoEnvironmentPanelState extends State<PorcinoEnvironmentPanel> {
           if (porcinoEnvironmentStudies.length > 1)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Wrap(
+              child: HorizontalChoiceStrip(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
@@ -3244,7 +3243,7 @@ class _PorcinoProductiveModelsPanelState
           const SizedBox(height: 14),
           Text('Detalle del escenario', style: textTheme.titleSmall),
           const SizedBox(height: 8),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -3464,7 +3463,7 @@ class _PorcinoFeedingSystemsPanelState
             padding: const EdgeInsets.only(top: 14, bottom: 4),
             child: Text('Sistema de transporte', style: textTheme.titleSmall),
           ),
-          Wrap(
+          HorizontalChoiceStrip(
             spacing: 8,
             runSpacing: 8,
             children: [

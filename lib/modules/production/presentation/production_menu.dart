@@ -1,3 +1,5 @@
+import '../../../core/widgets/horizontal_choice_strip.dart';
+import 'production_calculator_entries.dart';
 import '../../aviculture/presentation/poultry_farm_screen.dart';
 import '../../aviculture/domain/poultry_farm.dart';
 import '../../aviculture/domain/rearing_project_repository.dart';
@@ -119,11 +121,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
   }
 
   void _openCalculator(String type, String currentSpecies) {
-    showDialog<void>(
-      context: context,
-      builder: (_) =>
-          ProductionCalculatorModal(calcType: type, species: currentSpecies),
-    );
+    open(ProductionCalculatorModal(calcType: type, species: currentSpecies, fullScreen: true));
   }
 
   void _openVademecum(String currentSpecies) {
@@ -192,6 +190,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
         ),
         if (_viewMode == 1)
           ProductionDashboard(
+            onOpenTools: (chosen) => setState(() {species = chosen; activity = null; _viewMode = 0;}),
             onNavigate: widget.onNavigate,
             member: widget.member,
             access: widget.access,
@@ -412,7 +411,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
     return [
       const SizedBox(height: 16),
       if (allowed('Cálculos clínicos'))
-        ...aquaculturePanelsFor(fish)
+        ...productionCalculatorEntries(context, chosen, aquaculturePanelsFor(fish))
       else
         denied,
     ];
@@ -480,7 +479,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
           children: [
             Text('Actividad', style: textTheme.titleSmall),
             const SizedBox(height: 10),
-            Wrap(
+            HorizontalChoiceStrip(
               spacing: 8,
               runSpacing: 8,
               children: [
@@ -505,7 +504,7 @@ class _ProductionMenuState extends State<ProductionMenu> {
             icon: VetIcons.tap,
           ),
         ),
-      if (activity != null) ...[
+      if (activity != null && currentSpecies == 'Bovinos') ...[
         const SizedBox(height: 16),
         const VetSectionHeader(
           title: 'Calculadoras de producción',
@@ -678,12 +677,12 @@ class _ProductionMenuState extends State<ProductionMenu> {
             ),
           ),
         if (allowed('Cálculos clínicos'))
-          ...porcinoPanelsFor(
+          ...productionCalculatorEntries(context, 'Porcinos · $activity', porcinoPanelsFor(
             activity!,
             showCosts: allowed('Planeación financiera'),
             repository: widget.porcino,
             clinicId: widget.member?.clinicId,
-          )
+          ))
         else
           denied,
       ],
@@ -720,35 +719,35 @@ class _ProductionMenuState extends State<ProductionMenu> {
         // 1.35 dejaba la celda en 118 dp y el rotulo a dos lineas no cabia.
         childAspectRatio: 1.2,
         children: [
-          ProductionToolTile(
+          if (currentSpecies == 'Bovinos' && allowed('Cálculos clínicos')) ProductionToolTile(
             title: 'Calculadora de Ración',
             subtitle: 'Requerimientos por etapa',
             icon: VetIcons.feedBag,
             accent: VetColors.turquoise,
             onTap: () => _openCalculator('ration', currentSpecies),
           ),
-          ProductionToolTile(
+          if (currentSpecies == 'Bovinos' && allowed('Cálculos clínicos')) ProductionToolTile(
             title: 'FCA / Conversión',
             subtitle: 'Factor conversión alimenticia',
             icon: VetIcons.balance,
             accent: VetColors.violet,
             onTap: () => _openCalculator('fca', currentSpecies),
           ),
-          ProductionToolTile(
+          if (currentSpecies == 'Bovinos' && allowed('Cálculos clínicos')) ProductionToolTile(
             title: 'Densidad Animal',
             subtitle: 'kg/m² o animales/corral',
             icon: VetIcons.grid,
             accent: VetColors.cyan,
             onTap: () => _openCalculator('density', currentSpecies),
           ),
-          ProductionToolTile(
+          if (currentSpecies == 'Bovinos' && allowed('Cálculos clínicos')) ProductionToolTile(
             title: 'Capacidad de Caseta/Nave',
             subtitle: 'Superficie y ventilación',
             icon: VetIcons.barn,
             accent: VetColors.warning,
             onTap: () => _openCalculator('capacity', currentSpecies),
           ),
-          ProductionToolTile(
+          if (currentSpecies == 'Bovinos' && allowed('Cálculos clínicos')) ProductionToolTile(
             title: 'Dosis Seminales',
             subtitle: 'Espermatozoides por dosis',
             icon: VetIcons.microscope,

@@ -22,6 +22,7 @@ class ProductionDashboard extends StatefulWidget {
     this.farm,
     this.farmWrite,
     this.initialSpecies = 'Bovinos',
+    this.onOpenTools,
   });
 
   final ValueChanged<String> onNavigate;
@@ -42,6 +43,7 @@ class ProductionDashboard extends StatefulWidget {
   /// botones de captura no se dibujan.
   final ProductionWriteRepository? farmWrite;
   final String initialSpecies;
+  final ValueChanged<String>? onOpenTools;
 
   @override
   State<ProductionDashboard> createState() => _ProductionDashboardState();
@@ -147,13 +149,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
   }
 
   void _openCalculatorDialog(String calcType) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => ProductionCalculatorModal(
-        calcType: calcType,
-        species: _selectedSpecies,
-      ),
-    );
+    Navigator.push<void>(context, MaterialPageRoute(builder: (_) => ProductionCalculatorModal(calcType: calcType, species: _selectedSpecies, fullScreen: true)));
   }
 
   void _openMassMedicationDialog() {
@@ -683,7 +679,13 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
               'Calculadoras zootécnicas, constantes fisiológicas, vademécum y registros',
         ),
         const SizedBox(height: 10),
-        GridView.count(
+        if (_selectedSpecies != 'Bovinos' && widget.onOpenTools != null)
+        OutlinedButton.icon(
+          icon: const Icon(VetIcons.calculator),
+          label: Text('Calculadoras de $_selectedSpecies'),
+          onPressed: () => widget.onOpenTools!(_selectedSpecies),
+        ),
+      GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -692,35 +694,35 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
           // 1.35 dejaba la celda en 118 dp y el rotulo a dos lineas no cabia.
           childAspectRatio: 1.2,
           children: [
-            ProductionToolTile(
+            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
               title: 'Calculadora de Ración',
               subtitle: 'Requerimientos por etapa',
               icon: VetIcons.feedBag,
               accent: VetColors.turquoise,
               onTap: () => _openCalculatorDialog('ration'),
             ),
-            ProductionToolTile(
+            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
               title: 'FCA / Conversión',
               subtitle: 'Factor conversión alimenticia',
               icon: VetIcons.balance,
               accent: VetColors.violet,
               onTap: () => _openCalculatorDialog('fca'),
             ),
-            ProductionToolTile(
+            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
               title: 'Densidad Animal',
               subtitle: 'kg/m² o cabezas/corral',
               icon: VetIcons.grid,
               accent: VetColors.cyan,
               onTap: () => _openCalculatorDialog('density'),
             ),
-            ProductionToolTile(
+            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
               title: 'Capacidad de Caseta/Nave',
               subtitle: 'Dimensiones y ventilación',
               icon: VetIcons.barn,
               accent: VetColors.warning,
               onTap: () => _openCalculatorDialog('capacity'),
             ),
-            ProductionToolTile(
+            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
               title: 'Dosis Seminales',
               subtitle: 'Concentración y diluyente',
               icon: VetIcons.microscope,
@@ -730,7 +732,7 @@ class _ProductionDashboardState extends State<ProductionDashboard> {
             // Vivia en la fila de «Ejecución Diaria», que se retiro por pintar
             // un calendario de ejemplo. La dosificacion masiva no es un dato
             // inventado sino una calculadora, asi que se conserva aqui.
-            ProductionToolTile(
+            if (_selectedSpecies == 'Bovinos') ProductionToolTile(
               title: 'Dosificación Masiva',
               subtitle: 'Agua mg/L y alimento ppm',
               icon: VetIcons.dropper,
@@ -992,8 +994,10 @@ class ProductionCalculatorModal extends StatefulWidget {
     super.key,
     required this.calcType,
     required this.species,
+    this.fullScreen = false,
   });
 
+  final bool fullScreen;
   final String calcType;
   final String species;
 
@@ -1081,7 +1085,7 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
     if (widget.calcType == 'capacity') title = 'Capacidad de Nave / Caseta';
     if (widget.calcType == 'semen') title = 'Dosis Seminales e Inseminación';
 
-    return AlertDialog(
+    final dialog = AlertDialog(
       title: Text(title, style: const TextStyle(fontSize: 16)),
       content: SingleChildScrollView(
         child: Column(
@@ -1227,6 +1231,7 @@ class ProductionCalculatorModalState extends State<ProductionCalculatorModal> {
         ),
       ],
     );
+    return widget.fullScreen ? Scaffold(appBar: AppBar(title: Text('${widget.species} · $title')), body: Padding(padding: const EdgeInsets.all(16), child: dialog.content)) : dialog;
   }
 }
 
