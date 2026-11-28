@@ -233,6 +233,9 @@ void main() {
     await tester.tap(find.text('Bioseguridad y ambiente'));
     await tester.pumpAndSettle();
     expect(find.text('Ambiente y bienestar'), findsOneWidget);
+    await tester.ensureVisible(find.text('Referencias'));
+    await tester.tap(find.text('Referencias'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Referencias de bioseguridad'));
     await tester.tap(find.text('Referencias de bioseguridad'));
     await tester.pumpAndSettle();

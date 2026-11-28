@@ -32,9 +32,9 @@ const productionSpecies = <String, List<String>>{
 /// eventos de manejo: «animales y rebanos» son ahora los lotes, «cosechas y
 /// seguimiento» son las metricas de miel, «revisiones y sanidad» son los
 /// eventos sanitarios y los indicadores por unidad ya salen en el panel.
-/// Solo queda fuera la reproduccion, que no tiene tabla ni metricas: no se
-/// anuncia como disponible mientras no la tenga.
+/// La genealogía con progenitores identificados sigue pendiente. Las
+/// gestaciones se consultan en el módulo compartido por paciente.
 const plannedProductionAreas = <String, List<String>>{
-  'Bovinos': ['Reproducción y genealogía'],
-  'Ovinos / caprinos': ['Reproducción y genealogía'],
+  'Bovinos': ['Genealogía e identificación de progenitores'],
+  'Ovinos / caprinos': ['Genealogía e identificación de progenitores'],
 };

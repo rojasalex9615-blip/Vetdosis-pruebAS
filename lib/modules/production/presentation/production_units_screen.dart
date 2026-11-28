@@ -1,3 +1,4 @@
+import '../../../vet_ui/vet_format.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/widgets/contrast.dart';
@@ -170,6 +171,10 @@ class _TarjetaUnidad extends StatelessWidget {
                 Text(
                   unidad.name,
                   style: textTheme.titleMedium?.copyWith(color: tinta),
+                ),
+                Text(
+                  'Guardado local: ${VetFormat.date((unidad.updatedAt ?? unidad.createdAt).toLocal())} · ${TimeOfDay.fromDateTime((unidad.updatedAt ?? unidad.createdAt).toLocal()).format(context)}',
+                  style: textTheme.bodySmall,
                 ),
                 if (unidad.notes case final String nota)
                   Padding(

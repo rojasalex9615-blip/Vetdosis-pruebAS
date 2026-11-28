@@ -1,3 +1,4 @@
+import 'poultry_calendar_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../core/widgets/capture_sheet.dart';
 import '../../../vet_ui/vet_components.dart';
@@ -19,6 +20,8 @@ String poultryFarmError(Object error) {
     'house_has_history':
         'Esta caseta ya tiene historial y no puede trasladarse a otra granja.',
     'flock_not_in_house': 'La parvada elegida no pertenece a esta caseta.',
+    '23503': 'El registro tiene historial o tareas relacionadas; revisa sus vínculos antes de cambiarlo.',
+    'schedule_scope_changed': 'La caseta y la parvada de una programación no se pueden cambiar. Cancela la tarea y crea otra.',
     'duplicate key':
         'Ese nombre ya está registrado en esta granja o área de trabajo.',
   }.entries) {
@@ -38,6 +41,7 @@ class PoultryFarmScreen extends StatefulWidget {
 class _PoultryFarmScreenState extends State<PoultryFarmScreen> {
   PoultryFarmWorkspace? _data;
   String _error = '';
+  DateTime? _checked;
   bool _loading = true;
   int _request = 0;
   String? _farm, _house, _flock;
@@ -66,6 +70,7 @@ class _PoultryFarmScreenState extends State<PoultryFarmScreen> {
       _loading = true;
       _error = '';
       _data = null;
+      _checked = null;
     });
     try {
       if (repo == null || clinic == null || clinic.isEmpty) {
@@ -93,6 +98,7 @@ class _PoultryFarmScreenState extends State<PoultryFarmScreen> {
           _flock = null;
         }
         _data = data;
+        _checked = DateTime.now();
       });
     } on Object catch (e) {
       if (mounted && request == _request) {
@@ -169,6 +175,24 @@ class _PoultryFarmScreenState extends State<PoultryFarmScreen> {
         const VetNotice(
           text:
               'Organización compartida del área de trabajo: granja → caseta → parvada. Los registros sanitarios se guardan en la caseta, con parvada opcional. Cada guardado queda auditado.',
+        ),
+        if (_checked != null)
+          Text(
+            'Consulta confirmada: ${VetFormat.date(_checked!)} · ${TimeOfDay.fromDateTime(_checked!).format(context)}',
+          ),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PoultryCalendarScreen(
+                clinicId: widget.clinicId!,
+                repository: widget.repository!,
+                houseId: _house,
+              ),
+            ),
+          ),
+          icon: const Icon(VetIcons.calendar),
+          label: const Text('Calendario sanitario por caseta'),
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(

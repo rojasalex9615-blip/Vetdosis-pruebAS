@@ -212,6 +212,9 @@ void main() {
       find.text('Crianza de pollitas · Bovans, Hy-Line y Lohmann'),
       findsNothing,
     );
+    await tester.ensureVisible(find.text('Registros'));
+    await tester.tap(find.text('Registros'));
+    await tester.pumpAndSettle();
     final entry = find.text('Granjas, casetas y sanidad');
     await tester.ensureVisible(entry);
     await tester.tap(entry);
