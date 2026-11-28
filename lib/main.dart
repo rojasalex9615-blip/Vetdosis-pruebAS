@@ -1,3 +1,7 @@
+import 'modules/aviculture/domain/poultry_farm.dart';
+import 'modules/aviculture/data/supabase_poultry_farm_repository.dart';
+import 'modules/aviculture/domain/rearing_project_repository.dart';
+import 'modules/aviculture/data/local_rearing_project_store.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -97,7 +101,8 @@ Future<void> main() async {
     defaultValue: true,
   );
   const googleEnabled = bool.fromEnvironment('SUPABASE_GOOGLE_ENABLED');
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android &&
+  if (!kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android &&
       channel == 'beta') {
     try {
       await Firebase.initializeApp();
@@ -139,6 +144,8 @@ Future<void> main() async {
   ExoticDashboardRepository? exotics;
   ExoticWriteRepository? exoticsWrite;
   ProductionUnitRepository? productionUnits;
+  RearingProjectRepository? rearingProjects;
+  PoultryFarmRepository? poultryFarms;
   AvicultureRecordsRepository? aviculture;
   if (url.isNotEmpty && key.isNotEmpty) {
     const build = int.fromEnvironment('BETA_BUILD');
@@ -158,7 +165,9 @@ Future<void> main() async {
     clinical = SupabaseClinicalRepository(Supabase.instance.client);
     laboratory = SupabaseLabRepository(Supabase.instance.client);
     prescribing = SupabasePrescribingRepository(Supabase.instance.client);
-    referenceLibrary = SupabaseReferenceLibraryRepository(Supabase.instance.client);
+    referenceLibrary = SupabaseReferenceLibraryRepository(
+      Supabase.instance.client,
+    );
     inventory = SupabaseInventoryRepository(Supabase.instance.client);
     operations = SupabaseOperationsRepository(Supabase.instance.client);
     personalSpace = SupabasePersonalSpaceRepository(Supabase.instance.client);
@@ -168,7 +177,9 @@ Future<void> main() async {
     support = SupabaseSupportRepository(Supabase.instance.client);
     subscriptions = SupabaseSubscriptionRepository(Supabase.instance.client);
     moduleAccess = SupabaseModuleAccessRepository(Supabase.instance.client);
-    experienceRepository = SupabaseClinicExperienceRepository(Supabase.instance.client);
+    experienceRepository = SupabaseClinicExperienceRepository(
+      Supabase.instance.client,
+    );
     reviewCatalog = SupabaseReviewCatalogRepository(Supabase.instance.client);
     porcino = SupabasePorcinoRepository(Supabase.instance.client);
     farm = SupabaseProductionFarmRepository(Supabase.instance.client);
@@ -180,10 +191,12 @@ Future<void> main() async {
     exotics = SupabaseExoticRepository(Supabase.instance.client);
     exoticsWrite = SupabaseExoticWriteRepository(Supabase.instance.client);
     aviculture = SupabaseAvicultureRecordsRepository(Supabase.instance.client);
+    poultryFarms = SupabasePoultryFarmRepository(Supabase.instance.client);
     final localStore = LocalStore(await openOfflineDatabase());
     // Las unidades de produccion viven en la misma base local que el resto del
     // modo sin conexion: no hace falta otro archivo para ellas.
     productionUnits = LocalProductionUnitStore(localStore.database);
+    rearingProjects = LocalRearingProjectStore(localStore.database);
     final authRepository = SupabaseAuthRepository(
       Supabase.instance.client,
       existingSchema: existingSchema,
@@ -216,8 +229,11 @@ Future<void> main() async {
   );
   final alerts = HospitalAlerts(backend, await SharedPreferences.getInstance());
   await alerts.initialize();
-  if (auth != null && Firebase.apps.isNotEmpty && channel == 'beta' &&
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+  if (auth != null &&
+      Firebase.apps.isNotEmpty &&
+      channel == 'beta' &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android) {
     final service = HospitalPushService(
       Supabase.instance.client,
       FirebaseMessaging.instance,
@@ -290,6 +306,8 @@ Future<void> main() async {
       exoticsWrite: exoticsWrite,
       aviculture: aviculture,
       units: productionUnits,
+      rearingProjects: rearingProjects,
+      poultryFarms: poultryFarms,
       hospitalAlerts: alerts,
       requireAuth: true,
     ),
