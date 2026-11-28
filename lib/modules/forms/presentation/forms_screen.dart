@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../../core/widgets/neu_header_card.dart';
 import '../../prescribing/domain/prescribing_repository.dart';
 import '../../ai/domain/ai_repository.dart';
@@ -271,9 +272,9 @@ class _FormsScreenState extends State<FormsScreen> {
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Formatos y consentimientos',
-          style: Theme.of(context).textTheme.headlineMedium,
+        const AppPageHeading(
+          title: 'Formatos y consentimientos',
+          screens: {'Formatos'},
         ),
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),

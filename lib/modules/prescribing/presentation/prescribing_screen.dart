@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import '../../identity/domain/identity_repository.dart';
 import '../../exports/domain/branded_export.dart';
 import '../../exports/presentation/branded_export_action.dart';
@@ -1392,9 +1393,9 @@ class _PrescribingScreenState extends State<PrescribingScreen> {
     builder: (context, _) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Recetas y control de medicamentos',
-          style: Theme.of(context).textTheme.headlineMedium,
+        AppPageHeading(
+          title: 'Recetas y control de medicamentos',
+          screens: const {'Receta'},
         ),
         const Text(
           'Aplicar, reportar, autorizar y emitir son actos separados. El puesto no sustituye la habilitación profesional ni los permisos necesarios.',

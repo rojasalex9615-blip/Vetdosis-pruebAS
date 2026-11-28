@@ -213,7 +213,8 @@ void main() {
       final model = CoreViewModel(repository, await repository.load());
       await tester.pumpWidget(VetDosisApp(model: model));
       await tester.pumpAndSettle();
-      expect(find.text('Resumen de tu espacio'), findsOneWidget);
+      expect(find.text('Resumen de tu espacio'), findsNothing);
+      expect(find.text('Inicio'), findsWidgets);
       expect(find.text('Resumen no disponible.'), findsWidgets);
       expect(tester.takeException(), isNull);
       await tester.tap(find.byIcon(Icons.menu));

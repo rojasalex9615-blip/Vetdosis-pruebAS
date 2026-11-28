@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_heading_scope.dart';
 import 'credit_accounts_screen.dart';
 import 'partial_return_screen.dart';
 import '../../../core/widgets/neu_record_card.dart';
@@ -928,9 +929,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Inventario y ventas',
-            style: Theme.of(context).textTheme.headlineSmall,
+          AppPageHeading(
+            title: 'Inventario y ventas',
+            screens: const {'Inventario'},
           ),
           VetCard(
             radius: 18,
